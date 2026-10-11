@@ -1,0 +1,8 @@
+# Il programma non ha pacchetti esterni: l'unica cosa da tenere aggiornata sono le azioni
+# usate nei flussi di lavoro in .github/workflows.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

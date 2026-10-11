@@ -1,0 +1,35 @@
+name: CodeQL
+
+# Analisi di sicurezza del codice. Il programma viene compilato davvero (build.cmd), cosi' CodeQL conosce
+# tutti i tipi usati: senza compilazione non trova Windows Forms e segnala "Low C# analysis quality".
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    - cron: "0 6 * * 1"   # ogni lunedi' mattina
+
+jobs:
+  analyze:
+    name: Analisi C#
+    runs-on: windows-latest
+    permissions:
+      security-events: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: github/codeql-action/init@v3
+        with:
+          languages: csharp
+          build-mode: manual
+
+      # "< NUL" fa proseguire build.cmd oltre il "pause" finale.
+      - name: Compila
+        shell: cmd
+        run: build.cmd < NUL
+
+      - uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:csharp"

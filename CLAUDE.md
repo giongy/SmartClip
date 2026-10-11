@@ -11,6 +11,10 @@ commenti e risposte in italiano.
 - `build.cmd` — compila `PasswordPaste.exe`. `PasswordPaste.ico` è facoltativa.
 - `tests/Test.cs`, `tests/test.cmd` — controlli automatici (vedi sotto).
 
+- `.github/workflows/codeql.yml` — analisi CodeQL su GitHub con compilazione vera (`build-mode: manual`, lancia
+  `build.cmd < NUL` su Windows). Richiede che la configurazione predefinita di Code scanning sia disattivata.
+  `.github/dependabot.yml` aggiorna solo le azioni di quel flusso: il programma non ha pacchetti.
+
 ## Vincoli di compilazione
 
 - Si usa il `csc.exe` incluso in Windows (.NET Framework 4, **C# 5**): niente interpolazione di stringhe, `?.`,
