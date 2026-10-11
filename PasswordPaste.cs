@@ -84,8 +84,12 @@ class MainForm : Form
     readonly CheckBox slowBox = new CheckBox();
     readonly CheckBox altCodeBox = new CheckBox();
     readonly CheckBox hotkeyBox = new CheckBox();
+    readonly CheckBox trayBox = new CheckBox();
+    readonly NotifyIcon tray = new NotifyIcon();
     readonly ToolTip tips = new ToolTip();
     bool busy, closePending;
+    bool exiting;         // l'utente ha scelto Esci dal menu dell'icona: la chiusura è vera, non un "nascondi"
+    bool trayHintShown;   // il fumetto che spiega dov'è finita la finestra si mostra una volta sola
     volatile bool cancel;
 
     public MainForm()
@@ -137,6 +141,8 @@ class MainForm : Form
         PlaceOption(altCodeBox, "Alt+codice per i simboli che la tastiera non ha", ref top);
         PlaceOption(hotkeyBox, "Scorciatoia globale " + HotkeyName, ref top);
         hotkeyBox.Checked = true;
+        PlaceOption(trayBox, "Resta attivo nell'area di notifica (tray)", ref top);
+        trayBox.Checked = true;
         ClientSize = new Size(Edge + ContentWidth + Edge, top + 4);
 
         tips.AutoPopDelay = 30000;
@@ -159,12 +165,27 @@ class MainForm : Form
           + "Non funziona se il desktop remoto è a schermo intero e cattura tutte le\n"
           + "scorciatoie: in quel caso usa il pulsante.\n"
           + "Disattivala se entra in conflitto con un altro programma.", hotkeyBox);
+        Tip("Attiva: chiudendo o riducendo a icona la finestra il programma resta in funzione\n"
+          + "come icona vicino all'orologio, e la scorciatoia continua a funzionare.\n"
+          + "Clic sull'icona per riaprire la finestra, tasto destro e poi Esci per chiudere.\n"
+          + "Disattiva: finestra normale, che chiudendola termina il programma.", trayBox);
 
         Controls.AddRange(new Control[] { typeButton, status, line, delayLabel, delayBox, keyboardLabel, keyboardBox,
-            enterBox, clearBox, slowBox, altCodeBox, hotkeyBox });
+            enterBox, clearBox, slowBox, altCodeBox, hotkeyBox, trayBox });
         AcceptButton = typeButton;
 
         LoadSettings();
+
+        ContextMenuStrip trayMenu = new ContextMenuStrip();
+        trayMenu.Items.Add("Apri", null, delegate { RestoreWindow(); });
+        trayMenu.Items.Add("Esci", null, delegate { exiting = true; Close(); });
+        tray.ContextMenuStrip = trayMenu;
+        tray.Text = Program.AppName;
+        tray.Icon = Icon;
+        tray.MouseClick += delegate(object sender, MouseEventArgs e) { if (e.Button == MouseButtons.Left) RestoreWindow(); };
+        tray.Visible = trayBox.Checked;
+        trayBox.CheckedChanged += delegate { tray.Visible = trayBox.Checked; };
+
         // Click e non CheckedChanged: deve scattare solo quando è l'utente a cambiare la casella.
         hotkeyBox.Click += delegate { UpdateHotkey(); };
         ShowIdle();
@@ -238,14 +259,49 @@ class MainForm : Form
         }
         else if (Program.ShowMessage != 0 && (uint)m.Msg == Program.ShowMessage)
         {
-            if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
-            Activate();
+            RestoreWindow();
         }
         base.WndProc(ref m);
     }
 
+    // Riporta la finestra in primo piano, che sia ridotta a icona o nascosta nell'area di notifica.
+    void RestoreWindow()
+    {
+        Show();
+        if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
+        Activate();
+    }
+
+    void HideToTray()
+    {
+        Hide();
+        if (trayHintShown) return;
+        trayHintShown = true;
+        tray.ShowBalloonTip(4000, Program.AppName,
+            "Sono ancora attivo qui. Clic per riaprire, tasto destro e poi Esci per chiudere.", ToolTipIcon.Info);
+    }
+
+    protected override void OnResize(EventArgs e)
+    {
+        base.OnResize(e);
+        if (WindowState == FormWindowState.Minimized && trayBox.Checked) HideToTray();
+    }
+
+    protected override void Dispose(bool disposing)
+    {
+        if (disposing) tray.Dispose();   // altrimenti l'icona resterebbe nell'area di notifica dopo l'uscita
+        base.Dispose(disposing);
+    }
+
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
+        // Con l'icona attiva la X nasconde soltanto: si esce dal menu dell'icona (o allo spegnimento di Windows).
+        if (trayBox.Checked && !exiting && !closePending && e.CloseReason == CloseReason.UserClosing)
+        {
+            e.Cancel = true;
+            HideToTray();
+            return;
+        }
         if (busy)
         {
             // Chiudere a metà di un tasto lascerebbe Maiusc o Alt "premuti": si chiude appena la digitazione si ferma.
@@ -319,8 +375,8 @@ class MainForm : Form
 
     bool ConfirmUnusual(string text)
     {
-        // Una finestra di messaggio il cui proprietario è ridotto a icona resterebbe invisibile.
-        if (WindowState == FormWindowState.Minimized) WindowState = FormWindowState.Normal;
+        // Una finestra di messaggio il cui proprietario è nascosto o ridotto a icona resterebbe invisibile.
+        RestoreWindow();
         int lines = text.Split('\n').Length;
         string what = Count(text.Length) + (lines > 1 ? " su " + lines + " righe" : "");
         return MessageBox.Show(this,
@@ -462,6 +518,7 @@ class MainForm : Form
         slowBox.Checked = Transfer(key, save, "Slow", slowBox.Checked);
         altCodeBox.Checked = Transfer(key, save, "AltCodes", altCodeBox.Checked);
         hotkeyBox.Checked = Transfer(key, save, "Hotkey", hotkeyBox.Checked);
+        trayBox.Checked = Transfer(key, save, "Tray", trayBox.Checked);
 
         // Posizione della finestra. In lettura si parte da un punto fuori da ogni schermo: resta tale, e viene
         // ignorato, se nel registro non c'è nulla; lo stesso accade se lo schermo di allora non è più collegato.

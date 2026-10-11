@@ -10,6 +10,20 @@ rem L'icona e' facoltativa: senza il file .ico il programma usa quella predefini
 set ICON=
 if exist "%APP%.ico" set ICON=/win32icon:"%APP%.ico" /resource:"%APP%.ico",%NAME%.ico
 
+echo Compilo %NAME%.cs...
+if defined ICON (echo Icona: %NAME%.ico) else (echo Icona: quella predefinita, %NAME%.ico non trovato)
+
 "%CSC%" /nologo /codepage:65001 /target:winexe /optimize+ /out:"%APP%.exe" %ICON% ^
   /r:System.Windows.Forms.dll /r:System.Drawing.dll "%APP%.cs"
-if errorlevel 1 pause
+if errorlevel 1 goto failed
+
+echo.
+echo Fatto: creato %APP%.exe
+pause
+exit /b 0
+
+:failed
+echo.
+echo COMPILAZIONE NON RIUSCITA. Se %NAME% e' aperto, chiudilo e riprova.
+pause
+exit /b 1
