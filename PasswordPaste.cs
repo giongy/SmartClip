@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
@@ -87,6 +88,7 @@ class MainForm : Form
     readonly CheckBox trayBox = new CheckBox();
     readonly NotifyIcon tray = new NotifyIcon();
     readonly ToolTip tips = new ToolTip();
+    readonly Icon readyIcon, emptyIcon, readyTrayIcon, emptyTrayIcon;
     bool busy, closePending;
     bool exiting;         // l'utente ha scelto Esci dal menu dell'icona: la chiusura è vera, non un "nascondi"
     bool trayHintShown;   // il fumetto che spiega dov'è finita la finestra si mostra una volta sola
@@ -181,7 +183,12 @@ class MainForm : Form
         trayMenu.Items.Add("Esci", null, delegate { exiting = true; Close(); });
         tray.ContextMenuStrip = trayMenu;
         tray.Text = Program.AppName;
-        tray.Icon = Icon;
+        // L'icona a colori dice che negli appunti c'è del testo pronto, quella grigia che non c'è nulla.
+        readyIcon = Icon;
+        emptyIcon = Gray(Icon, SystemInformation.IconSize);
+        readyTrayIcon = new Icon(Icon, SystemInformation.SmallIconSize);
+        emptyTrayIcon = Gray(Icon, SystemInformation.SmallIconSize);
+        tray.Icon = readyTrayIcon;
         tray.MouseClick += delegate(object sender, MouseEventArgs e) { if (e.Button == MouseButtons.Left) RestoreWindow(); };
         tray.Visible = trayBox.Checked;
         trayBox.CheckedChanged += delegate { tray.Visible = trayBox.Checked; };
@@ -231,10 +238,58 @@ class MainForm : Form
     {
         base.OnHandleCreated(e);
         UpdateHotkey();
+        Native.AddClipboardFormatListener(Handle);
+        ShowClipboardState();
+    }
+
+    // Windows avvisa a ogni cambio degli appunti; qui si guarda solo se contengono testo, senza aprirli né
+    // leggerli, per non intralciare gli altri programmi.
+    void ShowClipboardState()
+    {
+        bool ready = Native.IsClipboardFormatAvailable(Native.CF_UNICODETEXT);
+        Icon = ready ? readyIcon : emptyIcon;
+        tray.Icon = ready ? readyTrayIcon : emptyTrayIcon;
+        tray.Text = Program.AppName + (ready ? ": testo pronto negli appunti" : ": appunti senza testo");
+    }
+
+    // Copia in scala di grigi dell'icona, nella dimensione richiesta.
+    static Icon Gray(Icon source, Size size)
+    {
+        using (Icon sized = new Icon(source, size))
+        using (Bitmap color = sized.ToBitmap())
+        using (Bitmap gray = new Bitmap(color.Width, color.Height))
+        {
+            using (Graphics graphics = Graphics.FromImage(gray))
+            using (ImageAttributes attributes = new ImageAttributes())
+            {
+                // Ogni canale diventa la luminosità del punto; la trasparenza resta com'è.
+                attributes.SetColorMatrix(new ColorMatrix(new float[][]
+                {
+                    new float[] { 0.30f, 0.30f, 0.30f, 0, 0 },
+                    new float[] { 0.59f, 0.59f, 0.59f, 0, 0 },
+                    new float[] { 0.11f, 0.11f, 0.11f, 0, 0 },
+                    new float[] { 0, 0, 0, 1, 0 },
+                    new float[] { 0, 0, 0, 0, 1 }
+                }));
+                graphics.DrawImage(color, new Rectangle(Point.Empty, gray.Size), 0, 0, color.Width, color.Height,
+                    GraphicsUnit.Pixel, attributes);
+            }
+            // L'icona creata da GetHicon va distrutta a mano: se ne tiene una copia che si gestisce da sola.
+            IntPtr handle = gray.GetHicon();
+            try
+            {
+                return (Icon)Icon.FromHandle(handle).Clone();
+            }
+            finally
+            {
+                Native.DestroyIcon(handle);
+            }
+        }
     }
 
     protected override void OnHandleDestroyed(EventArgs e)
     {
+        Native.RemoveClipboardFormatListener(Handle);
         Native.UnregisterHotKey(Handle, HotkeyId);
         base.OnHandleDestroyed(e);
     }
@@ -260,6 +315,10 @@ class MainForm : Form
         else if (Program.ShowMessage != 0 && (uint)m.Msg == Program.ShowMessage)
         {
             RestoreWindow();
+        }
+        else if (m.Msg == Native.WM_CLIPBOARDUPDATE)
+        {
+            ShowClipboardState();
         }
         base.WndProc(ref m);
     }
@@ -838,7 +897,8 @@ static class Typer
 // Funzioni e costanti di Windows, con i loro nomi ufficiali.
 static class Native
 {
-    public const int WM_HOTKEY = 0x0312;
+    public const int WM_HOTKEY = 0x0312, WM_CLIPBOARDUPDATE = 0x031D;
+    public const uint CF_UNICODETEXT = 13;
     public const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002, MOD_NOREPEAT = 0x4000;
     public const int VK_SHIFT = 0x10, VK_CONTROL = 0x11, VK_MENU = 0x12, VK_CAPITAL = 0x14, VK_SPACE = 0x20,
         VK_LWIN = 0x5B, VK_RWIN = 0x5C;
@@ -929,4 +989,16 @@ static class Native
 
     [DllImport("user32.dll")]
     public static extern bool SetProcessDPIAware();
+
+    [DllImport("user32.dll")]
+    public static extern bool AddClipboardFormatListener(IntPtr window);
+
+    [DllImport("user32.dll")]
+    public static extern bool RemoveClipboardFormatListener(IntPtr window);
+
+    [DllImport("user32.dll")]
+    public static extern bool IsClipboardFormatAvailable(uint format);
+
+    [DllImport("user32.dll")]
+    public static extern bool DestroyIcon(IntPtr icon);
 }
