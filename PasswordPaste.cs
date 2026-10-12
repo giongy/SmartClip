@@ -17,8 +17,8 @@ using Microsoft.Win32;
 [assembly: AssemblyProduct(Program.AppName)]
 [assembly: AssemblyVersion("1.1.0.0")]
 
-// Digita il contenuto degli appunti come pressioni di tasti reali (scancode),
-// così funziona anche dove l'incolla è disabilitato (schermate di blocco dei desktop remoti).
+// Types the clipboard content as real key presses (scancodes),
+// so it works even where paste is disabled (lock screens of remote desktops).
 static class Program
 {
     public const string AppName = "PasswordPaste";
@@ -32,7 +32,7 @@ static class Program
         {
             if (!first)
             {
-                // Già in esecuzione: riporta in primo piano la finestra esistente.
+                // Already running: bring the existing window to the foreground.
                 Native.AllowSetForegroundWindow(Native.ASFW_ANY);
                 Native.PostMessage(Native.HWND_BROADCAST, ShowMessage, IntPtr.Zero, IntPtr.Zero);
                 return;
@@ -48,25 +48,25 @@ static class Program
 
 class MainForm : Form
 {
-    // La scorciatoia globale: registrazione e testi partono tutti da qui.
+    // The global hotkey: registration and texts all start from here.
     const uint HotkeyModifiers = Native.MOD_CONTROL | Native.MOD_ALT;
     const Keys HotkeyKey = Keys.V;
     static readonly string HotkeyName = "Ctrl+Alt+" + HotkeyKey;
     const int HotkeyId = 1;
 
-    const int MinDelay = 1, MaxDelay = 30;             // limiti, in secondi, dell'attesa prima di digitare
-    const int DefaultDelay = 1;                        // attesa proposta finché l'utente non ne sceglie un'altra
-    const int ArmedSeconds = 15;                       // tempo concesso per portare in primo piano la finestra di destinazione
-    const int PollMs = 100;                            // ogni quanto si ricontrolla quale finestra è in primo piano
-    const int KeyDelayMs = 15, SlowKeyDelayMs = 60;    // pausa dopo ogni tasto premuto o rilasciato
-    const int UnusualLength = 100;                     // un testo più lungo difficilmente è una password
-    const int MaxTitleLength = 45;                     // oltre, il titolo della finestra di destinazione viene troncato
-    const int Edge = 12, ContentWidth = 316;           // margine e larghezza utile della finestra, in pixel a 96 dpi
-    const int RowHeight = 24;                          // distanza tra una casella di opzione e la successiva
+    const int MinDelay = 1, MaxDelay = 30;             // limits, in seconds, of the wait before typing
+    const int DefaultDelay = 1;                        // wait proposed until the user picks another one
+    const int ArmedSeconds = 15;                       // time allowed to bring the target window to the foreground
+    const int PollMs = 100;                            // how often the foreground window is checked again
+    const int KeyDelayMs = 15, SlowKeyDelayMs = 60;    // pause after each key press or release
+    const int UnusualLength = 100;                     // a longer text is unlikely to be a password
+    const int MaxTitleLength = 45;                     // beyond this, the title of the target window is truncated
+    const int Edge = 12, ContentWidth = 316;           // margin and usable width of the window, in pixels at 96 dpi
+    const int RowHeight = 24;                          // distance between one option checkbox and the next
     const string ButtonText = "Digita gli appunti";
     const string SettingsKey = @"Software\" + Program.AppName;
 
-    // Desktop, barra delle applicazioni, menu Start e selettore Alt+Tab: non sono mai la destinazione voluta.
+    // Desktop, taskbar, Start menu and Alt+Tab switcher: never the intended target.
     static readonly string[] ShellClasses =
     {
         "Progman", "WorkerW", "Shell_TrayWnd", "Shell_SecondaryTrayWnd", "Windows.UI.Core.CoreWindow",
@@ -90,8 +90,8 @@ class MainForm : Form
     readonly ToolTip tips = new ToolTip();
     readonly Icon readyIcon, emptyIcon, readyTrayIcon, emptyTrayIcon;
     bool busy, closePending;
-    bool exiting;         // l'utente ha scelto Esci dal menu dell'icona: la chiusura è vera, non un "nascondi"
-    bool trayHintShown;   // il fumetto che spiega dov'è finita la finestra si mostra una volta sola
+    bool exiting;         // the user chose Esci (Exit) in the icon menu: the close is real, not a "hide"
+    bool trayHintShown;   // the balloon explaining where the window went is shown only once
     volatile bool cancel;
 
     public MainForm()
@@ -135,7 +135,7 @@ class MainForm : Form
         keyboardBox.SelectedIndex = 0;
         keyboardBox.SetBounds(Edge + ContentWidth - 180, 170, 180, 23);
 
-        // Le caselle sono impilate: per aggiungerne una basta una riga qui, l'altezza della finestra si adegua.
+        // The checkboxes are stacked: adding one takes a single line here, the window height adapts.
         int top = 202;
         PlaceOption(enterBox, "Premi Invio alla fine", ref top);
         PlaceOption(clearBox, "Svuota gli appunti dopo aver digitato", ref top);
@@ -183,7 +183,7 @@ class MainForm : Form
         trayMenu.Items.Add("Esci", null, delegate { exiting = true; Close(); });
         tray.ContextMenuStrip = trayMenu;
         tray.Text = Program.AppName;
-        // L'icona a colori dice che negli appunti c'è del testo pronto, quella grigia che non c'è nulla.
+        // The coloured icon says the clipboard holds text ready to type, the grey one that it holds none.
         readyIcon = Icon;
         emptyIcon = Gray(Icon, SystemInformation.IconSize);
         readyTrayIcon = new Icon(Icon, SystemInformation.SmallIconSize);
@@ -193,7 +193,7 @@ class MainForm : Form
         tray.Visible = trayBox.Checked;
         trayBox.CheckedChanged += delegate { tray.Visible = trayBox.Checked; };
 
-        // Click e non CheckedChanged: deve scattare solo quando è l'utente a cambiare la casella.
+        // Click rather than CheckedChanged: it must fire only when the user changes the checkbox.
         hotkeyBox.Click += delegate { UpdateHotkey(); };
         ShowIdle();
         ResumeLayout(false);
@@ -242,8 +242,8 @@ class MainForm : Form
         ShowClipboardState();
     }
 
-    // Windows avvisa a ogni cambio degli appunti; qui si guarda solo se contengono testo, senza aprirli né
-    // leggerli, per non intralciare gli altri programmi.
+    // Windows notifies every clipboard change; here we only look at whether it holds text, without opening or
+    // reading it, so as not to get in the way of other programs.
     void ShowClipboardState()
     {
         bool ready = Native.IsClipboardFormatAvailable(Native.CF_UNICODETEXT);
@@ -252,7 +252,7 @@ class MainForm : Form
         tray.Text = Program.AppName + (ready ? ": testo pronto negli appunti" : ": appunti senza testo");
     }
 
-    // Copia in scala di grigi dell'icona, nella dimensione richiesta.
+    // Greyscale copy of the icon, in the requested size.
     static Icon Gray(Icon source, Size size)
     {
         using (Icon sized = new Icon(source, size))
@@ -262,7 +262,7 @@ class MainForm : Form
             using (Graphics graphics = Graphics.FromImage(gray))
             using (ImageAttributes attributes = new ImageAttributes())
             {
-                // Ogni canale diventa la luminosità del punto; la trasparenza resta com'è.
+                // Each channel becomes the brightness of the pixel; transparency stays as it is.
                 attributes.SetColorMatrix(new ColorMatrix(new float[][]
                 {
                     new float[] { 0.30f, 0.30f, 0.30f, 0, 0 },
@@ -274,7 +274,7 @@ class MainForm : Form
                 graphics.DrawImage(color, new Rectangle(Point.Empty, gray.Size), 0, 0, color.Width, color.Height,
                     GraphicsUnit.Pixel, attributes);
             }
-            // L'icona creata da GetHicon va distrutta a mano: se ne tiene una copia che si gestisce da sola.
+            // The icon created by GetHicon must be destroyed by hand: we keep a copy that manages itself.
             IntPtr handle = gray.GetHicon();
             try
             {
@@ -323,7 +323,7 @@ class MainForm : Form
         base.WndProc(ref m);
     }
 
-    // Riporta la finestra in primo piano, che sia ridotta a icona o nascosta nell'area di notifica.
+    // Brings the window to the foreground, whether it is minimised or hidden in the notification area.
     void RestoreWindow()
     {
         Show();
@@ -348,13 +348,13 @@ class MainForm : Form
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) tray.Dispose();   // altrimenti l'icona resterebbe nell'area di notifica dopo l'uscita
+        if (disposing) tray.Dispose();   // otherwise the icon would stay in the notification area after exit
         base.Dispose(disposing);
     }
 
     protected override void OnFormClosing(FormClosingEventArgs e)
     {
-        // Con l'icona attiva la X nasconde soltanto: si esce dal menu dell'icona (o allo spegnimento di Windows).
+        // With the icon active the X only hides: exit is from the icon menu (or at Windows shutdown).
         if (trayBox.Checked && !exiting && !closePending && e.CloseReason == CloseReason.UserClosing)
         {
             e.Cancel = true;
@@ -363,7 +363,7 @@ class MainForm : Form
         }
         if (busy)
         {
-            // Chiudere a metà di un tasto lascerebbe Maiusc o Alt "premuti": si chiude appena la digitazione si ferma.
+            // Closing halfway through a key would leave Shift or Alt "pressed": it closes as soon as typing stops.
             cancel = true;
             closePending = true;
             e.Cancel = true;
@@ -396,7 +396,7 @@ class MainForm : Form
 
             IntPtr target = await WaitForTarget(seconds);
             if (target == IntPtr.Zero) return;
-            if ((Native.GetKeyState(Native.VK_CAPITAL) & 1) != 0)   // il bit basso dice se il blocco è attivo
+            if ((Native.GetKeyState(Native.VK_CAPITAL) & 1) != 0)   // the low bit tells whether the lock is on
             {
                 status.Text = "Bloc Maiusc è attivo: disattivalo e riprova.";
                 return;
@@ -415,12 +415,12 @@ class MainForm : Form
             });
             status.Text = Describe(result, options);
 
-            // Si svuota solo se negli appunti c'è ancora la password appena digitata.
+            // Cleared only if the clipboard still holds the password just typed.
             if (result.Outcome == TypeOutcome.Done && clearBox.Checked
                 && Clipboard.ContainsText() && Clipboard.GetText() == copied)
                 Clipboard.Clear();
         }
-        catch (Exception ex)   // ad esempio appunti bloccati da un altro programma
+        catch (Exception ex)   // for example the clipboard locked by another program
         {
             status.Text = "Errore: " + ex.Message;
         }
@@ -434,7 +434,7 @@ class MainForm : Form
 
     bool ConfirmUnusual(string text)
     {
-        // Una finestra di messaggio il cui proprietario è nascosto o ridotto a icona resterebbe invisibile.
+        // A message box whose owner is hidden or minimised would stay invisible.
         RestoreWindow();
         int lines = text.Split('\n').Length;
         string what = Count(text.Length) + (lines > 1 ? " su " + lines + " righe" : "");
@@ -443,8 +443,8 @@ class MainForm : Form
             Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
     }
 
-    // Attende che la finestra di un altro programma resti in primo piano per 'seconds' secondi e la restituisce.
-    // Restituisce IntPtr.Zero (e spiega perché nella riga di stato) se l'utente annulla o non sceglie in tempo.
+    // Waits for another program's window to stay in the foreground for 'seconds' seconds and returns it.
+    // Returns IntPtr.Zero (and explains why in the status line) if the user cancels or does not choose in time.
     async Task<IntPtr> WaitForTarget(int seconds)
     {
         Stopwatch clock = Stopwatch.StartNew();
@@ -473,8 +473,8 @@ class MainForm : Form
             }
             else
             {
-                // Bisogna ancora passare alla finestra giusta: anche partendo dalla scorciatoia, che di suo
-                // non prevede attesa, serve il tempo di cliccare nel campo.
+                // The right window still has to be selected: even when started from the hotkey, which has no
+                // wait of its own, time is needed to click into the field.
                 candidate = IntPtr.Zero;
                 seconds = Math.Max(seconds, MinDelay);
                 status.Text = "Clicca ora nel campo password della finestra remota…";
@@ -546,7 +546,7 @@ class MainForm : Form
         }
         catch (Exception)
         {
-            // Impostazioni illeggibili o di tipo inatteso: restano i valori predefiniti.
+            // Settings unreadable or of an unexpected type: the defaults stay.
         }
     }
 
@@ -561,12 +561,12 @@ class MainForm : Form
         }
         catch (Exception)
         {
-            // Registro non scrivibile: le impostazioni non vengono ricordate.
+            // Registry not writable: the settings are not remembered.
         }
     }
 
-    // Scrive le impostazioni nel registro ('save') oppure le rilegge. Ognuna è elencata qui una volta sola, così
-    // lettura e scrittura non possono divergere; in lettura, ciò che non è mai stato salvato resta com'è.
+    // Writes the settings to the registry ('save') or reads them back. Each one is listed here only once, so
+    // reading and writing cannot diverge; when reading, whatever was never saved stays as it is.
     void TransferSettings(RegistryKey key, bool save)
     {
         int delay = Transfer(key, save, "Delay", (int)delayBox.Value);
@@ -579,8 +579,8 @@ class MainForm : Form
         hotkeyBox.Checked = Transfer(key, save, "Hotkey", hotkeyBox.Checked);
         trayBox.Checked = Transfer(key, save, "Tray", trayBox.Checked);
 
-        // Posizione della finestra. In lettura si parte da un punto fuori da ogni schermo: resta tale, e viene
-        // ignorato, se nel registro non c'è nulla; lo stesso accade se lo schermo di allora non è più collegato.
+        // Window position. Reading starts from a point outside every screen: it stays there, and is ignored,
+        // if the registry holds nothing; the same happens if the screen of that time is no longer connected.
         Point corner = !save ? OffScreen : WindowState == FormWindowState.Normal ? Location : RestoreBounds.Location;
         corner = new Point(Transfer(key, save, "Left", corner.X), Transfer(key, save, "Top", corner.Y));
         if (save) return;
@@ -625,7 +625,7 @@ class TypeResult
     }
 }
 
-// Il tasto (ed eventuali modificatori) che produce un carattere.
+// The key (and any modifiers) that produces a character.
 struct Stroke
 {
     public readonly int Scan;
@@ -642,18 +642,18 @@ struct Stroke
 
 static class Typer
 {
-    const int ExtendedBit = 0x100;   // aggiunto allo scancode dei tasti "estesi"
+    const int ExtendedBit = 0x100;   // added to the scancode of "extended" keys
     const int ScTab = 0x0F, ScEnter = 0x1C, ScShift = 0x2A, ScAlt = 0x38, ScSpace = 0x39, ScAltGr = ScAlt | ExtendedBit;
-    const int KeyReleaseTimeoutMs = 3000;   // quanto si aspetta che l'utente lasci i tasti che sta premendo
-    const byte Pressed = 0x80;              // valore di un tasto premuto nella tabella di stato di ToUnicodeEx
+    const int KeyReleaseTimeoutMs = 3000;   // how long to wait for the user to release the keys being held
+    const byte Pressed = 0x80;              // value of a pressed key in the ToUnicodeEx state table
     static readonly int[] ScNumpad = { 0x52, 0x4F, 0x50, 0x51, 0x4B, 0x4C, 0x4D, 0x47, 0x48, 0x49 };
     static readonly Encoding Ansi =
         Encoding.GetEncoding(1252, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
     static readonly int[] TypingKeys = BuildTypingKeys();
     public static readonly Dictionary<char, Stroke> UsKeys = BuildUsKeys();
 
-    // Digita il testo nella finestra 'target' e si ferma se questa perde il primo piano:
-    // una password non deve mai finire in un'altra finestra.
+    // Types the text into the 'target' window and stops if it loses the foreground:
+    // a password must never end up in another window.
     public static TypeResult TypeText(string text, IntPtr target, TypeOptions options, Func<bool> cancelled)
     {
         TypeResult result = new TypeResult();
@@ -697,7 +697,7 @@ static class Typer
 
         if (options.PressEnter)
         {
-            // Lascia al server il tempo di ricevere l'ultimo carattere prima di confermare.
+            // Gives the server time to receive the last character before confirming.
             Thread.Sleep(delay * 4);
             if (Native.GetForegroundWindow() != target) return result.Stop(TypeOutcome.FocusLost);
             if (!Chord(delay, ScEnter)) return result.Stop(TypeOutcome.Blocked);
@@ -705,8 +705,8 @@ static class Typer
         return result;
     }
 
-    // Un tasto che l'utente tiene ancora premuto (tipicamente quelli di una scorciatoia) altererebbe ciò che
-    // viene digitato: si aspetta che li rilasci.
+    // A key the user is still holding (typically those of a hotkey) would alter what gets typed:
+    // wait for them to be released.
     static bool WaitKeysReleased()
     {
         Stopwatch clock = Stopwatch.StartNew();
@@ -723,26 +723,26 @@ static class Typer
         int[] modifiers = { Native.VK_SHIFT, Native.VK_CONTROL, Native.VK_MENU, Native.VK_LWIN, Native.VK_RWIN };
         foreach (int key in modifiers)
             if (Native.GetAsyncKeyState(key) < 0) return true;
-        for (int key = '0'; key <= 'Z'; key++)   // i codici dei tasti di cifre e lettere coincidono con i caratteri
+        for (int key = '0'; key <= 'Z'; key++)   // the key codes of digits and letters match the characters
             if (Native.GetAsyncKeyState(key) < 0) return true;
         return false;
     }
 
-    // I tasti del blocco alfanumerico. Il tastierino numerico è escluso di proposito: il suo punto, ad esempio,
-    // con Bloc Num spento diventa Canc (ed è proprio il tasto che VkKeyScan propone per il carattere '.').
+    // The keys of the alphanumeric block. The numeric keypad is left out on purpose: its decimal point, for
+    // example, becomes Delete with Num Lock off (and it is the very key VkKeyScan proposes for the '.' character).
     static int[] BuildTypingKeys()
     {
         List<int> keys = new List<int>();
-        for (int scan = 0x02; scan <= 0x0D; scan++) keys.Add(scan);   // fila dei numeri
-        for (int scan = 0x10; scan <= 0x1B; scan++) keys.Add(scan);   // fila Q
-        for (int scan = 0x1E; scan <= 0x29; scan++) keys.Add(scan);   // fila A e tasto a sinistra dell'1
-        for (int scan = 0x2B; scan <= 0x35; scan++) keys.Add(scan);   // fila Z
-        keys.AddRange(new int[] { ScSpace, 0x56, 0x73, 0x7D });      // spazio, tasto < e tasti extra brasiliani/giapponesi
+        for (int scan = 0x02; scan <= 0x0D; scan++) keys.Add(scan);   // number row
+        for (int scan = 0x10; scan <= 0x1B; scan++) keys.Add(scan);   // Q row
+        for (int scan = 0x1E; scan <= 0x29; scan++) keys.Add(scan);   // A row and the key left of 1
+        for (int scan = 0x2B; scan <= 0x35; scan++) keys.Add(scan);   // Z row
+        keys.AddRange(new int[] { ScSpace, 0x56, 0x73, 0x7D });      // space, the < key and the extra Brazilian/Japanese keys
         return keys.ToArray();
     }
 
-    // Ricostruisce quale tasto produce ogni carattere sulla tastiera indicata: da solo, con Maiusc, con AltGr
-    // o con entrambi. I caratteri che non compaiono nel risultato non hanno un tasto.
+    // Works out which key produces each character on the given layout: alone, with Shift, with AltGr
+    // or with both. Characters missing from the result have no key.
     public static Dictionary<char, Stroke> MapLayout(IntPtr layout)
     {
         Dictionary<char, Stroke> keys = new Dictionary<char, Stroke>();
@@ -751,13 +751,13 @@ static class Typer
         char[] discarded = new char[8];
         byte[] nothingPressed = new byte[256];
 
-        // Dalla combinazione più semplice alla più complessa: se un carattere si ottiene in più modi vince la prima.
+        // From the simplest combination to the most complex: if a character has several, the first one wins.
         for (int modifiers = 0; modifiers < 4; modifiers++)
         {
             bool shift = (modifiers & 1) != 0, altGr = (modifiers & 2) != 0;
             byte[] keyState = new byte[256];
             if (shift) keyState[Native.VK_SHIFT] = Pressed;
-            if (altGr) keyState[Native.VK_CONTROL] = keyState[Native.VK_MENU] = Pressed;   // AltGr equivale a Ctrl+Alt
+            if (altGr) keyState[Native.VK_CONTROL] = keyState[Native.VK_MENU] = Pressed;   // AltGr is equivalent to Ctrl+Alt
 
             foreach (int scan in TypingKeys)
             {
@@ -768,8 +768,8 @@ static class Typer
                 char c = produced[0];
                 if (count < 0)
                 {
-                    // Tasto morto (ad esempio ^ sulla tastiera tedesca): produce il carattere solo se seguito da
-                    // spazio. Questa seconda chiamata lo azzera sui Windows che ignorano TOUNICODE_KEEP_STATE.
+                    // Dead key (for example ^ on the German keyboard): it produces the character only when followed
+                    // by a space. This second call clears it on Windows versions that ignore TOUNICODE_KEEP_STATE.
                     Native.ToUnicodeEx(Native.VK_SPACE, ScSpace, nothingPressed, discarded, discarded.Length,
                         Native.TOUNICODE_KEEP_STATE, layout);
                     if (!deadKeys.ContainsKey(c)) deadKeys.Add(c, new Stroke(scan, shift, altGr, true));
@@ -781,16 +781,16 @@ static class Typer
             }
         }
 
-        // Un tasto morto si usa solo per i caratteri che non hanno un tasto normale.
+        // A dead key is used only for characters that have no ordinary key.
         foreach (KeyValuePair<char, Stroke> dead in deadKeys)
             if (!keys.ContainsKey(dead.Key)) keys.Add(dead.Key, dead.Value);
         return keys;
     }
 
-    // La tastiera americana, per i server che la usano qualunque sia quella di questo PC.
+    // The US keyboard, for servers that use it whatever the layout of this PC.
     static Dictionary<char, Stroke> BuildUsKeys()
     {
-        // Per ogni fila: scancode del primo tasto, caratteri senza Maiusc, caratteri con Maiusc.
+        // For each row: scancode of the first key, characters without Shift, characters with Shift.
         Dictionary<char, Stroke> keys = new Dictionary<char, Stroke>();
         AddUsRow(keys, 0x02, "1234567890-=", "!@#$%^&*()_+");
         AddUsRow(keys, 0x10, "qwertyuiop[]", "QWERTYUIOP{}");
@@ -809,7 +809,7 @@ static class Typer
         }
     }
 
-    // Codice con cui comporre il carattere tramite Alt+tastierino (Windows-1252), se ne ha uno.
+    // Code used to compose the character through Alt+numpad (Windows-1252), if it has one.
     static int? AnsiCode(char c)
     {
         try
@@ -819,7 +819,7 @@ static class Typer
         }
         catch (EncoderFallbackException)
         {
-            // Il carattere non esiste in Windows-1252.
+            // The character does not exist in Windows-1252.
         }
         return null;
     }
@@ -833,8 +833,8 @@ static class Typer
         return sent && (!stroke.Dead || Chord(delay, ScSpace));
     }
 
-    // Preme i tasti nell'ordine dato e li rilascia in ordine inverso. Ciò che è stato premuto viene sempre
-    // rilasciato, anche se Windows rifiuta un invio: un modificatore rimasto "premuto" falserebbe tutto il resto.
+    // Presses the keys in the given order and releases them in reverse order. Whatever was pressed is always
+    // released, even if Windows rejects a send: a modifier left "pressed" would corrupt everything after it.
     static bool Chord(int delay, params int[] keys)
     {
         bool sent = true;
@@ -853,8 +853,8 @@ static class Typer
         return sent;
     }
 
-    // Tiene premuto Alt e batte il codice sul tastierino numerico. Lo zero iniziale dice a Windows di
-    // interpretarlo come Windows-1252, cioè come lo calcola AnsiCode.
+    // Holds Alt and types the code on the numeric keypad. The leading zero tells Windows to
+    // interpret it as Windows-1252, which is how AnsiCode computes it.
     static bool AltCode(int code, int delay)
     {
         if (!Send(ScAlt, false)) return false;
@@ -894,7 +894,7 @@ static class Typer
     }
 }
 
-// Funzioni e costanti di Windows, con i loro nomi ufficiali.
+// Windows functions and constants, with their official names.
 static class Native
 {
     public const int WM_HOTKEY = 0x0312, WM_CLIPBOARDUPDATE = 0x031D;
@@ -906,8 +906,8 @@ static class Native
     public const uint KEYEVENTF_EXTENDEDKEY = 0x0001, KEYEVENTF_KEYUP = 0x0002, KEYEVENTF_UNICODE = 0x0004,
         KEYEVENTF_SCANCODE = 0x0008;
     public const uint MAPVK_VSC_TO_VK = 1;
-    // Il flag di ToUnicodeEx che evita di alterare lo stato della tastiera (da Windows 10 1607 in poi);
-    // la documentazione lo descrive ma non gli dà un nome.
+    // The ToUnicodeEx flag that avoids altering the keyboard state (Windows 10 1607 and later);
+    // the documentation describes it but gives it no name.
     public const uint TOUNICODE_KEEP_STATE = 0x0004;
     public const int ASFW_ANY = -1;
     public static readonly IntPtr HWND_BROADCAST = (IntPtr)0xFFFF;

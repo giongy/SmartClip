@@ -1,6 +1,6 @@
 @echo off
-rem Compila ed esegue i controlli automatici. Durante la prova di digitazione compare per un paio
-rem di secondi una finestrella in cui il programma scrive da solo: non toccare tastiera e mouse.
+rem Builds and runs the automated checks. During the typing test a small window appears for a couple
+rem of seconds and the program types into it by itself: do not touch keyboard or mouse.
 setlocal
 set NAME=PasswordPaste
 set HERE=%~dp0

@@ -1,8 +1,9 @@
 # PasswordPaste
 
 Piccolo programma Windows che digita il contenuto degli appunti come pressioni di tasti reali, per inserire
-password dove l'incolla non funziona (schermate di blocco dei desktop remoti). L'utente è italiano: interfaccia,
-commenti e risposte in italiano.
+password dove l'incolla non funziona (schermate di blocco dei desktop remoti). L'utente è italiano: interfaccia e
+risposte in italiano. I commenti nel codice e nei file di configurazione sono in inglese (il progetto è condiviso
+su GitHub).
 
 ## File
 
@@ -10,6 +11,10 @@ commenti e risposte in italiano.
   `Typer` (mappa dei tasti e invio), `Native` (funzioni e costanti di Windows).
 - `build.cmd` — compila `PasswordPaste.exe`. `PasswordPaste.ico` è facoltativa.
 - `tests/Test.cs`, `tests/test.cmd` — controlli automatici (vedi sotto).
+- `LICENSE` — licenza MIT.
+- `README.md` — presentazione per GitHub, in inglese. Traduce le etichette delle opzioni: va aggiornato quando se
+  ne aggiunge o rinomina una. Mostra `docs/screenshot.png`, fatto con `tests.exe shot` (immagine `-idle`)
+  compilato aggiungendo `/resource:PasswordPaste.ico,PasswordPaste.ico`, altrimenti manca l'icona.
 
 - `.github/workflows/codeql.yml` — analisi CodeQL su GitHub con compilazione vera (`build-mode: manual`, lancia
   `build.cmd < NUL` su Windows). Richiede che la configurazione predefinita di Code scanning sia disattivata.

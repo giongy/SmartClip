@@ -114,3 +114,7 @@ purpose. Close PasswordPaste before building, including an instance hidden in th
 
 Bug reports with the client, both keyboard layouts and the character that failed are welcome in the
 [issues](https://github.com/giongy/passwordPaste/issues).
+
+## License
+
+[MIT](LICENSE)

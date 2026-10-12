@@ -1,14 +1,14 @@
 name: CodeQL
 
-# Analisi di sicurezza del codice. Il programma viene compilato davvero (build.cmd), cosi' CodeQL conosce
-# tutti i tipi usati: senza compilazione non trova Windows Forms e segnala "Low C# analysis quality".
+# Security analysis of the code. The program is really compiled (build.cmd), so CodeQL knows every type
+# used: without a build it cannot find Windows Forms and reports "Low C# analysis quality".
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
   schedule:
-    - cron: "0 6 * * 1"   # ogni lunedi' mattina
+    - cron: "0 6 * * 1"   # every Monday morning
 
 jobs:
   analyze:
@@ -25,7 +25,7 @@ jobs:
           languages: csharp
           build-mode: manual
 
-      # "< NUL" fa proseguire build.cmd oltre il "pause" finale.
+      # "< NUL" lets build.cmd continue past the final "pause".
       - name: Compila
         shell: cmd
         run: build.cmd < NUL

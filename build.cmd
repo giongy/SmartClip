@@ -1,12 +1,12 @@
 @echo off
-rem Compila con il compilatore C# incluso in Windows (.NET Framework 4), senza installare nulla.
+rem Builds with the C# compiler included in Windows (.NET Framework 4), without installing anything.
 setlocal
 set NAME=PasswordPaste
 set APP=%~dp0%NAME%
 set CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe
 if not exist "%CSC%" set CSC=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe
 
-rem L'icona e' facoltativa: senza il file .ico il programma usa quella predefinita.
+rem The icon is optional: without the .ico file the program uses the default one.
 set ICON=
 if exist "%APP%.ico" set ICON=/win32icon:"%APP%.ico" /resource:"%APP%.ico",%NAME%.ico
 
