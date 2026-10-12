@@ -1,7 +1,7 @@
 @echo off
 rem Builds with the C# compiler included in Windows (.NET Framework 4), without installing anything.
 setlocal
-set NAME=PasswordPaste
+set NAME=SmartClip
 set APP=%~dp0%NAME%
 set CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe
 if not exist "%CSC%" set CSC=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe

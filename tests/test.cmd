@@ -2,7 +2,7 @@
 rem Builds and runs the automated checks. During the typing test a small window appears for a couple
 rem of seconds and the program types into it by itself: do not touch keyboard or mouse.
 setlocal
-set NAME=PasswordPaste
+set NAME=SmartClip
 set HERE=%~dp0
 set APP=%~dp0..\%NAME%
 set CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe

@@ -16,15 +16,15 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 
 [assembly: AssemblyTitle(Program.AppName)]
-[assembly: AssemblyDescription("Digita il contenuto degli appunti dove l'incolla non funziona")]
+[assembly: AssemblyDescription("Gestore degli appunti che sa anche digitarli dove l'incolla non funziona")]
 [assembly: AssemblyProduct(Program.AppName)]
-[assembly: AssemblyVersion("1.2.0.0")]
+[assembly: AssemblyVersion("2.0.0.0")]
 
-// Types the clipboard content as real key presses (scancodes),
+// A small clipboard manager that can also type the clipboard content as real key presses (scancodes),
 // so it works even where paste is disabled (lock screens of remote desktops).
 static class Program
 {
-    public const string AppName = "PasswordPaste";
+    public const string AppName = "SmartClip";
     public static readonly uint ShowMessage = Native.RegisterWindowMessage(AppName + ".Show");
 
     [STAThread]
@@ -65,17 +65,21 @@ class MainForm : Form
     const int KeyDelayMs = 15, SlowKeyDelayMs = 60;    // pause after each key press or release
     const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
-    const int Edge = 12, ContentWidth = 440;           // margin and usable width of the window, in pixels at 96 dpi
-    const int ListExtra = 60;                          // height given to the list beyond what the options need
+    const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
+    const int ListExtra = 60;                          // height given to the lists beyond what the options need
+    const int SavedWidth = 230, TitleHeight = 20;      // the column of the saved texts, and the title above each column
     const int RowPadding = 10;                         // added to the text height to get a row of the list
     const int PictureRows = 3;                         // rows taken by a picture, to make room for its preview
     const int PreviewMargin = 4;                       // around the preview, inside its row
     const int RowHeight = 24;                          // distance between one option checkbox and the next
-    const int ViewWidth = 78, Gap = 6;                 // the button that switches between list and options, and its distance
-    const int ActionHeight = 26;                       // of the buttons under the list
+    const int Gap = 6;                                 // between neighbouring controls
+    const int ActionHeight = 26, ActionWidth = 84;     // the buttons in the bottom row
+    const int TypeWidth = 140;                         // the button that types the clipboard, in the same row
+    const int StatusHeight = 34;                       // two lines of text
     const Keys NewKey = Keys.N, SaveKey = Keys.S, DeleteKey = Keys.E;   // in the list, all with Ctrl
     const string ButtonText = "Digita gli appunti";
     public const string SettingsKey = @"Software\" + Program.AppName;
+    const string OldSettingsKey = @"Software\PasswordPaste";   // the name of the program up to version 1.2
 
     // Desktop, taskbar, Start menu and Alt+Tab switcher: never the intended target.
     static readonly string[] ShellClasses =
@@ -90,7 +94,8 @@ class MainForm : Form
     readonly Button viewButton = new Button();
     readonly Label status = new Label();
     readonly TextBox search = new TextBox();
-    readonly ListBox list = new ListBox();
+    readonly ListBox recentList = new ListBox(), savedList = new ListBox();   // what was copied, and what was saved
+    ListBox active;     // the one of the two that holds the selected entry
     readonly Button newButton = new Button(), saveButton = new Button(), deleteButton = new Button();
     readonly Control[] optionControls, listControls;   // the two views that take turns in the lower part of the window
     readonly TextBox delayBox = new TextBox();
@@ -137,25 +142,16 @@ class MainForm : Form
         }
 
         typeButton.Text = ButtonText;
-        typeButton.Font = new Font(Font, FontStyle.Bold);
-        typeButton.SetBounds(Edge, 12, ContentWidth - ViewWidth - Gap, 36);
         typeButton.Click += delegate { if (busy) cancel = true; else Run(Delay); };
-        viewButton.SetBounds(Edge + ContentWidth - ViewWidth, 12, ViewWidth, 36);
         viewButton.Click += delegate { ShowView(!optionsShown); };
         Look.Style(typeButton, true);
         foreach (Button button in new Button[] { viewButton, newButton, saveButton, deleteButton }) Look.Style(button, false);
-        Look.Field(list);
 
         status.UseMnemonic = false;
         status.ForeColor = Look.Muted;
-        status.SetBounds(Edge, 56, ContentWidth, 36);
 
-        Label line = new Label();
-        line.BackColor = Look.Border;
-        line.SetBounds(Edge, 99, ContentWidth, 1);
-
-        Label delayLabel = NewLabel("Attesa prima di digitare (secondi):", 114);
-        delayBox.SetBounds(Edge + ContentWidth - 56, 109, 56, 26);
+        Label delayLabel = NewLabel("Attesa prima di digitare (secondi):", Edge + 5);
+        delayBox.SetBounds(Edge + ContentWidth - 56, Edge, 56, 26);
         delayBox.TextAlign = HorizontalAlignment.Center;
         delayBox.MaxLength = MaxDelay.ToString().Length;
         Panel delayFrame = Look.Frame(delayBox);
@@ -164,7 +160,7 @@ class MainForm : Form
         delayBox.Leave += delegate { Delay = Delay; };   // what was written, brought back within the limits
 
         // The checkboxes are stacked: adding one takes a single line here, the window height adapts.
-        int top = 146;
+        int top = 49;
         PlaceOption(usBox, "Il server usa la tastiera inglese (USA)", ref top);
         PlaceOption(enterBox, "Premi Invio alla fine", ref top);
         PlaceOption(clearBox, "Svuota gli appunti dopo aver digitato", ref top);
@@ -178,31 +174,37 @@ class MainForm : Form
         historyBox.Checked = true;
         PlaceOption(trayBox, "Resta attivo nell'area di notifica (tray)", ref top);
         trayBox.Checked = true;
-        ClientSize = new Size(Edge + ContentWidth + Edge, top + 4 + ListExtra);
 
-        // The list takes the same area as the options, with its three buttons underneath.
-        search.SetBounds(Edge, 111, ContentWidth, 26);
-        Panel searchFrame = Look.Frame(search);
-        int actionWidth = (ContentWidth - 2 * Gap) / 3, actionTop = ClientSize.Height - Edge - ActionHeight;
+        // Under the options, or the lists that take their place: the status line, then one row of small buttons.
+        // On the left those that act on the selected entry, on the right typing and the switch between the views.
+        int areaBottom = top + 4 + ListExtra, statusTop = areaBottom + Gap, actionTop = statusTop + StatusHeight + Gap;
+        ClientSize = new Size(Edge + ContentWidth + Edge, actionTop + ActionHeight + Edge);
+        status.SetBounds(Edge, statusTop, ContentWidth, StatusHeight);
         newButton.Text = "Nuovo…";
-        newButton.SetBounds(Edge, actionTop, actionWidth, ActionHeight);
-        saveButton.SetBounds(Edge + actionWidth + Gap, actionTop, actionWidth, ActionHeight);
+        newButton.SetBounds(Edge, actionTop, ActionWidth, ActionHeight);
+        saveButton.SetBounds(newButton.Right + Gap, actionTop, ActionWidth, ActionHeight);
         deleteButton.Text = "Elimina";
-        deleteButton.SetBounds(Edge + ContentWidth - actionWidth, actionTop, actionWidth, ActionHeight);
-        list.IntegralHeight = false;
-        list.BorderStyle = BorderStyle.None;
-        list.DrawMode = DrawMode.OwnerDrawVariable;
-        list.ItemHeight = Font.Height + RowPadding;
-        list.MeasureItem += delegate(object sender, MeasureItemEventArgs e)
-        {
-            e.ItemHeight = list.ItemHeight * (((Entry)list.Items[e.Index]).Png == null ? 1 : PictureRows);
-        };
-        list.DrawItem += DrawEntry;
-        list.SetBounds(Edge, searchFrame.Bottom + Gap, ContentWidth, actionTop - Gap - searchFrame.Bottom - Gap);
+        deleteButton.SetBounds(saveButton.Right + Gap, actionTop, ActionWidth, ActionHeight);
+        viewButton.SetBounds(Edge + ContentWidth - ActionWidth, actionTop, ActionWidth, ActionHeight);
+        typeButton.SetBounds(viewButton.Left - Gap - TypeWidth, actionTop, TypeWidth, ActionHeight);
+
+        // The lists take the same area as the options, with the search box on top.
+        search.SetBounds(Edge, Edge, ContentWidth, 26);
+        Panel searchFrame = Look.Frame(search);
+
+        // Two columns: on the left what was copied, which comes and goes, on the right what was saved.
+        int listTop = searchFrame.Bottom + Gap + TitleHeight, listHeight = areaBottom - listTop;
+        int savedLeft = Edge + ContentWidth - SavedWidth;
+        Label recentTitle = NewLabel("Copiati di recente", searchFrame.Bottom + Gap);
+        Label savedTitle = NewLabel("Salvati", searchFrame.Bottom + Gap);
+        savedTitle.Left = savedLeft;
+        recentTitle.ForeColor = savedTitle.ForeColor = Look.Muted;
+        recentList.SetBounds(Edge, listTop, savedLeft - Edge - Edge, listHeight);
+        savedList.SetBounds(savedLeft, listTop, SavedWidth, listHeight);
 
         // The same three actions from the buttons, from the right-click menu and from the keyboard.
         EventHandler create = delegate { Edit(null); };
-        EventHandler change = delegate { Edit(list.SelectedItem as Entry); };
+        EventHandler change = delegate { Edit(Selected); };
         EventHandler delete = delegate { DeleteSelected(); };
         newButton.Click += create;
         saveButton.Click += change;
@@ -215,24 +217,47 @@ class MainForm : Form
         {
             changeItem.Text = saveButton.Text;
             changeItem.Enabled = saveButton.Enabled;
-            e.Cancel = list.SelectedItem == null;
+            e.Cancel = Selected == null;
         };
-        list.ContextMenuStrip = listMenu;
         Look.Style(listMenu);
 
+        foreach (ListBox each in new ListBox[] { recentList, savedList })
+        {
+            ListBox list = each;   // a variable of its own for the delegates below
+            Look.Field(list);
+            list.IntegralHeight = false;
+            list.BorderStyle = BorderStyle.None;
+            list.DrawMode = DrawMode.OwnerDrawVariable;
+            list.ItemHeight = Font.Height + RowPadding;
+            list.ContextMenuStrip = listMenu;
+            list.MeasureItem += delegate(object sender, MeasureItemEventArgs e)
+            {
+                e.ItemHeight = list.ItemHeight * (((Entry)list.Items[e.Index]).Png == null ? 1 : PictureRows);
+            };
+            list.DrawItem += DrawEntry;
+            // One entry is selected in the whole window: selecting in a column clears the other.
+            list.SelectedIndexChanged += delegate
+            {
+                if (list.SelectedIndex >= 0)
+                {
+                    active = list;
+                    Other(list).ClearSelected();
+                }
+                ShowActions();
+            };
+            // The left button chooses, the right one only selects, so that its menu acts on the entry under the pointer.
+            list.MouseDown += delegate(object sender, MouseEventArgs e)
+            {
+                int index = list.IndexFromPoint(e.Location);
+                if (e.Button == MouseButtons.Right && index >= 0) list.SelectedIndex = index;
+            };
+            list.MouseClick += delegate(object sender, MouseEventArgs e)
+            {
+                if (e.Button == MouseButtons.Left && list.IndexFromPoint(e.Location) >= 0) Accept();
+            };
+        }
         // A new search starts again from its best result.
-        search.TextChanged += delegate { list.ClearSelected(); Filter(); };
-        list.SelectedIndexChanged += delegate { ShowActions(); };
-        // The left button chooses, the right one only selects, so that its menu acts on the entry under the pointer.
-        list.MouseDown += delegate(object sender, MouseEventArgs e)
-        {
-            int index = list.IndexFromPoint(e.Location);
-            if (e.Button == MouseButtons.Right && index >= 0) list.SelectedIndex = index;
-        };
-        list.MouseClick += delegate(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left && list.IndexFromPoint(e.Location) >= 0) Accept();
-        };
+        search.TextChanged += delegate { active = null; Filter(); };
 
         tips.AutoPopDelay = 30000;
         Tip("Per quanti secondi la finestra di destinazione deve restare in primo piano\n"
@@ -269,12 +294,13 @@ class MainForm : Form
           + "come icona vicino all'orologio, e la scorciatoia continua a funzionare.\n"
           + "Clic sull'icona per riaprire la finestra, tasto destro e poi Esci per chiudere.\n"
           + "Disattiva: finestra normale, che chiudendola termina il programma.", trayBox);
-        Tip("Le voci con ★ sono i testi che hai salvato, le altre le ultime cose copiate.\n"
-          + "Scrivi per cercare: parole in qualsiasi ordine, senza badare a maiuscole e accenti.\n"
+        Tip("A sinistra le ultime cose copiate, a destra i testi che hai salvato.\n"
+          + "Scrivi per cercare in tutte e due: parole in qualsiasi ordine, senza badare a\n"
+          + "maiuscole e accenti. Le frecce scorrono la colonna, Tab passa all'altra.\n"
           + "Invio o un clic rimettono la voce negli appunti: poi la incolli con Ctrl+V o la\n"
           + "digiti con " + HotkeyName + ". Il tasto destro apre il menu della voce.\n"
           + "I testi salvati restano nel registro di Windows, cifrati per il tuo utente, e\n"
-          + "nell'elenco se ne vede solo il nome.", search, list);
+          + "se ne vede solo il nome.", search, recentList, savedList);
         Tip("Scrive un testo nuovo da tenere, con il suo nome (Ctrl+" + NewKey + ").", newButton);
         Tip("Su una voce copiata: la salva con un nome, e puoi ritoccarne il contenuto.\n"
           + "Su una voce salvata: ne cambia il nome o il contenuto (Ctrl+" + SaveKey + ").\n"
@@ -283,8 +309,9 @@ class MainForm : Form
 
         optionControls = new Control[] { delayLabel, delayFrame, usBox,
             enterBox, clearBox, slowBox, altCodeBox, hotkeyBox, pickBox, historyBox, trayBox };
-        listControls = new Control[] { searchFrame, list, newButton, saveButton, deleteButton };
-        Controls.AddRange(new Control[] { typeButton, viewButton, status, line });
+        listControls = new Control[] { searchFrame, recentTitle, savedTitle, recentList, savedList,
+            newButton, saveButton, deleteButton };
+        Controls.AddRange(new Control[] { typeButton, viewButton, status });
         Controls.AddRange(listControls);
         Controls.AddRange(optionControls);
         AcceptButton = typeButton;
@@ -352,43 +379,63 @@ class MainForm : Form
 
     void Filter()
     {
-        // The list is refilled at every clipboard change, also the one caused by choosing an entry:
+        // The lists are refilled at every clipboard change, also the one caused by choosing an entry:
         // the selection must stay on the same entry, not jump back to the first.
-        Entry selected = list.SelectedItem as Entry;
-        list.BeginUpdate();
-        list.Items.Clear();
+        Entry selected = Selected;
+        recentList.BeginUpdate();
+        savedList.BeginUpdate();
+        recentList.Items.Clear();
+        savedList.Items.Clear();
         foreach (Entry entry in entries)
         {
             if (!Texts.Matches(entry, search.Text)) continue;
+            ListBox list = entry.Name == null ? recentList : savedList;
             int index = list.Items.Add(entry);
             if (selected != null && entry.Name == selected.Name && entry.Text == selected.Text) list.SelectedIndex = index;
         }
-        if (list.SelectedIndex < 0 && list.Items.Count > 0) list.SelectedIndex = 0;
-        list.EndUpdate();
+        recentList.EndUpdate();
+        savedList.EndUpdate();
+        if (Selected == null) Pick(recentList.Items.Count > 0 ? recentList : savedList);
         ShowActions();
+    }
+
+    Entry Selected
+    {
+        get { return active == null ? null : active.SelectedItem as Entry; }
+    }
+
+    ListBox Other(ListBox list)
+    {
+        return list == recentList ? savedList : recentList;
+    }
+
+    // Moves the selection to a column: to the entry it held last, or to its first.
+    void Pick(ListBox list)
+    {
+        if (list.Items.Count > 0) list.SelectedIndex = Math.Max(0, list.SelectedIndex);
     }
 
     // The buttons under the list follow the selected entry: a copied text can be saved, a saved one changed.
     void ShowActions()
     {
-        Entry entry = list.SelectedItem as Entry;
+        Entry entry = Selected;
         saveButton.Text = entry != null && entry.Name != null ? "Modifica…" : "Salva…";
         saveButton.Enabled = entry != null && entry.Png == null;
         deleteButton.Enabled = entry != null;
     }
 
-    // A row of the list: the mark of a saved text or of a picture in its own column, then the text.
+    // A row of a list: the preview of a picture, if it is one, then the text.
     void DrawEntry(object sender, DrawItemEventArgs e)
     {
         if (e.Index < 0) return;
+        ListBox list = (ListBox)sender;
         Entry entry = (Entry)list.Items[e.Index];
         bool selected = (e.State & DrawItemState.Selected) != 0;
         using (Brush back = new SolidBrush(selected ? Look.Selected : list.BackColor))
         {
             e.Graphics.FillRectangle(back, e.Bounds);
         }
-        Rectangle mark = new Rectangle(e.Bounds.Left, e.Bounds.Top, list.ItemHeight, e.Bounds.Height);
-        Rectangle label = Rectangle.FromLTRB(mark.Right, e.Bounds.Top, e.Bounds.Right, e.Bounds.Bottom);
+        Rectangle label = Rectangle.FromLTRB(e.Bounds.Left + 2 * PreviewMargin, e.Bounds.Top, e.Bounds.Right, e.Bounds.Bottom);
         if (entry.Preview != null)
         {
             // As tall as the row allows, never wider than half of it, keeping the proportions.
@@ -399,21 +446,20 @@ class MainForm : Form
             e.Graphics.DrawImage(entry.Preview, label.Left, e.Bounds.Top + (e.Bounds.Height - size.Height) / 2, size.Width, size.Height);
             label = Rectangle.FromLTRB(label.Left + size.Width + 2 * PreviewMargin, label.Top, label.Right, label.Bottom);
         }
-        const TextFormatFlags Middle = TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix;
-        TextRenderer.DrawText(e.Graphics, entry.Mark, e.Font, mark, entry.Png == null ? Look.Star : Look.Picture,
-            Middle | TextFormatFlags.HorizontalCenter);
-        TextRenderer.DrawText(e.Graphics, entry.Label, e.Font, label, list.ForeColor, Middle | TextFormatFlags.EndEllipsis);
+        TextRenderer.DrawText(e.Graphics, entry.Label, e.Font, label, list.ForeColor, TextFormatFlags.VerticalCenter
+            | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);
     }
 
     void Step(int by)
     {
-        int index = list.SelectedIndex + by;
-        if (index >= 0 && index < list.Items.Count) list.SelectedIndex = index;
+        if (active == null) return;
+        int index = active.SelectedIndex + by;
+        if (index >= 0 && index < active.Items.Count) active.SelectedIndex = index;
     }
 
     void Accept()
     {
-        Entry entry = list.SelectedItem as Entry;
+        Entry entry = Selected;
         if (entry != null && !busy) Use(entry);
     }
 
@@ -505,7 +551,7 @@ class MainForm : Form
 
     void DeleteSelected()
     {
-        Entry entry = list.SelectedItem as Entry;
+        Entry entry = Selected;
         if (entry == null) return;
         if (entry.Name == null) Texts.Recent.Remove(entry);
         else if (!Ask("Vuoi eliminare «" + entry.Name + "»?") || !Change(delegate { Texts.Delete(entry.Name); })) return;
@@ -536,7 +582,7 @@ class MainForm : Form
     // The keys of the list, while the search box or the list itself has the focus.
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
-        if (optionsShown || !(search.Focused || list.Focused)) return base.ProcessCmdKey(ref msg, keyData);
+        if (optionsShown || !(search.Focused || recentList.Focused || savedList.Focused)) return base.ProcessCmdKey(ref msg, keyData);
         switch (keyData)
         {
             case Keys.Escape:
@@ -544,6 +590,9 @@ class MainForm : Form
                 return true;
             case Keys.Enter:
                 enterDown = true;
+                return true;
+            case Keys.Tab:
+                if (active != null) Pick(Other(active));
                 return true;
             case Keys.Up:
                 Step(-1);
@@ -555,7 +604,7 @@ class MainForm : Form
                 Edit(null);
                 return true;
             case Keys.Control | SaveKey:
-                Edit(list.SelectedItem as Entry);
+                Edit(Selected);
                 return true;
             case Keys.Control | DeleteKey:
                 DeleteSelected();
@@ -604,7 +653,7 @@ class MainForm : Form
 
     void ShowIdle()
     {
-        status.Text = "Copia la password, premi il pulsante e poi clicca nel campo password della finestra remota."
+        status.Text = "Per digitare una password: copiala, premi «" + ButtonText + "» e clicca nel campo della finestra remota."
             + (hotkeyBox.Checked ? " Oppure premi " + HotkeyName + " direttamente nel campo." : "");
     }
 
@@ -935,10 +984,41 @@ class MainForm : Form
         return characters == 1 ? "1 carattere" : characters + " caratteri";
     }
 
+    // The program used to be called PasswordPaste: as long as its registry key exists, the settings and saved
+    // texts in it move here. What is already here stays: the new key may have been written to in the meantime.
+    static void AdoptOldSettings()
+    {
+        using (RegistryKey old = Registry.CurrentUser.OpenSubKey(OldSettingsKey))
+        {
+            if (old == null) return;
+            using (RegistryKey current = Registry.CurrentUser.CreateSubKey(SettingsKey))
+            {
+                CopyMissing(old, current);
+            }
+        }
+        // Reached only if the copy went through to the end.
+        Registry.CurrentUser.DeleteSubKeyTree(OldSettingsKey, false);
+    }
+
+    static void CopyMissing(RegistryKey from, RegistryKey to)
+    {
+        foreach (string name in from.GetValueNames())
+            if (to.GetValue(name) == null) to.SetValue(name, from.GetValue(name), from.GetValueKind(name));
+        foreach (string name in from.GetSubKeyNames())
+        {
+            using (RegistryKey source = from.OpenSubKey(name))
+            using (RegistryKey target = to.CreateSubKey(name))
+            {
+                CopyMissing(source, target);
+            }
+        }
+    }
+
     void LoadSettings()
     {
         try
         {
+            AdoptOldSettings();
             using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SettingsKey))
             {
                 if (key != null) TransferSettings(key, false);
@@ -1106,7 +1186,7 @@ static class Look
     public static readonly Color Back = Color.FromArgb(30, 30, 46), Well = Color.FromArgb(24, 24, 37),
         Soft = Color.FromArgb(49, 50, 68), Border = Color.FromArgb(69, 71, 90), Selected = Color.FromArgb(58, 62, 92),
         Ink = Color.FromArgb(205, 214, 244), Muted = Color.FromArgb(166, 173, 200),
-        Accent = Color.FromArgb(137, 180, 250), Star = Color.FromArgb(249, 226, 175), Picture = Color.FromArgb(166, 227, 161);
+        Accent = Color.FromArgb(137, 180, 250);
 
     // 'primary' is the one button that stands out; the others stay quiet.
     public static void Style(Button button, bool primary)

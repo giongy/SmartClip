@@ -1,23 +1,25 @@
-# PasswordPaste
+# SmartClip
 
-Piccolo programma Windows che digita il contenuto degli appunti come pressioni di tasti reali, per inserire
-password dove l'incolla non funziona (schermate di blocco dei desktop remoti). L'utente è italiano: interfaccia e
+Piccolo gestore degli appunti per Windows che sa anche digitarne il contenuto come pressioni di tasti reali, per
+inserire password dove l'incolla non funziona (schermate di blocco dei desktop remoti). Fino alla versione 1.2
+si chiamava PasswordPaste: la cartella locale ha ancora quel nome (il repository GitHub è `giongy/SmartClip`), e alla
+prima apertura `AdoptOldSettings` sposta impostazioni e testi salvati da `HKCU\Software\PasswordPaste`. L'utente è italiano: interfaccia e
 risposte in italiano. I commenti nel codice e nei file di configurazione sono in inglese (il progetto è condiviso
 su GitHub).
 
 ## File
 
-- `PasswordPaste.cs` — tutto il programma, in un solo file: `Program`, `MainForm` (finestra con elenco e
+- `SmartClip.cs` — tutto il programma, in un solo file: `Program`, `MainForm` (finestra con elenco e
   opzioni, tray, impostazioni), `Entry` e `Texts` (le voci dell'elenco), `Typer` (mappa dei tasti e invio),
   `Native` (funzioni e costanti di Windows).
-- `build.cmd` — compila `PasswordPaste.exe`. `PasswordPaste.ico` è facoltativa.
+- `build.cmd` — compila `SmartClip.exe`. `SmartClip.ico` è facoltativa.
 - `tests/Test.cs`, `tests/test.cmd` — controlli automatici (vedi sotto).
 - `LICENSE` — licenza MIT.
 - `README.md` — presentazione per GitHub, in inglese. Traduce le etichette delle opzioni: va aggiornato quando se
   ne aggiunge o rinomina una. Mostra `docs/screenshot.png`, `docs/screenshot-options.png` e `docs/screenshot-edit.png`, fatti con
   `tests.exe real` (immagini `-real-list`, `-real-options` e `-real-edit`, con voci finte e a programma
   chiuso: altrimenti le scorciatoie risultano occupate)
-  compilato aggiungendo `/resource:PasswordPaste.ico,PasswordPaste.ico`, altrimenti manca l'icona.
+  compilato aggiungendo `/resource:SmartClip.ico,SmartClip.ico`, altrimenti manca l'icona.
 
 - `.github/workflows/codeql.yml` — analisi CodeQL su GitHub con compilazione vera (`build-mode: manual`, lancia
   `build.cmd < NUL` su Windows). Richiede che la configurazione predefinita di Code scanning sia disattivata.
@@ -30,8 +32,8 @@ su GitHub).
   propongono vanno ignorati. Lo scopo è poter ricompilare sul PC del lavoro senza installare nulla.
 - Il sorgente è UTF-8 senza BOM con lettere accentate: serve `/codepage:65001` (già in `build.cmd`).
 - `build.cmd` e `test.cmd` finiscono con `pause`: da riga di comando lanciarli con `< NUL`.
-- La compilazione fallisce se `PasswordPaste.exe` è in esecuzione (può essere nascosto nel tray): controllare
-  prima con `Get-Process PasswordPaste`.
+- La compilazione fallisce se `SmartClip.exe` è in esecuzione (può essere nascosto nel tray): controllare
+  prima con `Get-Process SmartClip`.
 
 ## Come funziona
 
@@ -44,7 +46,7 @@ su GitHub).
 - Caratteri senza tasto (su tastiera italiana: `~`, `` ` ``, `È`): inviati come Unicode, oppure con Alt+codice
   sul tastierino se l'opzione è attiva.
 - «Tastiera del server: Inglese (USA)» usa una tabella fissa (`UsKeys`) invece della tastiera locale.
-- Impostazioni in `HKCU\Software\PasswordPaste`, lette e scritte da un unico elenco (`TransferSettings`).
+- Impostazioni in `HKCU\Software\SmartClip`, lette e scritte da un unico elenco (`TransferSettings`).
 - Tray: con l'opzione attiva, X e riduzione a icona nascondono la finestra; si esce da «Esci» nel menu
   dell'icona. Una sola istanza: un secondo avvio fa ricomparire la finestra esistente.
 
@@ -52,8 +54,10 @@ su GitHub).
   da `WM_CLIPBOARDUPDATE`. Guarda solo se il formato testo è disponibile, senza aprire gli appunti. La versione
   grigia si genera all'avvio dall'icona normale (`Gray`).
 
-- La finestra principale è l'elenco (voluto dall'utente): testi salvati con un nome e ultime 30 cose copiate,
-  filtrati mentre si scrive (`Texts.Matches`: parole in qualsiasi ordine, senza maiuscole né accenti). Il
+- La finestra principale è l'elenco (voluto dall'utente), su due colonne affiancate (anche questo voluto: i
+  salvati non devono stare in cima ai copiati): a sinistra `recentList` con le ultime 30 cose copiate, a
+  destra `savedList` con i testi salvati. La voce selezionata è una sola in tutta la finestra (`active`,
+  `Selected`); Tab passa da una colonna all'altra. Tutte e due si filtrano mentre si scrive (`Texts.Matches`: parole in qualsiasi ordine, senza maiuscole né accenti). Il
   pulsante «Opzioni»/«Elenco» alterna nella stessa area le due viste (`ShowView`, `listControls` e
   `optionControls`). Le idee vengono dal progetto vicino `..\pastepad` (WinUI 3, .NET 10), riscritte qui in
   piccolo: niente modelli, formato, temi.
@@ -70,7 +74,7 @@ su GitHub).
   salvano, per scelta dell'utente.
   La stessa copia annunciata più volte da Windows si riconosce confrontando i byte del PNG.
   Nell'elenco occupano tre righe, con una miniatura (`Entry.Preview`, creata una volta alla copia).
-- I testi salvati stanno in `HKCU\Software\PasswordPaste\Saved`, un valore binario per nome, cifrato con DPAPI
+- I testi salvati stanno in `HKCU\Software\SmartClip\Saved`, un valore binario per nome, cifrato con DPAPI
   per l'utente (`ProtectedData`, in `System.Security.dll` che `csc` riferisce già da solo). L'elenco ne mostra
   solo il nome.
 - I testi salvati si scrivono in `EditForm` (nome e contenuto), aperta da `Edit`: testo nuovo, voce copiata
@@ -87,6 +91,10 @@ su GitHub).
   Barra del titolo e barre di scorrimento scure non compaiono nelle immagini di `tests.exe shot`: per
   vederle c'è `tests.exe real <prefisso>`, che mostra le finestre un attimo e fotografa lo schermo.
   La descrizione sotto il pulsante deve stare in due righe: è il motivo della larghezza (`ContentWidth`).
+
+- Disposizione (voluta dall'utente: «Digita gli appunti» in cima era troppo ingombrante): in alto la ricerca,
+  poi le colonne (o le opzioni), sotto la riga di stato e un'unica fila di pulsanti piccoli: a sinistra quelli
+  della voce selezionata, a destra «Digita gli appunti» e «Opzioni»/«Elenco».
 
 ## Regole di stile volute dall'utente
 

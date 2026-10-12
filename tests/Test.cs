@@ -241,11 +241,16 @@ static class TestProgram
             Save(form, path + "-idle.png");
 
             // Refilling the list (it happens at every clipboard change) must not move the selection.
-            ListBox list = (ListBox)typeof(MainForm).GetField("list", hidden).GetValue(form);
-            list.SelectedIndex = 5;
+            ListBox recent = (ListBox)typeof(MainForm).GetField("recentList", hidden).GetValue(form);
+            ListBox saved = (ListBox)typeof(MainForm).GetField("savedList", hidden).GetValue(form);
+            Console.WriteLine("[{0}] copied and saved entries go to their own column: {1} and {2}",
+                recent.Items.Count == 5 && saved.Items.Count == 3 ? "PASS" : "FAIL", recent.Items.Count, saved.Items.Count);
+            saved.SelectedIndex = 2;
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
-            Console.WriteLine("[{0}] the selection survives a refill: index {1}", list.SelectedIndex == 5 ? "PASS" : "FAIL", list.SelectedIndex);
-            list.SelectedIndex = 0;
+            Console.WriteLine("[{0}] the selection survives a refill: saved {1}, copied {2}",
+                saved.SelectedIndex == 2 && recent.SelectedIndex < 0 ? "PASS" : "FAIL", saved.SelectedIndex, recent.SelectedIndex);
+            recent.SelectedIndex = 0;
+            Console.WriteLine("[{0}] selecting in a column clears the other", saved.SelectedIndex < 0 ? "PASS" : "FAIL");
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
             Application.DoEvents();
             Save(form, path + "-options.png");
@@ -326,7 +331,7 @@ static class TestProgram
         using (Bitmap picture = SamplePicture()) entries.Add(new Entry(picture));
         entries.Add(new Entry(null, "Una frase copiata più lunga della finestra, che finisce tagliata sul bordo destro con i puntini"));
         entries.Add(new Entry(null, "prima riga\r\nseconda riga"));
-        entries.Add(new Entry(null, "https://github.com/giongy/passwordPaste"));
+        entries.Add(new Entry(null, "https://github.com/giongy/SmartClip"));
         typeof(MainForm).GetField("entries", hidden).SetValue(form, entries);
         typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
     }
@@ -357,7 +362,7 @@ static class TestProgram
     static int TypeTest()
     {
         Form form = new Form();
-        form.Text = "PasswordPaste - test automatico (non toccare)";
+        form.Text = Program.AppName + " - test automatico (non toccare)";
         form.TopMost = true;
         form.StartPosition = FormStartPosition.CenterScreen;
         form.ClientSize = new Size(560, 140);

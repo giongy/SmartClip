@@ -1,18 +1,20 @@
-# PasswordPaste
+# SmartClip
 
-[![CodeQL](https://github.com/giongy/passwordPaste/actions/workflows/codeql.yml/badge.svg)](https://github.com/giongy/passwordPaste/actions/workflows/codeql.yml)
+[![CodeQL](https://github.com/giongy/SmartClip/actions/workflows/codeql.yml/badge.svg)](https://github.com/giongy/SmartClip/actions/workflows/codeql.yml)
 
-**Type the clipboard as real keystrokes, for the places where paste does not work.**
+**A tiny clipboard manager that can also type the clipboard as real keystrokes, for the places where paste does
+not work.**
 
-PasswordPaste is a tiny Windows utility for the moment you have a long password in your password manager and a
-remote login screen that ignores Ctrl+V: remote desktop lock screens, VMware consoles, iLO / iDRAC and other KVM
-viewers. Instead of pasting, it presses the keys one by one, as if you were typing.
+SmartClip keeps the last things you copied, pictures included, and the texts you choose to save. One click makes
+any of them the current clipboard content again.
 
-![The PasswordPaste window](docs/screenshot.png)
+![The SmartClip window](docs/screenshot.png)
 
-The window doubles as a small clipboard manager: it lists the last things you copied, pictures included, and the
-texts you saved. One click makes any of them the current clipboard content again, to paste with Ctrl+V or to type
-with the hotkey.
+It also covers the moment you have a long password in your password manager and a remote login screen that ignores
+Ctrl+V: remote desktop lock screens, VMware consoles, iLO / iDRAC and other KVM viewers. Instead of pasting, it
+presses the keys one by one, as if you were typing.
+
+Formerly called PasswordPaste: the first start under the new name takes over its settings and saved texts.
 
 - One portable `.exe`, about 160 KB. No installer, no dependencies, no network access.
 - One C# source file that compiles with the compiler already shipped with Windows.
@@ -24,7 +26,7 @@ with the hotkey.
 
 ## Download
 
-Get [`PasswordPaste.exe`](https://github.com/giongy/passwordPaste/raw/main/PasswordPaste.exe) and run it. It needs
+Get [`SmartClip.exe`](https://github.com/giongy/SmartClip/raw/main/SmartClip.exe) and run it. It needs
 Windows with .NET Framework 4, which is part of Windows 10 and 11.
 
 The file is not code-signed, so Windows SmartScreen may warn you on first launch. If you prefer not to trust a
@@ -49,20 +51,21 @@ If you do not pick a window within 15 seconds, nothing is typed.
 Put the cursor in the password field and press **Ctrl+Alt+V**: the clipboard is typed immediately into the active
 window. A remote desktop client running full screen usually captures every shortcut; use the button in that case.
 
-### The list
+### The lists
 
-The main window shows the texts you saved under a name, marked with a star, followed by the last 30 things you
-copied while the program was running: texts and up to 5 pictures (screenshots, for example), each with a small
-preview.
+The main window has two columns. On the left, **Copiati di recente**: the last 30 things you copied while the
+program was running, texts and up to 5 pictures (screenshots, for example), each with a small preview. On the
+right, **Salvati**: the texts you saved under a name, which stay until you delete them.
 
 | Key | Action |
 | --- | --- |
-| Typing | Filters the list. Words can come in any order; case and accents are ignored. |
-| Up / Down | Moves through the results |
+| Typing | Filters both columns. Words can come in any order; case and accents are ignored. |
+| Up / Down | Moves through the column |
+| Tab | Switches to the other column |
 | Enter, or a click | Puts the selected entry back on the clipboard |
 | Right click | Opens the menu of the entry |
 
-Three buttons under the list manage the saved texts; each opens a small window with a name and a content box.
+Three buttons under the lists manage the saved texts; each opens a small window with a name and a content box.
 
 ![Saving a text](docs/screenshot-edit.png)
 
@@ -100,7 +103,7 @@ The **Opzioni** button switches the lower part of the window from the list to th
 
 The tray and window icon is coloured when the clipboard holds text and grey when it does not.
 
-Settings are stored in `HKEY_CURRENT_USER\Software\PasswordPaste`. Delete that key to reset them.
+Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key to reset them.
 
 ## Safety
 
@@ -115,7 +118,7 @@ Settings are stored in `HKEY_CURRENT_USER\Software\PasswordPaste`. Delete that k
 - What password managers and private browser windows mark as private (KeePass, Bitwarden and others do) is never
   remembered. A password typed with **Svuota gli appunti dopo aver digitato** on is dropped from the list too.
 - Saved texts are stored in the `Saved` subkey of the registry key above, encrypted with Windows DPAPI for your
-  user account: they cannot be read by another user or copied to another PC. The list shows only their names.
+  user account: they cannot be read by another user or copied to another PC. Only their names are shown.
 - A saved text put back on the clipboard is marked as private, so that Windows clipboard history (Win+V) and other
   clipboard managers skip it.
 - An entry is chosen when you release Enter, so a held key cannot repeat into the window the focus returns to.
@@ -134,14 +137,14 @@ local layout.
 ## Build
 
 ```
-git clone https://github.com/giongy/passwordPaste.git
-cd passwordPaste
+git clone https://github.com/giongy/SmartClip.git
+cd SmartClip
 build.cmd
 ```
 
 `build.cmd` uses the `csc.exe` that ships with Windows in `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319`. No Visual
 Studio, SDK or package restore is involved. That compiler stops at C# 5, so the source avoids newer syntax on
-purpose. Close PasswordPaste before building, including an instance hidden in the tray, or the output file is locked.
+purpose. Close SmartClip before building, including an instance hidden in the tray, or the output file is locked.
 
 ## Tests
 
@@ -167,13 +170,13 @@ page come from the second one.
 - Whether a Unicode keystroke reaches the remote machine depends on the remote desktop client. If a symbol goes
   missing, try the Alt+code option or the US layout option.
 - If the remote desktop client runs as administrator, Windows blocks keystrokes coming from a normal process: start
-  PasswordPaste as administrator too.
+  SmartClip as administrator too.
 - Display scaling above 100% has not been tested.
 - Typing goes key by key, so a long text takes a while (about 30 characters per second) and line breaks are
   typed as Enter. For anything that is not a password, Ctrl+V is the better choice.
 
 Bug reports with the client, both keyboard layouts and the character that failed are welcome in the
-[issues](https://github.com/giongy/passwordPaste/issues).
+[issues](https://github.com/giongy/SmartClip/issues).
 
 ## License
 
