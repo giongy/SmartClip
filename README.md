@@ -1,0 +1,116 @@
+# PasswordPaste
+
+[![CodeQL](https://github.com/giongy/passwordPaste/actions/workflows/codeql.yml/badge.svg)](https://github.com/giongy/passwordPaste/actions/workflows/codeql.yml)
+
+**Type the clipboard as real keystrokes, for the places where paste does not work.**
+
+PasswordPaste is a tiny Windows utility for the moment you have a long password in your password manager and a
+remote login screen that ignores Ctrl+V: remote desktop lock screens, VMware consoles, iLO / iDRAC and other KVM
+viewers. Instead of pasting, it presses the keys one by one, as if you were typing.
+
+![The PasswordPaste window](docs/screenshot.png)
+
+- One portable `.exe`, about 130 KB. No installer, no dependencies, no network access.
+- One C# source file that compiles with the compiler already shipped with Windows.
+- Stops typing the moment the target window loses focus, so a password never lands in the wrong place.
+
+> **Note:** the user interface is in Italian. The table below translates every option.
+
+## Download
+
+Get [`PasswordPaste.exe`](https://github.com/giongy/passwordPaste/raw/main/PasswordPaste.exe) and run it. It needs
+Windows with .NET Framework 4, which is part of Windows 10 and 11.
+
+The file is not code-signed, so Windows SmartScreen may warn you on first launch. If you prefer not to trust a
+downloaded binary, [build it yourself](#build): it takes a few seconds and needs nothing installed.
+
+## Usage
+
+**With the button**
+
+1. Copy the password.
+2. Click **Digita gli appunti** ("Type the clipboard").
+3. Click into the password field of the remote window.
+4. Once that window has stayed in the foreground for the configured delay (1 second by default), the text is typed.
+   The button becomes **Annulla** ("Cancel") while this is in progress.
+
+If you do not pick a window within 15 seconds, nothing is typed.
+
+**With the hotkey**
+
+Put the cursor in the password field and press **Ctrl+Alt+V**: the clipboard is typed immediately into the active
+window. A remote desktop client running full screen usually captures every shortcut; use the button in that case.
+
+## Options
+
+| Option (Italian label) | What it does |
+| --- | --- |
+| Attesa prima di digitare (secondi) | How long the target window must stay in the foreground before typing starts, 1 to 30 seconds. This is your time to click the right field, or to cancel. |
+| Tastiera del server | Keyboard layout of the remote machine. **Uguale a questo PC** ("same as this PC") suits ordinary remote desktops. Choose **Inglese (USA)** when symbols arrive wrong because the remote side assumes a US keyboard, as VMware consoles, iLO, iDRAC and some login screens do. |
+| Premi Invio alla fine | Press Enter after the last character. |
+| Svuota gli appunti dopo aver digitato | Clear the clipboard after a successful run. Windows clipboard history (Win+V) is not touched. |
+| Digitazione lenta | Slow typing, for remote sessions that drop or reorder characters. |
+| Alt+codice per i simboli che la tastiera non ha | Type symbols that your keyboard has no key for with Alt+numpad codes instead of Unicode input. Works only when the remote machine runs Windows. |
+| Scorciatoia globale Ctrl+Alt+V | Enable the global hotkey. Turn it off if it clashes with another program. |
+| Resta attivo nell'area di notifica (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Esci** to quit. |
+
+The tray and window icon is coloured when the clipboard holds text and grey when it does not.
+
+Settings are stored in `HKEY_CURRENT_USER\Software\PasswordPaste`. Delete that key to reset them.
+
+## Safety
+
+- Typing stops as soon as the target window is no longer in the foreground.
+- The desktop, the taskbar, the Start menu and the Alt+Tab switcher are never accepted as a target.
+- A text longer than 100 characters or spanning several lines asks for confirmation first: it is probably not a
+  password.
+- Nothing is typed while Caps Lock is on.
+- The program waits for you to release the hotkey keys before typing, so they cannot alter the output.
+- The clipboard is read only when you start a run. Its content is never written to disk or sent anywhere; the
+  registry key above holds the options and the window position, nothing else.
+
+## How it works
+
+Keys are sent as hardware scancodes through `SendInput`, which is what remote desktop clients forward to the other
+side. The character-to-key map is built from the active keyboard layout with `ToUnicodeEx`, covering plain, Shift,
+AltGr and Shift+AltGr combinations on the main alphanumeric block only. The numeric keypad is left out on purpose:
+its decimal key turns into Delete when Num Lock is off.
+
+A character with no key on your layout (`~` and `` ` `` on an Italian keyboard, for example) is sent as a Unicode
+keystroke, or as an Alt+numpad code when that option is on. The US layout option uses a fixed table instead of the
+local layout.
+
+## Build
+
+```
+git clone https://github.com/giongy/passwordPaste.git
+cd passwordPaste
+build.cmd
+```
+
+`build.cmd` uses the `csc.exe` that ships with Windows in `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319`. No Visual
+Studio, SDK or package restore is involved. That compiler stops at C# 5, so the source avoids newer syntax on
+purpose. Close PasswordPaste before building, including an instance hidden in the tray, or the output file is locked.
+
+## Tests
+
+`tests\test.cmd` compiles a test executable and runs two checks:
+
+- `tests.exe map` prints the key map of the active layout and compares the built-in US table against the installed
+  US layout.
+- `tests.exe type` opens a small window and really types into it: all ASCII characters, accented letters, AltGr
+  symbols, Unicode, Alt codes, Tab and Enter. It then checks that a wrong window and a cancel both stop everything.
+  It takes the keyboard focus for a couple of seconds, so keep your hands off while it runs.
+
+## Limitations
+
+- Developed and tested on an Italian keyboard layout. Other layouts are mapped by the same code but have not been
+  checked one by one; dead keys in particular are untested.
+- Whether a Unicode keystroke reaches the remote machine depends on the remote desktop client. If a symbol goes
+  missing, try the Alt+code option or the US layout option.
+- If the remote desktop client runs as administrator, Windows blocks keystrokes coming from a normal process: start
+  PasswordPaste as administrator too.
+- Display scaling above 100% has not been tested.
+
+Bug reports with the client, both keyboard layouts and the character that failed are welcome in the
+[issues](https://github.com/giongy/passwordPaste/issues).
