@@ -19,6 +19,11 @@ echo Controllo la mappa dei tasti...
 if errorlevel 1 goto failed
 
 echo.
+echo Controllo l'elenco dei testi...
+"%HERE%tests.exe" texts
+if errorlevel 1 goto failed
+
+echo.
 echo Controllo la digitazione...
 "%HERE%tests.exe" type
 if errorlevel 1 goto failed

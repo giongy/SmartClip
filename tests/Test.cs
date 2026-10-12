@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -11,6 +12,12 @@ using System.Windows.Forms;
 
 class ShotForm : MainForm
 {
+    protected override bool ShowWithoutActivation { get { return true; } }
+}
+
+class ShotEdit : EditForm
+{
+    public ShotEdit(Entry source) : base(source) { }
     protected override bool ShowWithoutActivation { get { return true; } }
 }
 
@@ -29,8 +36,118 @@ static class TestProgram
         if (mode == "map") return MapTest();
         if (mode == "shot") return Shot(args[1]);
         if (mode == "type") return TypeTest();
-        Console.WriteLine("usage: map | shot <png> | type");
+        if (mode == "texts") return TextsTest();
+        if (mode == "real") return Real(args[1]);
+        Console.WriteLine("usage: map | texts | shot <png> | type");
         return 64;
+    }
+
+    static int failed;
+
+    static void Check(bool ok, string what)
+    {
+        Console.WriteLine("[{0}] {1}", ok ? "PASS" : "FAIL", what);
+        if (!ok) failed++;
+    }
+
+    static DataObject Copied(string format, int value)
+    {
+        DataObject data = new DataObject();
+        data.SetData(DataFormats.UnicodeText, "secret");
+        if (format != null) data.SetData(format, new System.IO.MemoryStream(BitConverter.GetBytes(value)));
+        return data;
+    }
+
+    // The logic behind the list, without opening it and without touching the clipboard.
+    static int TextsTest()
+    {
+        Check(!Texts.IsPrivate(Copied(null, 0)), "plain text is not private");
+        Check(Texts.IsPrivate(Copied("ExcludeClipboardContentFromMonitorProcessing", 1)), "a marker format makes it private");
+        Check(Texts.IsPrivate(Copied("Clipboard Viewer Ignore", 1)), "the older marker format too");
+        Check(Texts.IsPrivate(Copied("CanIncludeInClipboardHistory", 0)), "history allowed = 0 makes it private");
+        Check(!Texts.IsPrivate(Copied("CanIncludeInClipboardHistory", 1)), "history allowed = 1 does not");
+        Check(Texts.IsPrivate(Copied("CanUploadToCloudClipboard", 0)), "cloud upload = 0 makes it private");
+
+        Texts.Recent.Clear();
+        Texts.Add("one");
+        Texts.Add("two");
+        Texts.Add("one");
+        Check(Texts.Recent.Count == 2 && Texts.Recent[0].Text == "one" && Texts.Recent[1].Text == "two", "copied again moves to the top");
+        Texts.Add((string)null);
+        Texts.Add("  \r\n ");
+        Texts.Add(new string('x', 100000));
+        Check(Texts.Recent.Count == 2, "nothing, blanks and huge texts are not remembered");
+        for (int i = 0; i < Texts.MaxRecent + 10; i++) Texts.Add("n" + i);
+        Check(Texts.Recent.Count == Texts.MaxRecent && Texts.Recent[0].Text == "n" + (Texts.MaxRecent + 9)
+            && !Texts.Recent.Exists(delegate(Entry e) { return e.Text == "one"; }), "the oldest ones drop out");
+        Texts.Forget("n" + (Texts.MaxRecent + 9));
+        Check(Texts.Recent.Count == Texts.MaxRecent - 1 && Texts.Recent[0].Text == "n" + (Texts.MaxRecent + 8),
+            "a typed and cleared password is forgotten");
+
+        Texts.Recent.Clear();
+        Texts.Add("text");
+        using (Bitmap picture = new Bitmap(40, 30))
+        {
+            picture.SetPixel(1, 1, Color.Red);
+            Texts.Add(picture);
+            Texts.Add(picture);
+            Check(Texts.Recent.Count == 2 && Texts.Recent[0].Png != null, "the same picture announced twice is kept once");
+            Check(Texts.Recent[0].Preview != null && Texts.Recent[0].Preview.Width == 40 && Texts.Recent[1].Preview == null,
+            "a picture has a preview, a text has none");
+        Check(Texts.Recent[0].ToString().IndexOf("40×30") > 0 && Texts.Matches(Texts.Recent[0], "immagine 40"),
+                "a picture is described by its size and found by it");
+            using (Image back = Image.FromStream(new System.IO.MemoryStream(Texts.Recent[0].Png)))
+            using (Bitmap pixels = new Bitmap(back))
+                Check(back.Width == 40 && back.Height == 30 && pixels.GetPixel(1, 1).ToArgb() == Color.Red.ToArgb(),
+                    "and comes back identical from memory");
+            for (int i = 0; i < Texts.MaxPictures + 3; i++)
+            {
+                picture.SetPixel(2, 2, Color.FromArgb(i, i, i));
+                Texts.Add(picture);
+            }
+            Check(Texts.Recent.FindAll(delegate(Entry e) { return e.Png != null; }).Count == Texts.MaxPictures
+                && Texts.Recent.Count == Texts.MaxPictures + 1, "only the last few pictures stay, texts are untouched");
+        }
+        Texts.Recent.Clear();
+        Texts.Add("copied");
+
+        Entry city = new Entry("Città di Torino", "riga uno\nSeconda RIGA");
+        Check(Texts.Matches(city, ""), "an empty search matches everything");
+        Check(Texts.Matches(city, "citta"), "accents do not count");
+        Check(Texts.Matches(city, "TORINO città"), "words in any order, any case");
+        Check(Texts.Matches(city, "riga seconda torino"), "name and text are both searched");
+        Check(!Texts.Matches(city, "torino milano"), "every word must be there");
+        Check(Texts.Matches(new Entry(null, "perché"), "perche"), "a copied text has no name and still matches");
+        Check(city.ToString().IndexOf("riga") < 0, "the list shows only the name of a saved text");
+        Check(new Entry(null, " a\r\nb\tc ").ToString() == "a  b c", "a copied text is shown on one line");
+
+        // Round trip through the registry, under a name nobody would use; removed afterwards.
+        string name = "~test " + Guid.NewGuid();
+        string text = "pässwörd €\nseconda riga ~`";
+        try
+        {
+            Texts.Save(name, text);
+            Entry saved = Texts.Load().Find(delegate(Entry e) { return e.Name == name; });
+            Check(saved != null && saved.Text == text, "a saved text comes back identical");
+            using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(MainForm.SettingsKey + @"\Saved"))
+            {
+                byte[] raw = key.GetValue(name) as byte[];
+                Check(raw != null && Encoding.UTF8.GetString(raw).IndexOf("seconda") < 0
+                    && Encoding.Unicode.GetString(raw).IndexOf("seconda") < 0, "and is not readable in the registry");
+            }
+            Texts.Save(name, "other");
+            Check(Texts.Load().FindAll(delegate(Entry e) { return e.Name == name; }).Count == 1, "saving again replaces");
+        }
+        finally
+        {
+            Texts.Delete(name);
+        }
+        Check(!Texts.Load().Exists(delegate(Entry e) { return e.Name == name; }), "a deleted text is gone");
+        List<Entry> all = Texts.Load();
+        int firstCopied = all.FindIndex(delegate(Entry e) { return e.Name == null; });
+        Check(firstCopied >= 0 && !all.GetRange(firstCopied, all.Count - firstCopied).Exists(delegate(Entry e) { return e.Name != null; }),
+            "saved texts come before the copied ones");
+        return failed == 0 ? 0 : 1;
     }
 
     static string Show(char c)
@@ -117,9 +234,22 @@ static class TestProgram
             form.ShowInTaskbar = false;
             form.StartPosition = FormStartPosition.Manual;
             form.Location = new Point(-30000, -30000);
+            BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
+            FillSample(form);
             form.Show();
             Application.DoEvents();
             Save(form, path + "-idle.png");
+
+            // Refilling the list (it happens at every clipboard change) must not move the selection.
+            ListBox list = (ListBox)typeof(MainForm).GetField("list", hidden).GetValue(form);
+            list.SelectedIndex = 5;
+            typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
+            Console.WriteLine("[{0}] the selection survives a refill: index {1}", list.SelectedIndex == 5 ? "PASS" : "FAIL", list.SelectedIndex);
+            list.SelectedIndex = 0;
+            typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
+            Application.DoEvents();
+            Save(form, path + "-options.png");
+            typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { false });
 
             Label status = (Label)typeof(MainForm).GetField("status", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(form);
             status.Text = "Fatto: 24 caratteri digitati. Attenzione: 2 caratteri senza tasto sulla tastiera, inviati come Unicode: se l'accesso fallisce prova «Alt+codice».";
@@ -133,7 +263,86 @@ static class TestProgram
             Console.WriteLine("form {0}x{1}, client {2}x{3}, icon {4}", form.Width, form.Height,
                 form.ClientSize.Width, form.ClientSize.Height, form.Icon == null ? "none" : form.Icon.Size.ToString());
         }
+
+        using (ShotEdit edit = new ShotEdit(new Entry("Firma email", "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567")))
+        {
+            edit.StartPosition = FormStartPosition.Manual;
+            edit.Location = new Point(-30000, -30000);
+            edit.Show();
+            Application.DoEvents();
+            Save(edit, path + "-edit.png");
+        }
         return 0;
+    }
+
+    // Photographs the windows as the screen shows them: what Windows draws (title bar, themed scroll bars
+    // and boxes) is missing from the pictures of 'shot'. The windows appear for a moment, without taking the focus.
+    static int Real(string path)
+    {
+        using (ShotForm form = new ShotForm())
+        {
+            form.StartPosition = FormStartPosition.Manual;
+            form.Location = new Point(80, 80);
+            BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
+            FillSample(form);
+            form.Show();
+            Snap(form, path + "-real-list.png");
+            typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
+            Snap(form, path + "-real-options.png");
+            using (ShotEdit edit = new ShotEdit(new Entry("Firma email", "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567")))
+            {
+                edit.StartPosition = FormStartPosition.Manual;
+                edit.Location = new Point(80, 80);
+                edit.Show();
+                Snap(edit, path + "-real-edit.png");
+            }
+        }
+        return 0;
+    }
+
+    static void Snap(Form form, string path)
+    {
+        for (int i = 0; i < 40; i++)
+        {
+            Application.DoEvents();
+            Thread.Sleep(10);
+        }
+        using (Bitmap bmp = new Bitmap(form.Width, form.Height))
+        {
+            using (Graphics g = Graphics.FromImage(bmp)) g.CopyFromScreen(form.Location, Point.Empty, bmp.Size);
+            bmp.Save(path, ImageFormat.Png);
+        }
+    }
+
+    // Fills the list with made-up entries instead of the user's own, which must not end up in a picture.
+    static void FillSample(MainForm form)
+    {
+        BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
+        List<Entry> entries = new List<Entry>();
+        entries.Add(new Entry("Firma email", "Cordiali saluti"));
+        entries.Add(new Entry("Password del server di prova", "not shown"));
+        entries.Add(new Entry("Indirizzo ufficio", "not shown"));
+        entries.Add(new Entry(null, "ssh admin@srv-database-01"));
+        using (Bitmap picture = SamplePicture()) entries.Add(new Entry(picture));
+        entries.Add(new Entry(null, "Una frase copiata più lunga della finestra, che finisce tagliata sul bordo destro con i puntini"));
+        entries.Add(new Entry(null, "prima riga\r\nseconda riga"));
+        entries.Add(new Entry(null, "https://github.com/giongy/passwordPaste"));
+        typeof(MainForm).GetField("entries", hidden).SetValue(form, entries);
+        typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
+    }
+
+    // Something that looks like a screenshot: a window with a title bar on a coloured desktop.
+    static Bitmap SamplePicture()
+    {
+        Bitmap picture = new Bitmap(1920, 1080);
+        using (Graphics g = Graphics.FromImage(picture))
+        using (Brush desk = new System.Drawing.Drawing2D.LinearGradientBrush(new Rectangle(0, 0, 1920, 1080), Color.SteelBlue, Color.MediumPurple, 30f))
+        {
+            g.FillRectangle(desk, 0, 0, 1920, 1080);
+            g.FillRectangle(Brushes.WhiteSmoke, 300, 180, 1100, 700);
+            g.FillRectangle(Brushes.DimGray, 300, 180, 1100, 60);
+        }
+        return picture;
     }
 
     static void Save(Form form, string path)
