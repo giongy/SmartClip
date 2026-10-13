@@ -27,7 +27,7 @@ class MainForm : Form
     const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
     const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
-    const int ListExtra = 168;                     // height given to the lists beyond what the options need
+    const int ListExtra = 144;                    // height given to the lists beyond what the options need
     const int ColumnGap = 20, ColumnWidth = (ContentWidth - ColumnGap) / 2;   // the two columns of the options
     const int TitleRow = 30, SectionGap = 10;          // the title of a category of options, and the air above it
     const int RuleGap = 8;                             // between the line under such a title and the first option
@@ -83,6 +83,8 @@ class MainForm : Form
     readonly CheckBox pickBox = new Toggle();
     readonly CheckBox historyBox = new Toggle();
     readonly CheckBox trayBox = new Toggle();
+    readonly CheckBox startBox = new Toggle();   // not among the settings: it shows what the Run key of Windows says
+    bool startHidden;   // the first request to show the window is not obeyed
     readonly NotifyIcon tray = new NotifyIcon();
     readonly ToolTip tips = new ToolTip();
     readonly Icon readyIcon, emptyIcon, readyTrayIcon, emptyTrayIcon;
@@ -98,7 +100,12 @@ class MainForm : Form
     uint ownCopy;       // clipboard sequence number of what was put there from the list: not to be remembered again
     readonly List<CheckBox> refused = new List<CheckBox>();   // hotkey checkboxes unticked by Windows, not by the user
 
-    public MainForm()
+    public MainForm() : this(false)
+    {
+    }
+
+    // 'hidden': started by Windows at sign-in, so the window does not show until asked.
+    public MainForm(bool hidden)
     {
         SuspendLayout();
         AutoScaleDimensions = new SizeF(96F, 96F);
@@ -158,6 +165,7 @@ class MainForm : Form
         PlaceTitle("Programma", left, ref top);
         PlaceOption(trayBox, "Resta attivo nell'area di notifica (tray)", left, ref top);
         trayBox.Checked = true;
+        PlaceOption(startBox, "Avvia insieme a Windows", left, ref top);
         top = Math.Max(top, leftBottom);
 
         // Under the options, or the lists that take their place: the status line, then one row of small buttons.
@@ -329,6 +337,10 @@ class MainForm : Form
           + "come icona vicino all'orologio, e la scorciatoia continua a funzionare.\n"
           + "Clic sull'icona per riaprire la finestra, tasto destro e poi Esci per chiudere.\n"
           + "Disattiva: finestra normale, che chiudendola termina il programma.", trayBox);
+        Tip("Avvia " + Program.AppName + " quando accedi a Windows, già nascosto nell'area di notifica\n"
+          + "(ridotto a icona, se l'opzione qui sopra è spenta).\n"
+          + "Vale per questo eseguibile: se lo sposti, al primo avvio da lì la voce si aggiorna da sola.\n"
+          + "È la stessa voce di Gestione attività > App di avvio: spenta lì, risulta spenta anche qui.", startBox);
         Tip("A sinistra le ultime cose copiate, a destra i testi che hai salvato.\n"
           + "Scrivi per cercare in tutte e due: parole in qualsiasi ordine, senza badare a\n"
           + "maiuscole e accenti. Le frecce scorrono la colonna, Tab passa all'altra.\n"
@@ -381,6 +393,19 @@ class MainForm : Form
         hotkeyBox.Click += delegate { UpdateHotkeys(); };
         pickBox.Click += delegate { UpdateHotkeys(); };
         ShowIdle();
+        // Starting with Windows is not a setting of ours: the checkbox shows and changes what Windows has.
+        Change(delegate { startBox.Checked = Startup.Enabled; });
+        startBox.Click += delegate
+        {
+            bool wanted = startBox.Checked;
+            bool done = Change(delegate { Startup.Enabled = wanted; });
+            Change(delegate { startBox.Checked = Startup.Enabled; });
+            if (done) status.Text = wanted ? "All'accesso a Windows " + Program.AppName + " partirà da solo, senza mostrare la finestra."
+                : Program.AppName + " non parte più insieme a Windows.";
+        };
+        // Started at sign-in: hidden in the notification area, or minimised if that option is off.
+        if (hidden && trayBox.Checked) startHidden = true;
+        else if (hidden) WindowState = FormWindowState.Minimized;
         ResumeLayout(false);
         PerformLayout();
     }
@@ -850,6 +875,19 @@ class MainForm : Form
     {
         status.Text = "Per digitare una password: copiala, premi «" + ButtonText + "» e clicca nel campo della finestra remota."
             + (hotkeyBox.Checked ? " Oppure premi " + HotkeyName + " direttamente nel campo." : "");
+    }
+
+    // Started hidden: the window that Application.Run wants to show stays invisible, but its handle is created
+    // all the same, because hotkeys and clipboard notifications hang on it.
+    protected override void SetVisibleCore(bool value)
+    {
+        if (startHidden)
+        {
+            startHidden = false;
+            if (!IsHandleCreated) CreateHandle();
+            value = false;
+        }
+        base.SetVisibleCore(value);
     }
 
     protected override void OnLoad(EventArgs e)

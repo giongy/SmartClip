@@ -63,6 +63,15 @@ su GitHub).
 - Tray: con l'opzione attiva, X e riduzione a icona nascondono la finestra; si esce da «Esci» nel menu
   dell'icona. Una sola istanza: un secondo avvio fa ricomparire la finestra esistente.
 
+- Avvio con Windows (`Startup`, in `Program.cs`): un valore nella chiave `Run` dell'utente, con l'argomento
+  `/tray`. Non è tra le impostazioni (`TransferSettings`): la spunta mostra ciò che dice Windows, così non
+  esistono due verità. Risulta spenta anche se la voce è stata disattivata da Gestione attività
+  (`StartupApproved\Run`, primo byte dispari); riattivandola da qui quel blocco si toglie. A ogni avvio il
+  comando si riallinea al percorso dell'eseguibile (`Follow`, chiamato da `Main` e non da `MainForm`: i test
+  lo punterebbero su `tests.exe`). Con `/tray` la finestra non si mostra (`SetVisibleCore`, che crea comunque
+  l'handle: scorciatoie e appunti dipendono da quello); con il tray spento parte ridotta a icona. Un secondo
+  avvio con `/tray` non fa ricomparire la finestra di quello già aperto.
+
 - Icona (tray e finestra) a colori se negli appunti c'è testo, grigia se non c'è: `ShowClipboardState`, avvisato
   da `WM_CLIPBOARDUPDATE`. Guarda solo se il formato testo è disponibile, senza aprire gli appunti. La versione
   grigia si genera all'avvio dall'icona normale (`Gray`).
@@ -204,6 +213,5 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - La cronologia su disco dal vivo: provata solo da `tests.exe texts`, mai con migliaia di voci né con il
   programma vero che scrive a ogni copia.
 
-## Idee lasciate aperte
-
-- Avvio direttamente nascosto nel tray (oggi la finestra si mostra sempre all'avvio).
+- L'avvio vero all'accesso a Windows: provati la voce nel registro e l'avvio nascosto con un programmino usa e
+  getta, mai una disconnessione e un nuovo accesso.
