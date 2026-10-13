@@ -24,7 +24,8 @@ su GitHub).
 - `.github/workflows/release.yml` — pubblica l'eseguibile come release di GitHub. **Per fare una release si
   cambia `AssemblyVersion` in `src\Program.cs` e si fa push**: il flusso compila con `build.cmd` e crea la
   release `vX.Y.Z` solo se con quel numero non esiste ancora (scelta dell'utente, invece di una release a
-  ogni push). Il numero di versione sta solo lì.
+  ogni push). Il numero di versione sta solo lì; la finestra lo mostra nel titolo (`Program.Version`). La
+  quarta cifra conta solo se non è zero: `2.1.0.0` è `v2.1.0`, `2.1.0.1` è `v2.1.0.1`.
 - `tests/Test.cs`, `tests/test.cmd` — controlli automatici (vedi sotto).
 - `LICENSE` — licenza MIT.
 - `README.md` — presentazione per GitHub, in inglese. Traduce le etichette delle opzioni: va aggiornato quando se

@@ -24,14 +24,16 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
-      # 2.1.0.0 in the source becomes the tag v2.1.0.
+      # 2.1.0.0 in the source becomes the tag v2.1.0, and 2.1.0.1 the tag v2.1.0.1: the fourth number counts
+      # only when it is not zero, as in the title of the window.
       - name: Legge la versione
         id: version
         shell: pwsh
         run: |
           $found = Select-String -Path src/Program.cs -Pattern 'AssemblyVersion\("(\d+\.\d+\.\d+)(\.\d+)?"\)'
           if (-not $found) { throw "AssemblyVersion not found in src/Program.cs" }
-          $tag = "v" + $found.Matches[0].Groups[1].Value
+          $groups = $found.Matches[0].Groups
+          $tag = "v" + $groups[1].Value + $(if ($groups[2].Value -ne ".0") { $groups[2].Value })
           gh release view $tag *> $null
           $publish = if ($LASTEXITCODE -eq 0) { "false" } else { "true" }
           "tag=$tag" >> $env:GITHUB_OUTPUT

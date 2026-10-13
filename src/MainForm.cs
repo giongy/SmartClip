@@ -103,7 +103,7 @@ class MainForm : Form
         SuspendLayout();
         AutoScaleDimensions = new SizeF(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
-        Text = Program.AppName;
+        Text = Program.AppName + " " + Program.Version;
         Font = SystemFonts.MessageBoxFont;
         // The window can be made larger, never smaller than it starts (see OnLoad); its size is not remembered,
         // so that it always opens as it was designed.
