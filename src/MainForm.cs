@@ -1360,7 +1360,9 @@ class MainForm : Form
     // lists take what is left above it.
     void FitStatus()
     {
-        if (!shown) return;
+        // Minimised, the window has no room and its controls are squeezed to nothing: placing them now would
+        // leave them wrong when it comes back. OnResize calls again then.
+        if (!shown || WindowState == FormWindowState.Minimized) return;
         int full = (int)(StatusHeight * Zoom), gap = (int)(Gap * Zoom), bottom = typeButton.Top - gap;
         int height = status.Text.Length == 0 ? 0 : TextRenderer.MeasureText(status.Text, status.Font, new Size(status.Width, 0),
             TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height > status.Font.Height * 3 / 2 ? full : full / 2;
@@ -1588,10 +1590,12 @@ class MainForm : Form
     }
 
     // Gives the column of the saved texts the asked width, as far as both columns stay usable; the copied
-    // ones take the rest of the window.
+    // ones take the rest of the window. Everything is measured from the window and from what never moves
+    // (the left margin, the width of the divider), not from where the columns are: so they cannot drift.
     void PlaceColumns(int width)
     {
-        int gap = savedCard.Left - recentCard.Right, right = savedCard.Right, least = (int)(MinColumn * Zoom);
+        if (WindowState == FormWindowState.Minimized) return;
+        int gap = divider.Width, right = ClientSize.Width - recentCard.Left, least = (int)(MinColumn * Zoom);
         width = Math.Max(least, Math.Min(width, right - recentCard.Left - gap - least));
         savedCard.SetBounds(right - width, savedCard.Top, width, savedCard.Height);
         recentCard.Width = savedCard.Left - gap - recentCard.Left;
@@ -1767,7 +1771,7 @@ class MainForm : Form
         // A narrower window may leave too little to the copied entries: the saved ones give some back.
         else if (shown && WindowState != FormWindowState.Minimized)
         {
-            PlaceColumns(savedCard.Width);
+            PlaceColumns((int)(savedColumn * Zoom));
             FitStatus();   // in a wider window the same message may take one line less
         }
     }
