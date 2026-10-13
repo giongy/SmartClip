@@ -55,7 +55,7 @@ su GitHub).
   grigia si genera all'avvio dall'icona normale (`Gray`).
 
 - La finestra principale è l'elenco (voluto dall'utente), su due colonne affiancate (anche questo voluto: i
-  salvati non devono stare in cima ai copiati): a sinistra `recentList` con le ultime 30 cose copiate, a
+  salvati non devono stare in cima ai copiati): a sinistra `recentList` con le cose copiate (le 200 più recenti che corrispondono alla ricerca, `MaxShown`), a
   destra `savedList` con i testi salvati. La voce selezionata è una sola in tutta la finestra (`active`,
   `Selected`); Tab passa da una colonna all'altra. Tutte e due si filtrano mentre si scrive (`Texts.Matches`: parole in qualsiasi ordine, senza maiuscole né accenti). Il
   pulsante «Opzioni»/«Elenco» alterna nella stessa area le due viste (`ShowView`, `listControls` e
@@ -67,16 +67,23 @@ su GitHub).
   non rientra nell'elenco (`ownCopy`, numero di sequenza degli appunti).
 - Ctrl+D (`OpenList`) porta la finestra in primo piano da qualsiasi programma; dopo la scelta `GoBack`
   restituisce il primo piano alla finestra di partenza e rinasconde la finestra se era nascosta.
-- I testi copiati stanno solo in memoria (`Texts.Recent`), per scelta dell'utente: mai su disco. Si scartano
-  quelli che i gestori di password segnano come riservati (`Texts.IsPrivate`). L'opzione spenta svuota l'elenco.
-- Anche le immagini copiate entrano in `Texts.Recent`, al massimo 5, compresse in PNG (`Entry.Png`); il loro
-  `Text` è la descrizione che si vede e si cerca. Se negli appunti c'è anche testo vince il testo. Non si
-  salvano, per scelta dell'utente.
+- La cronologia dei copiati (`Texts.Recent`) resta su disco per i giorni dell'opzione (`Texts.Keep`, 30 di
+  default): scelta dell'utente, che prima la voleva solo in memoria. Sta in `%LOCALAPPDATA%\SmartClip\History`,
+  **in chiaro** (l'utente non vuole cifratura: «sono cose mie sul mio PC») e in **un file al giorno**
+  (`2026-10-13.clips`), non uno per voce: l'utente copia centinaia di cose al giorno. Ogni copia si aggiunge in
+  coda (`Store`); la retention elimina i file dei giorni scaduti (`Prune`); una voce tolta si azzera sul posto
+  e il suo blocco si segna eliminato (`Erase`); un blocco troncato in coda si taglia alla lettura (`ReadFile`).
+  Con 0 giorni niente va su disco e valgono i limiti di memoria (30 voci, 5 immagini). Si scartano le copie che
+  i gestori di password segnano come riservate (`Texts.IsPrivate`). L'opzione spenta svuota elenco e disco.
+- Anche le immagini copiate entrano in `Texts.Recent`, compresse in PNG; il loro `Text` è la descrizione che si
+  vede e si cerca. Se negli appunti c'è anche testo vince il testo. Non diventano testi salvati. Una volta nel
+  file, in memoria resta solo la miniatura: il PNG si rilegge quando serve (`Entry.LoadPng`).
   La stessa copia annunciata più volte da Windows si riconosce confrontando i byte del PNG.
   Nell'elenco occupano tre righe, con una miniatura (`Entry.Preview`, creata una volta alla copia).
 - I testi salvati stanno in `HKCU\Software\SmartClip\Saved`, un valore binario per nome, cifrato con DPAPI
   per l'utente (`ProtectedData`, in `System.Security.dll` che `csc` riferisce già da solo). L'elenco ne mostra
-  solo il nome.
+  solo il nome e, a destra, il giorno in cui è stato salvato: sta nella sottochiave `Saved\Dates`, sotto lo
+  stesso nome, così il formato dei testi non cambia e quelli salvati prima restano semplicemente senza data.
 - I testi salvati si scrivono in `EditForm` (nome e contenuto), aperta da `Edit`: testo nuovo, voce copiata
   da tenere, voce salvata da cambiare. Le stesse tre azioni stanno nei pulsanti sotto l'elenco, nel menu del
   tasto destro e in Ctrl+N/S/E. Il nome scritto nella casella di ricerca è stato provato e scartato dall'utente
@@ -90,18 +97,31 @@ su GitHub).
   numerica e la tastiera del server una spunta (prima `NumericUpDown` e `ComboBox`, rimasti chiari).
   Barra del titolo e barre di scorrimento scure non compaiono nelle immagini di `tests.exe shot`: per
   vederle c'è `tests.exe real <prefisso>`, che mostra le finestre un attimo e fotografa lo schermo.
+  Forme arrotondate (l'utente trovava la finestra piatta e asettica, ma i colori vanno bene): ricerca, colonne
+  e caselle stanno in un `Card` (bordo sottile, d'accento quando il contenuto ha il focus; `Look.Wrap`), i
+  pulsanti sono `RoundButton`, la riga selezionata è una forma arrotondata con una tacca d'accento e quella
+  sotto il puntatore si illumina (`Hover`, indice in `ListBox.Tag`). Le voci copiate mostrano a destra l'ora
+  (o il giorno, se non è oggi); sopra ogni colonna il numero di voci; una colonna vuota dice perché.
   La descrizione sotto il pulsante deve stare in due righe: è il motivo della larghezza (`ContentWidth`).
 
 - Disposizione (voluta dall'utente: «Digita gli appunti» in cima era troppo ingombrante): in alto la ricerca,
   poi le colonne (o le opzioni), sotto la riga di stato e un'unica fila di pulsanti piccoli: a sinistra quelli
   della voce selezionata, a destra «Digita gli appunti» e «Opzioni»/«Elenco».
 
+- La finestra è ridimensionabile (voluto dall'utente), mai più piccola di come nasce (`MinimumSize` in
+  `OnLoad`). La dimensione non si salva: a ogni avvio torna quella di default; si ricorda solo la posizione.
+  Allargandola cresce la colonna dei copiati (`Anchor`); le opzioni restano in alto a sinistra.
+
 ## Regole di stile volute dall'utente
 
 - Nessun valore duplicato: ogni default, nome o numero sta in un posto solo (costanti in cima a `MainForm`,
   costanti di Windows in `Native` con i nomi ufficiali, scorciatoia definita una volta sola).
-- Aggiungere un'opzione: una riga `PlaceOption`, una in `TransferSettings`, il suggerimento `Tip` e la casella
-  in `optionControls`. L'altezza della finestra si calcola da sola.
+- Aggiungere un'opzione: una riga `PlaceOption` (`PlaceNumber` se è un numero) sotto il titolo della sua
+  categoria (`PlaceTitle`), una in `TransferSettings` e il suggerimento `Tip`. In `optionControls` entra da sola.
+  Le categorie sono su due colonne (volute dall'utente, l'elenco unico era caotico): a sinistra «Digitazione»,
+  a destra «Scorciatoie», «Cronologia», «Programma». I titoli sono in grassetto con una riga sotto: il colore
+  d'accento resta a ciò che si clicca (il link `PlaceLink` alla cartella della cronologia, prima indistinguibile
+  dai titoli). L'altezza della finestra si calcola da sola.
 
 ## Trappole già incontrate
 
@@ -120,6 +140,15 @@ su GitHub).
 - Nell'elenco Invio agisce al rilascio (`OnKeyUp`, con `enterDown`): alla pressione il tasto tenuto giù
   continuerebbe a ripetersi nella finestra a cui torna il primo piano. Il primo piano si restituisce prima di
   nascondere la finestra, finché il programma ha ancora il diritto di assegnarlo.
+- Niente `AcceptButton`: con «Digita gli appunti» come pulsante predefinito, Invio nella casella dell'attesa o su
+  una spunta delle opzioni faceva partire la digitazione.
+- `previous` si azzera quando il programma perde il primo piano (`WM_ACTIVATEAPP`): altrimenti una scelta fatta
+  molto dopo salterebbe alla finestra da cui era stato premuto Ctrl+D. Un secondo Ctrl+D a elenco aperto non lo
+  tocca.
+- Una scorciatoia rifiutata da Windows toglie la spunta ma si salva come ancora voluta (`refused`): al prossimo
+  avvio si riprova, invece di restare spenta per sempre.
+- Il registro non cambia maiuscole e minuscole di un nome che ha già: `Texts.Save` toglie il valore prima di
+  riscriverlo.
 - `Control.Visible` risponde falso se la finestra è nascosta: quale vista è attiva lo dice `optionsShown`.
 - Avviare il programma vero o creare `MainForm` nei test riscrive le impostazioni dell'utente alla chiusura:
   salvarle prima e ripristinarle dopo.
@@ -131,7 +160,7 @@ su GitHub).
 - `tests.exe map` — stampa la mappa della tastiera attiva e confronta la tabella americana (solo lettere e
   cifre, se il layout USA non è installato).
 - `tests.exe texts` — la logica dell'elenco, senza aprirlo e senza toccare gli appunti: formati riservati,
-  testi copiati, ricerca, andata e ritorno cifrata di un testo salvato (scrive e toglie un valore `~test …`).
+  testi copiati, cronologia su disco (in una cartella temporanea, non in quella dell'utente), ricerca, andata e ritorno cifrata di un testo salvato (scrive e toglie un valore `~test …`).
 - `tests.exe type` — apre una finestrella e ci digita davvero: tutti i caratteri ASCII, accentate, simboli con
   AltGr, Unicode, Alt+codice, Tab, Invio; poi verifica che finestra sbagliata e annullamento blocchino tutto.
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.
@@ -154,6 +183,8 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - Che il formato «riservato» messo sui testi salvati tenga davvero fuori la cronologia di Windows (Win+V).
 - I formati riservati sugli appunti veri (provati solo su oggetti in memoria) e la cattura a ogni copia.
 - Le immagini dal vivo: cattura di una schermata vera e ritorno negli appunti.
+- La cronologia su disco dal vivo: provata solo da `tests.exe texts`, mai con migliaia di voci né con il
+  programma vero che scrive a ogni copia.
 
 ## Idee lasciate aperte
 

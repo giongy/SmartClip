@@ -5,7 +5,7 @@
 **A tiny clipboard manager that can also type the clipboard as real keystrokes, for the places where paste does
 not work.**
 
-SmartClip keeps the last things you copied, pictures included, and the texts you choose to save. One click makes
+SmartClip keeps a history of what you copied, pictures included, and the texts you choose to save. One click makes
 any of them the current clipboard content again.
 
 ![The SmartClip window](docs/screenshot.png)
@@ -19,7 +19,8 @@ Formerly called PasswordPaste: the first start under the new name takes over its
 - One portable `.exe`, about 160 KB. No installer, no dependencies, no network access.
 - One C# source file that compiles with the compiler already shipped with Windows.
 - Stops typing the moment the target window loses focus, so a password never lands in the wrong place.
-- Copied items stay in memory only; saved texts are encrypted for your Windows account.
+- The history of copied items is kept for the number of days you choose, or in memory only; saved texts are
+  encrypted for your Windows account.
 - Dark interface with pastel accents.
 
 > **Note:** the user interface is in Italian. The tables below translate the keys and every option.
@@ -53,9 +54,10 @@ window. A remote desktop client running full screen usually captures every short
 
 ### The lists
 
-The main window has two columns. On the left, **Copiati di recente**: the last 30 things you copied while the
-program was running, texts and up to 5 pictures (screenshots, for example), each with a small preview. On the
-right, **Salvati**: the texts you saved under a name, which stay until you delete them.
+The main window has two columns. On the left, **Copiati di recente**: the things you copied while the program
+was running, texts and pictures (screenshots, for example), each picture with a small preview. They stay for the
+number of days set in the options, also across restarts; the column lists the 200 most recent, and the search
+reaches the rest. On the right, **Salvati**: the texts you saved under a name, which stay until you delete them.
 
 | Key | Action |
 | --- | --- |
@@ -85,6 +87,8 @@ without choosing.
 ## Options
 
 The **Opzioni** button switches the lower part of the window from the list to the options; **Elenco** switches back.
+The options are grouped under four titles: **Digitazione** (typing), **Scorciatoie** (hotkeys), **Cronologia**
+(history) and **Programma** (the program itself).
 
 ![The options](docs/screenshot-options.png)
 
@@ -98,8 +102,11 @@ The **Opzioni** button switches the lower part of the window from the list to th
 | Alt+codice per i simboli che la tastiera non ha | Type symbols that your keyboard has no key for with Alt+numpad codes instead of Unicode input. Works only when the remote machine runs Windows. |
 | Scorciatoia globale Ctrl+Alt+V | Enable the global hotkey. Turn it off if it clashes with another program. |
 | Scorciatoia Ctrl+D per aprire l'elenco | Enable the global hotkey that brings up the window with the list. While it is on, Ctrl+D no longer reaches other programs: turn it off if you need it there. |
-| Ricorda gli ultimi testi e immagini copiati | Keep the last 30 copied texts and pictures in the list while the program runs. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. |
+| Ricorda i testi e le immagini copiati | Keep the copied texts and pictures in the list. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. Turning it off also deletes the history on disk. |
+| Giorni su disco (0: solo in memoria) | For how many days, 0 to 365, what you copy stays in the history, also after the program closes. With 0 nothing is written to disk: the last 30 copied items, of which at most 5 pictures, stay in memory and are gone when the program closes. |
 | Resta attivo nell'area di notifica (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Esci** to quit. |
+
+Under the history options, the link **Apri la cartella della cronologia** opens the folder of the history files.
 
 The tray and window icon is coloured when the clipboard holds text and grey when it does not.
 
@@ -113,10 +120,13 @@ Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key t
   password.
 - Nothing is typed while Caps Lock is on.
 - The program waits for you to release the hotkey keys before typing, so they cannot alter the output.
-- Copied texts and pictures are kept in memory only, never written to disk or sent anywhere, and are gone when the
-  program closes. With **Ricorda gli ultimi testi e immagini copiati** off, the clipboard is read only when you start a run.
+- Copied texts and pictures are never sent anywhere. The history is written **unencrypted** to
+  `%LOCALAPPDATA%\SmartClip\History`, one file per day, and each file is deleted when its day expires. Set the days
+  to 0 to keep everything in memory only. An entry you remove from the list is overwritten with zeros in its file.
+  With **Ricorda i testi e le immagini copiati** off, the clipboard is read only when you start a run.
 - What password managers and private browser windows mark as private (KeePass, Bitwarden and others do) is never
-  remembered. A password typed with **Svuota gli appunti dopo aver digitato** on is dropped from the list too.
+  remembered. A password typed with **Svuota gli appunti dopo aver digitato** on is dropped from the list and
+  from the history file too.
 - Saved texts are stored in the `Saved` subkey of the registry key above, encrypted with Windows DPAPI for your
   user account: they cannot be read by another user or copied to another PC. Only their names are shown.
 - A saved text put back on the clipboard is marked as private, so that Windows clipboard history (Win+V) and other

@@ -75,7 +75,7 @@ static class TestProgram
         Check(Texts.Recent.Count == 2 && Texts.Recent[0].Text == "one" && Texts.Recent[1].Text == "two", "copied again moves to the top");
         Texts.Add((string)null);
         Texts.Add("  \r\n ");
-        Texts.Add(new string('x', 100000));
+        Texts.Add(new string('x', 1000000));
         Check(Texts.Recent.Count == 2, "nothing, blanks and huge texts are not remembered");
         for (int i = 0; i < Texts.MaxRecent + 10; i++) Texts.Add("n" + i);
         Check(Texts.Recent.Count == Texts.MaxRecent && Texts.Recent[0].Text == "n" + (Texts.MaxRecent + 9)
@@ -91,12 +91,12 @@ static class TestProgram
             picture.SetPixel(1, 1, Color.Red);
             Texts.Add(picture);
             Texts.Add(picture);
-            Check(Texts.Recent.Count == 2 && Texts.Recent[0].Png != null, "the same picture announced twice is kept once");
+            Check(Texts.Recent.Count == 2 && Texts.Recent[0].Picture, "the same picture announced twice is kept once");
             Check(Texts.Recent[0].Preview != null && Texts.Recent[0].Preview.Width == 40 && Texts.Recent[1].Preview == null,
             "a picture has a preview, a text has none");
         Check(Texts.Recent[0].ToString().IndexOf("40×30") > 0 && Texts.Matches(Texts.Recent[0], "immagine 40"),
                 "a picture is described by its size and found by it");
-            using (Image back = Image.FromStream(new System.IO.MemoryStream(Texts.Recent[0].Png)))
+            using (Image back = Image.FromStream(new System.IO.MemoryStream(Texts.Recent[0].LoadPng())))
             using (Bitmap pixels = new Bitmap(back))
                 Check(back.Width == 40 && back.Height == 30 && pixels.GetPixel(1, 1).ToArgb() == Color.Red.ToArgb(),
                     "and comes back identical from memory");
@@ -105,9 +105,10 @@ static class TestProgram
                 picture.SetPixel(2, 2, Color.FromArgb(i, i, i));
                 Texts.Add(picture);
             }
-            Check(Texts.Recent.FindAll(delegate(Entry e) { return e.Png != null; }).Count == Texts.MaxPictures
+            Check(Texts.Recent.FindAll(delegate(Entry e) { return e.Picture; }).Count == Texts.MaxPictures
                 && Texts.Recent.Count == Texts.MaxPictures + 1, "only the last few pictures stay, texts are untouched");
         }
+        HistoryTest();
         Texts.Recent.Clear();
         Texts.Add("copied");
 
@@ -129,6 +130,7 @@ static class TestProgram
             Texts.Save(name, text);
             Entry saved = Texts.Load().Find(delegate(Entry e) { return e.Name == name; });
             Check(saved != null && saved.Text == text, "a saved text comes back identical");
+            Check(saved != null && saved.Time.Date == DateTime.Today, "with the day it was saved");
             using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(MainForm.SettingsKey + @"\Saved"))
             {
                 byte[] raw = key.GetValue(name) as byte[];
@@ -137,17 +139,90 @@ static class TestProgram
             }
             Texts.Save(name, "other");
             Check(Texts.Load().FindAll(delegate(Entry e) { return e.Name == name; }).Count == 1, "saving again replaces");
+            Texts.Save(name.ToUpper(), "other");
+            Check(Texts.Load().FindAll(delegate(Entry e) { return string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase); })
+                .TrueForAll(delegate(Entry e) { return e.Name == name.ToUpper(); }), "saving with another letter case renames");
         }
         finally
         {
             Texts.Delete(name);
         }
         Check(!Texts.Load().Exists(delegate(Entry e) { return e.Name == name; }), "a deleted text is gone");
+        using (Microsoft.Win32.RegistryKey dates = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(MainForm.SettingsKey + @"\Saved\Dates"))
+            Check(dates != null && Array.IndexOf(dates.GetValueNames(), name.ToUpper()) < 0 && Array.IndexOf(dates.GetValueNames(), name) < 0,
+                "and so is its date");
         List<Entry> all = Texts.Load();
         int firstCopied = all.FindIndex(delegate(Entry e) { return e.Name == null; });
         Check(firstCopied >= 0 && !all.GetRange(firstCopied, all.Count - firstCopied).Exists(delegate(Entry e) { return e.Name != null; }),
             "saved texts come before the copied ones");
         return failed == 0 ? 0 : 1;
+    }
+
+    // The history on disk, in a folder of its own instead of the user's.
+    static void HistoryTest()
+    {
+        string real = Texts.Folder, folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "SmartClip test " + Guid.NewGuid());
+        string today = System.IO.Path.Combine(folder, DateTime.Today.ToString("yyyy-MM-dd") + ".clips");
+        string old = System.IO.Path.Combine(folder, DateTime.Today.AddDays(-8).ToString("yyyy-MM-dd") + ".clips");
+        Texts.Folder = folder;
+        try
+        {
+            Texts.Clear();
+            Texts.Keep(7);
+            for (int i = 0; i < Texts.MaxRecent + 10; i++) Texts.Add("kept " + i);
+            Texts.Add("sécret wörd");
+            using (Bitmap picture = new Bitmap(40, 30))
+            {
+                picture.SetPixel(1, 1, Color.Red);
+                Texts.Add(picture);
+                Texts.Add(picture);
+            }
+            Texts.Add("last");
+            int count = Texts.MaxRecent + 13;
+            Check(Texts.Recent.Count == count && System.IO.Directory.GetFiles(folder).Length == 1 && System.IO.File.Exists(today),
+                "with days to keep nothing drops out, and it all goes to one file per day");
+            Check(Texts.Recent[1].Png == null, "a stored picture leaves the memory");
+
+            System.IO.File.WriteAllBytes(old, new byte[0]);
+            long length = new System.IO.FileInfo(today).Length;
+            using (System.IO.FileStream cut = new System.IO.FileStream(today, System.IO.FileMode.Append)) cut.Write(new byte[] { 1, 2, 3, 4, 5 }, 0, 5);
+            Texts.Recent.Clear();
+            Texts.Keep(7);
+            Texts.Read();
+            Check(Texts.Recent.Count == count && Texts.Recent[0].Text == "last" && Texts.Recent[count - 1].Text == "kept 0",
+                "the history comes back from disk, newest first");
+            Check(!System.IO.File.Exists(old), "an expired day is deleted");
+            Check(new System.IO.FileInfo(today).Length == length, "a record cut short is removed");
+            Entry stored = Texts.Recent[1];
+            using (Image back = Image.FromStream(new System.IO.MemoryStream(stored.LoadPng())))
+            using (Bitmap pixels = new Bitmap(back))
+                Check(stored.Picture && stored.Preview != null && stored.Text.IndexOf("40×30") > 0 && back.Width == 40
+                    && pixels.GetPixel(1, 1).ToArgb() == Color.Red.ToArgb(), "a picture comes back with its preview, and whole when asked");
+
+            Texts.Forget("sécret wörd");
+            Check(Encoding.UTF8.GetString(System.IO.File.ReadAllBytes(today)).IndexOf("sécret") < 0, "a forgotten text is wiped from the file");
+            Texts.Add("after");
+            Texts.Recent.Clear();
+            Texts.Read();
+            Check(Texts.Recent.Count == count && Texts.Recent[0].Text == "after"
+                && !Texts.Recent.Exists(delegate(Entry e) { return e.Text == "sécret wörd"; }), "and stays out when read again");
+
+            Texts.Keep(0);
+            Check(Texts.Recent.Count == Texts.MaxRecent && System.IO.Directory.GetFiles(folder).Length == 0,
+                "zero days: files deleted, memory keeps the last few");
+            Entry loose = Texts.Recent.Find(delegate(Entry e) { return e.Picture; });
+            Check(loose != null && loose.LoadPng().Length > 0, "and the picture is in memory again");
+            Texts.Keep(7);
+            Check(System.IO.File.Exists(today) && loose.Png == null, "days again: what is in memory is written");
+            Texts.Clear();
+            Check(Texts.Recent.Count == 0 && System.IO.Directory.GetFiles(folder).Length == 0, "clearing removes list and files");
+        }
+        finally
+        {
+            Texts.Clear();
+            Texts.Folder = real;
+            if (System.IO.Directory.Exists(folder)) System.IO.Directory.Delete(folder, true);
+        }
     }
 
     static string Show(char c)

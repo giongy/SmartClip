@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.Globalization;
 using System.IO;
@@ -66,12 +67,22 @@ class MainForm : Form
     const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
     const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
-    const int ListExtra = 60;                          // height given to the lists beyond what the options need
-    const int SavedWidth = 230, TitleHeight = 20;      // the column of the saved texts, and the title above each column
+    const int ListExtra = 168;                     // height given to the lists beyond what the options need
+    const int ColumnGap = 20, ColumnWidth = (ContentWidth - ColumnGap) / 2;   // the two columns of the options
+    const int TitleRow = 30, SectionGap = 10;          // the title of a category of options, and the air above it
+    const int RuleGap = 8;                             // between the line under such a title and the first option
+    const int SavedWidth = 185,TitleHeight = 20;      // the column of the saved texts, and the title above each column
     const int RowPadding = 10;                         // added to the text height to get a row of the list
     const int PictureRows = 3;                         // rows taken by a picture, to make room for its preview
     const int PreviewMargin = 4;                       // around the preview, inside its row
     const int RowHeight = 24;                          // distance between one option checkbox and the next
+    const int NumberWidth = 56, NumberHeight = 26;     // the box of an option that is a number
+    const int NumberRow = 37;                          // distance between such an option and the next one
+    const int MaxShown = 200;                          // copied entries listed at once
+    const int SearchHeight = 30, GlyphWidth = 20;      // the search box, and the magnifying glass on its left
+    const int ListPadding = 4;                         // between the rounded edge of a column and its list
+    const int CountWidth = 120;                        // room for the number of entries, right of a column title
+    const int RowInset = 12, TimeGap = 8;              // of the text in a row, and around the time on its right
     const int Gap = 6;                                 // between neighbouring controls
     const int ActionHeight = 26, ActionWidth = 84;     // the buttons in the bottom row
     const int TypeWidth = 140;                         // the button that types the clipboard, in the same row
@@ -90,15 +101,19 @@ class MainForm : Form
     static readonly uint OwnProcessId = (uint)Process.GetCurrentProcess().Id;
     static readonly Point OffScreen = new Point(int.MinValue, int.MinValue);
 
-    readonly Button typeButton = new Button();
-    readonly Button viewButton = new Button();
+    readonly Button typeButton = new RoundButton();
+    readonly Button viewButton = new RoundButton();
+    readonly Label recentCount = new Label(), savedCount = new Label();   // how many entries each column lists
+    readonly Label recentEmpty = new Label(), savedEmpty = new Label();   // what a column says while it has none
     readonly Label status = new Label();
     readonly TextBox search = new TextBox();
     readonly ListBox recentList = new ListBox(), savedList = new ListBox();   // what was copied, and what was saved
     ListBox active;     // the one of the two that holds the selected entry
-    readonly Button newButton = new Button(), saveButton = new Button(), deleteButton = new Button();
-    readonly Control[] optionControls, listControls;   // the two views that take turns in the lower part of the window
-    readonly TextBox delayBox = new TextBox();
+    readonly Button newButton = new RoundButton(), saveButton = new RoundButton(), deleteButton = new RoundButton();
+    // The two views that take turns in the lower part of the window. The options add themselves as they are placed.
+    readonly List<Control> optionControls = new List<Control>();
+    readonly Control[] listControls;
+    readonly TextBox delayBox = new TextBox(), keepBox = new TextBox();
     readonly CheckBox usBox = new Toggle();
     readonly CheckBox enterBox = new Toggle();
     readonly CheckBox clearBox = new Toggle();
@@ -121,6 +136,7 @@ class MainForm : Form
     IntPtr previous;    // the window the list hotkey was pressed in: the foreground goes back there
     bool wasHidden;     // the list hotkey found the window hidden: after the choice it hides again
     uint ownCopy;       // clipboard sequence number of what was put there from the list: not to be remembered again
+    readonly List<CheckBox> refused = new List<CheckBox>();   // hotkey checkboxes unticked by Windows, not by the user
 
     public MainForm()
     {
@@ -129,8 +145,8 @@ class MainForm : Form
         AutoScaleMode = AutoScaleMode.Dpi;
         Text = Program.AppName;
         Font = SystemFonts.MessageBoxFont;
-        FormBorderStyle = FormBorderStyle.FixedSingle;
-        MaximizeBox = false;
+        // The window can be made larger, never smaller than it starts (see OnLoad); its size is not remembered,
+        // so that it always opens as it was designed.
         StartPosition = FormStartPosition.CenterScreen;
         TopMost = true;
         KeyPreview = true;
@@ -150,30 +166,39 @@ class MainForm : Form
         status.UseMnemonic = false;
         status.ForeColor = Look.Muted;
 
-        Label delayLabel = NewLabel("Attesa prima di digitare (secondi):", Edge + 5);
-        delayBox.SetBounds(Edge + ContentWidth - 56, Edge, 56, 26);
-        delayBox.TextAlign = HorizontalAlignment.Center;
-        delayBox.MaxLength = MaxDelay.ToString().Length;
-        Panel delayFrame = Look.Frame(delayBox);
+        // The options are stacked by category, in two columns: on the left what concerns typing, on the right
+        // the rest. Adding one takes a single line here, the window height adapts.
+        int left = Edge, top = Edge;
+        PlaceTitle("Digitazione", left, ref top);
+        // Confirming a number brings what was written back within its limits.
+        Label delayLabel = PlaceNumber(delayBox, "Attesa prima di digitare (secondi):", MaxDelay,
+            delegate { Delay = Delay; }, left, ref top);
         Delay = DefaultDelay;
-        delayBox.KeyPress += delegate(object sender, KeyPressEventArgs e) { e.Handled = !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar); };
-        delayBox.Leave += delegate { Delay = Delay; };   // what was written, brought back within the limits
+        PlaceOption(usBox, "Il server usa la tastiera inglese (USA)", left, ref top);
+        PlaceOption(enterBox, "Premi Invio alla fine", left, ref top);
+        PlaceOption(clearBox, "Svuota gli appunti dopo aver digitato", left, ref top);
+        PlaceOption(slowBox, "Digitazione lenta", left, ref top);
+        PlaceOption(altCodeBox, "Alt+codice per i simboli che la tastiera non ha", left, ref top);
+        int leftBottom = top;
 
-        // The checkboxes are stacked: adding one takes a single line here, the window height adapts.
-        int top = 49;
-        PlaceOption(usBox, "Il server usa la tastiera inglese (USA)", ref top);
-        PlaceOption(enterBox, "Premi Invio alla fine", ref top);
-        PlaceOption(clearBox, "Svuota gli appunti dopo aver digitato", ref top);
-        PlaceOption(slowBox, "Digitazione lenta", ref top);
-        PlaceOption(altCodeBox, "Alt+codice per i simboli che la tastiera non ha", ref top);
-        PlaceOption(hotkeyBox, "Scorciatoia globale " + HotkeyName, ref top);
+        left += ColumnWidth + ColumnGap;
+        top = Edge;
+        PlaceTitle("Scorciatoie", left, ref top);
+        PlaceOption(hotkeyBox, "Scorciatoia globale " + HotkeyName, left, ref top);
         hotkeyBox.Checked = true;
-        PlaceOption(pickBox, "Scorciatoia " + PickName + " per aprire l'elenco", ref top);
+        PlaceOption(pickBox, "Scorciatoia " + PickName + " per aprire l'elenco", left, ref top);
         pickBox.Checked = true;
-        PlaceOption(historyBox, "Ricorda gli ultimi testi e immagini copiati", ref top);
+        PlaceTitle("Cronologia", left, ref top);
+        PlaceOption(historyBox, "Ricorda i testi e le immagini copiati", left, ref top);
         historyBox.Checked = true;
-        PlaceOption(trayBox, "Resta attivo nell'area di notifica (tray)", ref top);
+        Label keepLabel = PlaceNumber(keepBox, "Giorni su disco (0: solo in memoria):", Texts.MaxKeepDays,
+            delegate { Retention = Retention; ApplyHistory(); Reload(); }, left, ref top);
+        Retention = Texts.DefaultKeepDays;
+        LinkLabel folderLink = PlaceLink("Apri la cartella della cronologia", OpenFolder, left, ref top);
+        PlaceTitle("Programma", left, ref top);
+        PlaceOption(trayBox, "Resta attivo nell'area di notifica (tray)", left, ref top);
         trayBox.Checked = true;
+        top = Math.Max(top, leftBottom);
 
         // Under the options, or the lists that take their place: the status line, then one row of small buttons.
         // On the left those that act on the selected entry, on the right typing and the switch between the views.
@@ -189,18 +214,55 @@ class MainForm : Form
         typeButton.SetBounds(viewButton.Left - Gap - TypeWidth, actionTop, TypeWidth, ActionHeight);
 
         // The lists take the same area as the options, with the search box on top.
-        search.SetBounds(Edge, Edge, ContentWidth, 26);
+        search.SetBounds(Edge, Edge, ContentWidth, SearchHeight);
         Panel searchFrame = Look.Frame(search);
+        // A magnifying glass on the left of the box, which makes room for it.
+        search.Left += GlyphWidth;
+        search.Width -= GlyphWidth;
+        searchFrame.Paint += DrawGlyph;
 
-        // Two columns: on the left what was copied, which comes and goes, on the right what was saved.
-        int listTop = searchFrame.Bottom + Gap + TitleHeight, listHeight = areaBottom - listTop;
+        // Two columns: on the left what was copied, which comes and goes, on the right what was saved. Above
+        // each its title and, on the right, how many entries it lists.
+        int titleTop = searchFrame.Bottom + Gap + 2, listTop = titleTop + TitleHeight, listHeight = areaBottom - listTop;
         int savedLeft = Edge + ContentWidth - SavedWidth;
-        Label recentTitle = NewLabel("Copiati di recente", searchFrame.Bottom + Gap);
-        Label savedTitle = NewLabel("Salvati", searchFrame.Bottom + Gap);
+        Label recentTitle = NewLabel("Copiati di recente", titleTop);
+        Label savedTitle = NewLabel("Salvati", titleTop);
         savedTitle.Left = savedLeft;
-        recentTitle.ForeColor = savedTitle.ForeColor = Look.Muted;
+        recentTitle.Font = savedTitle.Font = new Font(Font, FontStyle.Bold);
         recentList.SetBounds(Edge, listTop, savedLeft - Edge - Edge, listHeight);
         savedList.SetBounds(savedLeft, listTop, SavedWidth, listHeight);
+        Panel recentCard = Look.Wrap(recentList, ListPadding), savedCard = Look.Wrap(savedList, ListPadding);
+        recentCount.SetBounds(recentCard.Right - CountWidth, titleTop, CountWidth, TitleHeight);
+        savedCount.SetBounds(savedCard.Right - CountWidth, titleTop, CountWidth, TitleHeight);
+        foreach (Label count in new Label[] { recentCount, savedCount })
+        {
+            count.TextAlign = ContentAlignment.TopRight;
+            count.ForeColor = Look.Muted;
+        }
+        // What an empty column says, in the place of its list.
+        foreach (Label empty in new Label[] { recentEmpty, savedEmpty })
+        {
+            empty.Bounds = recentList.Bounds;
+            empty.TextAlign = ContentAlignment.MiddleCenter;
+            empty.ForeColor = Look.Border;
+        }
+        recentCard.Controls.Add(recentEmpty);
+        savedEmpty.Width = savedList.Width;
+        savedCard.Controls.Add(savedEmpty);
+        recentEmpty.BringToFront();
+        savedEmpty.BringToFront();
+
+        // When the window grows, the column of the copied entries takes the room; the saved ones stay on the
+        // right, status and buttons at the bottom.
+        const AnchorStyles toTop = AnchorStyles.Top, toBottom = AnchorStyles.Bottom, toLeft = AnchorStyles.Left, toRight = AnchorStyles.Right;
+        searchFrame.Anchor = toTop | toLeft | toRight;
+        recentCard.Anchor = toTop | toBottom | toLeft | toRight;
+        savedCard.Anchor = toTop | toBottom | toRight;
+        savedTitle.Anchor = recentCount.Anchor = savedCount.Anchor = toTop | toRight;
+        recentEmpty.Anchor = savedEmpty.Anchor = toTop | toBottom | toLeft | toRight;
+        status.Anchor = toBottom | toLeft | toRight;
+        newButton.Anchor = saveButton.Anchor = deleteButton.Anchor = toBottom | toLeft;
+        viewButton.Anchor = typeButton.Anchor = toBottom | toRight;
 
         // The same three actions from the buttons, from the right-click menu and from the keyboard.
         EventHandler create = delegate { Edit(null); };
@@ -232,7 +294,7 @@ class MainForm : Form
             list.ContextMenuStrip = listMenu;
             list.MeasureItem += delegate(object sender, MeasureItemEventArgs e)
             {
-                e.ItemHeight = list.ItemHeight * (((Entry)list.Items[e.Index]).Png == null ? 1 : PictureRows);
+                e.ItemHeight = list.ItemHeight * (((Entry)list.Items[e.Index]).Picture ? PictureRows : 1);
             };
             list.DrawItem += DrawEntry;
             // One entry is selected in the whole window: selecting in a column clears the other.
@@ -255,6 +317,10 @@ class MainForm : Form
             {
                 if (e.Button == MouseButtons.Left && list.IndexFromPoint(e.Location) >= 0) Accept();
             };
+            // The entry under the pointer lights up: a click would choose it.
+            list.MouseMove += delegate(object sender, MouseEventArgs e) { Hover(list, list.IndexFromPoint(e.Location)); };
+            list.MouseLeave += delegate { Hover(list, -1); };
+            list.Resize += delegate { list.Invalidate(); };   // the rows are drawn up to the right edge
         }
         // A new search starts again from its best result.
         search.TextChanged += delegate { active = null; Filter(); };
@@ -284,12 +350,18 @@ class MainForm : Form
           + "con Ctrl+V o la digiti con " + HotkeyName + ".\n"
           + "Finché è attiva, " + PickName + " non arriva più agli altri programmi: disattivala\n"
           + "se ti serve lì.", pickBox);
-        Tip("L'elenco propone le ultime " + Texts.MaxRecent + " cose copiate mentre il programma è aperto, di cui al\n"
-          + "massimo " + Texts.MaxPictures + " immagini.\n"
-          + "Restano solo in memoria: non vengono mai scritte su disco e spariscono alla chiusura.\n"
+        Tip("L'elenco propone i testi e le immagini copiati mentre il programma è aperto.\n"
           + "Ciò che i gestori di password segnano come riservato non viene ricordato.\n"
           + "Disattivala se copi password da programmi che non lo fanno: nell'elenco si\n"
-          + "leggerebbero in chiaro.", historyBox);
+          + "leggerebbero in chiaro. Spenta, cancella anche la cronologia su disco.", historyBox);
+        Tip("Per quanti giorni ciò che copi resta nella cronologia, anche dopo la chiusura.\n"
+          + "Sta in " + Texts.Folder + ",\n"
+          + "un file per giorno, scritto in chiaro: i giorni scaduti si eliminano da soli.\n"
+          + "Con 0 niente va su disco: restano in memoria le ultime " + Texts.MaxRecent + " cose copiate, di cui al\n"
+          + "massimo " + Texts.MaxPictures + " immagini, e spariscono alla chiusura.\n"
+          + "L'elenco mostra le " + MaxShown + " più recenti: le altre si trovano con la ricerca.", keepLabel, keepBox);
+        Tip("Apre in Esplora file la cartella con i file della cronologia, uno per giorno:\n"
+          + Texts.Folder, folderLink);
         Tip("Attiva: chiudendo o riducendo a icona la finestra il programma resta in funzione\n"
           + "come icona vicino all'orologio, e la scorciatoia continua a funzionare.\n"
           + "Clic sull'icona per riaprire la finestra, tasto destro e poi Esci per chiudere.\n"
@@ -307,19 +379,19 @@ class MainForm : Form
           + "Le immagini restano solo in memoria e non si salvano.", saveButton);
         Tip("Elimina il testo salvato, o toglie dall'elenco la voce copiata (Ctrl+" + DeleteKey + ").", deleteButton);
 
-        optionControls = new Control[] { delayLabel, delayFrame, usBox,
-            enterBox, clearBox, slowBox, altCodeBox, hotkeyBox, pickBox, historyBox, trayBox };
-        listControls = new Control[] { searchFrame, recentTitle, savedTitle, recentList, savedList,
+        listControls = new Control[] { searchFrame, recentTitle, savedTitle, recentCount, savedCount, recentCard, savedCard,
             newButton, saveButton, deleteButton };
         Controls.AddRange(new Control[] { typeButton, viewButton, status });
         Controls.AddRange(listControls);
-        Controls.AddRange(optionControls);
-        AcceptButton = typeButton;
+        Controls.AddRange(optionControls.ToArray());
+        // No AcceptButton: Enter among the options would start typing the clipboard.
 
         LoadSettings();
+        ApplyHistory();
+        Change(Texts.Read);
         historyBox.CheckedChanged += delegate
         {
-            if (!historyBox.Checked) Texts.Recent.Clear();
+            ApplyHistory();
             Reload();
         };
         Reload();
@@ -353,12 +425,31 @@ class MainForm : Form
     // The wait before typing, in seconds: whatever is written in its box, kept within the limits.
     int Delay
     {
-        get
-        {
-            int written;
-            return int.TryParse(delayBox.Text, out written) ? Math.Max(MinDelay, Math.Min(MaxDelay, written)) : DefaultDelay;
-        }
+        get { return Number(delayBox, MinDelay, MaxDelay, DefaultDelay); }
         set { delayBox.Text = Math.Max(MinDelay, Math.Min(MaxDelay, value)).ToString(); }
+    }
+
+    // For how many days what is copied stays on disk; zero keeps it only in memory.
+    int Retention
+    {
+        get { return Number(keepBox, 0, Texts.MaxKeepDays, Texts.DefaultKeepDays); }
+        set { keepBox.Text = Math.Max(0, Math.Min(Texts.MaxKeepDays, value)).ToString(); }
+    }
+
+    static int Number(TextBox box, int min, int max, int fallback)
+    {
+        int written;
+        return int.TryParse(box.Text, out written) ? Math.Max(min, Math.Min(max, written)) : fallback;
+    }
+
+    // Hands the two settings of the history to what keeps it, in memory and on disk.
+    void ApplyHistory()
+    {
+        Change(delegate
+        {
+            if (historyBox.Checked) Texts.Keep(Retention);
+            else Texts.Clear();
+        });
     }
 
     // The lower part of the window shows either the list or the options.
@@ -389,14 +480,51 @@ class MainForm : Form
         foreach (Entry entry in entries)
         {
             if (!Texts.Matches(entry, search.Text)) continue;
+            // The history can hold thousands: the search reaches the others. The copied ones come last.
+            if (entry.Name == null && recentList.Items.Count == MaxShown) break;
             ListBox list = entry.Name == null ? recentList : savedList;
             int index = list.Items.Add(entry);
             if (selected != null && entry.Name == selected.Name && entry.Text == selected.Text) list.SelectedIndex = index;
         }
         recentList.EndUpdate();
         savedList.EndUpdate();
+        recentList.Tag = savedList.Tag = null;   // the rows changed under the pointer
         if (Selected == null) Pick(recentList.Items.Count > 0 ? recentList : savedList);
         ShowActions();
+
+        bool searching = search.Text.Trim().Length > 0;
+        int copied = entries.FindAll(delegate(Entry entry) { return entry.Name == null; }).Count;
+        recentCount.Text = recentList.Items.Count == copied ? copied.ToString() : recentList.Items.Count + " di " + copied;
+        savedCount.Text = savedList.Items.Count == entries.Count - copied ? savedList.Items.Count.ToString()
+            : savedList.Items.Count + " di " + (entries.Count - copied);
+        recentEmpty.Text = searching ? "Nessun risultato" : historyBox.Checked ? "Quello che copi comparirà qui"
+            : "La cronologia è spenta";
+        savedEmpty.Text = searching ? "Nessun risultato" : "Nessun testo salvato";
+        recentEmpty.Visible = recentList.Items.Count == 0;
+        savedEmpty.Visible = savedList.Items.Count == 0;
+    }
+
+    // Remembers which row of a list the pointer is on, and has the two rows involved drawn again.
+    void Hover(ListBox list, int index)
+    {
+        int old = list.Tag is int ? (int)list.Tag : -1;
+        if (old == index) return;
+        list.Tag = index;
+        list.Cursor = index >= 0 ? Cursors.Hand : Cursors.Default;
+        foreach (int row in new int[] { old, index })
+            if (row >= 0 && row < list.Items.Count) list.Invalidate(list.GetItemRectangle(row));
+    }
+
+    void DrawGlyph(object sender, PaintEventArgs e)
+    {
+        Control frame = (Control)sender;
+        int size = Font.Height / 2 + 2, left = RowInset - 2, top = (frame.Height - size) / 2 - 1;
+        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        using (Pen pen = new Pen(Look.Muted, 1.6f))
+        {
+            e.Graphics.DrawEllipse(pen, left, top, size, size);
+            e.Graphics.DrawLine(pen, left + size * 0.85f, top + size * 0.85f, left + size + 4, top + size + 4);
+        }
     }
 
     Entry Selected
@@ -420,7 +548,7 @@ class MainForm : Form
     {
         Entry entry = Selected;
         saveButton.Text = entry != null && entry.Name != null ? "Modifica…" : "Salva…";
-        saveButton.Enabled = entry != null && entry.Png == null;
+        saveButton.Enabled = entry != null && !entry.Picture;
         deleteButton.Enabled = entry != null;
     }
 
@@ -430,12 +558,36 @@ class MainForm : Form
         if (e.Index < 0) return;
         ListBox list = (ListBox)sender;
         Entry entry = (Entry)list.Items[e.Index];
-        bool selected = (e.State & DrawItemState.Selected) != 0;
-        using (Brush back = new SolidBrush(selected ? Look.Selected : list.BackColor))
+        bool selected = (e.State & DrawItemState.Selected) != 0, hovered = Equals(list.Tag, e.Index);
+        using (Brush back = new SolidBrush(list.BackColor))
         {
             e.Graphics.FillRectangle(back, e.Bounds);
         }
-        Rectangle label = Rectangle.FromLTRB(e.Bounds.Left + 2 * PreviewMargin, e.Bounds.Top, e.Bounds.Right, e.Bounds.Bottom);
+        // The selected row is a rounded shape with a mark in the accent colour; the one under the pointer a fainter shape.
+        if (selected || hovered)
+        {
+            Rectangle row = Rectangle.FromLTRB(e.Bounds.Left + 1, e.Bounds.Top + 1, e.Bounds.Right - 2, e.Bounds.Bottom - 1);
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using (GraphicsPath shape = Look.Rounded(row))
+            using (Brush fill = new SolidBrush(selected ? Look.Selected : Look.Soft))
+            using (Brush mark = new SolidBrush(Look.Accent))
+            {
+                e.Graphics.FillPath(fill, shape);
+                if (selected) e.Graphics.FillRectangle(mark, row.Left + 3, row.Top + 5, 3, row.Height - 10);
+            }
+        }
+        Rectangle label = Rectangle.FromLTRB(e.Bounds.Left + RowInset, e.Bounds.Top, e.Bounds.Right - TimeGap, e.Bounds.Bottom);
+        if (entry.Time != DateTime.MinValue)
+        {
+            // On the right, when: of a copied entry the time today and the day before that, of a saved text
+            // always the day it was saved. The year only when it is not this one.
+            string when = entry.Time.ToString(entry.Name == null && entry.Time.Date == DateTime.Today ? "HH:mm"
+                : entry.Time.Year == DateTime.Today.Year ? "dd/MM" : "dd/MM/yy");
+            int width = TextRenderer.MeasureText(e.Graphics, when, e.Font, Size.Empty, TextFormatFlags.NoPadding).Width;
+            TextRenderer.DrawText(e.Graphics, when, e.Font, label, Look.Muted, TextFormatFlags.VerticalCenter
+                | TextFormatFlags.Right | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+            label.Width -= width + TimeGap;
+        }
         if (entry.Preview != null)
         {
             // As tall as the row allows, never wider than half of it, keeping the proportions.
@@ -471,14 +623,14 @@ class MainForm : Form
             DataObject data = new DataObject();
             // A saved text may be a password: marked so that Windows clipboard history and other monitors skip it.
             if (entry.Name != null) data.SetData(Texts.PrivateMarker, new MemoryStream(new byte[sizeof(int)]));
-            if (entry.Png == null)
+            if (!entry.Picture)
             {
                 data.SetText(entry.Text);
                 Clipboard.SetDataObject(data, true);
             }
             else
             {
-                using (MemoryStream png = new MemoryStream(entry.Png))
+                using (MemoryStream png = new MemoryStream(entry.LoadPng()))
                 using (Image picture = Image.FromStream(png))
                 {
                     data.SetImage(picture);
@@ -487,13 +639,13 @@ class MainForm : Form
             }
             ownCopy = Native.GetClipboardSequenceNumber();
         }
-        catch (ExternalException ex)   // the clipboard locked by another program
+        catch (Exception ex)   // the clipboard locked by another program, or a picture the history file no longer gives
         {
             status.Text = "Errore: " + ex.Message;
             return;
         }
         status.Text = "Negli appunti: " + Shorten(entry.ToString()) + ". Incollalo con Ctrl+V"
-            + (hotkeyBox.Checked && entry.Png == null ? " o digitalo con " + HotkeyName : "") + ".";
+            + (hotkeyBox.Checked && !entry.Picture ? " o digitalo con " + HotkeyName : "") + ".";
         GoBack();
     }
 
@@ -502,8 +654,12 @@ class MainForm : Form
     {
         if (busy) return;
         IntPtr foreground = Native.GetForegroundWindow();
-        previous = IsValidTarget(foreground) ? foreground : IntPtr.Zero;
-        wasHidden = !Visible;
+        // Pressed again with the list already in front: where to go back to is still what the first press found.
+        if (foreground != Handle)
+        {
+            previous = IsValidTarget(foreground) ? foreground : IntPtr.Zero;
+            wasHidden = !Visible;
+        }
         search.Clear();
         ShowView(false);
         RestoreWindow();
@@ -525,7 +681,7 @@ class MainForm : Form
     // or to change a saved one.
     void Edit(Entry source)
     {
-        if (source != null && source.Png != null) return;
+        if (source != null && source.Picture) return;
         using (EditForm edit = new EditForm(source))
         {
             // Asked again, with what was written still there, if the name turns out to be taken.
@@ -541,7 +697,7 @@ class MainForm : Form
                     Texts.Save(name, edit.Content);   // first, so that a failure leaves the old one in place
                     if (renamed && oldName != null) Texts.Delete(oldName);
                 })) continue;
-                if (source != null && source.Name == null) Texts.Recent.Remove(source);   // it now has a line among the saved ones
+                if (source != null && source.Name == null) Texts.Remove(source);   // it now has a line among the saved ones
                 status.Text = "Salvato «" + Shorten(name) + "».";
                 break;
             }
@@ -553,7 +709,7 @@ class MainForm : Form
     {
         Entry entry = Selected;
         if (entry == null) return;
-        if (entry.Name == null) Texts.Recent.Remove(entry);
+        if (entry.Name == null) Texts.Remove(entry);
         else if (!Ask("Vuoi eliminare «" + entry.Name + "»?") || !Change(delegate { Texts.Delete(entry.Name); })) return;
         Reload();
     }
@@ -638,11 +794,73 @@ class MainForm : Form
         return label;
     }
 
-    static void PlaceOption(CheckBox box, string text, ref int top)
+    // The name of a category of options, with some air above it unless it opens its column.
+    void PlaceTitle(string text, int left, ref int top)
+    {
+        if (top > Edge) top += SectionGap;
+        Label title = NewLabel(text, top);
+        title.Left = left;
+        title.Font = new Font(Font, FontStyle.Bold);
+        // A thin line under the title, as wide as the column: the accent colour is left to what can be clicked.
+        Label rule = new Label();
+        rule.SetBounds(left, top + TitleRow - RuleGap, ColumnWidth, 1);
+        rule.BackColor = Look.Border;
+        optionControls.Add(title);
+        optionControls.Add(rule);
+        top += TitleRow;
+    }
+
+    // A row with a number to write: its description on the left, its box at the right edge of the column.
+    // Returns the description, for its tooltip.
+    Label PlaceNumber(TextBox box, string text, int max, Action confirm, int left, ref int top)
+    {
+        Label label = NewLabel(text, top + 5);
+        label.Left = left;
+        box.SetBounds(left + ColumnWidth - NumberWidth, top, NumberWidth, NumberHeight);
+        box.TextAlign = HorizontalAlignment.Center;
+        box.MaxLength = max.ToString().Length;
+        box.KeyPress += delegate(object sender, KeyPressEventArgs e)
+        {
+            bool enter = e.KeyChar == (char)Keys.Enter;
+            if (enter) confirm();   // Enter confirms what was written, and nothing else
+            e.Handled = enter || !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
+        };
+        box.Leave += delegate { confirm(); };
+        top += NumberRow;
+        optionControls.Add(label);
+        optionControls.Add(Look.Frame(box));   // the frame of the box is what goes into the window
+        return label;
+    }
+
+    // A row with a link, for something to open rather than to set.
+    LinkLabel PlaceLink(string text, Action open, int left, ref int top)
+    {
+        LinkLabel link = new LinkLabel();
+        link.Text = text;
+        link.AutoSize = true;
+        link.Location = new Point(left, top);
+        link.LinkColor = Look.Accent;
+        link.ActiveLinkColor = Look.Ink;
+        link.LinkBehavior = LinkBehavior.AlwaysUnderline;   // or it would pass for the title of a category
+        link.LinkClicked += delegate { open(); };
+        optionControls.Add(link);
+        top += RowHeight;
+        return link;
+    }
+
+    // Shows the folder of the history files in Explorer.
+    void OpenFolder()
+    {
+        if (Directory.Exists(Texts.Folder)) Change(delegate { Process.Start(Texts.Folder); });
+        else status.Text = "La cartella della cronologia non esiste ancora: su disco non c'è niente.";
+    }
+
+    void PlaceOption(CheckBox box, string text, int left, ref int top)
     {
         box.Text = text;
         box.AutoSize = true;
-        box.Location = new Point(Edge, top);
+        box.Location = new Point(left, top);
+        optionControls.Add(box);
         top += RowHeight;
     }
 
@@ -655,6 +873,12 @@ class MainForm : Form
     {
         status.Text = "Per digitare una password: copiala, premi «" + ButtonText + "» e clicca nel campo della finestra remota."
             + (hotkeyBox.Checked ? " Oppure premi " + HotkeyName + " direttamente nel campo." : "");
+    }
+
+    protected override void OnLoad(EventArgs e)
+    {
+        base.OnLoad(e);
+        MinimumSize = Size;   // as designed, at the scale of this screen
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -731,13 +955,20 @@ class MainForm : Form
         else ShowIdle();
     }
 
-    // Registers a hotkey if its checkbox is ticked. If Windows refuses it, unticks the checkbox and returns false.
+    // Registers a hotkey if its checkbox is ticked. If Windows refuses it, unticks the checkbox and returns false;
+    // the checkbox is remembered as 'refused', so that the setting is saved as the user left it and the next
+    // start tries again.
     bool Register(CheckBox box, int id, uint modifiers, Keys key)
     {
         Native.UnregisterHotKey(Handle, id);
-        if (!box.Checked || Native.RegisterHotKey(Handle, id, modifiers | Native.MOD_NOREPEAT, (uint)key))
+        if (!box.Checked) return true;
+        if (Native.RegisterHotKey(Handle, id, modifiers | Native.MOD_NOREPEAT, (uint)key))
+        {
+            refused.Remove(box);
             return true;
+        }
         box.Checked = false;
+        if (!refused.Contains(box)) refused.Add(box);
         return false;
     }
 
@@ -754,6 +985,12 @@ class MainForm : Form
         else if (Program.ShowMessage != 0 && (uint)m.Msg == Program.ShowMessage)
         {
             RestoreWindow();
+        }
+        else if (m.Msg == Native.WM_ACTIVATEAPP && m.WParam == IntPtr.Zero)
+        {
+            // The user moved on to another program: a later choice must not jump back to where the list
+            // hotkey was pressed long before.
+            previous = IntPtr.Zero;
         }
         else if (m.Msg == Native.WM_CLIPBOARDUPDATE)
         {
@@ -1055,9 +1292,10 @@ class MainForm : Form
         clearBox.Checked = Transfer(key, save, "ClearClipboard", clearBox.Checked);
         slowBox.Checked = Transfer(key, save, "Slow", slowBox.Checked);
         altCodeBox.Checked = Transfer(key, save, "AltCodes", altCodeBox.Checked);
-        hotkeyBox.Checked = Transfer(key, save, "Hotkey", hotkeyBox.Checked);
-        pickBox.Checked = Transfer(key, save, "PickHotkey", pickBox.Checked);
+        hotkeyBox.Checked = Transfer(key, save, "Hotkey", hotkeyBox.Checked || refused.Contains(hotkeyBox));
+        pickBox.Checked = Transfer(key, save, "PickHotkey", pickBox.Checked || refused.Contains(pickBox));
         historyBox.Checked = Transfer(key, save, "History", historyBox.Checked);
+        Retention = Transfer(key, save, "KeepDays", Retention);
         trayBox.Checked = Transfer(key, save, "Tray", trayBox.Checked);
 
         // Window position. Reading starts from a point outside every screen: it stays there, and is ignored,
@@ -1092,27 +1330,73 @@ class Entry
 {
     const int MaxPreview = 120;   // beyond this, the text of a copied entry is truncated in the list
     public readonly string Name, Text;
+    public readonly DateTime Time;   // when it was copied, or saved: DateTime.MinValue if nobody knows
     const int PreviewHeight = 120;   // of the small copy shown in the list: enough for a sharp row at any scale
-    public readonly byte[] Png;      // null for a text
-    public readonly Image Preview;   // null for a text
+    public readonly bool Picture;
+    public readonly int Width, Height;   // of a picture
+    public readonly Image Preview;       // null for a text
+    public byte[] Png;                   // a picture while it is only in memory: null once the history file holds it
+    // Where the history file holds a copied entry: FilePath is null while it is only in memory. Offset and
+    // Length are those of its record, PngOffset and PngLength those of the picture inside it.
+    public string FilePath;
+    public long Offset, PngOffset;
+    public int Length, PngLength;
 
-    public Entry(string name, string text)
+    public Entry(string name, string text) : this(name, text, DateTime.Now)
+    {
+    }
+
+    public Entry(string name, string text, DateTime time)
     {
         Name = name;
         Text = text;
+        Time = time;
     }
 
     // A copied picture, kept as PNG because it takes far less memory than the bitmap. Its text describes it.
-    public Entry(Image picture)
+    public Entry(Image picture) : this(new Bitmap(picture, PreviewSize(picture)), picture.Width, picture.Height, DateTime.Now)
+    {
+        Png = ToPng(picture);
+        PngLength = Png.Length;
+    }
+
+    // A picture as the history file gives it back: the preview only, the rest is read when it is chosen.
+    public Entry(Image preview, int width, int height, DateTime time)
+    {
+        Picture = true;
+        Preview = preview;
+        Width = width;
+        Height = height;
+        Time = time;
+        Text = "Immagine " + width + "×" + height + ", copiata "
+            + (time.Date == DateTime.Today ? "" : "il " + time.ToString("dd/MM") + " ") + "alle " + time.ToString("HH:mm:ss");
+    }
+
+    static Size PreviewSize(Image picture)
+    {
+        int height = Math.Min(PreviewHeight, picture.Height);
+        return new Size(Math.Max(1, picture.Width * height / picture.Height), height);
+    }
+
+    public static byte[] ToPng(Image picture)
     {
         using (MemoryStream png = new MemoryStream())
         {
             picture.Save(png, ImageFormat.Png);
-            Png = png.ToArray();
+            return png.ToArray();
         }
-        int height = Math.Min(PreviewHeight, picture.Height), width = Math.Max(1, picture.Width * height / picture.Height);
-        Preview = new Bitmap(picture, width, height);
-        Text = "Immagine " + picture.Width + "×" + picture.Height + ", copiata alle " + DateTime.Now.ToString("HH:mm:ss");
+    }
+
+    // The whole picture: from memory, or from the history file.
+    public byte[] LoadPng()
+    {
+        if (Png != null) return Png;
+        using (FileStream stream = new FileStream(FilePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        using (BinaryReader reader = new BinaryReader(stream))
+        {
+            stream.Position = PngOffset;
+            return reader.ReadBytes(PngLength);
+        }
     }
 
     // What the list shows. Of a saved text only the name: a saved password never appears on screen.
@@ -1121,7 +1405,7 @@ class Entry
         get
         {
             if (Name != null) return Name;
-            if (Png != null) return Text;
+            if (Picture) return "Immagine " + Width + "×" + Height;   // when it was copied is shown beside it
             string line = Text.Trim().Replace('\r', ' ').Replace('\n', ' ').Replace('\t', ' ');
             return line.Length > MaxPreview ? line.Substring(0, MaxPreview) + "…" : line;
         }
@@ -1130,7 +1414,7 @@ class Entry
     // The sign that tells a saved text and a picture from a copied text.
     public string Mark
     {
-        get { return Name != null ? "★" : Png != null ? "▣" : ""; }
+        get { return Name != null ? "★" : Picture ? "▣" : ""; }
     }
 
     public override string ToString()
@@ -1179,10 +1463,95 @@ class Toggle : CheckBox
     }
 }
 
-// Colours and touches shared by the windows: dark, flat, with pastel accents.
+// A panel drawn as a rounded shape a shade darker than the window, with a thin edge that takes the accent
+// colour while what it holds has the focus.
+class Card : Panel
+{
+    public Card()
+    {
+        DoubleBuffered = true;
+        ResizeRedraw = true;
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        Graphics g = e.Graphics;
+        g.Clear(Parent.BackColor);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        using (GraphicsPath shape = Look.Rounded(new Rectangle(0, 0, Width - 1, Height - 1)))
+        using (Brush fill = new SolidBrush(Look.Well))
+        using (Pen edge = new Pen(ContainsFocus ? Look.Accent : Look.Border))
+        {
+            g.FillPath(fill, shape);
+            g.DrawPath(edge, shape);
+        }
+        base.OnPaint(e);
+    }
+}
+
+// A button drawn as a rounded shape in its own colours, a little lighter under the pointer.
+class RoundButton : Button
+{
+    bool hover;
+
+    protected override void OnMouseEnter(EventArgs e)
+    {
+        base.OnMouseEnter(e);
+        hover = true;
+        Invalidate();
+    }
+
+    protected override void OnMouseLeave(EventArgs e)
+    {
+        base.OnMouseLeave(e);
+        hover = false;
+        Invalidate();
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        Graphics g = e.Graphics;
+        g.Clear(Parent.BackColor);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        bool pressed = hover && Capture;
+        Color fill = !Enabled ? Look.Blend(BackColor, Parent.BackColor, 0.6f)
+            : pressed ? Look.Blend(BackColor, Look.Back, 0.25f) : hover ? Look.Blend(BackColor, Color.White, 0.12f) : BackColor;
+        using (GraphicsPath shape = Look.Rounded(new Rectangle(0, 0, Width - 1, Height - 1)))
+        using (Brush back = new SolidBrush(fill))
+        using (Pen edge = new Pen(Focused ? Look.Ink : Enabled ? FlatAppearance.BorderColor : fill))
+        {
+            g.FillPath(back, shape);
+            g.DrawPath(edge, shape);
+        }
+        TextRenderer.DrawText(g, Text, Font, ClientRectangle, Enabled ? ForeColor : Look.Border, TextFormatFlags.HorizontalCenter
+            | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix);
+    }
+}
+
+// Colours and touches shared by the windows: dark, with pastel accents and rounded shapes.
 static class Look
 {
     const int FramePadding = 6;   // between the edge of a framed text box and its text
+    const int Radius = 6;         // of the rounded corners
+
+    public static GraphicsPath Rounded(Rectangle area)
+    {
+        int side = 2 * Radius;
+        GraphicsPath path = new GraphicsPath();
+        path.AddArc(area.Left, area.Top, side, side, 180, 90);
+        path.AddArc(area.Right - side, area.Top, side, side, 270, 90);
+        path.AddArc(area.Right - side, area.Bottom - side, side, side, 0, 90);
+        path.AddArc(area.Left, area.Bottom - side, side, side, 90, 90);
+        path.CloseFigure();
+        return path;
+    }
+
+    // A colour part of the way from one to another.
+    public static Color Blend(Color from, Color to, float amount)
+    {
+        return Color.FromArgb((int)(from.R + (to.R - from.R) * amount), (int)(from.G + (to.G - from.G) * amount),
+            (int)(from.B + (to.B - from.B) * amount));
+    }
     public static readonly Color Back = Color.FromArgb(30, 30, 46), Well = Color.FromArgb(24, 24, 37),
         Soft = Color.FromArgb(49, 50, 68), Border = Color.FromArgb(69, 71, 90), Selected = Color.FromArgb(58, 62, 92),
         Ink = Color.FromArgb(205, 214, 244), Muted = Color.FromArgb(166, 173, 200),
@@ -1209,16 +1578,32 @@ static class Look
     // inside a panel that takes its place; the panel is what gets added to the window.
     public static Panel Frame(TextBox box)
     {
-        Panel frame = new Panel();
-        frame.Bounds = box.Bounds;
-        frame.BackColor = Well;
         box.BorderStyle = BorderStyle.None;
         Field(box);
-        Rectangle inside = Rectangle.Inflate(new Rectangle(Point.Empty, frame.Size), -FramePadding, -FramePadding);
-        // A single-line box keeps the height of its text: it is centred instead of stretched.
-        box.Bounds = box.Multiline ? inside : new Rectangle(inside.Left, (frame.Height - box.Height) / 2, inside.Width, box.Height);
-        frame.Controls.Add(box);
+        int textHeight = box.Height;
+        Panel frame = Wrap(box, FramePadding);
+        // A single-line box keeps the height of its text, whatever it is asked: the frame is built around it.
+        if (!box.Multiline)
+        {
+            frame.Height = textHeight + 2 * FramePadding;
+            box.Top = FramePadding;
+            box.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        }
         return frame;
+    }
+
+    // Puts a control inside a rounded card that takes its place; the card is what gets added to the window.
+    public static Panel Wrap(Control inner, int padding)
+    {
+        Card card = new Card();
+        card.Bounds = inner.Bounds;
+        card.BackColor = Well;
+        inner.Bounds = Rectangle.Inflate(new Rectangle(Point.Empty, card.Size), -padding, -padding);
+        inner.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;   // it follows its card
+        inner.GotFocus += delegate { card.Invalidate(); };
+        inner.LostFocus += delegate { card.Invalidate(); };
+        card.Controls.Add(inner);
+        return card;
     }
 
     public static void Style(ContextMenuStrip menu)
@@ -1246,13 +1631,25 @@ static class Look
     }
 }
 
-// What is behind the list: the last texts and pictures copied, kept only in memory, and the texts saved by
-// the user, kept in the registry and encrypted for the current Windows user.
+// What is behind the list: the texts and pictures copied, and the texts saved by the user, kept in the registry
+// and encrypted for the current Windows user. What was copied stays for a number of days in the history
+// folder, as it is, one file per day; with zero days it stays only in memory, and only the last few.
 static class Texts
 {
-    public const int MaxRecent = 30, MaxPictures = 5;   // pictures are heavy: only a few of the recent ones
-    const int MaxLength = 2000;   // a longer text is not something to type key by key
+    public const int MaxRecent = 30, MaxPictures = 5;   // while only in memory, where pictures are heavy
+    public const int MaxKeepDays = 365, DefaultKeepDays = 30;
+    const int MaxLength = 100000;   // a longer text is more likely a whole document than something to use again
+    // A record of a history file: kind, time of the copy and length, then that many bytes. Of a text, the
+    // text itself; of a picture its width, height and the length of the preview, then preview and picture as PNG.
+    const byte DeletedKind = 0, TextKind = 1, PictureKind = 2;
+    const int HeaderSize = sizeof(byte) + sizeof(long) + sizeof(int), PictureHeader = 3 * sizeof(int);
+    const string DayFormat = "yyyy-MM-dd", Extension = ".clips";
+    public static string Folder = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Program.AppName, "History");
+    static int keepDays;       // zero: nothing goes to disk
+    static DateTime pruned;    // the day the expired files were last removed
     const string SavedKey = MainForm.SettingsKey + @"\Saved";
+    const string DatesKey = "Dates";   // under the saved texts: when each was saved, under the same name
     // Clipboard formats with which password managers and private browser windows mark what must not be
     // recorded: the first two by merely being there, the others by holding a zero.
     public const string PrivateMarker = "ExcludeClipboardContentFromMonitorProcessing";
@@ -1281,9 +1678,10 @@ static class Texts
                 }
             }
         }
-        catch (ExternalException)
+        catch (Exception)
         {
-            // Clipboard held by another program, or a picture that cannot be read: this copy is not remembered.
+            // Clipboard held by another program, or a picture that cannot be read or is too large: this copy is
+            // not remembered. Whatever the failure, it must not surface at every copy made in another program.
         }
     }
 
@@ -1297,26 +1695,243 @@ static class Texts
     public static void Add(Image picture)
     {
         Entry entry = new Entry(picture);
-        // The same picture again, also because Windows announces one copy several times.
-        Recent.RemoveAll(delegate(Entry other) { return other.Png != null && other.Png.SequenceEqual(entry.Png); });
+        // The same picture again, also because Windows announces one copy several times. Only those of the
+        // same length are read back from the history file to be compared.
+        Recent.RemoveAll(delegate(Entry other)
+        {
+            if (!other.Picture || other.PngLength != entry.PngLength || !other.LoadPng().SequenceEqual(entry.Png)) return false;
+            Erase(other);
+            return true;
+        });
         Insert(entry);
     }
 
     static void Insert(Entry entry)
     {
         Recent.Insert(0, entry);
-        if (Recent.FindAll(IsPicture).Count > MaxPictures) Recent.RemoveAt(Recent.FindLastIndex(IsPicture));
-        if (Recent.Count > MaxRecent) Recent.RemoveAt(MaxRecent);
+        if (keepDays == 0)
+        {
+            Limit();
+            return;
+        }
+        if (pruned != DateTime.Today) Prune();
+        Store(entry);
     }
 
-    static bool IsPicture(Entry entry)
+    // What memory alone is allowed to hold: the newest pictures, then the newest entries.
+    static void Limit()
     {
-        return entry.Png != null;
+        int pictures = 0;
+        Recent.RemoveAll(delegate(Entry entry) { return entry.Picture && ++pictures > MaxPictures; });
+        if (Recent.Count > MaxRecent) Recent.RemoveRange(MaxRecent, Recent.Count - MaxRecent);
     }
 
     public static void Forget(string text)
     {
-        Recent.RemoveAll(delegate(Entry entry) { return entry.Text == text; });
+        Recent.RemoveAll(delegate(Entry entry)
+        {
+            if (entry.Text != text) return false;
+            Erase(entry);
+            return true;
+        });
+    }
+
+    public static void Remove(Entry entry)
+    {
+        Recent.Remove(entry);
+        Erase(entry);
+    }
+
+    // Forgets everything that was copied, on disk too, and keeps nothing on disk from now on.
+    public static void Clear()
+    {
+        keepDays = 0;
+        Recent.Clear();
+        DeleteFiles(DateTime.MaxValue);
+    }
+
+    // For how many days what is copied stays on disk. Zero brings back to memory the little it can hold and
+    // removes the files; otherwise the expired days go and what was only in memory is written.
+    public static void Keep(int days)
+    {
+        keepDays = days;
+        if (days == 0)
+        {
+            Limit();
+            foreach (Entry entry in Recent)
+            {
+                if (entry.Picture) entry.Png = entry.LoadPng();
+                entry.FilePath = null;
+            }
+            DeleteFiles(DateTime.MaxValue);
+            return;
+        }
+        Prune();
+        for (int i = Recent.Count - 1; i >= 0; i--)   // from the oldest, the order they were copied in
+            if (Recent[i].FilePath == null) Store(Recent[i]);
+    }
+
+    // Reads the history files into the list: once, when the program starts.
+    public static void Read()
+    {
+        if (keepDays == 0 || !Directory.Exists(Folder)) return;
+        foreach (string file in Directory.GetFiles(Folder, "*" + Extension)) ReadFile(file);
+        // Newest first. The clock is coarse: copies with the same time keep the order they have in the file.
+        Recent.Sort(delegate(Entry a, Entry b)
+        {
+            int byTime = b.Time.CompareTo(a.Time);
+            return byTime != 0 ? byTime : b.Offset.CompareTo(a.Offset);
+        });
+    }
+
+    static void ReadFile(string file)
+    {
+        long end = 0, length = 0;
+        try
+        {
+            using (FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Read))
+            using (BinaryReader reader = new BinaryReader(stream))
+            {
+                length = stream.Length;
+                while (end + HeaderSize <= length)
+                {
+                    byte kind = reader.ReadByte();
+                    DateTime time = new DateTime(reader.ReadInt64());
+                    int size = reader.ReadInt32();
+                    if (size < 0 || end + HeaderSize + size > length) break;
+                    Entry entry = null;
+                    if (kind == TextKind) entry = new Entry(null, Encoding.UTF8.GetString(reader.ReadBytes(size)), time);
+                    else if (kind == PictureKind)
+                    {
+                        int width = reader.ReadInt32(), height = reader.ReadInt32(), previewLength = reader.ReadInt32();
+                        // Copied into a bitmap of its own, which does not need the stream to stay open.
+                        using (MemoryStream packed = new MemoryStream(reader.ReadBytes(previewLength)))
+                        using (Image preview = Image.FromStream(packed))
+                        {
+                            entry = new Entry(new Bitmap(preview), width, height, time);
+                        }
+                        entry.PngOffset = stream.Position;
+                        entry.PngLength = size - PictureHeader - previewLength;
+                    }
+                    if (entry != null)
+                    {
+                        entry.FilePath = file;
+                        entry.Offset = end;
+                        entry.Length = size;
+                        Recent.Add(entry);
+                    }
+                    end += HeaderSize + size;
+                    stream.Position = end;
+                }
+            }
+            // A record cut short, by a crash while it was being written: removed, or whatever is added after
+            // it could never be read.
+            if (end < length)
+                using (FileStream stream = new FileStream(file, FileMode.Open, FileAccess.Write))
+                {
+                    stream.SetLength(end);
+                }
+        }
+        catch (Exception)
+        {
+            // A file that cannot be opened or makes no sense: what was read up to here stays, the file too.
+        }
+    }
+
+    // Adds an entry to the file of its day. If the disk refuses, it simply stays in memory.
+    static void Store(Entry entry)
+    {
+        try
+        {
+            Directory.CreateDirectory(Folder);
+            string file = Path.Combine(Folder, entry.Time.ToString(DayFormat, CultureInfo.InvariantCulture) + Extension);
+            using (FileStream stream = new FileStream(file, FileMode.Append, FileAccess.Write))
+            using (BinaryWriter writer = new BinaryWriter(stream))
+            {
+                long offset = stream.Position;
+                byte[] preview = entry.Picture ? Entry.ToPng(entry.Preview) : null;
+                byte[] content = entry.Picture ? entry.Png : Encoding.UTF8.GetBytes(entry.Text);
+                int length = entry.Picture ? PictureHeader + preview.Length + content.Length : content.Length;
+                writer.Write(entry.Picture ? PictureKind : TextKind);
+                writer.Write(entry.Time.Ticks);
+                writer.Write(length);
+                if (entry.Picture)
+                {
+                    writer.Write(entry.Width);
+                    writer.Write(entry.Height);
+                    writer.Write(preview.Length);
+                    writer.Write(preview);
+                }
+                writer.Write(content);
+                writer.Flush();
+                entry.PngOffset = stream.Position - content.Length;
+                entry.Offset = offset;
+                entry.Length = length;
+                entry.FilePath = file;
+            }
+            entry.Png = null;   // from now on read from the file when needed
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+    }
+
+    // Wipes an entry from its history file: zeros over its content, and its record marked as deleted. The
+    // file keeps its length and goes away with its day.
+    static void Erase(Entry entry)
+    {
+        if (entry.FilePath == null) return;
+        try
+        {
+            using (FileStream stream = new FileStream(entry.FilePath, FileMode.Open, FileAccess.Write))
+            {
+                stream.Position = entry.Offset;
+                stream.WriteByte(DeletedKind);
+                stream.Position = entry.Offset + HeaderSize;
+                stream.Write(new byte[entry.Length], 0, entry.Length);
+            }
+        }
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+        entry.FilePath = null;
+    }
+
+    // Removes the days that are over, from the list and from the disk.
+    static void Prune()
+    {
+        pruned = DateTime.Today;
+        DateTime oldest = pruned.AddDays(-keepDays);
+        Recent.RemoveAll(delegate(Entry entry) { return entry.Time.Date < oldest; });
+        DeleteFiles(oldest);
+    }
+
+    // Deletes the history files of the days before the given one.
+    static void DeleteFiles(DateTime before)
+    {
+        if (!Directory.Exists(Folder)) return;
+        foreach (string file in Directory.GetFiles(Folder, "*" + Extension))
+        {
+            DateTime day;
+            if (!DateTime.TryParseExact(Path.GetFileNameWithoutExtension(file), DayFormat, CultureInfo.InvariantCulture,
+                DateTimeStyles.None, out day) || day >= before) continue;
+            try
+            {
+                File.Delete(file);
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
     }
 
     public static bool IsPrivate(IDataObject data)
@@ -1338,6 +1953,7 @@ static class Texts
     {
         List<Entry> entries = new List<Entry>();
         using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SavedKey))
+        using (RegistryKey dates = key == null ? null : key.OpenSubKey(DatesKey))
         {
             string[] names = key == null ? new string[0] : key.GetValueNames();
             Array.Sort(names, StringComparer.CurrentCultureIgnoreCase);
@@ -1345,10 +1961,13 @@ static class Texts
             {
                 byte[] data = key.GetValue(name) as byte[];
                 if (data == null) continue;
+                // A text saved before the dates were kept has none.
+                object ticks = dates == null ? null : dates.GetValue(name);
+                bool dated = ticks is long && (long)ticks > DateTime.MinValue.Ticks && (long)ticks <= DateTime.MaxValue.Ticks;
                 try
                 {
                     byte[] plain = ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser);
-                    entries.Add(new Entry(name, Encoding.UTF8.GetString(plain)));
+                    entries.Add(new Entry(name, Encoding.UTF8.GetString(plain), dated ? new DateTime((long)ticks) : DateTime.MinValue));
                 }
                 catch (CryptographicException)
                 {
@@ -1362,17 +1981,24 @@ static class Texts
 
     public static void Save(string name, string text)
     {
+        byte[] secret = ProtectedData.Protect(Encoding.UTF8.GetBytes(text), null, DataProtectionScope.CurrentUser);
         using (RegistryKey key = Registry.CurrentUser.CreateSubKey(SavedKey))
+        using (RegistryKey dates = key.CreateSubKey(DatesKey))
         {
-            key.SetValue(name, ProtectedData.Protect(Encoding.UTF8.GetBytes(text), null, DataProtectionScope.CurrentUser));
+            key.DeleteValue(name, false);   // otherwise the registry keeps the letter case of the name it already has
+            key.SetValue(name, secret);
+            dates.DeleteValue(name, false);
+            dates.SetValue(name, DateTime.Now.Ticks, RegistryValueKind.QWord);
         }
     }
 
     public static void Delete(string name)
     {
         using (RegistryKey key = Registry.CurrentUser.CreateSubKey(SavedKey))
+        using (RegistryKey dates = key.CreateSubKey(DatesKey))
         {
             key.DeleteValue(name, false);
+            dates.DeleteValue(name, false);
         }
     }
 
@@ -1393,7 +2019,7 @@ class EditForm : Form
     const int ButtonWidth = 90, ButtonHeight = 26, Gap = 6;
     const int MaxNameLength = 60;
     readonly TextBox nameBox = new TextBox(), contentBox = new TextBox();
-    readonly Button saveButton = new Button(), cancelButton = new Button();
+    readonly Button saveButton = new RoundButton(), cancelButton = new RoundButton();
 
     public EditForm(Entry source)
     {
@@ -1762,7 +2388,7 @@ static class Typer
 // Windows functions and constants, with their official names.
 static class Native
 {
-    public const int WM_HOTKEY = 0x0312, WM_CLIPBOARDUPDATE = 0x031D, EM_SETCUEBANNER = 0x1501;
+    public const int WM_ACTIVATEAPP = 0x001C, WM_HOTKEY = 0x0312, WM_CLIPBOARDUPDATE = 0x031D, EM_SETCUEBANNER = 0x1501;
     public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20, DWMWA_CAPTION_COLOR = 35, DWMWA_TEXT_COLOR = 36;
     public const uint CF_UNICODETEXT = 13;
     public const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002, MOD_NOREPEAT = 0x4000;
