@@ -268,7 +268,7 @@ static class Texts
     {
         keepDays = 0;
         Recent.Clear();
-        DeleteFiles(DateTime.MaxValue, new List<string>());
+        DeleteFiles(DateTime.MaxValue);
     }
 
     // For how many days what is copied stays on disk. Zero brings back to memory the little it can hold and
@@ -284,7 +284,7 @@ static class Texts
                 if (entry.Picture) entry.Png = entry.LoadPng();
                 entry.FilePath = null;
             }
-            DeleteFiles(DateTime.MaxValue, new List<string>());
+            DeleteFiles(DateTime.MaxValue);
             return;
         }
         Prune();
@@ -430,7 +430,7 @@ static class Texts
     }
 
     // Removes the days that are over, from the list and from the disk. A pinned entry outlives its day, and
-    // its file with it: the other entries of that file are wiped one by one.
+    // its file with it, rewritten without the other entries.
     static void Prune()
     {
         if (!loaded) return;
@@ -447,30 +447,29 @@ static class Texts
 
     static void Drop(DateTime oldest)
     {
-        List<string> held = new List<string>();
-        foreach (Entry entry in Recent)
-            if (entry.Pinned && entry.FilePath != null && entry.Time.Date < oldest) held.Add(Path.GetFileName(entry.FilePath));
-        Recent.RemoveAll(delegate(Entry entry)
-        {
-            if (entry.Pinned || entry.Time.Date >= oldest) return false;
-            if (entry.FilePath != null && held.Contains(Path.GetFileName(entry.FilePath))) Erase(entry);
-            return true;
-        });
-        DeleteFiles(oldest, held);
+        Recent.RemoveAll(delegate(Entry entry) { return !entry.Pinned && entry.Time.Date < oldest; });
+        DeleteFiles(oldest);
     }
 
-    // Deletes the history files of the days before the given one, except those named in 'held'.
-    static void DeleteFiles(DateTime before, List<string> held)
+    // Deletes the history files of the days before the given one. A file that still holds entries of the
+    // list (the pinned ones) is not deleted but shrunk to them.
+    static void DeleteFiles(DateTime before)
     {
         if (!Directory.Exists(Folder)) return;
         foreach (string file in Directory.GetFiles(Folder, "*" + Extension))
         {
             DateTime day;
             if (!DateTime.TryParseExact(Path.GetFileNameWithoutExtension(file), DayFormat, CultureInfo.InvariantCulture,
-                DateTimeStyles.None, out day) || day >= before || held.Contains(Path.GetFileName(file))) continue;
+                DateTimeStyles.None, out day) || day >= before) continue;
+            string name = Path.GetFileName(file);
+            List<Entry> kept = Recent.FindAll(delegate(Entry entry)
+            {
+                return entry.FilePath != null && string.Equals(Path.GetFileName(entry.FilePath), name, StringComparison.OrdinalIgnoreCase);
+            });
             try
             {
-                File.Delete(file);
+                if (kept.Count == 0) File.Delete(file);
+                else Shrink(file, kept);
             }
             catch (IOException)
             {
@@ -478,6 +477,39 @@ static class Texts
             catch (UnauthorizedAccessException)
             {
             }
+        }
+    }
+
+    // Rewrites a history file with only the given entries, which then learn where they are now. Nothing is
+    // done to a file that holds nothing else already.
+    static void Shrink(string file, List<Entry> kept)
+    {
+        kept.Sort(delegate(Entry a, Entry b) { return a.Offset.CompareTo(b.Offset); });
+        long[] moved = new long[kept.Count];
+        long size = 0;
+        foreach (Entry entry in kept) size += HeaderSize + entry.Length;
+        string copy = file + ".new";
+        using (FileStream source = new FileStream(file, FileMode.Open, FileAccess.Read))
+        {
+            if (source.Length == size) return;
+            using (BinaryReader reader = new BinaryReader(source))
+            using (FileStream target = new FileStream(copy, FileMode.Create, FileAccess.Write))
+            {
+                for (int i = 0; i < kept.Count; i++)
+                {
+                    source.Position = kept[i].Offset;
+                    moved[i] = target.Position - kept[i].Offset;
+                    byte[] record = reader.ReadBytes(HeaderSize + kept[i].Length);
+                    target.Write(record, 0, record.Length);
+                }
+            }
+        }
+        File.Delete(file);
+        File.Move(copy, file);
+        for (int i = 0; i < kept.Count; i++)
+        {
+            kept[i].Offset += moved[i];
+            kept[i].PngOffset += moved[i];
         }
     }
 

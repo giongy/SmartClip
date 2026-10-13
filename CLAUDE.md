@@ -105,8 +105,8 @@ su GitHub).
 - Una voce copiata si può tenere in cima alla colonna (`Entry.Pinned`, voluto dall'utente): stellina
   all'estremità destra della riga (`StarArea`, `OnStar`: lì il clic non sceglie la voce), menu del tasto destro
   e Ctrl+P, tutti in `TogglePin`. Nel file è un bit del tipo del blocco (`PinnedKind`), cambiato sul posto
-  (`Texts.Pin`). Una voce fissata non scade: `Prune` tiene il file del suo giorno e azzera le altre voci che
-  contiene; per questo non fa nulla finché `Read` non ha letto i file (`loaded`), altrimenti all'avvio li
+  (`Texts.Pin`). Una voce fissata non scade: `Prune` tiene il file del suo giorno ma lo riscrive con le sole
+  voci fissate (`Shrink`; l'utente non voleva file pieni di zeri, i file senza stelline si cancellano); per questo non fa nulla finché `Read` non ha letto i file (`loaded`), altrimenti all'avvio li
   cancellerebbe senza sapere delle stelline. Ricopiare lo stesso testo non la sposta e `Forget` non la toglie;
   i limiti di memoria non la contano. L'ordine (fissate prima) lo dà `Texts.Load`.
 - «Pulisci ora…» nelle opzioni (voluto dall'utente): elimina subito ciò che è stato copiato prima degli ultimi

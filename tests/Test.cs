@@ -260,6 +260,16 @@ static class TestProgram
             Texts.Clean(0);
             Check(Texts.Recent.Count == 1 && Texts.Recent[0].Pinned
                 && Encoding.UTF8.GetString(System.IO.File.ReadAllBytes(today)).IndexOf("fresh") < 0, "with none only the pinned ones stay");
+            // 13 bytes of header before the text of a record.
+            Check(new System.IO.FileInfo(today).Length == 13 + "kept on top".Length && System.IO.Directory.GetFiles(folder).Length == 1,
+                "and their file is shrunk to them, not filled with zeros");
+            Texts.Pin(Texts.Recent[0], false);
+            Texts.Recent.Clear();
+            Texts.Read();
+            Check(Texts.Recent.Count == 1 && Texts.Recent[0].Text == "kept on top" && !Texts.Recent[0].Pinned,
+                "a shrunk file is still written and read in the right place");
+            Texts.Clean(0);
+            Check(System.IO.Directory.GetFiles(folder).Length == 0, "with nothing pinned the files are deleted");
         }
         finally
         {
