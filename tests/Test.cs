@@ -21,6 +21,11 @@ class ShotEdit : EditForm
     protected override bool ShowWithoutActivation { get { return true; } }
 }
 
+class ShotHelp : HelpForm
+{
+    protected override bool ShowWithoutActivation { get { return true; } }
+}
+
 static class TestProgram
 {
     [DllImport("user32.dll")]
@@ -216,6 +221,30 @@ static class TestProgram
             Check(System.IO.File.Exists(today) && loose.Png == null, "days again: what is in memory is written");
             Texts.Clear();
             Check(Texts.Recent.Count == 0 && System.IO.Directory.GetFiles(folder).Length == 0, "clearing removes list and files");
+
+            // Pinned entries: first in the list, untouched by a new copy, and kept beyond their days.
+            DateTime past = DateTime.Now.AddDays(-20);
+            string pastFile = System.IO.Path.Combine(folder, past.ToString("yyyy-MM-dd") + ".clips");
+            Entry aged = new Entry(null, "aged text", past), star = new Entry(null, "star text", past);
+            Texts.Recent.Add(aged);
+            Texts.Recent.Add(star);
+            Texts.Keep(30);
+            Texts.Add("fresh");
+            Texts.Pin(star, true);
+            Check(Texts.Load().Find(delegate(Entry e) { return e.Name == null; }) == star, "a pinned entry comes first");
+            Texts.Add("star text");
+            Texts.Forget("star text");
+            Check(Texts.Recent.Count == 3 && Texts.Recent.Contains(star), "copied again or forgotten, it stays as it is");
+            Texts.Keep(7);
+            string left = Encoding.UTF8.GetString(System.IO.File.ReadAllBytes(pastFile));
+            Check(Texts.Recent.Count == 2 && Texts.Recent.Contains(star) && left.IndexOf("aged") < 0 && left.IndexOf("star") > 0,
+                "it outlives its days, while the others of its file are wiped");
+            Texts.Recent.Clear();
+            Texts.Read();
+            star =Texts.Recent.Find(delegate(Entry e) { return e.Text == "star text"; });
+            Check(Texts.Recent.Count == 2 && star != null && star.Pinned, "and comes back pinned from disk");
+            Texts.Pin(star, false);
+            Check(Texts.Recent.Count == 1 && !System.IO.File.Exists(pastFile), "unpinned, it leaves with its day");
         }
         finally
         {
@@ -376,6 +405,11 @@ static class TestProgram
                 edit.Show();
                 Snap(edit, path + "-real-edit.png");
             }
+            using (ShotHelp help = new ShotHelp())
+            {
+                help.Show(form);
+                Snap(help, path + "-real-help.png");
+            }
         }
         return 0;
     }
@@ -402,7 +436,9 @@ static class TestProgram
         entries.Add(new Entry("Firma email", "Cordiali saluti"));
         entries.Add(new Entry("Password del server di prova", "not shown"));
         entries.Add(new Entry("Indirizzo ufficio", "not shown"));
-        entries.Add(new Entry(null, "ssh admin@srv-database-01"));
+        Entry pinned = new Entry(null, "ssh admin@srv-database-01");
+        pinned.Pinned = true;
+        entries.Add(pinned);
         using (Bitmap picture = SamplePicture()) entries.Add(new Entry(picture));
         entries.Add(new Entry(null, "Una frase copiata più lunga della finestra, che finisce tagliata sul bordo destro con i puntini"));
         entries.Add(new Entry(null, "prima riga\r\nseconda riga"));

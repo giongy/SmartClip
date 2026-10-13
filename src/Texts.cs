@@ -19,6 +19,7 @@ class Entry
     public readonly DateTime Time;   // when it was copied, or saved: DateTime.MinValue if nobody knows
     const int PreviewHeight = 120;   // of the small copy shown in the list: enough for a sharp row at any scale
     public readonly bool Picture;
+    public bool Pinned;              // a copied entry the user keeps at the top of its column
     public readonly int Width, Height;   // of a picture
     public readonly Image Preview;       // null for a text
     public byte[] Png;                   // a picture while it is only in memory: null once the history file holds it
@@ -120,12 +121,14 @@ static class Texts
     // A record of a history file: kind, time of the copy and length, then that many bytes. Of a text, the
     // text itself; of a picture its width, height and the length of the preview, then preview and picture as PNG.
     const byte DeletedKind = 0, TextKind = 1, PictureKind = 2;
+    const byte PinnedKind = 0x80;   // added to the kind of an entry kept at the top
     const int HeaderSize = sizeof(byte) + sizeof(long) + sizeof(int), PictureHeader = 3 * sizeof(int);
     const string DayFormat = "yyyy-MM-dd", Extension = ".clips";
     public static string Folder = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Program.AppName, "History");
     static int keepDays;       // zero: nothing goes to disk
     static DateTime pruned;    // the day the expired files were last removed
+    static bool loaded;        // the history files were read: before that, nobody knows which hold a pinned entry
     const string SavedKey = MainForm.SettingsKey + @"\Saved";
     const string DatesKey = "Dates";   // under the saved texts: when each was saved, under the same name
     // Clipboard formats with which password managers and private browser windows mark what must not be
@@ -166,7 +169,9 @@ static class Texts
     public static void Add(string text)
     {
         if (text == null || text.Trim().Length == 0 || text.Length > MaxLength) return;
-        Forget(text);   // copied again: it moves to the top instead of appearing twice
+        // Copied again: it moves to the top instead of appearing twice. A pinned one is at the top already.
+        if (Recent.Exists(delegate(Entry entry) { return entry.Pinned && entry.Text == text; })) return;
+        Forget(text);
         Insert(new Entry(null, text));
     }
 
@@ -174,14 +179,20 @@ static class Texts
     {
         Entry entry = new Entry(picture);
         // The same picture again, also because Windows announces one copy several times. Only those of the
-        // same length are read back from the history file to be compared.
+        // same length are read back from the history file to be compared. A pinned one stays as it is.
+        bool pinned = false;
         Recent.RemoveAll(delegate(Entry other)
         {
             if (!other.Picture || other.PngLength != entry.PngLength || !other.LoadPng().SequenceEqual(entry.Png)) return false;
+            if (other.Pinned)
+            {
+                pinned = true;
+                return false;
+            }
             Erase(other);
             return true;
         });
-        Insert(entry);
+        if (!pinned) Insert(entry);
     }
 
     static void Insert(Entry entry)
@@ -196,19 +207,21 @@ static class Texts
         Store(entry);
     }
 
-    // What memory alone is allowed to hold: the newest pictures, then the newest entries.
+    // What memory alone is allowed to hold: the newest pictures, then the newest entries. The pinned ones
+    // are not counted.
     static void Limit()
     {
-        int pictures = 0;
-        Recent.RemoveAll(delegate(Entry entry) { return entry.Picture && ++pictures > MaxPictures; });
-        if (Recent.Count > MaxRecent) Recent.RemoveRange(MaxRecent, Recent.Count - MaxRecent);
+        int pictures = 0, kept = 0;
+        Recent.RemoveAll(delegate(Entry entry) { return !entry.Pinned && entry.Picture && ++pictures > MaxPictures; });
+        Recent.RemoveAll(delegate(Entry entry) { return !entry.Pinned && ++kept > MaxRecent; });
     }
 
+    // Forgets a copied text, unless the user pinned it.
     public static void Forget(string text)
     {
         Recent.RemoveAll(delegate(Entry entry)
         {
-            if (entry.Text != text) return false;
+            if (entry.Text != text || entry.Pinned) return false;
             Erase(entry);
             return true;
         });
@@ -220,12 +233,42 @@ static class Texts
         Erase(entry);
     }
 
+    // Keeps a copied entry at the top of its column, or lets it go back among the others: then it leaves at
+    // once, if its days are over.
+    public static void Pin(Entry entry, bool pinned)
+    {
+        entry.Pinned = pinned;
+        if (entry.FilePath != null)
+        {
+            try
+            {
+                using (FileStream stream = new FileStream(entry.FilePath, FileMode.Open, FileAccess.Write))
+                {
+                    stream.Position = entry.Offset;
+                    stream.WriteByte(KindOf(entry));
+                }
+            }
+            catch (IOException)
+            {
+            }
+            catch (UnauthorizedAccessException)
+            {
+            }
+        }
+        if (!pinned && keepDays > 0) Prune();
+    }
+
+    static byte KindOf(Entry entry)
+    {
+        return (byte)((entry.Picture ? PictureKind : TextKind) | (entry.Pinned ? PinnedKind : 0));
+    }
+
     // Forgets everything that was copied, on disk too, and keeps nothing on disk from now on.
     public static void Clear()
     {
         keepDays = 0;
         Recent.Clear();
-        DeleteFiles(DateTime.MaxValue);
+        DeleteFiles(DateTime.MaxValue, new List<string>());
     }
 
     // For how many days what is copied stays on disk. Zero brings back to memory the little it can hold and
@@ -241,7 +284,7 @@ static class Texts
                 if (entry.Picture) entry.Png = entry.LoadPng();
                 entry.FilePath = null;
             }
-            DeleteFiles(DateTime.MaxValue);
+            DeleteFiles(DateTime.MaxValue, new List<string>());
             return;
         }
         Prune();
@@ -252,8 +295,10 @@ static class Texts
     // Reads the history files into the list: once, when the program starts.
     public static void Read()
     {
+        loaded = true;
         if (keepDays == 0 || !Directory.Exists(Folder)) return;
         foreach (string file in Directory.GetFiles(Folder, "*" + Extension)) ReadFile(file);
+        Prune();
         // Newest first. The clock is coarse: copies with the same time keep the order they have in the file.
         Recent.Sort(delegate(Entry a, Entry b)
         {
@@ -274,6 +319,8 @@ static class Texts
                 while (end + HeaderSize <= length)
                 {
                     byte kind = reader.ReadByte();
+                    bool pinned = (kind & PinnedKind) != 0;
+                    if (pinned) kind -= PinnedKind;
                     DateTime time = new DateTime(reader.ReadInt64());
                     int size = reader.ReadInt32();
                     if (size < 0 || end + HeaderSize + size > length) break;
@@ -293,6 +340,7 @@ static class Texts
                     }
                     if (entry != null)
                     {
+                        entry.Pinned = pinned;
                         entry.FilePath = file;
                         entry.Offset = end;
                         entry.Length = size;
@@ -330,7 +378,7 @@ static class Texts
                 byte[] preview = entry.Picture ? Entry.ToPng(entry.Preview) : null;
                 byte[] content = entry.Picture ? entry.Png : Encoding.UTF8.GetBytes(entry.Text);
                 int length = entry.Picture ? PictureHeader + preview.Length + content.Length : content.Length;
-                writer.Write(entry.Picture ? PictureKind : TextKind);
+                writer.Write(KindOf(entry));
                 writer.Write(entry.Time.Ticks);
                 writer.Write(length);
                 if (entry.Picture)
@@ -381,24 +429,34 @@ static class Texts
         entry.FilePath = null;
     }
 
-    // Removes the days that are over, from the list and from the disk.
+    // Removes the days that are over, from the list and from the disk. A pinned entry outlives its day, and
+    // its file with it: the other entries of that file are wiped one by one.
     static void Prune()
     {
+        if (!loaded) return;
         pruned = DateTime.Today;
         DateTime oldest = pruned.AddDays(-keepDays);
-        Recent.RemoveAll(delegate(Entry entry) { return entry.Time.Date < oldest; });
-        DeleteFiles(oldest);
+        List<string> held = new List<string>();
+        foreach (Entry entry in Recent)
+            if (entry.Pinned && entry.FilePath != null && entry.Time.Date < oldest) held.Add(Path.GetFileName(entry.FilePath));
+        Recent.RemoveAll(delegate(Entry entry)
+        {
+            if (entry.Pinned || entry.Time.Date >= oldest) return false;
+            if (entry.FilePath != null && held.Contains(Path.GetFileName(entry.FilePath))) Erase(entry);
+            return true;
+        });
+        DeleteFiles(oldest, held);
     }
 
-    // Deletes the history files of the days before the given one.
-    static void DeleteFiles(DateTime before)
+    // Deletes the history files of the days before the given one, except those named in 'held'.
+    static void DeleteFiles(DateTime before, List<string> held)
     {
         if (!Directory.Exists(Folder)) return;
         foreach (string file in Directory.GetFiles(Folder, "*" + Extension))
         {
             DateTime day;
             if (!DateTime.TryParseExact(Path.GetFileNameWithoutExtension(file), DayFormat, CultureInfo.InvariantCulture,
-                DateTimeStyles.None, out day) || day >= before) continue;
+                DateTimeStyles.None, out day) || day >= before || held.Contains(Path.GetFileName(file))) continue;
             try
             {
                 File.Delete(file);
@@ -426,7 +484,8 @@ static class Texts
         return false;
     }
 
-    // Everything the list can offer: the saved texts by name, then the copied ones from the newest.
+    // Everything the list can offer: the saved texts by name, then the copied ones from the newest, the
+    // pinned ones before the others.
     public static List<Entry> Load()
     {
         List<Entry> entries = new List<Entry>();
@@ -453,7 +512,8 @@ static class Texts
                 }
             }
         }
-        entries.AddRange(Recent);
+        entries.AddRange(Recent.FindAll(delegate(Entry entry) { return entry.Pinned; }));
+        entries.AddRange(Recent.FindAll(delegate(Entry entry) { return !entry.Pinned; }));
         return entries;
     }
 

@@ -65,8 +65,11 @@ reaches the rest. On the right, **Salvati**: the texts you saved under a name, w
 | Typing | Filters both columns. Words can come in any order; case and accents are ignored. |
 | Up / Down | Moves through the column |
 | Tab | Switches to the other column |
-| Enter, or a click | Puts the selected entry back on the clipboard |
+| Click | Puts the entry back on the clipboard; the window stays, so you can still save or delete it |
+| Enter, or a double click | Puts the entry back on the clipboard and returns to the window you came from |
 | Right click | Opens the menu of the entry |
+| The star at the right end of a copied entry, or Ctrl+P | Keeps the entry at the top of its column, also beyond the days of the history, until you take the star off |
+| F1, or the **?** button | Opens the guide: everything the program does, in Italian |
 
 Three buttons under the lists manage the saved texts; each opens a small window with a name and a content box.
 

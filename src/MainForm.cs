@@ -15,16 +15,16 @@ class MainForm : Form
     // The global hotkeys: registration and texts all start from here. The first types the clipboard at once,
     // the second brings up this window with the list.
     const uint HotkeyModifiers = Native.MOD_CONTROL | Native.MOD_ALT, PickModifiers = Native.MOD_CONTROL;
-    const Keys HotkeyKey = Keys.V, PickKey = Keys.D;
-    static readonly string HotkeyName = "Ctrl+Alt+" + HotkeyKey, PickName = "Ctrl+" + PickKey;
+    const Keys HotkeyKey = Keys.V, PickKey = Keys.D, HelpKey = Keys.F1;
+    public static readonly string HotkeyName = "Ctrl+Alt+" + HotkeyKey, PickName = "Ctrl+" + PickKey;
     const int HotkeyId = 1, PickId = 2;
 
-    const int MinDelay = 1, MaxDelay = 30;             // limits, in seconds, of the wait before typing
+    public const int MinDelay = 1, MaxDelay = 30;             // limits, in seconds, of the wait before typing
     const int DefaultDelay = 1;                        // wait proposed until the user picks another one
-    const int ArmedSeconds = 15;                       // time allowed to bring the target window to the foreground
+    public const int ArmedSeconds = 15;                       // time allowed to bring the target window to the foreground
     const int PollMs = 100;                            // how often the foreground window is checked again
     const int KeyDelayMs = 15, SlowKeyDelayMs = 60;    // pause after each key press or release
-    const int UnusualLength = 100;                     // a longer text is unlikely to be a password
+    public const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
     const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
     const int ListExtra = 144;                    // height given to the lists beyond what the options need
@@ -38,17 +38,17 @@ class MainForm : Form
     const int RowHeight = 24;                          // distance between one option checkbox and the next
     const int NumberWidth = 56, NumberHeight = 26;     // the box of an option that is a number
     const int NumberRow = 37;                          // distance between such an option and the next one
-    const int MaxShown = 200;                          // copied entries listed at once
+    public const int MaxShown = 200;                          // copied entries listed at once
     const int SearchHeight = 30, GlyphWidth = 20;      // the search box, and the magnifying glass on its left
     const int ListPadding = 4;                         // between the rounded edge of a column and its list
     const int CountWidth = 120;                        // room for the number of entries, right of a column title
     const int RowInset = 12, TimeGap = 8;              // of the text in a row, and around the time on its right
     const int Gap = 6;                                 // between neighbouring controls
-    const int ActionHeight = 26, ActionWidth = 100;    // the buttons in the bottom row
+    const int ActionHeight = 26, ActionWidth = 92;     // the buttons in the bottom row
     const int TypeWidth = 160;                        // the button that types the clipboard, in the same row
     const int StatusHeight = 34;                       // two lines of text
-    const Keys NewKey = Keys.N, SaveKey = Keys.S, DeleteKey = Keys.E;   // in the list, all with Ctrl
-    const string ButtonText = "Digita gli appunti";
+    public const Keys NewKey = Keys.N, SaveKey = Keys.S, DeleteKey = Keys.E, PinKey = Keys.P;   // in the list, all with Ctrl
+    public const string ButtonText = "Digita gli appunti";
     public const string SettingsKey = @"Software\" + Program.AppName;
     const string OldSettingsKey = @"Software\PasswordPaste";   // the name of the program up to version 1.2
 
@@ -62,7 +62,8 @@ class MainForm : Form
     static readonly Point OffScreen = new Point(int.MinValue, int.MinValue);
 
     readonly RoundButton typeButton = new RoundButton();
-    readonly RoundButton viewButton = new RoundButton();
+    readonly RoundButton viewButton = new RoundButton(), helpButton = new RoundButton();
+    HelpForm help;      // the guide, while it is open
     readonly Label recentCount = new Label(), savedCount = new Label();   // how many entries each column lists
     readonly Label recentEmpty = new Label(), savedEmpty = new Label();   // what a column says while it has none
     readonly Label status = new Label();
@@ -127,8 +128,9 @@ class MainForm : Form
         typeButton.Text = ButtonText;
         typeButton.Click += delegate { if (busy) cancel = true; else Run(Delay); };
         viewButton.Click += delegate { ShowView(!optionsShown); };
+        helpButton.Click += delegate { ShowHelp(); };
         Look.Style(typeButton, true);
-        foreach (Button button in new Button[] { viewButton, newButton, saveButton, deleteButton }) Look.Style(button, false);
+        foreach (Button button in new Button[] { viewButton, helpButton, newButton, saveButton, deleteButton }) Look.Style(button, false);
 
         status.UseMnemonic = false;
         status.ForeColor = Look.Muted;
@@ -181,7 +183,9 @@ class MainForm : Form
         saveButton.SetBounds(newButton.Right + Gap, actionTop, ActionWidth, ActionHeight);
         deleteButton.Text = "Elimina";
         deleteButton.SetBounds(saveButton.Right + Gap, actionTop, ActionWidth, ActionHeight);
-        viewButton.SetBounds(Edge + ContentWidth - ActionWidth, actionTop, ActionWidth, ActionHeight);
+        helpButton.Sign = Sign.Help;
+        helpButton.SetBounds(Edge + ContentWidth - ActionHeight, actionTop, ActionHeight, ActionHeight);   // a square
+        viewButton.SetBounds(helpButton.Left - Gap - ActionWidth, actionTop, ActionWidth, ActionHeight);
         typeButton.SetBounds(viewButton.Left - Gap - TypeWidth, actionTop, TypeWidth, ActionHeight);
 
         // The lists take the same area as the options, with the search box on top.
@@ -233,7 +237,7 @@ class MainForm : Form
         recentEmpty.Anchor = savedEmpty.Anchor = toTop | toBottom | toLeft | toRight;
         status.Anchor = toBottom | toLeft | toRight;
         newButton.Anchor = saveButton.Anchor = deleteButton.Anchor = toBottom | toLeft;
-        viewButton.Anchor = typeButton.Anchor = toBottom | toRight;
+        viewButton.Anchor = typeButton.Anchor = helpButton.Anchor = toBottom | toRight;
 
         // The same three actions from the buttons, from the right-click menu and from the keyboard.
         EventHandler create = delegate { Edit(null); };
@@ -244,13 +248,18 @@ class MainForm : Form
         deleteButton.Click += delete;
         ContextMenuStrip listMenu = new ContextMenuStrip();
         ToolStripItem changeItem = listMenu.Items.Add("", null, change);
+        // Only for a copied entry: the same as a click on its star.
+        ToolStripItem pinItem = listMenu.Items.Add("", null, delegate { TogglePin(Selected); });
         listMenu.Items.Add(deleteButton.Text, null, delete);
         listMenu.Items.Add(newButton.Text, null, create);
         listMenu.Opening += delegate(object sender, System.ComponentModel.CancelEventArgs e)
         {
+            Entry entry = Selected;
             changeItem.Text = saveButton.Text;
             changeItem.Enabled = saveButton.Enabled;
-            e.Cancel = Selected == null;
+            pinItem.Visible = entry != null && entry.Name == null;
+            pinItem.Text = entry != null && entry.Pinned ? "Togli dall'alto" : "Tieni in alto";
+            e.Cancel = entry == null;
         };
         Look.Style(listMenu);
 
@@ -284,9 +293,20 @@ class MainForm : Form
                 int index = list.IndexFromPoint(e.Location);
                 if (e.Button == MouseButtons.Right && index >= 0) list.SelectedIndex = index;
             };
+            // One click leaves the window where it is, so that the entry can still be saved or deleted; a
+            // double click, like Enter, also goes back to the window the list hotkey was pressed in.
+            // A click on the star of a copied entry does not choose it: it keeps it at the top, or lets it go.
             list.MouseClick += delegate(object sender, MouseEventArgs e)
             {
-                if (e.Button == MouseButtons.Left && list.IndexFromPoint(e.Location) >= 0) Accept();
+                int index = list.IndexFromPoint(e.Location);
+                if (e.Button != MouseButtons.Left || index < 0) return;
+                if (OnStar(list, e.Location)) TogglePin((Entry)list.Items[index]);
+                else Accept(false);
+            };
+            // The second click on a star finds another entry there: the first one moved the row.
+            list.MouseDoubleClick += delegate(object sender, MouseEventArgs e)
+            {
+                if (e.Button == MouseButtons.Left && list.IndexFromPoint(e.Location) >= 0 && !OnStar(list, e.Location)) Accept(true);
             };
             // The entry under the pointer lights up: a click would choose it.
             list.MouseMove += delegate(object sender, MouseEventArgs e) { Hover(list, list.IndexFromPoint(e.Location)); };
@@ -345,18 +365,22 @@ class MainForm : Form
           + "Scrivi per cercare in tutte e due: parole in qualsiasi ordine, senza badare a\n"
           + "maiuscole e accenti. Le frecce scorrono la colonna, Tab passa all'altra.\n"
           + "Invio o un clic rimettono la voce negli appunti: poi la incolli con Ctrl+V o la\n"
-          + "digiti con " + HotkeyName + ". Il tasto destro apre il menu della voce.\n"
+          + "digiti con " + HotkeyName + ". Con un clic la finestra resta aperta, con Invio o un\n"
+          + "doppio clic torni dov'eri. Il tasto destro apre il menu della voce.\n"
+          + "La stellina a destra di una voce copiata (Ctrl+" + PinKey + ") la tiene in cima all'elenco,\n"
+          + "anche oltre i giorni della cronologia, finché non la togli.\n"
           + "I testi salvati restano nel registro di Windows, cifrati per il tuo utente, e\n"
           + "se ne vede solo il nome.", search, recentList, savedList);
         Tip("Scrive un testo nuovo da tenere, con il suo nome (Ctrl+" + NewKey + ").", newButton);
         Tip("Su una voce copiata: la salva con un nome, e puoi ritoccarne il contenuto.\n"
           + "Su una voce salvata: ne cambia il nome o il contenuto (Ctrl+" + SaveKey + ").\n"
           + "Le immagini restano solo in memoria e non si salvano.", saveButton);
+        Tip("Apre la guida: tutto quello che il programma sa fare (" + HelpKey + ").", helpButton);
         Tip("Elimina il testo salvato, o toglie dall'elenco la voce copiata (Ctrl+" + DeleteKey + ").", deleteButton);
 
         listControls = new Control[] { searchFrame, recentTitle, savedTitle, recentCount, savedCount, recentCard, savedCard,
             newButton, saveButton, deleteButton };
-        Controls.AddRange(new Control[] { typeButton, viewButton, status });
+        Controls.AddRange(new Control[] { typeButton, viewButton, helpButton, status });
         Controls.AddRange(listControls);
         Controls.AddRange(optionControls.ToArray());
         // No AcceptButton: Enter among the options would start typing the clipboard.
@@ -438,6 +462,18 @@ class MainForm : Form
             if (historyBox.Checked) Texts.Keep(Retention);
             else Texts.Clear();
         });
+    }
+
+    // Opens the guide, or brings it forward if it is already open. It is not a dialog: it can stay beside
+    // the window while the user tries what it says.
+    void ShowHelp()
+    {
+        if (help == null || help.IsDisposed)
+        {
+            help = new HelpForm();
+            help.Show(this);
+        }
+        else help.Activate();
     }
 
     // The lower part of the window shows either the list or the options.
@@ -573,6 +609,15 @@ class MainForm : Form
             }
         }
         Rectangle label = Rectangle.FromLTRB(e.Bounds.Left + RowInset, e.Bounds.Top, e.Bounds.Right - TimeGap, e.Bounds.Bottom);
+        if (list == recentList)
+        {
+            // At the right end, the star that keeps the entry at the top: in colour if it does, faint on the
+            // row where a click would light it.
+            Rectangle star = StarArea(e.Bounds);
+            if (entry.Pinned) Look.Draw(e.Graphics, Sign.Star, star, null);
+            else if (selected || hovered) Look.Draw(e.Graphics, Sign.Star, star, Look.Blend(Look.Muted, list.BackColor, 0.4f));
+            label.Width -= star.Width + TimeGap;
+        }
         if (entry.Time != DateTime.MinValue)
         {
             // On the right, when: of a copied entry the time today and the day before that, of a saved text
@@ -604,6 +649,31 @@ class MainForm : Form
             | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);
     }
 
+    // Where the star of a copied entry is drawn, at the right end of its row.
+    Rectangle StarArea(Rectangle row)
+    {
+        int side = Font.Height;
+        return new Rectangle(row.Right - TimeGap - side, row.Top + (row.Height - side) / 2, side, side);
+    }
+
+    // Whether the pointer is on the star of a row, or in the little room around it.
+    bool OnStar(ListBox list, Point where)
+    {
+        int index = list.IndexFromPoint(where);
+        if (list != recentList || index < 0) return false;
+        Rectangle row = list.GetItemRectangle(index);
+        return row.Contains(where) && where.X >= StarArea(row).Left - TimeGap / 2;
+    }
+
+    // Keeps a copied entry at the top of its column, or lets it go back among the others.
+    void TogglePin(Entry entry)
+    {
+        if (entry == null || entry.Name != null) return;
+        Change(delegate { Texts.Pin(entry, !entry.Pinned); });
+        status.Text = (entry.Pinned ? "Resta in alto: " : "Non è più in alto: ") + Shorten(entry.ToString()) + ".";
+        Reload();
+    }
+
     void Step(int by)
     {
         if (active == null) return;
@@ -611,14 +681,14 @@ class MainForm : Form
         if (index >= 0 && index < active.Items.Count) active.SelectedIndex = index;
     }
 
-    void Accept()
+    void Accept(bool leave)
     {
         Entry entry = Selected;
-        if (entry != null && !busy) Use(entry);
+        if (entry != null && !busy && Use(entry) && leave) GoBack();
     }
 
     // Makes an entry the clipboard content again: from there Ctrl+V pastes it and the hotkey types it.
-    void Use(Entry entry)
+    bool Use(Entry entry)
     {
         try
         {
@@ -644,11 +714,11 @@ class MainForm : Form
         catch (Exception ex)   // the clipboard locked by another program, or a picture the history file no longer gives
         {
             status.Text = "Errore: " + ex.Message;
-            return;
+            return false;
         }
         status.Text = "Negli appunti: " + Shorten(entry.ToString()) + ". Incollalo con Ctrl+V"
             + (hotkeyBox.Checked && !entry.Picture ? " o digitalo con " + HotkeyName : "") + ".";
-        GoBack();
+        return true;
     }
 
     // The list hotkey: shows the window with the list, remembering where the user was.
@@ -740,6 +810,11 @@ class MainForm : Form
     // The keys of the list, while the search box or the list itself has the focus.
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
+        if (keyData == HelpKey)   // from the options too
+        {
+            ShowHelp();
+            return true;
+        }
         if (optionsShown || !(search.Focused || recentList.Focused || savedList.Focused)) return base.ProcessCmdKey(ref msg, keyData);
         switch (keyData)
         {
@@ -767,6 +842,9 @@ class MainForm : Form
             case Keys.Control | DeleteKey:
                 DeleteSelected();
                 return true;
+            case Keys.Control | PinKey:
+                TogglePin(Selected);
+                return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);
     }
@@ -778,7 +856,7 @@ class MainForm : Form
         base.OnKeyUp(e);
         if (e.KeyCode != Keys.Enter || !enterDown) return;
         enterDown = false;
-        Accept();
+        Accept(true);
     }
 
     protected override void OnDeactivate(EventArgs e)

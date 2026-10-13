@@ -15,6 +15,10 @@ su GitHub).
   - `MainForm.cs` — la finestra: disposizione, elenco, opzioni, tray, impostazioni, digitazione. È il file
     grande; dividerlo ancora sarebbe una ristrutturazione, non uno spostamento.
   - `EditForm.cs` — la finestra «Nuovo/Modifica».
+  - `HelpForm.cs` — la guida (pulsante «?» o F1): il testo sta in `Lines`, una riga per paragrafo (`# ` titolo,
+    `- ` punto, tabulazione tra un tasto e ciò che fa), e prende nomi, tasti e numeri dalle costanti pubbliche
+    di `MainForm` e `Texts`. Non è modale: resta aperta accanto alla finestra. **Va aggiornata quando cambia
+    una funzione**, come il README.
   - `Look.cs` — colori e controlli disegnati: `Look`, `Card`, `RoundButton`, `Toggle`.
   - `Texts.cs` — `Entry` e `Texts`: le voci dell'elenco, la cronologia su disco, i testi salvati.
   - `Typer.cs` — mappa dei tasti e invio (`Typer`, `Stroke`, `TypeOptions`, `TypeResult`).
@@ -87,8 +91,9 @@ su GitHub).
   digita con Ctrl+Alt+V. Non si digita né si incolla da soli (provato e scartato dall'utente). Un testo salvato
   torna negli appunti con il formato che lo segna riservato; ciò che il programma stesso mette negli appunti
   non rientra nell'elenco (`ownCopy`, numero di sequenza degli appunti).
-- Ctrl+D (`OpenList`) porta la finestra in primo piano da qualsiasi programma; dopo la scelta `GoBack`
-  restituisce il primo piano alla finestra di partenza e rinasconde la finestra se era nascosta.
+- Ctrl+D (`OpenList`) porta la finestra in primo piano da qualsiasi programma; dopo la scelta con Invio o
+  doppio clic `GoBack` restituisce il primo piano alla finestra di partenza e rinasconde la finestra se era
+  nascosta. Un clic singolo no (voluto dall'utente: la finestra spariva e la voce non si poteva più salvare).
 - La cronologia dei copiati (`Texts.Recent`) resta su disco per i giorni dell'opzione (`Texts.Keep`, 30 di
   default): scelta dell'utente, che prima la voleva solo in memoria. Sta in `%LOCALAPPDATA%\SmartClip\History`,
   **in chiaro** (l'utente non vuole cifratura: «sono cose mie sul mio PC») e in **un file al giorno**
@@ -97,6 +102,13 @@ su GitHub).
   e il suo blocco si segna eliminato (`Erase`); un blocco troncato in coda si taglia alla lettura (`ReadFile`).
   Con 0 giorni niente va su disco e valgono i limiti di memoria (30 voci, 5 immagini). Si scartano le copie che
   i gestori di password segnano come riservate (`Texts.IsPrivate`). L'opzione spenta svuota elenco e disco.
+- Una voce copiata si può tenere in cima alla colonna (`Entry.Pinned`, voluto dall'utente): stellina
+  all'estremità destra della riga (`StarArea`, `OnStar`: lì il clic non sceglie la voce), menu del tasto destro
+  e Ctrl+P, tutti in `TogglePin`. Nel file è un bit del tipo del blocco (`PinnedKind`), cambiato sul posto
+  (`Texts.Pin`). Una voce fissata non scade: `Prune` tiene il file del suo giorno e azzera le altre voci che
+  contiene; per questo non fa nulla finché `Read` non ha letto i file (`loaded`), altrimenti all'avvio li
+  cancellerebbe senza sapere delle stelline. Ricopiare lo stesso testo non la sposta e `Forget` non la toglie;
+  i limiti di memoria non la contano. L'ordine (fissate prima) lo dà `Texts.Load`.
 - Anche le immagini copiate entrano in `Texts.Recent`, compresse in PNG; il loro `Text` è la descrizione che si
   vede e si cerca. Se negli appunti c'è anche testo vince il testo. Non diventano testi salvati. Una volta nel
   file, in memoria resta solo la miniatura: il PNG si rilegge quando serve (`Entry.LoadPng`).
@@ -133,7 +145,8 @@ su GitHub).
 
 - Disposizione (voluta dall'utente: «Digita gli appunti» in cima era troppo ingombrante): in alto la ricerca,
   poi le colonne (o le opzioni), sotto la riga di stato e un'unica fila di pulsanti piccoli: a sinistra quelli
-  della voce selezionata, a destra «Digita gli appunti» e «Opzioni»/«Elenco».
+  della voce selezionata, a destra «Digita gli appunti», «Opzioni»/«Elenco» e il quadratino «?» della guida
+  (una scritta «Guida» nella fila non ci sta).
 
 - La finestra è ridimensionabile (voluto dall'utente), mai più piccola di come nasce (`MinimumSize` in
   `OnLoad`). La dimensione non si salva: a ogni avvio torna quella di default; si ricorda solo la posizione.

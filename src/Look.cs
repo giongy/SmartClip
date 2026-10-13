@@ -118,7 +118,8 @@ class RoundButton : Button
             | TextFormatFlags.NoPadding;
         Color ink = Enabled ? ForeColor : Look.Blend(Look.Muted, Parent.BackColor, 0.5f);
         float scale = (float)Height / DesignHeight;
-        int side = sign.HasValue ? (int)(SignSize * scale) : 0, gap = sign.HasValue ? (int)(SignGap * scale) : 0;
+        int side = sign.HasValue ? (int)(SignSize * scale) : 0;
+        int gap = sign.HasValue && Text.Length > 0 ? (int)(SignGap * scale) : 0;   // a sign alone stays in the middle
         int text = TextRenderer.MeasureText(g, Text, Font, Size.Empty, flags).Width, left = (Width - side - gap - text) / 2;
         if (sign.HasValue)
             Look.Draw(g, sign.Value, new Rectangle(left, (Height - side) / 2, side, side),
@@ -128,7 +129,7 @@ class RoundButton : Button
 }
 
 // The small signs drawn beside entries and on buttons: they are where the colour is.
-enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, List, Keys, Search }
+enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, List, Keys, Search, Help }
 
 // Colours and touches shared by the windows: neutral, with rounded shapes and small coloured signs.
 static class Look
@@ -249,6 +250,11 @@ static class Look
                 case Sign.Search:
                     g.DrawEllipse(pen, x + 2 * u, y + 2 * u, 8.5f * u, 8.5f * u);
                     g.DrawLine(pen, x + 9.6f * u, y + 9.6f * u, x + 14 * u, y + 14 * u);
+                    break;
+                case Sign.Help:   // a question mark
+                    g.DrawArc(pen, x + 5 * u, y + 2 * u, 6 * u, 6 * u, 180, 270);
+                    g.DrawLine(pen, x + 8 * u, y + 8 * u, x + 8 * u, y + 10 * u);
+                    g.FillEllipse(fill, x + 6.9f * u, y + 12.2f * u, 2.2f * u, 2.2f * u);
                     break;
             }
         }
