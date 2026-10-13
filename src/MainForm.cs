@@ -27,7 +27,7 @@ class MainForm : Form
     public const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
     const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
-    const int ListExtra = 144;                    // height given to the lists beyond what the options need
+    const int ListExtra = 158;                   // height given to the lists beyond what the options need
     const int ColumnGap = 20, ColumnWidth = (ContentWidth - ColumnGap) / 2;   // the two columns of the options
     const int TitleRow = 30, SectionGap = 10;          // the title of a category of options, and the air above it
     const int RuleGap = 8;                             // between the line under such a title and the first option
@@ -38,6 +38,7 @@ class MainForm : Form
     const int RowHeight = 24;                          // distance between one option checkbox and the next
     const int NumberWidth = 56, NumberHeight = 26;     // the box of an option that is a number
     const int NumberRow = 37;                          // distance between such an option and the next one
+    const int OptionButtonWidth = 130;                 // a button among the options
     public const int MaxShown = 200;                          // copied entries listed at once
     const int SearchHeight = 30, GlyphWidth = 20;      // the search box, and the magnifying glass on its left
     const int ListPadding = 4;                         // between the rounded edge of a column and its list
@@ -74,7 +75,8 @@ class MainForm : Form
     // The two views that take turns in the lower part of the window. The options add themselves as they are placed.
     readonly List<Control> optionControls = new List<Control>();
     readonly Control[] listControls;
-    readonly TextBox delayBox = new TextBox(), keepBox = new TextBox();
+    readonly TextBox delayBox = new TextBox(), keepBox = new TextBox(), cleanBox = new TextBox();
+    readonly RoundButton cleanButton = new RoundButton();
     readonly CheckBox usBox = new Toggle();
     readonly CheckBox enterBox = new Toggle();
     readonly CheckBox clearBox = new Toggle();
@@ -148,6 +150,11 @@ class MainForm : Form
         PlaceOption(clearBox, "Svuota gli appunti dopo aver digitato", left, ref top);
         PlaceOption(slowBox, "Digitazione lenta", left, ref top);
         PlaceOption(altCodeBox, "Alt+codice per i simboli che la tastiera non ha", left, ref top);
+        // On the left too, where there is room: under the history the window would have to grow.
+        PlaceTitle("Programma", left, ref top);
+        PlaceOption(trayBox, "Resta attivo nell'area di notifica (tray)", left, ref top);
+        trayBox.Checked = true;
+        PlaceOption(startBox, "Avvia insieme a Windows", left, ref top);
         int leftBottom = top;
 
         left += ColumnWidth + ColumnGap;
@@ -164,10 +171,12 @@ class MainForm : Form
             delegate { Retention = Retention; ApplyHistory(); Reload(); }, left, ref top);
         Retention = Texts.DefaultKeepDays;
         LinkLabel folderLink = PlaceLink("Apri la cartella della cronologia", OpenFolder, left, ref top);
-        PlaceTitle("Programma", left, ref top);
-        PlaceOption(trayBox, "Resta attivo nell'area di notifica (tray)", left, ref top);
-        trayBox.Checked = true;
-        PlaceOption(startBox, "Avvia insieme a Windows", left, ref top);
+        // Not a setting: what to spare when the button below is pressed.
+        Label cleanLabel = PlaceNumber(cleanBox, "Pulendo, tieni gli ultimi giorni (0: niente):", Texts.MaxKeepDays,
+            delegate { Spared = Spared; }, left, ref top);
+        Spared = 0;
+        PlaceButton(cleanButton, "Pulisci ora…", CleanHistory, left, ref top);
+        cleanButton.Sign = Sign.Delete;
         top = Math.Max(top, leftBottom);
 
         // Under the options, or the lists that take their place: the status line, then one row of small buttons.
@@ -353,6 +362,10 @@ class MainForm : Form
           + "L'elenco mostra le " + MaxShown + " più recenti: le altre si trovano con la ricerca.", keepLabel, keepBox);
         Tip("Apre in Esplora file la cartella con i file della cronologia, uno per giorno:\n"
           + Texts.Folder, folderLink);
+        Tip("Elimina subito dalla cronologia, in memoria e su disco, quello che hai copiato prima\n"
+          + "degli ultimi giorni scritti qui sopra: con 1 resta solo oggi, con 0 non resta niente.\n"
+          + "Prima chiede conferma. Le voci con la stellina e i testi salvati non vengono toccati,\n"
+          + "e nemmeno gli appunti. I giorni su disco restano quelli impostati.", cleanLabel, cleanBox, cleanButton);
         Tip("Attiva: chiudendo o riducendo a icona la finestra il programma resta in funzione\n"
           + "come icona vicino all'orologio, e la scorciatoia continua a funzionare.\n"
           + "Clic sull'icona per riaprire la finestra, tasto destro e poi Esci per chiudere.\n"
@@ -446,6 +459,13 @@ class MainForm : Form
     {
         get { return Number(keepBox, 0, Texts.MaxKeepDays, Texts.DefaultKeepDays); }
         set { keepBox.Text = Math.Max(0, Math.Min(Texts.MaxKeepDays, value)).ToString(); }
+    }
+
+    // How many of the last days the button that cleans the history leaves alone; zero is none.
+    int Spared
+    {
+        get { return Number(cleanBox, 0, Texts.MaxKeepDays, 0); }
+        set { cleanBox.Text = Math.Max(0, Math.Min(Texts.MaxKeepDays, value)).ToString(); }
     }
 
     static int Number(TextBox box, int min, int max, int fallback)
@@ -926,6 +946,32 @@ class MainForm : Form
         optionControls.Add(link);
         top += RowHeight;
         return link;
+    }
+
+    // A row with a small button, for something to do at once rather than to set.
+    void PlaceButton(RoundButton button, string text, Action act, int left, ref int top)
+    {
+        button.Text = text;
+        button.SetBounds(left, top, OptionButtonWidth, ActionHeight);
+        Look.Style(button, false);
+        button.Click += delegate { act(); };
+        optionControls.Add(button);
+        top += NumberRow;
+    }
+
+    // Removes at once what was copied before the days to spare; with zero, everything. Pinned entries stay.
+    void CleanHistory()
+    {
+        int days = Spared;
+        string what = days == 0 ? "tutto quello che hai copiato" : days == 1 ? "quello che hai copiato prima di oggi"
+            : "quello che hai copiato prima degli ultimi " + days + " giorni (oggi compreso)";
+        if (!Ask("Vuoi eliminare " + what + "?\n\nLe voci con la stellina e i testi salvati restano.")) return;
+        int before = Texts.Recent.Count;
+        if (!Change(delegate { Texts.Clean(days); })) return;
+        int removed = before - Texts.Recent.Count;
+        status.Text = removed == 0 ? "Niente da eliminare nella cronologia."
+            : removed == 1 ? "Eliminata 1 voce dalla cronologia." : "Eliminate " + removed + " voci dalla cronologia.";
+        Reload();
     }
 
     // Shows the folder of the history files in Explorer.

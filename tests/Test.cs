@@ -245,6 +245,21 @@ static class TestProgram
             Check(Texts.Recent.Count == 2 && star != null && star.Pinned, "and comes back pinned from disk");
             Texts.Pin(star, false);
             Check(Texts.Recent.Count == 1 && !System.IO.File.Exists(pastFile), "unpinned, it leaves with its day");
+
+            // Cleaning on request: the last days are spared, and so is what is pinned.
+            Entry earlier = new Entry(null, "earlier", DateTime.Now.AddDays(-2));
+            Texts.Recent.Add(earlier);
+            Texts.Keep(7);
+            Texts.Clean(3);
+            Check(Texts.Recent.Count == 2, "cleaning spares the last days");
+            Texts.Clean(1);
+            Check(Texts.Recent.Count == 1 && Texts.Recent[0].Text == "fresh" && System.IO.Directory.GetFiles(folder).Length == 1,
+                "with one day only today stays");
+            Texts.Add("kept on top");
+            Texts.Pin(Texts.Recent[0], true);
+            Texts.Clean(0);
+            Check(Texts.Recent.Count == 1 && Texts.Recent[0].Pinned
+                && Encoding.UTF8.GetString(System.IO.File.ReadAllBytes(today)).IndexOf("fresh") < 0, "with none only the pinned ones stay");
         }
         finally
         {

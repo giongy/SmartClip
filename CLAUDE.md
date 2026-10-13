@@ -109,6 +109,10 @@ su GitHub).
   contiene; per questo non fa nulla finché `Read` non ha letto i file (`loaded`), altrimenti all'avvio li
   cancellerebbe senza sapere delle stelline. Ricopiare lo stesso testo non la sposta e `Forget` non la toglie;
   i limiti di memoria non la contano. L'ordine (fissate prima) lo dà `Texts.Load`.
+- «Pulisci ora…» nelle opzioni (voluto dall'utente): elimina subito ciò che è stato copiato prima degli ultimi
+  N giorni scritti nella casella accanto (`Spared`, non è un'impostazione: riparte da 0, cioè tutto), dopo una
+  conferma. `Texts.Clean` e la retention passano dallo stesso `Drop`; le voci fissate restano. Il pulsante si
+  mette con `PlaceButton`.
 - Anche le immagini copiate entrano in `Texts.Recent`, compresse in PNG; il loro `Text` è la descrizione che si
   vede e si cerca. Se negli appunti c'è anche testo vince il testo. Non diventano testi salvati. Una volta nel
   file, in memoria resta solo la miniatura: il PNG si rilegge quando serve (`Entry.LoadPng`).
@@ -158,8 +162,9 @@ su GitHub).
   costanti di Windows in `Native` con i nomi ufficiali, scorciatoia definita una volta sola).
 - Aggiungere un'opzione: una riga `PlaceOption` (`PlaceNumber` se è un numero) sotto il titolo della sua
   categoria (`PlaceTitle`), una in `TransferSettings` e il suggerimento `Tip`. In `optionControls` entra da sola.
-  Le categorie sono su due colonne (volute dall'utente, l'elenco unico era caotico): a sinistra «Digitazione»,
-  a destra «Scorciatoie», «Cronologia», «Programma». I titoli sono in grassetto con una riga sotto: il colore
+  Le categorie sono su due colonne (volute dall'utente, l'elenco unico era caotico): a sinistra «Digitazione»
+  e «Programma», a destra «Scorciatoie» e «Cronologia» (così le due colonne sono alte uguali e la finestra non
+  cresce: l'utente non la voleva più alta). I titoli sono in grassetto con una riga sotto: il colore
   d'accento resta a ciò che si clicca (il link `PlaceLink` alla cartella della cronologia, prima indistinguibile
   dai titoli). L'altezza della finestra si calcola da sola.
 

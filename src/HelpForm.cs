@@ -94,6 +94,9 @@ class HelpForm : Form
             + "cui al massimo " + Texts.MaxPictures + " immagini, e spariscono alla chiusura.",
         "- Quello che i gestori di password segnano come riservato non viene ricordato.",
         "- Le voci con la stellina restano anche oltre quei giorni.",
+        "- Nelle opzioni, «Pulisci ora» elimina subito quello che hai copiato prima degli ultimi giorni che "
+            + "scrivi accanto: con 1 resta solo oggi, con 0 non resta niente. Chiede conferma, e non tocca le "
+            + "voci con la stellina né i testi salvati.",
         "- Spegnendo la cronologia nelle opzioni si svuotano l'elenco e i file su disco, stelline comprese.",
 
         "# Le opzioni",
@@ -103,7 +106,8 @@ class HelpForm : Form
             + MainForm.MaxDelay + "), se il server usa la tastiera americana, se premere Invio alla fine, se "
             + "svuotare gli appunti dopo, la digitazione lenta e i simboli composti con Alt+codice.",
         "- Scorciatoie: accende e spegne " + MainForm.HotkeyName + " e " + MainForm.PickName + ".",
-        "- Cronologia: se ricordare ciò che copi, per quanti giorni, e il collegamento alla cartella dei file.",
+        "- Cronologia: se ricordare ciò che copi, per quanti giorni, il collegamento alla cartella dei file e "
+            + "il pulsante che la pulisce subito.",
         "- Programma: se restare attivo nell'area di notifica e se partire insieme a Windows.",
 
         "# L'icona vicino all'orologio",

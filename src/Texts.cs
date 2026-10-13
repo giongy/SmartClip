@@ -435,7 +435,18 @@ static class Texts
     {
         if (!loaded) return;
         pruned = DateTime.Today;
-        DateTime oldest = pruned.AddDays(-keepDays);
+        Drop(pruned.AddDays(-keepDays));
+    }
+
+    // Asked by the user: removes at once what was copied before the last 'days' days, today being the first;
+    // with zero, all of it. What is pinned stays.
+    public static void Clean(int days)
+    {
+        Drop(DateTime.Today.AddDays(1 - days));
+    }
+
+    static void Drop(DateTime oldest)
+    {
         List<string> held = new List<string>();
         foreach (Entry entry in Recent)
             if (entry.Pinned && entry.FilePath != null && entry.Time.Date < oldest) held.Add(Path.GetFileName(entry.FilePath));

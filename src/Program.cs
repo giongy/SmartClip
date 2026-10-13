@@ -8,7 +8,7 @@ using Microsoft.Win32;
 [assembly: AssemblyDescription("Gestore degli appunti che sa anche digitarli dove l'incolla non funziona")]
 [assembly: AssemblyProduct(Program.AppName)]
 // Changing this number and pushing publishes a new release (.github/workflows/release.yml).
-[assembly: AssemblyVersion("2.5.0.0")]
+[assembly: AssemblyVersion("2.7.0.0")]
 
 // A small clipboard manager that can also type the clipboard content as real key presses (scancodes),
 // so it works even where paste is disabled (lock screens of remote desktops).
