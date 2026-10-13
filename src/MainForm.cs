@@ -44,8 +44,8 @@ class MainForm : Form
     const int CountWidth = 120;                        // room for the number of entries, right of a column title
     const int RowInset = 12, TimeGap = 8;              // of the text in a row, and around the time on its right
     const int Gap = 6;                                 // between neighbouring controls
-    const int ActionHeight = 26, ActionWidth = 84;     // the buttons in the bottom row
-    const int TypeWidth = 140;                         // the button that types the clipboard, in the same row
+    const int ActionHeight = 26, ActionWidth = 100;    // the buttons in the bottom row
+    const int TypeWidth = 160;                        // the button that types the clipboard, in the same row
     const int StatusHeight = 34;                       // two lines of text
     const Keys NewKey = Keys.N, SaveKey = Keys.S, DeleteKey = Keys.E;   // in the list, all with Ctrl
     const string ButtonText = "Digita gli appunti";
@@ -61,15 +61,15 @@ class MainForm : Form
     static readonly uint OwnProcessId = (uint)Process.GetCurrentProcess().Id;
     static readonly Point OffScreen = new Point(int.MinValue, int.MinValue);
 
-    readonly Button typeButton = new RoundButton();
-    readonly Button viewButton = new RoundButton();
+    readonly RoundButton typeButton = new RoundButton();
+    readonly RoundButton viewButton = new RoundButton();
     readonly Label recentCount = new Label(), savedCount = new Label();   // how many entries each column lists
     readonly Label recentEmpty = new Label(), savedEmpty = new Label();   // what a column says while it has none
     readonly Label status = new Label();
     readonly TextBox search = new TextBox();
     readonly ListBox recentList = new ListBox(), savedList = new ListBox();   // what was copied, and what was saved
     ListBox active;     // the one of the two that holds the selected entry
-    readonly Button newButton = new RoundButton(), saveButton = new RoundButton(), deleteButton = new RoundButton();
+    readonly RoundButton newButton = new RoundButton(), saveButton = new RoundButton(), deleteButton = new RoundButton();
     // The two views that take turns in the lower part of the window. The options add themselves as they are placed.
     readonly List<Control> optionControls = new List<Control>();
     readonly Control[] listControls;
@@ -166,6 +166,9 @@ class MainForm : Form
         ClientSize = new Size(Edge + ContentWidth + Edge, actionTop + ActionHeight + Edge);
         status.SetBounds(Edge, statusTop, ContentWidth, StatusHeight);
         newButton.Text = "Nuovo…";
+        newButton.Sign = Sign.Plus;
+        deleteButton.Sign = Sign.Delete;
+        typeButton.Sign = Sign.Keys;
         newButton.SetBounds(Edge, actionTop, ActionWidth, ActionHeight);
         saveButton.SetBounds(newButton.Right + Gap, actionTop, ActionWidth, ActionHeight);
         deleteButton.Text = "Elimina";
@@ -204,7 +207,7 @@ class MainForm : Form
         {
             empty.Bounds = recentList.Bounds;
             empty.TextAlign = ContentAlignment.MiddleCenter;
-            empty.ForeColor = Look.Border;
+            empty.ForeColor = Look.Muted;
         }
         recentCard.Controls.Add(recentEmpty);
         savedEmpty.Width = savedList.Width;
@@ -419,6 +422,7 @@ class MainForm : Form
         foreach (Control control in optionControls) control.Visible = options;
         foreach (Control control in listControls) control.Visible = !options;
         viewButton.Text = options ? "Elenco" : "Opzioni";
+        viewButton.Sign = options ? Sign.List : Sign.Options;
         if (!options) search.Focus();
     }
 
@@ -478,13 +482,18 @@ class MainForm : Form
     void DrawGlyph(object sender, PaintEventArgs e)
     {
         Control frame = (Control)sender;
-        int size = Font.Height / 2 + 2, left = RowInset - 2, top = (frame.Height - size) / 2 - 1;
-        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        using (Pen pen = new Pen(Look.Muted, 1.6f))
-        {
-            e.Graphics.DrawEllipse(pen, left, top, size, size);
-            e.Graphics.DrawLine(pen, left + size * 0.85f, top + size * 0.85f, left + size + 4, top + size + 4);
-        }
+        int side = Font.Height;
+        Look.Draw(e.Graphics, Sign.Search, new Rectangle(RowInset - 3, (frame.Height - side) / 2, side, side), null);
+    }
+
+    // The sign that tells what an entry is: a saved text, an address, any other text. A picture shows itself.
+    static Sign SignOf(Entry entry)
+    {
+        if (entry.Name != null) return Sign.Star;
+        string start = entry.Text.TrimStart();
+        foreach (string prefix in new string[] { "http://", "https://", "www." })
+            if (start.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return Sign.Link;
+        return Sign.Text;
     }
 
     Entry Selected
@@ -507,7 +516,9 @@ class MainForm : Form
     void ShowActions()
     {
         Entry entry = Selected;
-        saveButton.Text = entry != null && entry.Name != null ? "Modifica…" : "Salva…";
+        bool saved = entry != null && entry.Name != null;
+        saveButton.Text = saved ? "Modifica…" : "Salva…";
+        saveButton.Sign = saved ? Sign.Edit : Sign.Star;
         saveButton.Enabled = entry != null && !entry.Picture;
         deleteButton.Enabled = entry != null;
     }
@@ -557,6 +568,12 @@ class MainForm : Form
             e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
             e.Graphics.DrawImage(entry.Preview, label.Left, e.Bounds.Top + (e.Bounds.Height - size.Height) / 2, size.Width, size.Height);
             label = Rectangle.FromLTRB(label.Left + size.Width + 2 * PreviewMargin, label.Top, label.Right, label.Bottom);
+        }
+        else
+        {
+            int side = e.Font.Height;
+            Look.Draw(e.Graphics, SignOf(entry), new Rectangle(label.Left, e.Bounds.Top + (e.Bounds.Height - side) / 2, side, side), null);
+            label = Rectangle.FromLTRB(label.Left + side + 2 * PreviewMargin, label.Top, label.Right, label.Bottom);
         }
         TextRenderer.DrawText(e.Graphics, entry.Label, e.Font, label, list.ForeColor, TextFormatFlags.VerticalCenter
             | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);

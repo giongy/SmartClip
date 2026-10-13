@@ -21,7 +21,7 @@ Formerly called PasswordPaste: the first start under the new name takes over its
 - Stops typing the moment the target window loses focus, so a password never lands in the wrong place.
 - The history of copied items is kept for the number of days you choose, or in memory only; saved texts are
   encrypted for your Windows account.
-- Dark interface with pastel accents.
+- Neutral warm-grey interface with small coloured signs.
 
 > **Note:** the user interface is in Italian. The tables below translate the keys and every option.
 

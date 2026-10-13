@@ -102,7 +102,12 @@ su GitHub).
   tasto destro e in Ctrl+N/S/E. Il nome scritto nella casella di ricerca è stato provato e scartato dall'utente
   (poco chiaro). Il clic sinistro sceglie la voce, il destro la seleziona soltanto.
 
-- Aspetto (`Look`, voluto dall'utente: scuro con accenti pastello): barra del titolo nel colore della finestra
+- Tema (voluto dall'utente, a cui lo scuro con accenti pastello di prima non piaceva più, ma nemmeno il
+  bianco): grigio caldo neutro con tocchi di colore nelle icone. I colori stanno tutti in cima a `Look`; i
+  segni (`Sign`, disegnati da `Look.Draw` su una griglia di 16, senza immagini) dicono cos'è una voce — testo,
+  indirizzo, salvato — e stanno sui pulsanti (`RoundButton.Sign`). Barra del titolo e barre di scorrimento
+  seguono da sole la luminosità dello sfondo (`Look.Dark`).
+- Aspetto (`Look`): barra del titolo nel colore della finestra
   (`DwmSetWindowAttribute`, solo Windows 11: altrove fallisce senza danni), pulsanti piatti con un solo
   pulsante in colore d'accento, righe dell'elenco disegnate a mano (`DrawEntry`) con il segno ★/▣ in colonna.
   I controlli che Windows non lascia scurire sono stati sostituiti: le caselle di testo stanno senza bordo

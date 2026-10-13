@@ -69,10 +69,20 @@ class Card : Panel
     }
 }
 
-// A button drawn as a rounded shape in its own colours, a little lighter under the pointer.
+// A button drawn as a rounded shape in its own colours, a little different under the pointer, with a small
+// sign before its text if it is given one.
 class RoundButton : Button
 {
+    const int SignSize = 14, SignGap = 6;   // in pixels at 96 dpi, like the height the button is designed for
+    const int DesignHeight = 26;
     bool hover;
+    Sign? sign;
+
+    public Sign? Sign
+    {
+        get { return sign; }
+        set { sign = value; Invalidate(); }
+    }
 
     protected override void OnMouseEnter(EventArgs e)
     {
@@ -95,20 +105,32 @@ class RoundButton : Button
         g.SmoothingMode = SmoothingMode.AntiAlias;
         bool pressed = hover && Capture;
         Color fill = !Enabled ? Look.Blend(BackColor, Parent.BackColor, 0.6f)
-            : pressed ? Look.Blend(BackColor, Look.Back, 0.25f) : hover ? Look.Blend(BackColor, Color.White, 0.12f) : BackColor;
+            : pressed ? Look.Blend(BackColor, Look.Ink, 0.16f) : hover ? Look.Blend(BackColor, Look.Ink, 0.07f) : BackColor;
         using (GraphicsPath shape = Look.Rounded(new Rectangle(0, 0, Width - 1, Height - 1)))
         using (Brush back = new SolidBrush(fill))
-        using (Pen edge = new Pen(Focused ? Look.Ink : Enabled ? FlatAppearance.BorderColor : fill))
+        using (Pen edge = new Pen(Focused ? Look.Ink : Enabled ? FlatAppearance.BorderColor : Look.Border))
         {
             g.FillPath(back, shape);
             g.DrawPath(edge, shape);
         }
-        TextRenderer.DrawText(g, Text, Font, ClientRectangle, Enabled ? ForeColor : Look.Border, TextFormatFlags.HorizontalCenter
-            | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix);
+        // Sign and text together are centred. On a coloured button the sign takes the colour of the text.
+        const TextFormatFlags flags = TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix
+            | TextFormatFlags.NoPadding;
+        Color ink = Enabled ? ForeColor : Look.Blend(Look.Muted, Parent.BackColor, 0.5f);
+        float scale = (float)Height / DesignHeight;
+        int side = sign.HasValue ? (int)(SignSize * scale) : 0, gap = sign.HasValue ? (int)(SignGap * scale) : 0;
+        int text = TextRenderer.MeasureText(g, Text, Font, Size.Empty, flags).Width, left = (Width - side - gap - text) / 2;
+        if (sign.HasValue)
+            Look.Draw(g, sign.Value, new Rectangle(left, (Height - side) / 2, side, side),
+                !Enabled || BackColor == Look.Accent ? ink : (Color?)null);
+        TextRenderer.DrawText(g, Text, Font, new Rectangle(left + side + gap, 0, text + 2, Height), ink, flags);
     }
 }
 
-// Colours and touches shared by the windows: dark, with pastel accents and rounded shapes.
+// The small signs drawn beside entries and on buttons: they are where the colour is.
+enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, List, Keys, Search }
+
+// Colours and touches shared by the windows: neutral, with rounded shapes and small coloured signs.
 static class Look
 {
     const int FramePadding = 6;   // between the edge of a framed text box and its text
@@ -132,26 +154,105 @@ static class Look
         return Color.FromArgb((int)(from.R + (to.R - from.R) * amount), (int)(from.G + (to.G - from.G) * amount),
             (int)(from.B + (to.B - from.B) * amount));
     }
-    public static readonly Color Back = Color.FromArgb(30, 30, 46), Well = Color.FromArgb(24, 24, 37),
-        Soft = Color.FromArgb(49, 50, 68), Border = Color.FromArgb(69, 71, 90), Selected = Color.FromArgb(58, 62, 92),
-        Ink = Color.FromArgb(205, 214, 244), Muted = Color.FromArgb(166, 173, 200),
-        Accent = Color.FromArgb(137, 180, 250);
+
+    // The neutral part: a warm grey window, neither dark nor white, with lighter areas where text is written
+    // or listed.
+    public static readonly Color Back = Color.FromArgb(232, 230, 225), Well = Color.FromArgb(247, 246, 243),
+        Soft = Color.FromArgb(219, 216, 210), Border = Color.FromArgb(198, 194, 186), Selected = Color.FromArgb(214, 224, 244),
+        Ink = Color.FromArgb(38, 40, 46), Muted = Color.FromArgb(108, 110, 116);
+    // The coloured part: the accent, and the colours of the signs.
+    public static readonly Color Accent = Color.FromArgb(62, 108, 214), Green = Color.FromArgb(40, 158, 104),
+        Amber = Color.FromArgb(222, 148, 30), Red = Color.FromArgb(214, 76, 72), Teal = Color.FromArgb(22, 152, 164),
+        Purple = Color.FromArgb(132, 92, 220);
+    static readonly bool Dark = Back.GetBrightness() < 0.5f;   // what Windows draws (title bar, scroll bars) follows
 
     // 'primary' is the one button that stands out; the others stay quiet.
     public static void Style(Button button, bool primary)
     {
         button.FlatStyle = FlatStyle.Flat;
         button.FlatAppearance.BorderColor = primary ? Accent : Border;
-        button.BackColor = primary ? Accent : Soft;
-        button.ForeColor = primary ? Back : Ink;
+        button.BackColor = primary ? Accent : Well;
+        button.ForeColor = primary ? Color.White : Ink;
     }
 
-    // A place where text is written or listed: a shade darker than the window, with dark scroll bars.
+    // A place where text is written or listed: a shade off the window, with scroll bars to match.
     public static void Field(Control field)
     {
         field.BackColor = Well;
         field.ForeColor = Ink;
-        field.HandleCreated += delegate { Native.SetWindowTheme(field.Handle, "DarkMode_Explorer", null); };
+        field.HandleCreated += delegate { Native.SetWindowTheme(field.Handle, Dark ? "DarkMode_Explorer" : "Explorer", null); };
+    }
+
+    // Draws one of the small signs in its own colour, or in the given one, inside a square box. Each is laid
+    // out on a grid of 16.
+    public static void Draw(Graphics g, Sign sign, Rectangle box, Color? colour)
+    {
+        float u = box.Width / 16f, x = box.Left, y = box.Top;
+        Color own = sign == Sign.Text || sign == Sign.Search || sign == Sign.Keys ? Accent : sign == Sign.Link ? Teal
+            : sign == Sign.Star || sign == Sign.Edit ? Amber : sign == Sign.Plus ? Green : sign == Sign.Delete ? Red : Purple;
+        SmoothingMode mode = g.SmoothingMode;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        using (Pen pen = new Pen(colour ?? own, 1.7f * u))
+        using (Brush fill = new SolidBrush(colour ?? own))
+        {
+            pen.StartCap = pen.EndCap = LineCap.Round;
+            pen.LineJoin = LineJoin.Round;
+            switch (sign)
+            {
+                case Sign.Text:
+                case Sign.List:
+                    g.DrawLine(pen, x + 2.5f * u, y + 4 * u, x + 13.5f * u, y + 4 * u);
+                    g.DrawLine(pen, x + 2.5f * u, y + 8 * u, x + 13.5f * u, y + 8 * u);
+                    g.DrawLine(pen, x + 2.5f * u, y + 12 * u, x + (sign == Sign.Text ? 9 : 13.5f) * u, y + 12 * u);
+                    break;
+                case Sign.Link:
+                    g.DrawLine(pen, x + 4 * u, y + 12 * u, x + 12 * u, y + 4 * u);
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 6 * u, y + 4 * u), new PointF(x + 12 * u, y + 4 * u),
+                        new PointF(x + 12 * u, y + 10 * u) });
+                    break;
+                case Sign.Star:
+                    PointF[] star = new PointF[10];
+                    for (int i = 0; i < star.Length; i++)
+                    {
+                        double angle = -Math.PI / 2 + i * Math.PI / 5, radius = (i % 2 == 0 ? 7 : 3) * u;
+                        star[i] = new PointF(x + 8 * u + (float)(radius * Math.Cos(angle)), y + 8.5f * u + (float)(radius * Math.Sin(angle)));
+                    }
+                    g.FillPolygon(fill, star);
+                    break;
+                case Sign.Plus:
+                    g.DrawLine(pen, x + 8 * u, y + 3 * u, x + 8 * u, y + 13 * u);
+                    g.DrawLine(pen, x + 3 * u, y + 8 * u, x + 13 * u, y + 8 * u);
+                    break;
+                case Sign.Edit:   // a pencil, and the line it leaves
+                    pen.Width = 2.6f * u;
+                    g.DrawLine(pen, x + 5.5f * u, y + 10.5f * u, x + 11.5f * u, y + 4.5f * u);
+                    pen.Width = 1.4f * u;
+                    g.DrawLine(pen, x + 3 * u, y + 13.5f * u, x + 13 * u, y + 13.5f * u);
+                    break;
+                case Sign.Delete:
+                    g.DrawLine(pen, x + 4 * u, y + 4 * u, x + 12 * u, y + 12 * u);
+                    g.DrawLine(pen, x + 12 * u, y + 4 * u, x + 4 * u, y + 12 * u);
+                    break;
+                case Sign.Options:   // two sliders
+                    g.DrawLine(pen, x + 2.5f * u, y + 5 * u, x + 13.5f * u, y + 5 * u);
+                    g.DrawLine(pen, x + 2.5f * u, y + 11 * u, x + 13.5f * u, y + 11 * u);
+                    g.FillEllipse(fill, x + 8 * u, y + 2.5f * u, 5 * u, 5 * u);
+                    g.FillEllipse(fill, x + 3 * u, y + 8.5f * u, 5 * u, 5 * u);
+                    break;
+                case Sign.Keys:   // a keyboard
+                    pen.Width = 1.4f * u;
+                    g.DrawRectangle(pen, x + 1.5f * u, y + 3.5f * u, 13 * u, 9 * u);
+                    foreach (float key in new float[] { 4.5f, 8, 11.5f })
+                        g.FillEllipse(fill, x + (key - 0.9f) * u, y + 5.6f * u, 1.8f * u, 1.8f * u);
+                    g.DrawLine(pen, x + 5 * u, y + 10 * u, x + 11 * u, y + 10 * u);
+                    break;
+                case Sign.Search:
+                    g.DrawEllipse(pen, x + 2 * u, y + 2 * u, 8.5f * u, 8.5f * u);
+                    g.DrawLine(pen, x + 9.6f * u, y + 9.6f * u, x + 14 * u, y + 14 * u);
+                    break;
+            }
+        }
+        g.SmoothingMode = mode;
     }
 
     // A text box as a flat darker area. The system border cannot be coloured, so the box goes borderless
@@ -204,7 +305,7 @@ static class Look
     // Title bar in the colour of the window (Windows 11; earlier versions refuse and keep their own).
     public static void Caption(Form form)
     {
-        int back = ColorTranslator.ToWin32(form.BackColor), text = ColorTranslator.ToWin32(form.ForeColor), dark = 1;
+        int back = ColorTranslator.ToWin32(form.BackColor), text = ColorTranslator.ToWin32(form.ForeColor), dark = Dark ? 1 : 0;
         Native.DwmSetWindowAttribute(form.Handle, Native.DWMWA_USE_IMMERSIVE_DARK_MODE, ref dark, sizeof(int));
         Native.DwmSetWindowAttribute(form.Handle, Native.DWMWA_CAPTION_COLOR, ref back, sizeof(int));
         Native.DwmSetWindowAttribute(form.Handle, Native.DWMWA_TEXT_COLOR, ref text, sizeof(int));
