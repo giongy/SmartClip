@@ -2,15 +2,13 @@
 rem Builds and runs the automated checks. During the typing test a small window appears for a couple
 rem of seconds and the program types into it by itself: do not touch keyboard or mouse.
 setlocal
-set NAME=SmartClip
 set HERE=%~dp0
-set APP=%~dp0..\%NAME%
 set CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe
 if not exist "%CSC%" set CSC=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe
 
 echo Compilo i controlli...
 "%CSC%" /nologo /codepage:65001 /target:exe /main:TestProgram /out:"%HERE%tests.exe" ^
-  /r:System.Windows.Forms.dll /r:System.Drawing.dll "%APP%.cs" "%HERE%Test.cs"
+  /r:System.Windows.Forms.dll /r:System.Drawing.dll "%HERE%..\src\*.cs" "%HERE%Test.cs"
 if errorlevel 1 goto failed
 
 echo.

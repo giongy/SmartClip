@@ -10,11 +10,11 @@ rem The icon is optional: without the .ico file the program uses the default one
 set ICON=
 if exist "%APP%.ico" set ICON=/win32icon:"%APP%.ico" /resource:"%APP%.ico",%NAME%.ico
 
-echo Compilo %NAME%.cs...
+echo Compilo src\*.cs...
 if defined ICON (echo Icona: %NAME%.ico) else (echo Icona: quella predefinita, %NAME%.ico non trovato)
 
 "%CSC%" /nologo /codepage:65001 /target:winexe /optimize+ /out:"%APP%.exe" %ICON% ^
-  /r:System.Windows.Forms.dll /r:System.Drawing.dll "%APP%.cs"
+  /r:System.Windows.Forms.dll /r:System.Drawing.dll "%~dp0src\*.cs"
 if errorlevel 1 goto failed
 
 echo.

@@ -17,7 +17,7 @@ presses the keys one by one, as if you were typing.
 Formerly called PasswordPaste: the first start under the new name takes over its settings and saved texts.
 
 - One portable `.exe`, about 160 KB. No installer, no dependencies, no network access.
-- One C# source file that compiles with the compiler already shipped with Windows.
+- A handful of C# source files in `src`, compiled with the compiler already shipped with Windows.
 - Stops typing the moment the target window loses focus, so a password never lands in the wrong place.
 - The history of copied items is kept for the number of days you choose, or in memory only; saved texts are
   encrypted for your Windows account.

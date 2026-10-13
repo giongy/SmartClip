@@ -2,17 +2,24 @@
 
 Piccolo gestore degli appunti per Windows che sa anche digitarne il contenuto come pressioni di tasti reali, per
 inserire password dove l'incolla non funziona (schermate di blocco dei desktop remoti). Fino alla versione 1.2
-si chiamava PasswordPaste: la cartella locale ha ancora quel nome (il repository GitHub è `giongy/SmartClip`), e alla
+si chiamava PasswordPaste (il repository GitHub è `giongy/SmartClip`), e alla
 prima apertura `AdoptOldSettings` sposta impostazioni e testi salvati da `HKCU\Software\PasswordPaste`. L'utente è italiano: interfaccia e
 risposte in italiano. I commenti nel codice e nei file di configurazione sono in inglese (il progetto è condiviso
 su GitHub).
 
 ## File
 
-- `SmartClip.cs` — tutto il programma, in un solo file: `Program`, `MainForm` (finestra con elenco e
-  opzioni, tray, impostazioni), `Entry` e `Texts` (le voci dell'elenco), `Typer` (mappa dei tasti e invio),
-  `Native` (funzioni e costanti di Windows).
-- `build.cmd` — compila `SmartClip.exe`. `SmartClip.ico` è facoltativa.
+- `src\` — il programma, un file per responsabilità (fino alla 2.0 era un solo `SmartClip.cs`, diviso quando ha
+  superato le 2000 righe; nessuno spazio dei nomi, le classi si vedono tutte tra loro):
+  - `Program.cs` — avvio, istanza unica, attributi dell'assembly.
+  - `MainForm.cs` — la finestra: disposizione, elenco, opzioni, tray, impostazioni, digitazione. È il file
+    grande; dividerlo ancora sarebbe una ristrutturazione, non uno spostamento.
+  - `EditForm.cs` — la finestra «Nuovo/Modifica».
+  - `Look.cs` — colori e controlli disegnati: `Look`, `Card`, `RoundButton`, `Toggle`.
+  - `Texts.cs` — `Entry` e `Texts`: le voci dell'elenco, la cronologia su disco, i testi salvati.
+  - `Typer.cs` — mappa dei tasti e invio (`Typer`, `Stroke`, `TypeOptions`, `TypeResult`).
+  - `Native.cs` — funzioni e costanti di Windows.
+- `build.cmd` — compila `src\*.cs` in `SmartClip.exe`. `SmartClip.ico` è facoltativa.
 - `tests/Test.cs`, `tests/test.cmd` — controlli automatici (vedi sotto).
 - `LICENSE` — licenza MIT.
 - `README.md` — presentazione per GitHub, in inglese. Traduce le etichette delle opzioni: va aggiornato quando se
@@ -155,7 +162,7 @@ su GitHub).
 
 ## Controlli
 
-`tests\test.cmd` compila `tests.exe` (sorgente del programma + `Test.cs`, ingresso `TestProgram`) ed esegue:
+`tests\test.cmd` compila `tests.exe` (`src\*.cs` + `Test.cs`, ingresso `TestProgram`) ed esegue:
 
 - `tests.exe map` — stampa la mappa della tastiera attiva e confronta la tabella americana (solo lettere e
   cifre, se il layout USA non è installato).
