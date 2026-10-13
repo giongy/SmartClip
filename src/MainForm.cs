@@ -384,7 +384,7 @@ class MainForm : Form
             };
             list.DrawItem += DrawEntry;
             // One entry is selected in the whole window: selecting in a column clears the other.
-            list.SelectedIndexChanged += delegate
+            EventHandler taken = delegate
             {
                 if (list.SelectedIndex >= 0)
                 {
@@ -393,12 +393,16 @@ class MainForm : Form
                 }
                 ShowActions();
             };
+            list.SelectedIndexChanged += taken;
             // The left button chooses, the right one only selects, so that its menu acts on the entry under the pointer.
             list.MouseDown += delegate(object sender, MouseEventArgs e)
             {
                 HidePeek();
                 int index = RowAt(list, e.Location);
                 if (e.Button == MouseButtons.Right && index >= 0) list.SelectedIndex = index;
+                // Windows announces the row taken by a click only when the button is released, after the
+                // click has been handled: without this the click would act on the entry selected before.
+                taken(list, EventArgs.Empty);
             };
             // One click leaves the window where it is, so that the entry can still be saved or deleted; a
             // double click, like Enter, also goes back to the window the list hotkey was pressed in.
