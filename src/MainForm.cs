@@ -27,11 +27,13 @@ class MainForm : Form
     public const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
     const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
-    const int ListExtra = 158;                   // height given to the lists beyond what the options need
+    const int ListExtra = 115;                  // height given to the lists beyond what the options need
     const int ColumnGap = 20, ColumnWidth = (ContentWidth - ColumnGap) / 2;   // the two columns of the options
     const int TitleRow = 30, SectionGap = 10;          // the title of a category of options, and the air above it
     const int RuleGap = 8;                             // between the line under such a title and the first option
-    const int SavedWidth = 185,TitleHeight = 20;      // the column of the saved texts, and the title above each column
+    const int SavedWidth = 250, TitleHeight = 20;      // the column of the saved texts, and the title above each column
+    const int MinColumn = 185;                         // the least a column can be dragged to
+    const int GripHeight = 28;                         // of the mark between the columns, where they are dragged
     const int RowPadding = 10;                         // added to the text height to get a row of the list
     const int PictureRows = 3;                         // rows taken by a picture, to make room for its preview
     const int PreviewMargin = 4;                       // around the preview, inside its row
@@ -43,7 +45,8 @@ class MainForm : Form
     const int SearchHeight = 30, GlyphWidth = 20;      // the search box, and the magnifying glass on its left
     const int ListPadding = 4;                         // between the rounded edge of a column and its list
     const int CountWidth = 120;                        // room for the number of entries, right of a column title
-    const int RowInset = 12, TimeGap = 8;              // of the text in a row, and around the time on its right
+    const int GroupIndent = 14;                        // of a saved text under its folder
+    const int RowInset = 12, TimeGap = 8;             // of the text in a row, and around the time on its right
     const int Gap = 6;                                 // between neighbouring controls
     const int ActionHeight = 26, ActionWidth = 92;     // the buttons in the bottom row
     const int TypeWidth = 160;                        // the button that types the clipboard, in the same row
@@ -71,12 +74,18 @@ class MainForm : Form
     readonly TextBox search = new TextBox();
     readonly ListBox recentList = new ListBox(), savedList = new ListBox();   // what was copied, and what was saved
     ListBox active;     // the one of the two that holds the selected entry
+    Panel recentCard, savedCard;                  // the rounded shapes the two lists are in
+    Label savedTitle;
+    readonly Panel divider = new Panel();         // the room between the columns: dragged, it moves their border
+    int savedColumn = SavedWidth;                 // the width the user gave to the saved texts, in pixels at 96 dpi
+    int dragFrom, dragWidth;                      // where the pointer and the border were when a drag started
+    bool shown;                                   // the window has its final scale: the columns can be placed
     readonly RoundButton newButton = new RoundButton(), saveButton = new RoundButton(), deleteButton = new RoundButton();
     // The two views that take turns in the lower part of the window. The options add themselves as they are placed.
     readonly List<Control> optionControls = new List<Control>();
     readonly Control[] listControls;
     readonly TextBox delayBox = new TextBox(), keepBox = new TextBox(), cleanBox = new TextBox();
-    readonly RoundButton cleanButton = new RoundButton();
+    readonly RoundButton cleanButton = new RoundButton(), exportButton = new RoundButton(), importButton = new RoundButton();
     readonly CheckBox usBox = new Toggle();
     readonly CheckBox enterBox = new Toggle();
     readonly CheckBox clearBox = new Toggle();
@@ -155,6 +164,13 @@ class MainForm : Form
         PlaceOption(trayBox, "Resta attivo nell'area di notifica (tray)", left, ref top);
         trayBox.Checked = true;
         PlaceOption(startBox, "Avvia insieme a Windows", left, ref top);
+        // Side by side, each with its two choices: the saved texts alone, or what was copied too.
+        ContextMenuStrip exportMenu = Choice(Export), importMenu = Choice(Import);
+        top += Gap;
+        PlaceButton(exportButton, "Esporta…", delegate { exportMenu.Show(exportButton, 0, exportButton.Height); }, left, ref top);
+        top -= NumberRow;
+        PlaceButton(importButton, "Importa…", delegate { importMenu.Show(importButton, 0, importButton.Height); },
+            left + OptionButtonWidth + Gap, ref top);
         int leftBottom = top;
 
         left += ColumnWidth + ColumnGap;
@@ -210,12 +226,28 @@ class MainForm : Form
         int titleTop = searchFrame.Bottom + Gap + 2, listTop = titleTop + TitleHeight, listHeight = areaBottom - listTop;
         int savedLeft = Edge + ContentWidth - SavedWidth;
         Label recentTitle = NewLabel("Copiati di recente", titleTop);
-        Label savedTitle = NewLabel("Salvati", titleTop);
+        savedTitle = NewLabel("Salvati", titleTop);
         savedTitle.Left = savedLeft;
         recentTitle.Font = savedTitle.Font = new Font(Font, FontStyle.Bold);
         recentList.SetBounds(Edge, listTop, savedLeft - Edge - Edge, listHeight);
         savedList.SetBounds(savedLeft, listTop, SavedWidth, listHeight);
-        Panel recentCard = Look.Wrap(recentList, ListPadding), savedCard = Look.Wrap(savedList, ListPadding);
+        recentCard = Look.Wrap(recentList, ListPadding);
+        savedCard = Look.Wrap(savedList, ListPadding);
+        // The room between the columns can be dragged, to give the saved texts more of the window or less; a
+        // double click goes back to the width they start with.
+        divider.SetBounds(recentCard.Right, listTop, Edge, listHeight);
+        divider.Cursor = Cursors.VSplit;
+        divider.Paint += DrawGrip;
+        divider.MouseDown += delegate(object sender, MouseEventArgs e)
+        {
+            dragFrom = Cursor.Position.X;
+            dragWidth = savedCard.Width;
+        };
+        divider.MouseMove += delegate(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left) PlaceColumns(dragWidth + dragFrom - Cursor.Position.X);
+        };
+        divider.DoubleClick += delegate { PlaceColumns((int)(SavedWidth * Zoom)); };
         recentCount.SetBounds(recentCard.Right - CountWidth, titleTop, CountWidth, TitleHeight);
         savedCount.SetBounds(savedCard.Right - CountWidth, titleTop, CountWidth, TitleHeight);
         foreach (Label count in new Label[] { recentCount, savedCount })
@@ -243,6 +275,7 @@ class MainForm : Form
         recentCard.Anchor = toTop | toBottom | toLeft | toRight;
         savedCard.Anchor = toTop | toBottom | toRight;
         savedTitle.Anchor = recentCount.Anchor = savedCount.Anchor = toTop | toRight;
+        divider.Anchor = toTop | toBottom | toRight;
         recentEmpty.Anchor = savedEmpty.Anchor = toTop | toBottom | toLeft | toRight;
         status.Anchor = toBottom | toLeft | toRight;
         newButton.Anchor = saveButton.Anchor = deleteButton.Anchor = toBottom | toLeft;
@@ -259,17 +292,36 @@ class MainForm : Form
         ToolStripItem changeItem = listMenu.Items.Add("", null, change);
         // Only for a copied entry: the same as a click on its star.
         ToolStripItem pinItem = listMenu.Items.Add("", null, delegate { TogglePin(Selected); });
-        listMenu.Items.Add(deleteButton.Text, null, delete);
+        // Only for a saved text, once there are folders: they are listed when the menu opens.
+        ToolStripMenuItem moveItem = new ToolStripMenuItem("Sposta in");
+        listMenu.Items.Add(moveItem);
+        ToolStripItem deleteItem = listMenu.Items.Add(deleteButton.Text, null, delete);
         listMenu.Items.Add(newButton.Text, null, create);
-        listMenu.Opening += delegate(object sender, System.ComponentModel.CancelEventArgs e)
+        listMenu.Items.Add("Nuova cartella…", null, delegate { EditGroup(null); });
+        // With nothing selected the menu still opens: a first folder can be made in an empty list.
+        listMenu.Opening += delegate
         {
             Entry entry = Selected;
             changeItem.Text = saveButton.Text;
             changeItem.Enabled = saveButton.Enabled;
+            changeItem.Visible = deleteItem.Visible = entry != null;
             pinItem.Visible = entry != null && entry.Name == null;
             pinItem.Text = entry != null && entry.Pinned ? "Togli dall'alto" : "Tieni in alto";
-            e.Cancel = entry == null;
+            List<string> groups = GroupNames();
+            // Asked back, 'Visible' would answer false: the menu is not on screen yet.
+            bool movable = entry != null && entry.Name != null && !entry.IsGroup && groups.Count > 0;
+            moveItem.Visible = movable;
+            moveItem.DropDownItems.Clear();
+            if (!movable) return;
+            // The place where the text already is cannot be chosen.
+            moveItem.DropDownItems.Add("Nessuna cartella", null, delegate { MoveTo(entry, null); }).Enabled = entry.Group != null;
+            foreach (string each in groups)
+            {
+                string group = each;   // a variable of its own for the delegate
+                moveItem.DropDownItems.Add(group, null, delegate { MoveTo(entry, group); }).Enabled = !Texts.SameName(group, entry.Group);
+            }
         };
+        Look.Style((ToolStripDropDownMenu)moveItem.DropDown);
         Look.Style(listMenu);
 
         foreach (ListBox each in new ListBox[] { recentList, savedList })
@@ -313,9 +365,12 @@ class MainForm : Form
                 else Accept(false);
             };
             // The second click on a star finds another entry there: the first one moved the row.
+            // Nor does it count on a folder, which the first click has already opened or closed.
             list.MouseDoubleClick += delegate(object sender, MouseEventArgs e)
             {
-                if (e.Button == MouseButtons.Left && list.IndexFromPoint(e.Location) >= 0 && !OnStar(list, e.Location)) Accept(true);
+                int index = list.IndexFromPoint(e.Location);
+                if (e.Button == MouseButtons.Left && index >= 0 && !OnStar(list, e.Location) && !((Entry)list.Items[index]).IsGroup)
+                    Accept(true);
             };
             // The entry under the pointer lights up: a click would choose it.
             list.MouseMove += delegate(object sender, MouseEventArgs e) { Hover(list, list.IndexFromPoint(e.Location)); };
@@ -374,6 +429,12 @@ class MainForm : Form
           + "(ridotto a icona, se l'opzione qui sopra è spenta).\n"
           + "Vale per questo eseguibile: se lo sposti, al primo avvio da lì la voce si aggiorna da sola.\n"
           + "È la stessa voce di Gestione attività > App di avvio: spenta lì, risulta spenta anche qui.", startBox);
+        Tip("Scrive in un file di testo, che si apre con il Blocco note, i testi salvati con le loro\n"
+          + "cartelle; se lo chiedi, anche le cose copiate. Le immagini non ci vanno.\n"
+          + "Nel file i testi sono in chiaro, password comprese: tienilo in un posto sicuro.", exportButton);
+        Tip("Legge un file scritto da «Esporta», anche su un altro PC, e aggiunge ciò che contiene\n"
+          + "a quello che c'è già. Se un testo salvato ha il nome di uno esistente, chiede quale tenere.\n"
+          + "Le cose copiate che l'elenco ha già non vengono ripetute.", importButton);
         Tip("A sinistra le ultime cose copiate, a destra i testi che hai salvato.\n"
           + "Scrivi per cercare in tutte e due: parole in qualsiasi ordine, senza badare a\n"
           + "maiuscole e accenti. Le frecce scorrono la colonna, Tab passa all'altra.\n"
@@ -383,15 +444,21 @@ class MainForm : Form
           + "La stellina a destra di una voce copiata (Ctrl+" + PinKey + ") la tiene in cima all'elenco,\n"
           + "anche oltre i giorni della cronologia, finché non la togli.\n"
           + "I testi salvati restano nel registro di Windows, cifrati per il tuo utente, e\n"
-          + "se ne vede solo il nome.", search, recentList, savedList);
+          + "se ne vede solo il nome. Si possono raccogliere in cartelle: «Nuova cartella» è nel\n"
+          + "menu del tasto destro (Ctrl+Maiusc+" + NewKey + "), come «Sposta in»; un clic sulla cartella\n"
+          + "la apre e la chiude.", search, recentList, savedList);
         Tip("Scrive un testo nuovo da tenere, con il suo nome (Ctrl+" + NewKey + ").", newButton);
         Tip("Su una voce copiata: la salva con un nome, e puoi ritoccarne il contenuto.\n"
           + "Su una voce salvata: ne cambia il nome o il contenuto (Ctrl+" + SaveKey + ").\n"
+          + "Su una cartella: le cambia il nome.\n"
           + "Le immagini restano solo in memoria e non si salvano.", saveButton);
         Tip("Apre la guida: tutto quello che il programma sa fare (" + HelpKey + ").", helpButton);
-        Tip("Elimina il testo salvato, o toglie dall'elenco la voce copiata (Ctrl+" + DeleteKey + ").", deleteButton);
+        Tip("Elimina il testo salvato, o toglie dall'elenco la voce copiata (Ctrl+" + DeleteKey + ").\n"
+          + "Di una cartella elimina solo la cartella: i suoi testi restano tra i salvati.", deleteButton);
 
-        listControls = new Control[] { searchFrame, recentTitle, savedTitle, recentCount, savedCount, recentCard, savedCard,
+        Tip("Trascina per dare più o meno spazio ai testi salvati.\n"
+          + "Doppio clic: la larghezza di partenza.", divider);
+        listControls = new Control[] { searchFrame, recentTitle, savedTitle, recentCount, savedCount, recentCard, savedCard, divider,
             newButton, saveButton, deleteButton };
         Controls.AddRange(new Control[] { typeButton, viewButton, helpButton, status });
         Controls.AddRange(listControls);
@@ -522,14 +589,29 @@ class MainForm : Form
         savedList.BeginUpdate();
         recentList.Items.Clear();
         savedList.Items.Clear();
+        bool searching = search.Text.Trim().Length > 0;
+        Entry group = null;   // the folder whose texts are being listed: it comes just before them
+        bool listed = false;  // whether its own row is in the list
         foreach (Entry entry in entries)
         {
+            // A folder is always there, except in a search: then it appears only with what was found in it.
+            if (entry.IsGroup)
+            {
+                group = entry;
+                listed = !searching;
+                if (listed) ShowRow(savedList, entry, selected);
+                continue;
+            }
             if (!Texts.Matches(entry, search.Text)) continue;
             // The history can hold thousands: the search reaches the others. The copied ones come last.
             if (entry.Name == null && recentList.Items.Count == MaxShown) break;
-            ListBox list = entry.Name == null ? recentList : savedList;
-            int index = list.Items.Add(entry);
-            if (selected != null && entry.Name == selected.Name && entry.Text == selected.Text) list.SelectedIndex = index;
+            if (entry.Group != null)
+            {
+                if (!searching && !group.Open) continue;
+                if (!listed) ShowRow(savedList, group, selected);
+                listed = true;
+            }
+            ShowRow(entry.Name == null ? recentList : savedList, entry, selected);
         }
         recentList.EndUpdate();
         savedList.EndUpdate();
@@ -537,16 +619,25 @@ class MainForm : Form
         if (Selected == null) Pick(recentList.Items.Count > 0 ? recentList : savedList);
         ShowActions();
 
-        bool searching = search.Text.Trim().Length > 0;
         int copied = entries.FindAll(delegate(Entry entry) { return entry.Name == null; }).Count;
         recentCount.Text = recentList.Items.Count == copied ? copied.ToString() : recentList.Items.Count + " di " + copied;
-        savedCount.Text = savedList.Items.Count == entries.Count - copied ? savedList.Items.Count.ToString()
-            : savedList.Items.Count + " di " + (entries.Count - copied);
+        // Of the saved ones the texts are counted, not the folders; those in a closed folder are there all the same.
+        int saved = entries.FindAll(delegate(Entry entry) { return entry.Name != null && !entry.IsGroup; }).Count, found = 0;
+        foreach (Entry entry in savedList.Items) if (!entry.IsGroup) found++;
+        savedCount.Text = searching && found != saved ? found + " di " + saved : saved.ToString();
         recentEmpty.Text = searching ? "Nessun risultato" : historyBox.Checked ? "Quello che copi comparirà qui"
             : "La cronologia è spenta";
         savedEmpty.Text = searching ? "Nessun risultato" : "Nessun testo salvato";
         recentEmpty.Visible = recentList.Items.Count == 0;
         savedEmpty.Visible = savedList.Items.Count == 0;
+    }
+
+    // Adds a row to a list; if it is the entry that was selected, it is selected again.
+    static void ShowRow(ListBox list, Entry entry, Entry selected)
+    {
+        int index = list.Items.Add(entry);
+        if (selected != null && entry.Name == selected.Name && entry.Text == selected.Text && entry.IsGroup == selected.IsGroup)
+            list.SelectedIndex = index;
     }
 
     // Remembers which row of a list the pointer is on, and has the two rows involved drawn again.
@@ -570,6 +661,7 @@ class MainForm : Form
     // The sign that tells what an entry is: a saved text, an address, any other text. A picture shows itself.
     static Sign SignOf(Entry entry)
     {
+        if (entry.IsGroup) return entry.Open ? Sign.Opened : Sign.Closed;
         if (entry.Name != null) return Sign.Star;
         string start = entry.Text.TrimStart();
         foreach (string prefix in new string[] { "http://", "https://", "www." })
@@ -598,7 +690,7 @@ class MainForm : Form
     {
         Entry entry = Selected;
         bool saved = entry != null && entry.Name != null;
-        saveButton.Text = saved ? "Modifica…" : "Salva…";
+        saveButton.Text = saved && entry.IsGroup ? "Rinomina…" : saved ? "Modifica…" : "Salva…";
         saveButton.Sign = saved ? Sign.Edit : Sign.Star;
         saveButton.Enabled = entry != null && !entry.Picture;
         deleteButton.Enabled = entry != null;
@@ -638,6 +730,16 @@ class MainForm : Form
             else if (selected || hovered) Look.Draw(e.Graphics, Sign.Star, star, Look.Blend(Look.Muted, list.BackColor, 0.4f));
             label.Width -= star.Width + TimeGap;
         }
+        if (entry.IsGroup)
+        {
+            // On the right of a folder, how many texts it holds.
+            string count = entries.FindAll(delegate(Entry other) { return Texts.SameName(other.Group, entry.Name); }).Count.ToString();
+            int width = TextRenderer.MeasureText(e.Graphics, count, e.Font, Size.Empty, TextFormatFlags.NoPadding).Width;
+            TextRenderer.DrawText(e.Graphics, count, e.Font, label, Look.Muted, TextFormatFlags.VerticalCenter
+                | TextFormatFlags.Right | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+            label.Width -= width + TimeGap;
+        }
+        if (entry.Group != null) label = Rectangle.FromLTRB(label.Left + GroupIndent, label.Top, label.Right, label.Bottom);
         if (entry.Time != DateTime.MinValue)
         {
             // On the right, when: of a copied entry the time today and the day before that, of a saved text
@@ -665,8 +767,11 @@ class MainForm : Form
             Look.Draw(e.Graphics, SignOf(entry), new Rectangle(label.Left, e.Bounds.Top + (e.Bounds.Height - side) / 2, side, side), null);
             label = Rectangle.FromLTRB(label.Left + side + 2 * PreviewMargin, label.Top, label.Right, label.Bottom);
         }
-        TextRenderer.DrawText(e.Graphics, entry.Label, e.Font, label, list.ForeColor, TextFormatFlags.VerticalCenter
-            | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);
+        using (Font font = new Font(e.Font, entry.IsGroup ? FontStyle.Bold : FontStyle.Regular))   // a folder stands out
+        {
+            TextRenderer.DrawText(e.Graphics, entry.Label, font, label, list.ForeColor, TextFormatFlags.VerticalCenter
+                | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);
+        }
     }
 
     // Where the star of a copied entry is drawn, at the right end of its row.
@@ -704,7 +809,8 @@ class MainForm : Form
     void Accept(bool leave)
     {
         Entry entry = Selected;
-        if (entry != null && !busy && Use(entry) && leave) GoBack();
+        if (entry != null && entry.IsGroup) ToggleGroup(entry);   // a folder is not chosen: it opens and closes
+        else if (entry != null && !busy && Use(entry) && leave) GoBack();
     }
 
     // Makes an entry the clipboard content again: from there Ctrl+V pastes it and the hotkey types it.
@@ -774,20 +880,28 @@ class MainForm : Form
     void Edit(Entry source)
     {
         if (source != null && source.Picture) return;
-        using (EditForm edit = new EditForm(source))
+        if (source != null && source.IsGroup)
+        {
+            EditGroup(source.Name);
+            return;
+        }
+        // A new text is proposed for the folder the selection is in; any text can then be put elsewhere.
+        Entry near = Selected;
+        string group = source != null ? source.Group : near == null ? null : near.IsGroup ? near.Name : near.Group;
+        using (EditForm edit = new EditForm(source, group, GroupNames()))
         {
             // Asked again, with what was written still there, if the name turns out to be taken.
             while (edit.ShowDialog(this) == DialogResult.OK)
             {
                 string name = edit.EntryName, oldName = source == null ? null : source.Name;
-                // Registry value names do not distinguish case.
-                bool renamed = !string.Equals(name, oldName, StringComparison.OrdinalIgnoreCase);
-                bool taken = renamed && entries.Exists(delegate(Entry entry) { return string.Equals(entry.Name, name, StringComparison.OrdinalIgnoreCase); });
+                bool renamed = !Texts.SameName(name, oldName);
+                bool taken = renamed && entries.Exists(delegate(Entry entry) { return !entry.IsGroup && Texts.SameName(entry.Name, name); });
                 if (taken && !Ask("«" + name + "» esiste già. Vuoi sostituirlo?")) continue;
                 if (!Change(delegate
                 {
-                    Texts.Save(name, edit.Content);   // first, so that a failure leaves the old one in place
+                    Texts.Save(name, edit.Content, edit.Group);   // first, so that a failure leaves the old one in place
                     if (renamed && oldName != null) Texts.Delete(oldName);
+                    if (edit.Group != null) Texts.SetGroup(edit.Group, true);   // or the text would not be seen
                 })) continue;
                 if (source != null && source.Name == null) Texts.Remove(source);   // it now has a line among the saved ones
                 status.Text = "Salvato «" + Shorten(name) + "».";
@@ -797,11 +911,70 @@ class MainForm : Form
         Reload();
     }
 
+    // The folders of the saved texts, by name.
+    List<string> GroupNames()
+    {
+        return entries.FindAll(delegate(Entry entry) { return entry.IsGroup; }).ConvertAll(delegate(Entry entry) { return entry.Name; });
+    }
+
+    // Asks the name of a new folder, or another name for the given one.
+    void EditGroup(string old)
+    {
+        using (EditForm edit = new EditForm(old))
+        {
+            while (edit.ShowDialog(this) == DialogResult.OK)
+            {
+                string name = edit.EntryName;
+                if (!Texts.SameName(name, old) && GroupNames().Exists(delegate(string other) { return Texts.SameName(other, name); }))
+                {
+                    MessageBox.Show(this, "La cartella «" + name + "» esiste già.", Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    continue;
+                }
+                if (!Change(delegate
+                {
+                    if (old == null) Texts.SetGroup(name, true);
+                    else Texts.RenameGroup(old, name);
+                })) continue;
+                status.Text = (old == null ? "Creata la cartella «" : "La cartella ora si chiama «") + Shorten(name) + "».";
+                break;
+            }
+        }
+        Reload();
+    }
+
+    // Puts a saved text into a folder, which opens to show it, or into none.
+    void MoveTo(Entry entry, string group)
+    {
+        if (!Change(delegate
+        {
+            Texts.Move(entry.Name, group);
+            if (group != null) Texts.SetGroup(group, true);
+        })) return;
+        status.Text = group == null ? "«" + Shorten(entry.Name) + "» non è più in una cartella."
+            : "«" + Shorten(entry.Name) + "» è nella cartella «" + Shorten(group) + "».";
+        Reload();
+    }
+
+    // Shows or hides the texts of a folder.
+    void ToggleGroup(Entry group)
+    {
+        Change(delegate { Texts.SetGroup(group.Name, !group.Open); });
+        Reload();
+    }
+
     void DeleteSelected()
     {
         Entry entry = Selected;
         if (entry == null) return;
         if (entry.Name == null) Texts.Remove(entry);
+        else if (entry.IsGroup)
+        {
+            // Only the folder goes: what it holds is too easily a password to be deleted along.
+            bool holds = entries.Exists(delegate(Entry other) { return Texts.SameName(other.Group, entry.Name); });
+            if (!Ask("Vuoi eliminare la cartella «" + entry.Name + "»?"
+                + (holds ? "\n\nI testi che contiene non vengono eliminati: restano tra i salvati, fuori dalla cartella." : ""))
+                || !Change(delegate { Texts.RenameGroup(entry.Name, null); })) return;
+        }
         else if (!Ask("Vuoi eliminare «" + entry.Name + "»?") || !Change(delegate { Texts.Delete(entry.Name); })) return;
         Reload();
     }
@@ -855,6 +1028,9 @@ class MainForm : Form
                 return true;
             case Keys.Control | NewKey:
                 Edit(null);
+                return true;
+            case Keys.Control | Keys.Shift | NewKey:
+                EditGroup(null);
                 return true;
             case Keys.Control | SaveKey:
                 Edit(Selected);
@@ -959,6 +1135,70 @@ class MainForm : Form
         top += NumberRow;
     }
 
+    // The menu under the buttons that export and import: what to take, then on with it.
+    static ContextMenuStrip Choice(Action<bool> act)
+    {
+        ContextMenuStrip menu = new ContextMenuStrip();
+        menu.Items.Add("Solo i testi salvati…", null, delegate { act(false); });
+        menu.Items.Add("Tutto, anche le cose copiate…", null, delegate { act(true); });
+        Look.Style(menu);
+        return menu;
+    }
+
+    static string BackupFilter
+    {
+        get { return "File di testo (*" + Backup.Extension + ")|*" + Backup.Extension; }
+    }
+
+    // Writes the saved texts, and with 'all' what was copied too, to a text file chosen by the user.
+    void Export(bool all)
+    {
+        if (!Ask("Il file conterrà i testi in chiaro, password comprese: chiunque lo apra potrà leggerli.\n\nVuoi continuare?")) return;
+        using (SaveFileDialog dialog = new SaveFileDialog())
+        {
+            dialog.Filter = BackupFilter;
+            dialog.FileName = Program.AppName + " " + DateTime.Today.ToString(Texts.DayFormat) + Backup.Extension;
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            BackupResult result = null;
+            if (!Change(delegate { result = Backup.Export(dialog.FileName, all); })) return;
+            status.Text = "Esportati: " + Count(result.Saved, "testo salvato", "testi salvati")
+                + (all ? ", " + Count(result.Copied, "copiato", "copiati") : "")
+                + (result.Pictures > 0 ? ". Le immagini (" + result.Pictures + ") non si esportano" : "") + ".";
+        }
+    }
+
+    // Takes in a file written by Export. With 'all' the copied texts too, if the history is on.
+    void Import(bool all)
+    {
+        using (OpenFileDialog dialog = new OpenFileDialog())
+        {
+            dialog.Filter = BackupFilter;
+            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            bool copied = all && historyBox.Checked;
+            BackupResult result = null;
+            if (!Change(delegate
+            {
+                result = Backup.Import(dialog.FileName, copied, delegate(int clashes)
+                {
+                    return Ask((clashes == 1 ? "Un testo salvato del file ha il nome di uno che esiste già."
+                        : clashes + " testi salvati del file hanno il nome di uno che esiste già.")
+                        + "\n\nSì: vale quello del file.\nNo: resta quello che c'è.");
+                });
+            })) return;
+            status.Text = result.Saved + result.Copied + result.Kept == 0 ? "Nel file non c'era niente da importare."
+                : "Importati: " + Count(result.Saved, "testo salvato", "testi salvati")
+                + (copied ? ", " + Count(result.Copied, "copiato", "copiati") : "")
+                + (result.Kept > 0 ? ". Lasciati com'erano: " + result.Kept : "")
+                + (all && !copied ? ". La cronologia è spenta: i copiati non sono stati importati" : "") + ".";
+        }
+        Reload();
+    }
+
+    static string Count(int number, string one, string many)
+    {
+        return number + " " + (number == 1 ? one : many);
+    }
+
     // Removes at once what was copied before the days to spare; with zero, everything. Pinned entries stay.
     void CleanHistory()
     {
@@ -1018,6 +1258,40 @@ class MainForm : Form
     {
         base.OnLoad(e);
         MinimumSize = Size;   // as designed, at the scale of this screen
+        shown = true;
+        PlaceColumns((int)(savedColumn * Zoom));
+    }
+
+    // How much larger than designed this screen draws the window.
+    float Zoom
+    {
+        get { return CurrentAutoScaleDimensions.Width / 96f; }
+    }
+
+    // Gives the column of the saved texts the asked width, as far as both columns stay usable; the copied
+    // ones take the rest of the window.
+    void PlaceColumns(int width)
+    {
+        int gap = savedCard.Left - recentCard.Right, right = savedCard.Right, least = (int)(MinColumn * Zoom);
+        width = Math.Max(least, Math.Min(width, right - recentCard.Left - gap - least));
+        savedCard.SetBounds(right - width, savedCard.Top, width, savedCard.Height);
+        recentCard.Width = savedCard.Left - gap - recentCard.Left;
+        savedTitle.Left = savedCard.Left;
+        recentCount.Left = recentCard.Right - recentCount.Width;
+        divider.Left = recentCard.Right;
+        savedColumn = (int)Math.Round(width / Zoom);
+    }
+
+    // A short line in the middle of the room between the columns: the sign that it can be dragged.
+    void DrawGrip(object sender, PaintEventArgs e)
+    {
+        int height = (int)(GripHeight * Zoom);
+        using (Pen pen = new Pen(Look.Border, 2 * Zoom))
+        {
+            pen.StartCap = pen.EndCap = LineCap.Round;
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            e.Graphics.DrawLine(pen, divider.Width / 2f, (divider.Height - height) / 2f, divider.Width / 2f, (divider.Height + height) / 2f);
+        }
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -1161,6 +1435,8 @@ class MainForm : Form
     {
         base.OnResize(e);
         if (WindowState == FormWindowState.Minimized && trayBox.Checked) HideToTray();
+        // A narrower window may leave too little to the copied entries: the saved ones give some back.
+        else if (shown && WindowState != FormWindowState.Minimized) PlaceColumns(savedCard.Width);
     }
 
     protected override void Dispose(bool disposing)
@@ -1357,7 +1633,7 @@ class MainForm : Form
 
     static string Count(int characters)
     {
-        return characters == 1 ? "1 carattere" : characters + " caratteri";
+        return Count(characters, "carattere", "caratteri");
     }
 
     // The program used to be called PasswordPaste: as long as its registry key exists, the settings and saved
@@ -1436,6 +1712,7 @@ class MainForm : Form
         historyBox.Checked = Transfer(key, save, "History", historyBox.Checked);
         Retention = Transfer(key, save, "KeepDays", Retention);
         trayBox.Checked = Transfer(key, save, "Tray", trayBox.Checked);
+        savedColumn = Transfer(key, save, "SavedWidth", savedColumn);   // applied when the window loads
 
         // Window position. Reading starts from a point outside every screen: it stays there, and is ignored,
         // if the registry holds nothing; the same happens if the screen of that time is no longer connected.

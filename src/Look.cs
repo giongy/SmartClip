@@ -129,7 +129,7 @@ class RoundButton : Button
 }
 
 // The small signs drawn beside entries and on buttons: they are where the colour is.
-enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, List, Keys, Search, Help }
+enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, List, Keys, Search, Help, Opened, Closed }
 
 // Colours and touches shared by the windows: neutral, with rounded shapes and small coloured signs.
 static class Look
@@ -189,7 +189,8 @@ static class Look
     public static void Draw(Graphics g, Sign sign, Rectangle box, Color? colour)
     {
         float u = box.Width / 16f, x = box.Left, y = box.Top;
-        Color own = sign == Sign.Text || sign == Sign.Search || sign == Sign.Keys ? Accent : sign == Sign.Link ? Teal
+        Color own = sign == Sign.Text || sign == Sign.Search || sign == Sign.Keys ? Accent
+            : sign == Sign.Link || sign == Sign.Opened || sign == Sign.Closed ? Teal
             : sign == Sign.Star || sign == Sign.Edit ? Amber : sign == Sign.Plus ? Green : sign == Sign.Delete ? Red : Purple;
         SmoothingMode mode = g.SmoothingMode;
         g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -251,6 +252,14 @@ static class Look
                     g.DrawEllipse(pen, x + 2 * u, y + 2 * u, 8.5f * u, 8.5f * u);
                     g.DrawLine(pen, x + 9.6f * u, y + 9.6f * u, x + 14 * u, y + 14 * u);
                     break;
+                case Sign.Opened:   // of a folder: an arrowhead pointing down, or to the right when it is closed
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 4 * u, y + 6 * u), new PointF(x + 8 * u, y + 10 * u),
+                        new PointF(x + 12 * u, y + 6 * u) });
+                    break;
+                case Sign.Closed:
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 6 * u, y + 4 * u), new PointF(x + 10 * u, y + 8 * u),
+                        new PointF(x + 6 * u, y + 12 * u) });
+                    break;
                 case Sign.Help:   // a question mark
                     g.DrawArc(pen, x + 5 * u, y + 2 * u, 6 * u, 6 * u, 180, 270);
                     g.DrawLine(pen, x + 8 * u, y + 8 * u, x + 8 * u, y + 10 * u);
@@ -293,7 +302,7 @@ static class Look
         return card;
     }
 
-    public static void Style(ContextMenuStrip menu)
+    public static void Style(ToolStripDropDownMenu menu)
     {
         menu.Renderer = new ToolStripProfessionalRenderer(new MenuColors());
         menu.ForeColor = Ink;

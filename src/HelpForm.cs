@@ -41,6 +41,8 @@ class HelpForm : Form
         "Il segno colorato a sinistra dice che cos'è la voce: un testo, un indirizzo web, un testo salvato. Le "
             + "immagini mostrano una miniatura. A destra c'è l'ora della copia (il giorno, se non è di oggi) o il "
             + "giorno del salvataggio.",
+        "Lo spazio tra le due colonne si trascina, per dare più o meno posto ai testi salvati: la larghezza "
+            + "scelta resta anche al prossimo avvio, e un doppio clic lì torna a quella di partenza.",
         "La colonna dei copiati mostra le " + MainForm.MaxShown + " voci più recenti: le altre si trovano con la ricerca.",
 
         "# I testi salvati",
@@ -51,6 +53,15 @@ class HelpForm : Form
             + "puoi ritoccarne il contenuto.",
         "- «Modifica» (Ctrl+" + MainForm.SaveKey + "), su una voce salvata, ne cambia il nome o il contenuto.",
         "- «Elimina» (Ctrl+" + MainForm.DeleteKey + ") cancella il testo salvato, oppure toglie dall'elenco la voce copiata.",
+        "Quando diventano tanti puoi raccoglierli in cartelle:",
+        "- «Nuova cartella» sta nel menu del tasto destro (Ctrl+Maiusc+" + MainForm.NewKey + ").",
+        "- Un clic sul nome di una cartella, o Invio, la apre e la chiude; il numero a destra dice quanti testi "
+            + "contiene. Aperte e chiuse, le ritrovi come le hai lasciate.",
+        "- «Sposta in», nel menu del tasto destro di un testo salvato, lo mette in una cartella o lo toglie. La "
+            + "stessa scelta c'è nella finestra in cui lo scrivi, a sinistra dei pulsanti.",
+        "- Con una cartella selezionata, «Rinomina» le cambia il nome ed «Elimina» toglie la cartella soltanto: "
+            + "i testi che conteneva restano tra i salvati.",
+        "- La ricerca trova anche dentro le cartelle chiuse, e il nome di una cartella trova i suoi testi.",
         "I testi salvati stanno nel registro di Windows, cifrati per il tuo utente: un altro utente dello stesso "
             + "PC non li può leggere. Quando ne rimetti uno negli appunti viene segnato come riservato, perché "
             + "la cronologia di Windows (Win+V) e gli altri gestori di appunti lo ignorino. Le immagini non si "
@@ -80,6 +91,7 @@ class HelpForm : Form
         "Invio\tSceglie la voce e torna alla finestra di partenza.",
         "Esc\tTorna alla finestra di partenza senza scegliere.",
         "Ctrl+" + MainForm.NewKey + "\tNuovo testo salvato.",
+        "Ctrl+Maiusc+" + MainForm.NewKey + "\tNuova cartella.",
         "Ctrl+" + MainForm.SaveKey + "\tSalva la voce copiata, o modifica quella salvata.",
         "Ctrl+" + MainForm.DeleteKey + "\tElimina la voce selezionata.",
         "Ctrl+" + MainForm.PinKey + "\tTiene in alto la voce copiata, o la lascia andare.",
@@ -108,7 +120,20 @@ class HelpForm : Form
         "- Scorciatoie: accende e spegne " + MainForm.HotkeyName + " e " + MainForm.PickName + ".",
         "- Cronologia: se ricordare ciò che copi, per quanti giorni, il collegamento alla cartella dei file e "
             + "il pulsante che la pulisce subito.",
-        "- Programma: se restare attivo nell'area di notifica e se partire insieme a Windows.",
+        "- Programma: se restare attivo nell'area di notifica, se partire insieme a Windows, e i pulsanti per "
+            + "esportare e importare.",
+
+        "# Esportare e importare",
+        "Nelle opzioni, sotto «Programma», due pulsanti portano i tuoi testi fuori dal programma e li riprendono, "
+            + "per una copia di sicurezza o per passarli a un altro PC. Ognuno chiede se vuoi solo i testi salvati "
+            + "o tutto, cioè anche le cose copiate.",
+        "- «Esporta» scrive un file di testo che si apre con il Blocco note: i testi salvati con le loro "
+            + "cartelle e, se lo chiedi, le cose copiate con l'ora e la stellina. Le immagini non ci vanno.",
+        "- Nel file i testi sono in chiaro, password comprese: tienilo in un posto sicuro.",
+        "- «Importa» legge un file così e aggiunge ciò che contiene a quello che c'è già. Se un testo salvato "
+            + "ha il nome di uno esistente chiede quale tenere; le cose copiate che l'elenco ha già non si ripetono.",
+        "- Il file si può ritoccare a mano: il testo di ogni voce sta nelle righe che iniziano con una "
+            + "tabulazione, che va lasciata al suo posto.",
 
         "# L'icona vicino all'orologio",
         "Con l'opzione attiva, chiudere o ridurre a icona la finestra la nasconde soltanto: il programma resta "
@@ -198,7 +223,7 @@ class HelpForm : Form
     // Fills the box from 'Lines', each with the look of what it is. Written once the window has its scale.
     void Write()
     {
-        float scale = CurrentAutoScaleDimensions.Width / AutoScaleDimensions.Width;
+        float scale = CurrentAutoScaleDimensions.Width / 96f;   // the sizes above are for 96 dpi
         int bullet = (int)(BulletIndent * scale), key = (int)(KeyColumn * scale);
         using (Font heading = new Font(Font.FontFamily, Font.Size * HeadingGrowth, FontStyle.Bold))
         using (Font strong = new Font(Font, FontStyle.Bold))

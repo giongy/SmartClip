@@ -17,7 +17,7 @@ class ShotForm : MainForm
 
 class ShotEdit : EditForm
 {
-    public ShotEdit(Entry source) : base(source) { }
+    public ShotEdit(Entry source, string group, List<string> groups) : base(source, group, groups) { }
     protected override bool ShowWithoutActivation { get { return true; } }
 }
 
@@ -127,12 +127,37 @@ static class TestProgram
         Check(city.ToString().IndexOf("riga") < 0, "the list shows only the name of a saved text");
         Check(new Entry(null, " a\r\nb\tc ").ToString() == "a  b c", "a copied text is shown on one line");
 
+        // The exported file: what goes out comes back, also a text that looks like the file itself.
+        List<Entry> sent = new List<Entry>();
+        Entry sentFolder = new Entry("Lavoro", "", DateTime.MinValue);
+        sentFolder.IsGroup = true;
+        Entry sentSaved = new Entry("Firma", "[Salvato]\r\nNome: finto\r\n\r\n\tcon tabulazione\r\nultima riga\r\n\r\n", new DateTime(2026, 3, 4, 5, 6, 7));
+        sentSaved.Group = "Lavoro";
+        Entry sentCopied = new Entry(null, "copiato è", new DateTime(2026, 1, 2, 3, 4, 5));
+        sentCopied.Pinned = true;
+        sent.AddRange(new Entry[] { new Entry("Senza data", "uno", DateTime.MinValue), sentFolder, sentSaved, sentCopied });
+        using (Bitmap picture = new Bitmap(4, 4)) sent.Add(new Entry(picture));
+        List<Entry> read = Backup.Parse(Backup.Lines(sent, true));
+        Check(read.Count == 4 && read[0].Name == "Senza data" && read[0].Text == "uno" && read[0].Time == DateTime.MinValue
+            && read[0].Group == null, "an exported text comes back, a picture is left out");
+        Check(read[1].IsGroup && read[1].Name == "Lavoro", "a folder comes back");
+        Check(read[2].Name == "Firma" && read[2].Text == sentSaved.Text && read[2].Group == "Lavoro" && read[2].Time == sentSaved.Time,
+            "a text that looks like the file comes back identical, with folder and day");
+        Check(read[3].Name == null && read[3].Text == "copiato è" && read[3].Pinned && read[3].Time == sentCopied.Time,
+            "a copied text comes back with its time and its star");
+        Check(Backup.Parse(Backup.Lines(sent, false)).Count == 3, "saved texts alone, when asked");
+        List<string> edited = Backup.Lines(sent, true);
+        edited.Insert(edited.IndexOf("\tuno") + 1, "");
+        edited.Add("righe senza senso");
+        Check(Backup.Parse(edited).Count == 4 && Backup.Parse(edited)[0].Text == "uno", "a file changed by hand is still read");
+
         // Round trip through the registry, under a name nobody would use; removed afterwards.
         string name = "~test " + Guid.NewGuid();
         string text = "pässwörd €\nseconda riga ~`";
+        string group = "~test folder " + Guid.NewGuid();
         try
         {
-            Texts.Save(name, text);
+            Texts.Save(name, text, null);
             Entry saved = Texts.Load().Find(delegate(Entry e) { return e.Name == name; });
             Check(saved != null && saved.Text == text, "a saved text comes back identical");
             Check(saved != null && saved.Time.Date == DateTime.Today, "with the day it was saved");
@@ -142,15 +167,31 @@ static class TestProgram
                 Check(raw != null && Encoding.UTF8.GetString(raw).IndexOf("seconda") < 0
                     && Encoding.Unicode.GetString(raw).IndexOf("seconda") < 0, "and is not readable in the registry");
             }
-            Texts.Save(name, "other");
+            // Folders: a text follows its own, through a new name too, and outlives it.
+            Texts.SetGroup(group, false);
+            Texts.Save(name, text, group);
+            List<Entry> listed = Texts.Load();
+            int at = listed.FindIndex(delegate(Entry e) { return e.IsGroup && e.Name == group; });
+            Check(at >= 0 && !listed[at].Open && listed[at + 1].Name == name && listed[at + 1].Group == group,
+                "a text in a folder is listed right after it");
+            Check(Texts.Matches(listed[at + 1], "~test folder"), "and is found by the name of its folder");
+            Texts.RenameGroup(group, group + " 2");
+            Check(Texts.Load().Exists(delegate(Entry e) { return e.Name == name && e.Group == group + " 2"; })
+                && !Texts.Groups().Contains(group), "a renamed folder takes its texts along");
+            Texts.RenameGroup(group + " 2", null);
+            Check(Texts.Load().Exists(delegate(Entry e) { return e.Name == name && e.Group == null; })
+                && !Texts.Groups().Contains(group + " 2"), "a deleted folder leaves its texts among the saved ones");
+            Texts.Save(name, "other", null);
             Check(Texts.Load().FindAll(delegate(Entry e) { return e.Name == name; }).Count == 1, "saving again replaces");
-            Texts.Save(name.ToUpper(), "other");
+            Texts.Save(name.ToUpper(), "other", null);
             Check(Texts.Load().FindAll(delegate(Entry e) { return string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase); })
                 .TrueForAll(delegate(Entry e) { return e.Name == name.ToUpper(); }), "saving with another letter case renames");
         }
         finally
         {
             Texts.Delete(name);
+            Texts.RenameGroup(group, null);
+            Texts.RenameGroup(group + " 2", null);
         }
         Check(!Texts.Load().Exists(delegate(Entry e) { return e.Name == name; }), "a deleted text is gone");
         using (Microsoft.Win32.RegistryKey dates = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(MainForm.SettingsKey + @"\Saved\Dates"))
@@ -270,6 +311,14 @@ static class TestProgram
                 "a shrunk file is still written and read in the right place");
             Texts.Clean(0);
             Check(System.IO.Directory.GetFiles(folder).Length == 0, "with nothing pinned the files are deleted");
+
+            // Copied texts from an exported file: back at their time, unless the list has them.
+            Texts.Add("here\nalready");
+            List<Entry> restored = new List<Entry>();
+            restored.Add(new Entry(null, "here\r\nalready", DateTime.Now.AddDays(-1)));
+            restored.Add(new Entry(null, "from the file", DateTime.Now.AddDays(-1)));
+            Check(Texts.Restore(restored) == 1 && Texts.Recent.Count == 2 && Texts.Recent[1].Text == "from the file"
+                && System.IO.Directory.GetFiles(folder).Length == 2, "imported copies go to their own day, once");
         }
         finally
         {
@@ -373,7 +422,7 @@ static class TestProgram
             ListBox recent = (ListBox)typeof(MainForm).GetField("recentList", hidden).GetValue(form);
             ListBox saved = (ListBox)typeof(MainForm).GetField("savedList", hidden).GetValue(form);
             Console.WriteLine("[{0}] copied and saved entries go to their own column: {1} and {2}",
-                recent.Items.Count == 5 && saved.Items.Count == 3 ? "PASS" : "FAIL", recent.Items.Count, saved.Items.Count);
+                recent.Items.Count == 5 && saved.Items.Count == 5 ? "PASS" : "FAIL", recent.Items.Count, saved.Items.Count);
             saved.SelectedIndex = 2;
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
             Console.WriteLine("[{0}] the selection survives a refill: saved {1}, copied {2}",
@@ -398,7 +447,7 @@ static class TestProgram
                 form.ClientSize.Width, form.ClientSize.Height, form.Icon == null ? "none" : form.Icon.Size.ToString());
         }
 
-        using (ShotEdit edit = new ShotEdit(new Entry("Firma email", "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567")))
+        using (ShotEdit edit = new ShotEdit(new Entry("Firma email", "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567"), "Lavoro", new List<string>(new string[] { "Lavoro", "Casa" })))
         {
             edit.StartPosition = FormStartPosition.Manual;
             edit.Location = new Point(-30000, -30000);
@@ -423,7 +472,7 @@ static class TestProgram
             Snap(form, path + "-real-list.png");
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
             Snap(form, path + "-real-options.png");
-            using (ShotEdit edit = new ShotEdit(new Entry("Firma email", "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567")))
+            using (ShotEdit edit = new ShotEdit(new Entry("Firma email", "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567"), "Lavoro", new List<string>(new string[] { "Lavoro", "Casa" })))
             {
                 edit.StartPosition = FormStartPosition.Manual;
                 edit.Location = new Point(80, 80);
@@ -459,8 +508,16 @@ static class TestProgram
         BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
         List<Entry> entries = new List<Entry>();
         entries.Add(new Entry("Firma email", "Cordiali saluti"));
-        entries.Add(new Entry("Password del server di prova", "not shown"));
-        entries.Add(new Entry("Indirizzo ufficio", "not shown"));
+        // Two folders, one open and one closed, each right before its texts.
+        foreach (string name in new string[] { "Lavoro", "Password del server di prova", "Indirizzo ufficio", "Casa", "Wi-Fi di casa" })
+        {
+            bool folder = name == "Lavoro" || name == "Casa";
+            Entry entry = new Entry(name, folder ? "" : "not shown", folder ? DateTime.MinValue : DateTime.Now);
+            entry.IsGroup = folder;
+            entry.Open = name == "Lavoro";
+            if (!entry.IsGroup) entry.Group = entries[entries.Count - 1].IsGroup ? entries[entries.Count - 1].Name : entries[entries.Count - 1].Group;
+            entries.Add(entry);
+        }
         Entry pinned = new Entry(null, "ssh admin@srv-database-01");
         pinned.Pinned = true;
         entries.Add(pinned);

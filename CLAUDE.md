@@ -21,6 +21,7 @@ su GitHub).
     una funzione**, come il README.
   - `Look.cs` — colori e controlli disegnati: `Look`, `Card`, `RoundButton`, `Toggle`.
   - `Texts.cs` — `Entry` e `Texts`: le voci dell'elenco, la cronologia su disco, i testi salvati.
+  - `Backup.cs` — esportazione e importazione in un file di testo (`Backup`, `BackupResult`).
   - `Typer.cs` — mappa dei tasti e invio (`Typer`, `Stroke`, `TypeOptions`, `TypeResult`).
   - `Native.cs` — funzioni e costanti di Windows.
 - `build.cmd` — compila `src\*.cs` in `SmartClip.exe`. `SmartClip.ico` è facoltativa. L'eseguibile non sta
@@ -122,6 +123,26 @@ su GitHub).
   per l'utente (`ProtectedData`, in `System.Security.dll` che `csc` riferisce già da solo). L'elenco ne mostra
   solo il nome e, a destra, il giorno in cui è stato salvato: sta nella sottochiave `Saved\Dates`, sotto lo
   stesso nome, così il formato dei testi non cambia e quelli salvati prima restano semplicemente senza data.
+- Cartelle dei testi salvati (volute dall'utente), a un solo livello. Nel codice si chiamano «group», perché
+  `Texts.Folder` è già la cartella della cronologia. Stanno in due sottochiavi di `Saved`: `Folders` (un valore
+  per cartella, 1 se aperta: lo stato si ricorda) e `Places` (nome del testo → cartella), così il formato dei
+  testi non cambia. Nell'elenco una cartella è una `Entry` con `IsGroup`, messa da `Texts.Load` subito prima
+  dei suoi testi: per questo dove si scorre `entries` cercando i testi va escluso `IsGroup`. Clic o Invio la
+  aprono e chiudono (`Accept`, `ToggleGroup`), «Rinomina…» ed «Elimina» sono gli stessi pulsanti dei testi;
+  eliminarla lascia i testi tra i salvati (scelta dell'utente: potrebbero essere password). «Nuova cartella…»
+  (Ctrl+Maiusc+N) e «Sposta in» stanno nel menu del tasto destro, che ora si apre anche senza selezione. In
+  `EditForm` la cartella si sceglie da un pulsante che apre un menu (un `ComboBox` resterebbe chiaro); la
+  stessa finestra, con il solo nome, chiede come si chiama una cartella. In una ricerca le cartelle compaiono
+  solo se contengono risultati, anche da chiuse.
+- «Esporta…» e «Importa…» nelle opzioni, sotto «Programma» (voluti dall'utente, con la scelta «solo i testi
+  salvati» o «tutto» in un menu sotto ciascun pulsante, `Choice`). Il file è testo UTF-8 con BOM, leggibile dal
+  Blocco note e **in chiaro** (prima di esportare si chiede conferma): un segno per voce (`[Cartella]`,
+  `[Salvato]`, `[Copiato]`), pochi campi, poi il testo, una riga per riga dopo una tabulazione: è la
+  tabulazione a distinguerlo dal resto, quindi un testo può contenere qualsiasi cosa. Le immagini non si
+  esportano. L'importazione aggiunge: per i salvati con un nome già preso chiede una volta sola se sostituire;
+  i copiati tornano con la loro ora e la stellina nel file del loro giorno (`Texts.Restore`), tranne quelli che
+  l'elenco ha già; con la cronologia spenta non si importano. Per farci stare i pulsanti senza alzare la
+  finestra è sceso `ListExtra`.
 - I testi salvati si scrivono in `EditForm` (nome e contenuto), aperta da `Edit`: testo nuovo, voce copiata
   da tenere, voce salvata da cambiare. Le stesse tre azioni stanno nei pulsanti sotto l'elenco, nel menu del
   tasto destro e in Ctrl+N/S/E. Il nome scritto nella casella di ricerca è stato provato e scartato dall'utente
@@ -155,6 +176,10 @@ su GitHub).
 - La finestra è ridimensionabile (voluto dall'utente), mai più piccola di come nasce (`MinimumSize` in
   `OnLoad`). La dimensione non si salva: a ogni avvio torna quella di default; si ricorda solo la posizione.
   Allargandola cresce la colonna dei copiati (`Anchor`); le opzioni restano in alto a sinistra.
+  Lo spazio tra le due colonne si trascina (`divider`, `PlaceColumns`; voluto dall'utente, a cui i salvati
+  stavano stretti): la larghezza dei salvati si salva (`SavedWidth`, in pixel a 96 dpi) e si applica in
+  `OnLoad`, quando la finestra ha la sua scala. Nessuna colonna scende sotto `MinColumn`; doppio clic sullo
+  spazio torna alla larghezza di partenza.
 
 ## Regole di stile volute dall'utente
 
@@ -195,6 +220,8 @@ su GitHub).
 - Il registro non cambia maiuscole e minuscole di un nome che ha già: `Texts.Save` toglie il valore prima di
   riscriverlo.
 - `Control.Visible` risponde falso se la finestra è nascosta: quale vista è attiva lo dice `optionsShown`.
+  Lo stesso vale per le voci di un menu mentre si sta aprendo (`Opening`): «Sposta in» restava vuoto perché
+  il codice rileggeva `moveItem.Visible` appena assegnato.
 - Avviare il programma vero o creare `MainForm` nei test riscrive le impostazioni dell'utente alla chiusura:
   salvarle prima e ripristinarle dopo.
 

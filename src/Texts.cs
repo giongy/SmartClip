@@ -20,6 +20,8 @@ class Entry
     const int PreviewHeight = 120;   // of the small copy shown in the list: enough for a sharp row at any scale
     public readonly bool Picture;
     public bool Pinned;              // a copied entry the user keeps at the top of its column
+    public string Group;             // the folder a saved text is in, or null
+    public bool IsGroup, Open;       // not a text but a folder of saved texts, named by Name; and whether it shows them
     public readonly int Width, Height;   // of a picture
     public readonly Image Preview;       // null for a text
     public byte[] Png;                   // a picture while it is only in memory: null once the history file holds it
@@ -101,7 +103,7 @@ class Entry
     // The sign that tells a saved text and a picture from a copied text.
     public string Mark
     {
-        get { return Name != null ? "★" : Picture ? "▣" : ""; }
+        get { return IsGroup ? "" : Name != null ? "★" : Picture ? "▣" : ""; }
     }
 
     public override string ToString()
@@ -123,7 +125,8 @@ static class Texts
     const byte DeletedKind = 0, TextKind = 1, PictureKind = 2;
     const byte PinnedKind = 0x80;   // added to the kind of an entry kept at the top
     const int HeaderSize = sizeof(byte) + sizeof(long) + sizeof(int), PictureHeader = 3 * sizeof(int);
-    const string DayFormat = "yyyy-MM-dd", Extension = ".clips";
+    public const string DayFormat = "yyyy-MM-dd";
+    const string Extension = ".clips";
     public static string Folder = Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Program.AppName, "History");
     static int keepDays;       // zero: nothing goes to disk
@@ -131,6 +134,9 @@ static class Texts
     static bool loaded;        // the history files were read: before that, nobody knows which hold a pinned entry
     const string SavedKey = MainForm.SettingsKey + @"\Saved";
     const string DatesKey = "Dates";   // under the saved texts: when each was saved, under the same name
+    // The folders of the saved texts ("groups" here: Folder is where the history is). Under the saved texts,
+    // the groups by name, each with 1 if it is open, and the group of each text that has one, under its name.
+    const string GroupsKey = "Folders", PlacesKey = "Places";
     // Clipboard formats with which password managers and private browser windows mark what must not be
     // recorded: the first two by merely being there, the others by holding a zero.
     public const string PrivateMarker = "ExcludeClipboardContentFromMonitorProcessing";
@@ -299,12 +305,39 @@ static class Texts
         if (keepDays == 0 || !Directory.Exists(Folder)) return;
         foreach (string file in Directory.GetFiles(Folder, "*" + Extension)) ReadFile(file);
         Prune();
-        // Newest first. The clock is coarse: copies with the same time keep the order they have in the file.
+        Sort();
+    }
+
+    // Newest first. The clock is coarse: copies with the same time keep the order they have in the file.
+    static void Sort()
+    {
         Recent.Sort(delegate(Entry a, Entry b)
         {
             int byTime = b.Time.CompareTo(a.Time);
             return byTime != 0 ? byTime : b.Offset.CompareTo(a.Offset);
         });
+    }
+
+    // Puts back copied texts read from an exported file, each at the time it was copied; those the list
+    // holds already are left out. Returns how many went in.
+    public static int Restore(List<Entry> entries)
+    {
+        // Line ends do not count: the file has its own.
+        HashSet<string> held = new HashSet<string>();
+        foreach (Entry entry in Recent)
+            if (!entry.Picture) held.Add(entry.Text.Replace("\r\n", "\n"));
+        int added = 0;
+        foreach (Entry entry in entries)
+        {
+            if (entry.Text.Trim().Length == 0 || entry.Text.Length > MaxLength || !held.Add(entry.Text.Replace("\r\n", "\n"))) continue;
+            Recent.Add(entry);
+            if (keepDays > 0) Store(entry);
+            added++;
+        }
+        Sort();
+        if (keepDays == 0) Limit();
+        else Prune();
+        return added;
     }
 
     static void ReadFile(string file)
@@ -527,13 +560,15 @@ static class Texts
         return false;
     }
 
-    // Everything the list can offer: the saved texts by name, then the copied ones from the newest, the
-    // pinned ones before the others.
+    // Everything the list can offer: the saved texts by name, those in no group first and then each group
+    // followed by its own; after them the copied ones from the newest, the pinned ones before the others.
     public static List<Entry> Load()
     {
-        List<Entry> entries = new List<Entry>();
+        List<Entry> entries = new List<Entry>(), grouped = new List<Entry>();
         using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SavedKey))
         using (RegistryKey dates = key == null ? null : key.OpenSubKey(DatesKey))
+        using (RegistryKey groups = key == null ? null : key.OpenSubKey(GroupsKey))
+        using (RegistryKey places = key == null ? null : key.OpenSubKey(PlacesKey))
         {
             string[] names = key == null ? new string[0] : key.GetValueNames();
             Array.Sort(names, StringComparer.CurrentCultureIgnoreCase);
@@ -547,12 +582,24 @@ static class Texts
                 try
                 {
                     byte[] plain = ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser);
-                    entries.Add(new Entry(name, Encoding.UTF8.GetString(plain), dated ? new DateTime((long)ticks) : DateTime.MinValue));
+                    Entry entry = new Entry(name, Encoding.UTF8.GetString(plain), dated ? new DateTime((long)ticks) : DateTime.MinValue);
+                    // A text whose group is gone is simply in none.
+                    string group = places == null ? null : places.GetValue(name) as string;
+                    if (group != null && groups != null && groups.GetValue(group) != null) entry.Group = group;
+                    (entry.Group == null ? entries : grouped).Add(entry);
                 }
                 catch (CryptographicException)
                 {
                     // Saved by another user or on another PC: it cannot be read here.
                 }
+            }
+            foreach (string group in Groups())
+            {
+                Entry header = new Entry(group, "", DateTime.MinValue);
+                header.IsGroup = true;
+                header.Open = !Equals(groups.GetValue(group), 0);
+                entries.Add(header);
+                entries.AddRange(grouped.FindAll(delegate(Entry entry) { return SameName(entry.Group, group); }));
             }
         }
         entries.AddRange(Recent.FindAll(delegate(Entry entry) { return entry.Pinned; }));
@@ -560,7 +607,20 @@ static class Texts
         return entries;
     }
 
-    public static void Save(string name, string text)
+    // Registry value names do not distinguish case, and so neither the names of texts and groups.
+    public static bool SameName(string one, string other)
+    {
+        return string.Equals(one, other, StringComparison.OrdinalIgnoreCase);
+    }
+
+    // 'group' is the group the text goes into, or null for none.
+    public static void Save(string name, string text, string group)
+    {
+        Save(name, text, group, DateTime.Now);
+    }
+
+    // With the day it was saved, when it comes from an exported file: DateTime.MinValue if nobody knows.
+    public static void Save(string name, string text, string group, DateTime time)
     {
         byte[] secret = ProtectedData.Protect(Encoding.UTF8.GetBytes(text), null, DataProtectionScope.CurrentUser);
         using (RegistryKey key = Registry.CurrentUser.CreateSubKey(SavedKey))
@@ -569,8 +629,9 @@ static class Texts
             key.DeleteValue(name, false);   // otherwise the registry keeps the letter case of the name it already has
             key.SetValue(name, secret);
             dates.DeleteValue(name, false);
-            dates.SetValue(name, DateTime.Now.Ticks, RegistryValueKind.QWord);
+            dates.SetValue(name, time.Ticks, RegistryValueKind.QWord);
         }
+        Move(name, group);
     }
 
     public static void Delete(string name)
@@ -581,12 +642,61 @@ static class Texts
             key.DeleteValue(name, false);
             dates.DeleteValue(name, false);
         }
+        Move(name, null);
+    }
+
+    // Puts a saved text into a group, or into none.
+    public static void Move(string name, string group)
+    {
+        using (RegistryKey places = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + PlacesKey))
+        {
+            places.DeleteValue(name, false);
+            if (group != null) places.SetValue(name, group);
+        }
+    }
+
+    // The names of the groups, in the order the list shows them.
+    public static List<string> Groups()
+    {
+        using (RegistryKey groups = Registry.CurrentUser.OpenSubKey(SavedKey + @"\" + GroupsKey))
+        {
+            List<string> names = new List<string>(groups == null ? new string[0] : groups.GetValueNames());
+            names.Sort(StringComparer.CurrentCultureIgnoreCase);
+            return names;
+        }
+    }
+
+    // Creates a group, or opens and closes one that is there.
+    public static void SetGroup(string name, bool open)
+    {
+        using (RegistryKey groups = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + GroupsKey))
+        {
+            groups.SetValue(name, open ? 1 : 0, RegistryValueKind.DWord);
+        }
+    }
+
+    // Gives a group another name, or none ('name' is null): then its texts stay, in no group.
+    public static void RenameGroup(string old, string name)
+    {
+        using (RegistryKey groups = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + GroupsKey))
+        using (RegistryKey places = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + PlacesKey))
+        {
+            object open = groups.GetValue(old) ?? 1;
+            groups.DeleteValue(old, false);   // first, or a change of letter case alone would not show
+            if (name != null) groups.SetValue(name, open, RegistryValueKind.DWord);
+            foreach (string text in places.GetValueNames())
+            {
+                if (!SameName(places.GetValue(text) as string, old)) continue;
+                if (name != null) places.SetValue(text, name);
+                else places.DeleteValue(text, false);
+            }
+        }
     }
 
     // Every word of the query must appear somewhere, in any order; case and accents do not count.
     public static bool Matches(Entry entry, string query)
     {
-        string where = entry.Name + "\n" + entry.Text;
+        string where = entry.Group + "\n" + entry.Name + "\n" + entry.Text;   // the name of its folder finds a text too
         foreach (string word in query.Split((char[])null, StringSplitOptions.RemoveEmptyEntries))
             if (Comparer.IndexOf(where, word, Loose) < 0) return false;
         return true;

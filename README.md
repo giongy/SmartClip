@@ -68,10 +68,17 @@ reaches the rest. On the right, **Salvati**: the texts you saved under a name, w
 | Click | Puts the entry back on the clipboard; the window stays, so you can still save or delete it |
 | Enter, or a double click | Puts the entry back on the clipboard and returns to the window you came from |
 | Right click | Opens the menu of the entry |
+| Dragging the gap between the columns | Gives the saved texts more room, or less; the width is remembered. A double click there restores it |
 | The star at the right end of a copied entry, or Ctrl+P | Keeps the entry at the top of its column, also beyond the days of the history, until you take the star off |
 | F1, or the **?** button | Opens the guide: everything the program does, in Italian |
 
 Three buttons under the lists manage the saved texts; each opens a small window with a name and a content box.
+
+Saved texts can be gathered in folders, one level deep. **Nuova cartella…** ("New folder") is in the right-click
+menu (Ctrl+Shift+N), and so is **Sposta in** ("Move to") for a saved text; the window of a text has the same
+choice beside its buttons. A click on a folder opens and closes it, and it is found as it was left. With a
+folder selected the buttons rename it or delete it: deleting a folder never deletes its texts, which go back
+among the others. The search also looks inside closed folders.
 
 ![Saving a text](docs/screenshot-edit.png)
 
@@ -111,6 +118,12 @@ The options are grouped under four titles: **Digitazione** (typing), **Scorciato
 | Pulendo, tieni gli ultimi giorni (0: niente), with the button **Pulisci ora…** | Deletes at once, from memory and disk, what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Starred entries and saved texts are not touched. |
 | Resta attivo nell'area di notifica (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Esci** to quit. |
 | Avvia insieme a Windows | Start SmartClip when you sign in, already hidden in the notification area (minimised, if the option above is off). It is the entry Windows shows in Task Manager > Startup apps: the checkbox reflects it, and follows the program if you move the `.exe`. |
+
+Under **Programma**, the buttons **Esporta…** and **Importa…** write the saved texts, with their folders, to a
+plain text file that Notepad opens, and read such a file back, on this PC or another. Each asks whether to take
+only the saved texts or everything, that is also what was copied (pictures are left out). The file holds the
+texts **in clear**, passwords included. Importing adds to what is there: when a saved text has the name of an
+existing one it asks which to keep, and copied texts already in the list are not repeated.
 
 Under the history options, the link **Apri la cartella della cronologia** opens the folder of the history files.
 
