@@ -16,7 +16,7 @@ presses the keys one by one, as if you were typing.
 
 Formerly called PasswordPaste: the first start under the new name takes over its settings and saved texts.
 
-- One portable `.exe`, about 160 KB. No installer, no dependencies, no network access.
+- One portable `.exe`, about 170 KB. No installer, no dependencies, no network access.
 - A handful of C# source files in `src`, compiled with the compiler already shipped with Windows.
 - Stops typing the moment the target window loses focus, so a password never lands in the wrong place.
 - The history of copied items is kept for the number of days you choose, or in memory only; saved texts are
@@ -27,8 +27,9 @@ Formerly called PasswordPaste: the first start under the new name takes over its
 
 ## Download
 
-Get [`SmartClip.exe`](https://github.com/giongy/SmartClip/raw/main/SmartClip.exe) and run it. It needs
-Windows with .NET Framework 4, which is part of Windows 10 and 11.
+Get [`SmartClip.exe`](https://github.com/giongy/SmartClip/releases/latest/download/SmartClip.exe) from the
+[latest release](https://github.com/giongy/SmartClip/releases/latest) and run it. It needs Windows with .NET
+Framework 4, which is part of Windows 10 and 11. Each release is compiled by GitHub from the source of its tag.
 
 The file is not code-signed, so Windows SmartScreen may warn you on first launch. If you prefer not to trust a
 downloaded binary, [build it yourself](#build): it takes a few seconds and needs nothing installed.

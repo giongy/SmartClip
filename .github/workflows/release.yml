@@ -1,0 +1,51 @@
+name: Release
+
+# Publishes SmartClip.exe as a GitHub release whenever the version number changes: the number is the
+# AssemblyVersion line of src/Program.cs, and a release is created only if none carries it yet. So a
+# release is made by changing that line and pushing; every other push ends at the first step.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+      - "build.cmd"
+      - "SmartClip.ico"
+      - ".github/workflows/release.yml"
+  workflow_dispatch:
+
+jobs:
+  release:
+    name: Pubblica
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v7
+
+      # 2.1.0.0 in the source becomes the tag v2.1.0.
+      - name: Legge la versione
+        id: version
+        shell: pwsh
+        run: |
+          $found = Select-String -Path src/Program.cs -Pattern 'AssemblyVersion\("(\d+\.\d+\.\d+)(\.\d+)?"\)'
+          if (-not $found) { throw "AssemblyVersion not found in src/Program.cs" }
+          $tag = "v" + $found.Matches[0].Groups[1].Value
+          gh release view $tag *> $null
+          $publish = if ($LASTEXITCODE -eq 0) { "false" } else { "true" }
+          "tag=$tag" >> $env:GITHUB_OUTPUT
+          "publish=$publish" >> $env:GITHUB_OUTPUT
+          Write-Host "$tag, to publish: $publish"
+          exit 0
+
+      # "< NUL" lets build.cmd continue past the final "pause".
+      - name: Compila
+        if: steps.version.outputs.publish == 'true'
+        shell: cmd
+        run: build.cmd < NUL
+
+      - name: Crea la release
+        if: steps.version.outputs.publish == 'true'
+        shell: pwsh
+        run: gh release create ${{ steps.version.outputs.tag }} SmartClip.exe --target ${{ github.sha }} --title "SmartClip ${{ steps.version.outputs.tag }}" --generate-notes

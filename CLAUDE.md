@@ -19,7 +19,12 @@ su GitHub).
   - `Texts.cs` — `Entry` e `Texts`: le voci dell'elenco, la cronologia su disco, i testi salvati.
   - `Typer.cs` — mappa dei tasti e invio (`Typer`, `Stroke`, `TypeOptions`, `TypeResult`).
   - `Native.cs` — funzioni e costanti di Windows.
-- `build.cmd` — compila `src\*.cs` in `SmartClip.exe`. `SmartClip.ico` è facoltativa.
+- `build.cmd` — compila `src\*.cs` in `SmartClip.exe`. `SmartClip.ico` è facoltativa. L'eseguibile non sta
+  più in git (`.gitignore`): si scarica dalle release.
+- `.github/workflows/release.yml` — pubblica l'eseguibile come release di GitHub. **Per fare una release si
+  cambia `AssemblyVersion` in `src\Program.cs` e si fa push**: il flusso compila con `build.cmd` e crea la
+  release `vX.Y.Z` solo se con quel numero non esiste ancora (scelta dell'utente, invece di una release a
+  ogni push). Il numero di versione sta solo lì.
 - `tests/Test.cs`, `tests/test.cmd` — controlli automatici (vedi sotto).
 - `LICENSE` — licenza MIT.
 - `README.md` — presentazione per GitHub, in inglese. Traduce le etichette delle opzioni: va aggiornato quando se
