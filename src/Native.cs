@@ -5,10 +5,16 @@ using System.Text;
 // Windows functions and constants, with their official names.
 static class Native
 {
-    public const int WM_ACTIVATEAPP = 0x001C, WM_HOTKEY = 0x0312, WM_CLIPBOARDUPDATE = 0x031D, EM_SETCUEBANNER = 0x1501;
-    public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20, DWMWA_CAPTION_COLOR = 35, DWMWA_TEXT_COLOR = 36;
+    public const int WM_ACTIVATEAPP = 0x001C, WM_NCHITTEST = 0x0084, WM_HOTKEY = 0x0312, WM_CLIPBOARDUPDATE = 0x031D,
+        EM_SETCUEBANNER = 0x1501;
+    public const int HTTRANSPARENT = -1;
+    public const int WS_EX_TOPMOST = 0x00000008, WS_EX_TOOLWINDOW = 0x00000080, WS_EX_NOACTIVATE = 0x08000000;
+    public const int CS_DROPSHADOW = 0x00020000;
+    public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20, DWMWA_WINDOW_CORNER_PREFERENCE = 33, DWMWA_BORDER_COLOR = 34,
+        DWMWA_CAPTION_COLOR = 35, DWMWA_TEXT_COLOR = 36;
+    public const int DWMWCP_ROUND = 2;
     public const uint CF_UNICODETEXT = 13;
-    public const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002, MOD_NOREPEAT = 0x4000;
+    public const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002, MOD_SHIFT = 0x0004, MOD_NOREPEAT = 0x4000;
     public const int VK_SHIFT = 0x10, VK_CONTROL = 0x11, VK_MENU = 0x12, VK_CAPITAL = 0x14, VK_SPACE = 0x20,
         VK_LWIN = 0x5B, VK_RWIN = 0x5C;
     public const uint INPUT_KEYBOARD = 1;

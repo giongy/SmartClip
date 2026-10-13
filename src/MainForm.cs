@@ -13,10 +13,13 @@ using Microsoft.Win32;
 class MainForm : Form
 {
     // The global hotkeys: registration and texts all start from here. The first types the clipboard at once,
-    // the second brings up this window with the list.
-    const uint HotkeyModifiers = Native.MOD_CONTROL | Native.MOD_ALT, PickModifiers = Native.MOD_CONTROL;
-    const Keys HotkeyKey = Keys.V, PickKey = Keys.D, HelpKey = Keys.F1;
-    public static readonly string HotkeyName = "Ctrl+Alt+" + HotkeyKey, PickName = "Ctrl+" + PickKey;
+    // the second brings up this window with the list. These are the keys they start with: the user can give
+    // them others (see AwaitKeys), which are remembered among the settings.
+    const Keys DefaultTypeKeys = Keys.Control | Keys.Alt | Keys.V, DefaultPickKeys = Keys.Control | Keys.D;
+    const Keys HelpKey = Keys.F1;
+    static Keys typeKeys = DefaultTypeKeys, pickKeys = DefaultPickKeys;
+    public static string HotkeyName { get { return NameOf(typeKeys); } }
+    public static string PickName { get { return NameOf(pickKeys); } }
     const int HotkeyId = 1, PickId = 2;
 
     public const int MinDelay = 1, MaxDelay = 30;             // limits, in seconds, of the wait before typing
@@ -34,8 +37,8 @@ class MainForm : Form
     const int SavedWidth = 250, TitleHeight = 20;      // the column of the saved texts, and the title above each column
     const int MinColumn = 185;                         // the least a column can be dragged to
     const int GripHeight = 28;                         // of the mark between the columns, where they are dragged
-    const int RowPadding = 10;                         // added to the text height to get a row of the list
-    const int PictureRows = 3;                         // rows taken by a picture, to make room for its preview
+    const int RowPadding = 16;                         // added to the text height to get a row of the list: roomy
+    const int PictureLines = 5;                        // lines of text a picture is as tall as, to make room for its preview
     const int PreviewMargin = 4;                       // around the preview, inside its row
     const int RowHeight = 24;                          // distance between one option checkbox and the next
     const int NumberWidth = 56, NumberHeight = 26;     // the box of an option that is a number
@@ -50,9 +53,18 @@ class MainForm : Form
     const int Gap = 6;                                 // between neighbouring controls
     const int ActionHeight = 26, ActionWidth = 92;     // the buttons in the bottom row
     const int TypeWidth = 160;                        // the button that types the clipboard, in the same row
-    const int StatusHeight = 34;                       // two lines of text
+    const int StatusHeight = 34;                       // two lines of text: the most the status line takes
+    const int FadeMs = 6000;                           // how long a passing message stays in the status line
+    const int RestMs = 600;                            // how long the pointer rests on a row before it is shown whole
+    const int AskedMs = 15000;                         // how long a saved text stays in view once asked for
     public const Keys NewKey = Keys.N, SaveKey = Keys.S, DeleteKey = Keys.E, PinKey = Keys.P;   // in the list, all with Ctrl
+    const Keys NewKeys = Keys.Control | NewKey, GroupKeys = Keys.Control | Keys.Shift | NewKey, SaveKeys = Keys.Control | SaveKey,
+        DeleteKeys = Keys.Control | DeleteKey, PinKeys = Keys.Control | PinKey;
+    // What the list itself answers to: a global hotkey on the same keys would take them away from it.
+    static readonly Keys[] ListKeys = { NewKeys, GroupKeys, SaveKeys, DeleteKeys, PinKeys };
     public const string ButtonText = "Digita gli appunti";
+    const string RecentTitle = "Copiati di recente";
+    const TextFormatFlags LineFlags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;   // one line of a row
     public const string SettingsKey = @"Software\" + Program.AppName;
     const string OldSettingsKey = @"Software\PasswordPaste";   // the name of the program up to version 1.2
 
@@ -75,7 +87,18 @@ class MainForm : Form
     readonly ListBox recentList = new ListBox(), savedList = new ListBox();   // what was copied, and what was saved
     ListBox active;     // the one of the two that holds the selected entry
     Panel recentCard, savedCard;                  // the rounded shapes the two lists are in
-    Label savedTitle;
+    Label recentTitle, savedTitle;
+    readonly ContextMenuStrip listMenu = new ContextMenuStrip();
+    readonly Peek peek = new Peek();              // shows whole the entry of a row
+    readonly Timer rest = new Timer();            // runs while the pointer rests on a row, and while a text asked for is in view
+    bool peekAsked;                               // what is in view was asked for from the menu: moving the pointer leaves it there
+    readonly Timer fade = new Timer();            // runs while the status line holds a passing message
+    Entry grabbed;                                // the saved text the button went down on: it may be dragged to a folder
+    Point grabbedAt;
+    string dropGroup;                             // the folder a dragged text would go to, while it is over one
+    bool paused;                                  // what is copied is not remembered, until the user says otherwise
+    readonly List<ToolStripItem> pauseItems = new List<ToolStripItem>();   // the menu entries that say so
+    CheckBox capturing;                           // the hotkey whose new keys are awaited, or null
     readonly Panel divider = new Panel();         // the room between the columns: dragged, it moves their border
     int savedColumn = SavedWidth;                 // the width the user gave to the saved texts, in pixels at 96 dpi
     int dragFrom, dragWidth;                      // where the pointer and the border were when a drag started
@@ -86,6 +109,7 @@ class MainForm : Form
     readonly Control[] listControls;
     readonly TextBox delayBox = new TextBox(), keepBox = new TextBox(), cleanBox = new TextBox();
     readonly RoundButton cleanButton = new RoundButton(), exportButton = new RoundButton(), importButton = new RoundButton();
+    readonly RoundButton typeKeysButton = new RoundButton(), pickKeysButton = new RoundButton();   // show the keys of a hotkey, and take new ones
     readonly CheckBox usBox = new Toggle();
     readonly CheckBox enterBox = new Toggle();
     readonly CheckBox clearBox = new Toggle();
@@ -123,7 +147,7 @@ class MainForm : Form
         AutoScaleDimensions = new SizeF(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
         Text = Program.AppName + " " + Program.Version;
-        Font = SystemFonts.MessageBoxFont;
+        Font = Look.TextFont;
         // The window can be made larger, never smaller than it starts (see OnLoad); its size is not remembered,
         // so that it always opens as it was designed.
         StartPosition = FormStartPosition.CenterScreen;
@@ -145,6 +169,19 @@ class MainForm : Form
 
         status.UseMnemonic = false;
         status.ForeColor = Look.Muted;
+        // The status line takes the room of what it says. A message written with Say leaves after a while;
+        // anything else stays until the next one.
+        status.TextChanged += delegate
+        {
+            fade.Stop();
+            FitStatus();
+        };
+        fade.Interval = FadeMs;
+        fade.Tick += delegate
+        {
+            fade.Stop();
+            if (!busy) ShowIdle();
+        };
 
         // The options are stacked by category, in two columns: on the left what concerns typing, on the right
         // the rest. Adding one takes a single line here, the window height adapts.
@@ -176,9 +213,9 @@ class MainForm : Form
         left += ColumnWidth + ColumnGap;
         top = Edge;
         PlaceTitle("Scorciatoie", left, ref top);
-        PlaceOption(hotkeyBox, "Scorciatoia globale " + HotkeyName, left, ref top);
+        PlaceHotkey(hotkeyBox, typeKeysButton, ButtonText, left, ref top);
         hotkeyBox.Checked = true;
-        PlaceOption(pickBox, "Scorciatoia " + PickName + " per aprire l'elenco", left, ref top);
+        PlaceHotkey(pickBox, pickKeysButton, "Apri l'elenco", left, ref top);
         pickBox.Checked = true;
         PlaceTitle("Cronologia", left, ref top);
         PlaceOption(historyBox, "Ricorda i testi e le immagini copiati", left, ref top);
@@ -225,7 +262,7 @@ class MainForm : Form
         // each its title and, on the right, how many entries it lists.
         int titleTop = searchFrame.Bottom + Gap + 2, listTop = titleTop + TitleHeight, listHeight = areaBottom - listTop;
         int savedLeft = Edge + ContentWidth - SavedWidth;
-        Label recentTitle = NewLabel("Copiati di recente", titleTop);
+        recentTitle = NewLabel(RecentTitle, titleTop);
         savedTitle = NewLabel("Salvati", titleTop);
         savedTitle.Left = savedLeft;
         recentTitle.Font = savedTitle.Font = new Font(Font, FontStyle.Bold);
@@ -288,8 +325,12 @@ class MainForm : Form
         newButton.Click += create;
         saveButton.Click += change;
         deleteButton.Click += delete;
-        ContextMenuStrip listMenu = new ContextMenuStrip();
         ToolStripItem changeItem = listMenu.Items.Add("", null, change);
+        // Only for a saved text, of which the list shows the name alone: its content, for a while.
+        ToolStripItem showItem = listMenu.Items.Add("Mostra il contenuto", null, delegate
+        {
+            if (savedList.SelectedIndex >= 0) ShowPeek(savedList, savedList.SelectedIndex, true);
+        });
         // Only for a copied entry: the same as a click on its star.
         ToolStripItem pinItem = listMenu.Items.Add("", null, delegate { TogglePin(Selected); });
         // Only for a saved text, once there are folders: they are listed when the menu opens.
@@ -298,13 +339,17 @@ class MainForm : Form
         ToolStripItem deleteItem = listMenu.Items.Add(deleteButton.Text, null, delete);
         listMenu.Items.Add(newButton.Text, null, create);
         listMenu.Items.Add("Nuova cartella…", null, delegate { EditGroup(null); });
+        listMenu.Items.Add(new ToolStripSeparator());
+        pauseItems.Add(listMenu.Items.Add("", null, delegate { Pause(!paused); }));
         // With nothing selected the menu still opens: a first folder can be made in an empty list.
         listMenu.Opening += delegate
         {
+            HidePeek();
             Entry entry = Selected;
             changeItem.Text = saveButton.Text;
             changeItem.Enabled = saveButton.Enabled;
             changeItem.Visible = deleteItem.Visible = entry != null;
+            showItem.Visible = entry != null && entry.Name != null && !entry.IsGroup;
             pinItem.Visible = entry != null && entry.Name == null;
             pinItem.Text = entry != null && entry.Pinned ? "Togli dall'alto" : "Tieni in alto";
             List<string> groups = GroupNames();
@@ -335,7 +380,7 @@ class MainForm : Form
             list.ContextMenuStrip = listMenu;
             list.MeasureItem += delegate(object sender, MeasureItemEventArgs e)
             {
-                e.ItemHeight = list.ItemHeight * (((Entry)list.Items[e.Index]).Picture ? PictureRows : 1);
+                e.ItemHeight = ((Entry)list.Items[e.Index]).Picture ? Font.Height * PictureLines : list.ItemHeight;
             };
             list.DrawItem += DrawEntry;
             // One entry is selected in the whole window: selecting in a column clears the other.
@@ -351,7 +396,8 @@ class MainForm : Form
             // The left button chooses, the right one only selects, so that its menu acts on the entry under the pointer.
             list.MouseDown += delegate(object sender, MouseEventArgs e)
             {
-                int index = list.IndexFromPoint(e.Location);
+                HidePeek();
+                int index = RowAt(list, e.Location);
                 if (e.Button == MouseButtons.Right && index >= 0) list.SelectedIndex = index;
             };
             // One click leaves the window where it is, so that the entry can still be saved or deleted; a
@@ -359,7 +405,7 @@ class MainForm : Form
             // A click on the star of a copied entry does not choose it: it keeps it at the top, or lets it go.
             list.MouseClick += delegate(object sender, MouseEventArgs e)
             {
-                int index = list.IndexFromPoint(e.Location);
+                int index = RowAt(list, e.Location);
                 if (e.Button != MouseButtons.Left || index < 0) return;
                 if (OnStar(list, e.Location)) TogglePin((Entry)list.Items[index]);
                 else Accept(false);
@@ -368,15 +414,66 @@ class MainForm : Form
             // Nor does it count on a folder, which the first click has already opened or closed.
             list.MouseDoubleClick += delegate(object sender, MouseEventArgs e)
             {
-                int index = list.IndexFromPoint(e.Location);
+                int index = RowAt(list, e.Location);
                 if (e.Button == MouseButtons.Left && index >= 0 && !OnStar(list, e.Location) && !((Entry)list.Items[index]).IsGroup)
                     Accept(true);
             };
             // The entry under the pointer lights up: a click would choose it.
-            list.MouseMove += delegate(object sender, MouseEventArgs e) { Hover(list, list.IndexFromPoint(e.Location)); };
+            list.MouseMove += delegate(object sender, MouseEventArgs e) { Hover(list, RowAt(list, e.Location)); };
             list.MouseLeave += delegate { Hover(list, -1); };
+            list.MouseWheel += delegate { HidePeek(); };      // the rows move under it
             list.Resize += delegate { list.Invalidate(); };   // the rows are drawn up to the right edge
         }
+        // The pointer resting on a copied entry shows it whole; one that was asked for leaves by itself.
+        rest.Tick += delegate
+        {
+            rest.Stop();
+            int row = recentList.Tag is int ? (int)recentList.Tag : -1;
+            if (peek.Visible) HidePeek();
+            else if (row >= 0 && row < recentList.Items.Count && !listMenu.Visible && MouseButtons == MouseButtons.None
+                && recentList.RectangleToScreen(recentList.GetItemRectangle(row)).Contains(Cursor.Position))
+                ShowPeek(recentList, row, false);
+        };
+
+        // A saved text is dragged to a folder: onto the folder itself or onto a text it holds. Dropped on a
+        // text outside the folders, or below them all, it leaves the one it was in.
+        savedList.AllowDrop = true;
+        savedList.MouseDown += delegate(object sender, MouseEventArgs e)
+        {
+            int index = RowAt(savedList, e.Location);
+            grabbed = e.Button == MouseButtons.Left && index >= 0 && !((Entry)savedList.Items[index]).IsGroup
+                ? (Entry)savedList.Items[index] : null;
+            grabbedAt = e.Location;
+        };
+        savedList.MouseUp += delegate { grabbed = null; };
+        savedList.MouseMove += delegate(object sender, MouseEventArgs e)
+        {
+            // Only once the pointer has really moved: a click must stay a click.
+            Rectangle still = new Rectangle(grabbedAt, Size.Empty);
+            still.Inflate(SystemInformation.DragSize);
+            if (grabbed == null || e.Button != MouseButtons.Left || still.Contains(e.Location)) return;
+            Entry entry = grabbed;
+            grabbed = null;
+            HidePeek();
+            savedList.DoDragDrop(entry, DragDropEffects.Move);
+            Aim(null);
+        };
+        savedList.DragOver += delegate(object sender, DragEventArgs e)
+        {
+            Entry entry = e.Data.GetData(typeof(Entry)) as Entry;
+            string group = GroupAt(savedList.PointToClient(new Point(e.X, e.Y)));
+            bool moves = entry != null && !Texts.SameName(group, entry.Group);
+            e.Effect = moves ? DragDropEffects.Move : DragDropEffects.None;
+            Aim(moves ? group : null);
+        };
+        savedList.DragLeave += delegate { Aim(null); };
+        savedList.DragDrop += delegate(object sender, DragEventArgs e)
+        {
+            Entry entry = e.Data.GetData(typeof(Entry)) as Entry;
+            string group = GroupAt(savedList.PointToClient(new Point(e.X, e.Y)));
+            Aim(null);
+            if (entry != null && !Texts.SameName(group, entry.Group)) MoveTo(entry, group);
+        };
         // A new search starts again from its best result.
         search.TextChanged += delegate { active = null; Filter(); };
 
@@ -396,15 +493,6 @@ class MainForm : Form
           + "vengono normalmente inviati come caratteri Unicode, che non tutti i programmi\n"
           + "di desktop remoto accettano. Con questa opzione vengono invece composti con\n"
           + "Alt+codice sul tastierino numerico: funziona solo se il server è Windows.", altCodeBox);
-        Tip(HotkeyName + " digita subito gli appunti nella finestra attiva, senza attesa.\n"
-          + "Non funziona se il desktop remoto è a schermo intero e cattura tutte le\n"
-          + "scorciatoie: in quel caso usa il pulsante.\n"
-          + "Disattivala se entra in conflitto con un altro programma.", hotkeyBox);
-        Tip(PickName + " porta in primo piano questa finestra con l'elenco, da qualsiasi programma.\n"
-          + "Scelta una voce, il controllo torna alla finestra da cui sei partito: lì la incolli\n"
-          + "con Ctrl+V o la digiti con " + HotkeyName + ".\n"
-          + "Finché è attiva, " + PickName + " non arriva più agli altri programmi: disattivala\n"
-          + "se ti serve lì.", pickBox);
         Tip("L'elenco propone i testi e le immagini copiati mentre il programma è aperto.\n"
           + "Ciò che i gestori di password segnano come riservato non viene ricordato.\n"
           + "Disattivala se copi password da programmi che non lo fanno: nell'elenco si\n"
@@ -435,18 +523,6 @@ class MainForm : Form
         Tip("Legge un file scritto da «Esporta», anche su un altro PC, e aggiunge ciò che contiene\n"
           + "a quello che c'è già. Se un testo salvato ha il nome di uno esistente, chiede quale tenere.\n"
           + "Le cose copiate che l'elenco ha già non vengono ripetute.", importButton);
-        Tip("A sinistra le ultime cose copiate, a destra i testi che hai salvato.\n"
-          + "Scrivi per cercare in tutte e due: parole in qualsiasi ordine, senza badare a\n"
-          + "maiuscole e accenti. Le frecce scorrono la colonna, Tab passa all'altra.\n"
-          + "Invio o un clic rimettono la voce negli appunti: poi la incolli con Ctrl+V o la\n"
-          + "digiti con " + HotkeyName + ". Con un clic la finestra resta aperta, con Invio o un\n"
-          + "doppio clic torni dov'eri. Il tasto destro apre il menu della voce.\n"
-          + "La stellina a destra di una voce copiata (Ctrl+" + PinKey + ") la tiene in cima all'elenco,\n"
-          + "anche oltre i giorni della cronologia, finché non la togli.\n"
-          + "I testi salvati restano nel registro di Windows, cifrati per il tuo utente, e\n"
-          + "se ne vede solo il nome. Si possono raccogliere in cartelle: «Nuova cartella» è nel\n"
-          + "menu del tasto destro (Ctrl+Maiusc+" + NewKey + "), come «Sposta in»; un clic sulla cartella\n"
-          + "la apre e la chiude.", search, recentList, savedList);
         Tip("Scrive un testo nuovo da tenere, con il suo nome (Ctrl+" + NewKey + ").", newButton);
         Tip("Su una voce copiata: la salva con un nome, e puoi ritoccarne il contenuto.\n"
           + "Su una voce salvata: ne cambia il nome o il contenuto (Ctrl+" + SaveKey + ").\n"
@@ -466,6 +542,7 @@ class MainForm : Form
         // No AcceptButton: Enter among the options would start typing the clipboard.
 
         LoadSettings();
+        NameHotkeys();
         ApplyHistory();
         Change(Texts.Read);
         historyBox.CheckedChanged += delegate
@@ -479,7 +556,9 @@ class MainForm : Form
 
         ContextMenuStrip trayMenu = new ContextMenuStrip();
         trayMenu.Items.Add("Apri", null, delegate { RestoreWindow(); });
+        pauseItems.Add(trayMenu.Items.Add("", null, delegate { Pause(!paused); }));
         trayMenu.Items.Add("Esci", null, delegate { exiting = true; Close(); });
+        ShowPause();
         tray.ContextMenuStrip = trayMenu;
         Look.Style(trayMenu);
         tray.Text = Program.AppName;
@@ -504,8 +583,8 @@ class MainForm : Form
             bool wanted = startBox.Checked;
             bool done = Change(delegate { Startup.Enabled = wanted; });
             Change(delegate { startBox.Checked = Startup.Enabled; });
-            if (done) status.Text = wanted ? "All'accesso a Windows " + Program.AppName + " partirà da solo, senza mostrare la finestra."
-                : Program.AppName + " non parte più insieme a Windows.";
+            if (done) Say(wanted ? "All'accesso a Windows " + Program.AppName + " partirà da solo, senza mostrare la finestra."
+                : Program.AppName + " non parte più insieme a Windows.");
         };
         // Started at sign-in: hidden in the notification area, or minimised if that option is off.
         if (hidden && trayBox.Checked) startHidden = true;
@@ -566,6 +645,8 @@ class MainForm : Form
     // The lower part of the window shows either the list or the options.
     void ShowView(bool options)
     {
+        EndCapture();
+        HidePeek();
         optionsShown = options;
         foreach (Control control in optionControls) control.Visible = options;
         foreach (Control control in listControls) control.Visible = !options;
@@ -585,6 +666,7 @@ class MainForm : Form
         // The lists are refilled at every clipboard change, also the one caused by choosing an entry:
         // the selection must stay on the same entry, not jump back to the first.
         Entry selected = Selected;
+        HidePeek();   // the row it belongs to may be about to move
         recentList.BeginUpdate();
         savedList.BeginUpdate();
         recentList.Items.Clear();
@@ -625,8 +707,8 @@ class MainForm : Form
         int saved = entries.FindAll(delegate(Entry entry) { return entry.Name != null && !entry.IsGroup; }).Count, found = 0;
         foreach (Entry entry in savedList.Items) if (!entry.IsGroup) found++;
         savedCount.Text = searching && found != saved ? found + " di " + saved : saved.ToString();
-        recentEmpty.Text = searching ? "Nessun risultato" : historyBox.Checked ? "Quello che copi comparirà qui"
-            : "La cronologia è spenta";
+        recentEmpty.Text = searching ? "Nessun risultato" : !historyBox.Checked ? "La cronologia è spenta"
+            : paused ? "In pausa: quello che copi non viene ricordato" : "Quello che copi comparirà qui";
         savedEmpty.Text = searching ? "Nessun risultato" : "Nessun testo salvato";
         recentEmpty.Visible = recentList.Items.Count == 0;
         savedEmpty.Visible = savedList.Items.Count == 0;
@@ -649,6 +731,95 @@ class MainForm : Form
         list.Cursor = index >= 0 ? Cursors.Hand : Cursors.Default;
         foreach (int row in new int[] { old, index })
             if (row >= 0 && row < list.Items.Count) list.Invalidate(list.GetItemRectangle(row));
+        // What was in view belonged to the row the pointer left; a copied entry is shown whole if it rests there.
+        if (!peekAsked || index < 0) HidePeek();
+        if (index < 0 || list != recentList) return;
+        rest.Interval = RestMs;
+        rest.Start();
+    }
+
+    // The row of a list at a point, or -1: the list itself answers with the nearest one, also below the last.
+    static int RowAt(ListBox list, Point where)
+    {
+        int index = list.IndexFromPoint(where);
+        return index >= 0 && index < list.Items.Count && list.GetItemRectangle(index).Contains(where) ? index : -1;
+    }
+
+    // Shows whole the entry of a row, in a small window under it. A text its row already shows whole needs
+    // none, unless it was asked for: then it stays in view for a while, wherever the pointer goes.
+    void ShowPeek(ListBox list, int row, bool asked)
+    {
+        Entry entry = (Entry)list.Items[row];
+        Rectangle area = list.GetItemRectangle(row);
+        if (entry.IsGroup || !asked && !entry.Picture && !Cut(list, entry, area)) return;
+        peek.Reveal(entry, list.RectangleToScreen(area), Zoom);
+        peekAsked = asked && peek.Visible;
+        if (!peekAsked) return;
+        rest.Interval = AskedMs;
+        rest.Start();
+    }
+
+    void HidePeek()
+    {
+        rest.Stop();
+        peekAsked = false;
+        if (peek.Visible) peek.Hide();
+    }
+
+    // Whether the row of a copied text shows less than the text: more lines, or more than fits.
+    bool Cut(ListBox list, Entry entry, Rectangle row)
+    {
+        // Measured without the ellipsis of the row: asked how wide the text is, with it the answer is the dots alone.
+        return entry.Label != entry.Text.Trim() || TextRenderer.MeasureText(entry.Label, Font, Size.Empty,
+            LineFlags & ~TextFormatFlags.EndEllipsis).Width > Content(list, entry, row).Width - SignRoom;
+    }
+
+    // The folder a saved text dropped at a point of their column would go to: that of the row there, which
+    // is none for a text outside the folders and below the last row.
+    string GroupAt(Point where)
+    {
+        int row = RowAt(savedList, where);
+        Entry entry = row < 0 ? null : (Entry)savedList.Items[row];
+        return entry == null ? null : entry.IsGroup ? entry.Name : entry.Group;
+    }
+
+    // Lights up the folder a dragged text is over, as the pointer does.
+    void Aim(string group)
+    {
+        if (dropGroup == group) return;
+        dropGroup = group;
+        savedList.Invalidate();
+    }
+
+    // When, as a row says it at its right: of a copied entry the time today and the day before that, of a
+    // saved text always the day it was saved. The year only when it is not this one. Null if nobody knows.
+    static string When(Entry entry)
+    {
+        if (entry.IsGroup || entry.Time == DateTime.MinValue) return null;
+        return entry.Time.ToString(entry.Name == null && entry.Time.Date == DateTime.Today ? "HH:mm"
+            : entry.Time.Year == DateTime.Today.Year ? "dd/MM" : "dd/MM/yy");
+    }
+
+    // What that takes of the row, with the air before it.
+    int WhenRoom(Entry entry)
+    {
+        string when = When(entry);
+        return when == null ? 0 : TimeGap + TextRenderer.MeasureText(when, Font, Size.Empty, TextFormatFlags.NoPadding).Width;
+    }
+
+    // The part of a row left to its sign and its text: up to when it was copied or saved, which comes
+    // before the star in a row of the copied entries.
+    Rectangle Content(ListBox list, Entry entry, Rectangle row)
+    {
+        int left = row.Left + RowInset + (entry.Group != null ? GroupIndent : 0);
+        int right = row.Right - TimeGap - (list == recentList ? StarArea(row).Width + TimeGap : 0) - WhenRoom(entry);
+        return Rectangle.FromLTRB(left, row.Top, right, row.Bottom);
+    }
+
+    // What the sign of an entry takes at the left of its row, with the air after it.
+    int SignRoom
+    {
+        get { return Font.Height + 2 * PreviewMargin; }
     }
 
     void DrawGlyph(object sender, PaintEventArgs e)
@@ -702,7 +873,9 @@ class MainForm : Form
         if (e.Index < 0) return;
         ListBox list = (ListBox)sender;
         Entry entry = (Entry)list.Items[e.Index];
-        bool selected = (e.State & DrawItemState.Selected) != 0, hovered = Equals(list.Tag, e.Index);
+        bool selected = (e.State & DrawItemState.Selected) != 0;
+        // Under the pointer, or the folder a dragged text would be dropped into.
+        bool hovered = Equals(list.Tag, e.Index) || entry.IsGroup && dropGroup != null && Texts.SameName(entry.Name, dropGroup);
         using (Brush back = new SolidBrush(list.BackColor))
         {
             e.Graphics.FillRectangle(back, e.Bounds);
@@ -720,7 +893,12 @@ class MainForm : Form
                 if (selected) e.Graphics.FillRectangle(mark, row.Left + 3, row.Top + 5, 3, row.Height - 10);
             }
         }
-        Rectangle label = Rectangle.FromLTRB(e.Bounds.Left + RowInset, e.Bounds.Top, e.Bounds.Right - TimeGap, e.Bounds.Bottom);
+        Rectangle label = Content(list, entry, e.Bounds);
+        string when = When(entry);
+        if (when != null)
+            TextRenderer.DrawText(e.Graphics, when, e.Font, Rectangle.FromLTRB(label.Right, label.Top, label.Right + WhenRoom(entry),
+                label.Bottom), Look.Muted, TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.SingleLine
+                | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
         if (list == recentList)
         {
             // At the right end, the star that keeps the entry at the top: in colour if it does, faint on the
@@ -728,7 +906,6 @@ class MainForm : Form
             Rectangle star = StarArea(e.Bounds);
             if (entry.Pinned) Look.Draw(e.Graphics, Sign.Star, star, null);
             else if (selected || hovered) Look.Draw(e.Graphics, Sign.Star, star, Look.Blend(Look.Muted, list.BackColor, 0.4f));
-            label.Width -= star.Width + TimeGap;
         }
         if (entry.IsGroup)
         {
@@ -736,18 +913,6 @@ class MainForm : Form
             string count = entries.FindAll(delegate(Entry other) { return Texts.SameName(other.Group, entry.Name); }).Count.ToString();
             int width = TextRenderer.MeasureText(e.Graphics, count, e.Font, Size.Empty, TextFormatFlags.NoPadding).Width;
             TextRenderer.DrawText(e.Graphics, count, e.Font, label, Look.Muted, TextFormatFlags.VerticalCenter
-                | TextFormatFlags.Right | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
-            label.Width -= width + TimeGap;
-        }
-        if (entry.Group != null) label = Rectangle.FromLTRB(label.Left + GroupIndent, label.Top, label.Right, label.Bottom);
-        if (entry.Time != DateTime.MinValue)
-        {
-            // On the right, when: of a copied entry the time today and the day before that, of a saved text
-            // always the day it was saved. The year only when it is not this one.
-            string when = entry.Time.ToString(entry.Name == null && entry.Time.Date == DateTime.Today ? "HH:mm"
-                : entry.Time.Year == DateTime.Today.Year ? "dd/MM" : "dd/MM/yy");
-            int width = TextRenderer.MeasureText(e.Graphics, when, e.Font, Size.Empty, TextFormatFlags.NoPadding).Width;
-            TextRenderer.DrawText(e.Graphics, when, e.Font, label, Look.Muted, TextFormatFlags.VerticalCenter
                 | TextFormatFlags.Right | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
             label.Width -= width + TimeGap;
         }
@@ -765,12 +930,11 @@ class MainForm : Form
         {
             int side = e.Font.Height;
             Look.Draw(e.Graphics, SignOf(entry), new Rectangle(label.Left, e.Bounds.Top + (e.Bounds.Height - side) / 2, side, side), null);
-            label = Rectangle.FromLTRB(label.Left + side + 2 * PreviewMargin, label.Top, label.Right, label.Bottom);
+            label = Rectangle.FromLTRB(label.Left + SignRoom, label.Top, label.Right, label.Bottom);
         }
         using (Font font = new Font(e.Font, entry.IsGroup ? FontStyle.Bold : FontStyle.Regular))   // a folder stands out
         {
-            TextRenderer.DrawText(e.Graphics, entry.Label, font, label, list.ForeColor, TextFormatFlags.VerticalCenter
-                | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);
+            TextRenderer.DrawText(e.Graphics, entry.Label, font, label, list.ForeColor, TextFormatFlags.VerticalCenter | LineFlags);
         }
     }
 
@@ -795,7 +959,7 @@ class MainForm : Form
     {
         if (entry == null || entry.Name != null) return;
         Change(delegate { Texts.Pin(entry, !entry.Pinned); });
-        status.Text = (entry.Pinned ? "Resta in alto: " : "Non è più in alto: ") + Shorten(entry.ToString()) + ".";
+        Say((entry.Pinned ? "Resta in alto: " : "Non è più in alto: ") + Shorten(entry.ToString()) + ".");
         Reload();
     }
 
@@ -842,8 +1006,8 @@ class MainForm : Form
             status.Text = "Errore: " + ex.Message;
             return false;
         }
-        status.Text = "Negli appunti: " + Shorten(entry.ToString()) + ". Incollalo con Ctrl+V"
-            + (hotkeyBox.Checked && !entry.Picture ? " o digitalo con " + HotkeyName : "") + ".";
+        Say("Negli appunti: " + Shorten(entry.ToString()) + ". Incollalo con Ctrl+V"
+            + (hotkeyBox.Checked && !entry.Picture ? " o digitalo con " + HotkeyName : "") + ".");
         return true;
     }
 
@@ -904,7 +1068,7 @@ class MainForm : Form
                     if (edit.Group != null) Texts.SetGroup(edit.Group, true);   // or the text would not be seen
                 })) continue;
                 if (source != null && source.Name == null) Texts.Remove(source);   // it now has a line among the saved ones
-                status.Text = "Salvato «" + Shorten(name) + "».";
+                Say("Salvato «" + Shorten(name) + "».");
                 break;
             }
         }
@@ -935,7 +1099,7 @@ class MainForm : Form
                     if (old == null) Texts.SetGroup(name, true);
                     else Texts.RenameGroup(old, name);
                 })) continue;
-                status.Text = (old == null ? "Creata la cartella «" : "La cartella ora si chiama «") + Shorten(name) + "».";
+                Say((old == null ? "Creata la cartella «" : "La cartella ora si chiama «") + Shorten(name) + "».");
                 break;
             }
         }
@@ -950,8 +1114,8 @@ class MainForm : Form
             Texts.Move(entry.Name, group);
             if (group != null) Texts.SetGroup(group, true);
         })) return;
-        status.Text = group == null ? "«" + Shorten(entry.Name) + "» non è più in una cartella."
-            : "«" + Shorten(entry.Name) + "» è nella cartella «" + Shorten(group) + "».";
+        Say(group == null ? "«" + Shorten(entry.Name) + "» non è più in una cartella."
+            : "«" + Shorten(entry.Name) + "» è nella cartella «" + Shorten(group) + "».");
         Reload();
     }
 
@@ -1003,6 +1167,8 @@ class MainForm : Form
     // The keys of the list, while the search box or the list itself has the focus.
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
+        HidePeek();
+        if (capturing != null) return TakeKeys(keyData);
         if (keyData == HelpKey)   // from the options too
         {
             ShowHelp();
@@ -1026,19 +1192,19 @@ class MainForm : Form
             case Keys.Down:
                 Step(1);
                 return true;
-            case Keys.Control | NewKey:
+            case NewKeys:
                 Edit(null);
                 return true;
-            case Keys.Control | Keys.Shift | NewKey:
+            case GroupKeys:
                 EditGroup(null);
                 return true;
-            case Keys.Control | SaveKey:
+            case SaveKeys:
                 Edit(Selected);
                 return true;
-            case Keys.Control | DeleteKey:
+            case DeleteKeys:
                 DeleteSelected();
                 return true;
-            case Keys.Control | PinKey:
+            case PinKeys:
                 TogglePin(Selected);
                 return true;
         }
@@ -1059,6 +1225,148 @@ class MainForm : Form
     {
         base.OnDeactivate(e);
         enterDown = false;
+        HidePeek();
+        EndCapture();   // keys pressed elsewhere are not for us
+    }
+
+    // A key combination as the user reads it: "Ctrl+Alt+V".
+    static string NameOf(Keys keys)
+    {
+        Keys code = keys & Keys.KeyCode;
+        string key = code >= Keys.D0 && code <= Keys.D9 ? (code - Keys.D0).ToString() : code.ToString();
+        return ((keys & Keys.Control) != 0 ? "Ctrl+" : "") + ((keys & Keys.Alt) != 0 ? "Alt+" : "")
+            + ((keys & Keys.Shift) != 0 ? "Maiusc+" : "") + key;
+    }
+
+    // Whether a combination can be a global hotkey: a letter, a digit or a function key, with Ctrl or Alt
+    // so that it is never something one types.
+    static bool Usable(Keys keys)
+    {
+        Keys code = keys & Keys.KeyCode;
+        bool key = code >= Keys.A && code <= Keys.Z || code >= Keys.D0 && code <= Keys.D9 || code >= Keys.F1 && code <= Keys.F12;
+        return key && (keys & (Keys.Control | Keys.Alt)) != 0;
+    }
+
+    // Writes the keys of the global hotkeys wherever they are named: on their buttons and in the tooltips.
+    void NameHotkeys()
+    {
+        typeKeysButton.Text = HotkeyName;
+        pickKeysButton.Text = PickName;
+        const string change = "\nIl pulsante a destra mostra i suoi tasti: premilo per dargliene altri.";
+        Tip(HotkeyName + " digita subito gli appunti nella finestra attiva, senza attesa.\n"
+          + "Non funziona se il desktop remoto è a schermo intero e cattura tutte le\n"
+          + "scorciatoie: in quel caso usa il pulsante «" + ButtonText + "»." + change, hotkeyBox);
+        Tip(PickName + " porta in primo piano questa finestra con l'elenco, da qualsiasi programma.\n"
+          + "Scelta una voce, il controllo torna alla finestra da cui sei partito: lì la incolli\n"
+          + "con Ctrl+V o la digiti con " + HotkeyName + ".\n"
+          + "Finché è attiva, " + PickName + " non arriva più agli altri programmi." + change, pickBox);
+        Tip("Premi qui e poi i tasti nuovi: Ctrl o Alt, anche con Maiusc, insieme a una lettera,\n"
+          + "una cifra o un tasto funzione. Esc lascia quelli di adesso, Canc torna a quelli di partenza.\n"
+          + "Con Ctrl+Alt evita le lettere che con AltGr scrivono un simbolo (E, per l'euro): la\n"
+          + "scorciatoia scatterebbe scrivendolo.", typeKeysButton, pickKeysButton);
+        Tip("Digita il testo degli appunti un tasto alla volta, dove incollare non funziona:\n"
+          + "copia la password, premi qui e clicca nel campo della finestra remota.\n"
+          + "Oppure premi " + HotkeyName + " direttamente nel campo.", typeButton);
+        Tip("Scrivi per cercare nelle due colonne: parole in qualsiasi ordine, senza badare a\n"
+          + "maiuscole e accenti. Le frecce scorrono la colonna, Tab passa all'altra.\n"
+          + "Invio o un clic rimettono la voce negli appunti: poi la incolli con Ctrl+V o la\n"
+          + "digiti con " + HotkeyName + ". Con un clic la finestra resta aperta, con Invio o un\n"
+          + "doppio clic torni dov'eri. Il tasto destro apre il menu della voce.\n"
+          + "Fermando il puntatore su una voce copiata la vedi per intero.\n"
+          + "La stellina a destra di una voce copiata (Ctrl+" + PinKey + ") la tiene in cima all'elenco,\n"
+          + "anche oltre i giorni della cronologia, finché non la togli.\n"
+          + "I testi salvati restano nel registro di Windows, cifrati per il tuo utente, e\n"
+          + "se ne vede solo il nome. Si possono raccogliere in cartelle: «Nuova cartella» è nel\n"
+          + "menu del tasto destro (Ctrl+Maiusc+" + NewKey + "); un testo ci entra trascinandolo, o con\n"
+          + "«Sposta in». Un clic sulla cartella la apre e la chiude.", search);
+    }
+
+    // Waits for the keys of a global hotkey: the next combination pressed becomes it. Meanwhile both
+    // hotkeys are off, or Windows would take them before this window sees them. Asked again, gives up.
+    void AwaitKeys(CheckBox box)
+    {
+        bool again = capturing == box;
+        EndCapture();
+        if (again || busy) return;
+        capturing = box;
+        Native.UnregisterHotKey(Handle, HotkeyId);
+        Native.UnregisterHotKey(Handle, PickId);
+        (box == hotkeyBox ? typeKeysButton : pickKeysButton).Text = "Premi i tasti…";
+        status.Text = "Premi i tasti nuovi: Ctrl o Alt con una lettera, una cifra o un tasto funzione. "
+            + "Esc lascia quelli di adesso, Canc torna a quelli di partenza.";
+    }
+
+    // Stops waiting for keys: the hotkeys work again, with the keys they have now.
+    void EndCapture()
+    {
+        if (capturing != null) UpdateHotkeys();
+    }
+
+    // A key pressed while a hotkey awaits its new keys. Always true: none of them does anything else.
+    bool TakeKeys(Keys keys)
+    {
+        Keys code = keys & Keys.KeyCode;
+        if (code == Keys.ControlKey || code == Keys.ShiftKey || code == Keys.Menu) return true;   // the key is still to come
+        bool typing = capturing == hotkeyBox;
+        if (keys == Keys.Escape)
+        {
+            EndCapture();
+            return true;
+        }
+        if (keys == Keys.Delete) keys = typing ? DefaultTypeKeys : DefaultPickKeys;
+        if (!Usable(keys))
+            status.Text = NameOf(keys) + " non va bene: serve Ctrl o Alt con una lettera, una cifra o un tasto funzione.";
+        else if (keys == (typing ? pickKeys : typeKeys) || Array.IndexOf(ListKeys, keys) >= 0)
+            status.Text = NameOf(keys) + " serve già al programma: scegline un'altra.";
+        else
+        {
+            CheckBox box = capturing;
+            if (typing) typeKeys = keys;
+            else pickKeys = keys;
+            box.Checked = true;   // new keys are given to a hotkey that is wanted
+            EndCapture();
+            // Unticked again if Windows refused the keys: the status line already says so.
+            if (box.Checked) Say((typing ? "Per digitare gli appunti ora premi " : "Per aprire l'elenco ora premi ") + NameOf(keys) + ".");
+        }
+        return true;
+    }
+
+    // Stops remembering what is copied, or starts again. Not a setting: the next start always listens.
+    void Pause(bool pause)
+    {
+        paused = pause;
+        ShowPause();
+        Filter();   // an empty column says why
+        Say(pause ? "In pausa: quello che copi non viene ricordato, finché non riprendi la cattura."
+            : "La cattura è ripresa: quello che copi torna nell'elenco.");
+    }
+
+    // Says whether the capture is paused where it shows: in the menus, above the column and on the icon.
+    void ShowPause()
+    {
+        foreach (ToolStripItem item in pauseItems) item.Text = paused ? "Riprendi la cattura" : "Sospendi la cattura";
+        recentTitle.Text = RecentTitle + (paused ? " (in pausa)" : "");
+        if (IsHandleCreated) ShowClipboardState();
+    }
+
+    // A passing message: after a while it leaves the status line, and its room goes back to the lists.
+    void Say(string text)
+    {
+        status.Text = text;
+        fade.Start();
+    }
+
+    // Gives the status line the room of what it says, one line or two, and none while it is silent; the
+    // lists take what is left above it.
+    void FitStatus()
+    {
+        if (!shown) return;
+        int full = (int)(StatusHeight * Zoom), gap = (int)(Gap * Zoom), bottom = typeButton.Top - gap;
+        int height = status.Text.Length == 0 ? 0 : TextRenderer.MeasureText(status.Text, status.Font, new Size(status.Width, 0),
+            TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height > status.Font.Height * 3 / 2 ? full : full / 2;
+        status.SetBounds(status.Left, bottom - height, status.Width, height);
+        foreach (Control column in new Control[] { recentCard, savedCard, divider }) column.Height = status.Top - gap - column.Top;
+        divider.Invalidate();   // its mark stays in the middle
     }
 
     static Label NewLabel(string text, int y)
@@ -1106,6 +1414,15 @@ class MainForm : Form
         optionControls.Add(label);
         optionControls.Add(Look.Frame(box));   // the frame of the box is what goes into the window
         return label;
+    }
+
+    // A row with a global hotkey: the switch that turns it on and, at the right edge of the column, the
+    // button that shows its keys and takes new ones.
+    void PlaceHotkey(CheckBox box, RoundButton keys, string text, int left, ref int top)
+    {
+        int row = top + 4;   // the switch level with the text of the button
+        PlaceOption(box, text, left, ref row);
+        PlaceButton(keys, "", delegate { AwaitKeys(box); }, left + ColumnWidth - OptionButtonWidth, ref top);
     }
 
     // A row with a link, for something to open rather than to set.
@@ -1161,9 +1478,9 @@ class MainForm : Form
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
             BackupResult result = null;
             if (!Change(delegate { result = Backup.Export(dialog.FileName, all); })) return;
-            status.Text = "Esportati: " + Count(result.Saved, "testo salvato", "testi salvati")
+            Say("Esportati: " + Count(result.Saved, "testo salvato", "testi salvati")
                 + (all ? ", " + Count(result.Copied, "copiato", "copiati") : "")
-                + (result.Pictures > 0 ? ". Le immagini (" + result.Pictures + ") non si esportano" : "") + ".";
+                + (result.Pictures > 0 ? ". Le immagini (" + result.Pictures + ") non si esportano" : "") + ".");
         }
     }
 
@@ -1185,11 +1502,11 @@ class MainForm : Form
                         + "\n\nSì: vale quello del file.\nNo: resta quello che c'è.");
                 });
             })) return;
-            status.Text = result.Saved + result.Copied + result.Kept == 0 ? "Nel file non c'era niente da importare."
+            Say(result.Saved + result.Copied + result.Kept == 0 ? "Nel file non c'era niente da importare."
                 : "Importati: " + Count(result.Saved, "testo salvato", "testi salvati")
                 + (copied ? ", " + Count(result.Copied, "copiato", "copiati") : "")
                 + (result.Kept > 0 ? ". Lasciati com'erano: " + result.Kept : "")
-                + (all && !copied ? ". La cronologia è spenta: i copiati non sono stati importati" : "") + ".";
+                + (all && !copied ? ". La cronologia è spenta: i copiati non sono stati importati" : "") + ".");
         }
         Reload();
     }
@@ -1209,8 +1526,8 @@ class MainForm : Form
         int before = Texts.Recent.Count;
         if (!Change(delegate { Texts.Clean(days); })) return;
         int removed = before - Texts.Recent.Count;
-        status.Text = removed == 0 ? "Niente da eliminare nella cronologia."
-            : removed == 1 ? "Eliminata 1 voce dalla cronologia." : "Eliminate " + removed + " voci dalla cronologia.";
+        Say(removed == 0 ? "Niente da eliminare nella cronologia."
+            : removed == 1 ? "Eliminata 1 voce dalla cronologia." : "Eliminate " + removed + " voci dalla cronologia.");
         Reload();
     }
 
@@ -1218,7 +1535,7 @@ class MainForm : Form
     void OpenFolder()
     {
         if (Directory.Exists(Texts.Folder)) Change(delegate { Process.Start(Texts.Folder); });
-        else status.Text = "La cartella della cronologia non esiste ancora: su disco non c'è niente.";
+        else Say("La cartella della cronologia non esiste ancora: su disco non c'è niente.");
     }
 
     void PlaceOption(CheckBox box, string text, int left, ref int top)
@@ -1235,10 +1552,11 @@ class MainForm : Form
         foreach (Control control in controls) tips.SetToolTip(control, text);
     }
 
+    // With nothing to say the status line is silent, and leaves its room to the lists: how to type a
+    // password is in the tooltip of its button and in the guide.
     void ShowIdle()
     {
-        status.Text = "Per digitare una password: copiala, premi «" + ButtonText + "» e clicca nel campo della finestra remota."
-            + (hotkeyBox.Checked ? " Oppure premi " + HotkeyName + " direttamente nel campo." : "");
+        status.Text = "";
     }
 
     // Started hidden: the window that Application.Run wants to show stays invisible, but its handle is created
@@ -1260,6 +1578,7 @@ class MainForm : Form
         MinimumSize = Size;   // as designed, at the scale of this screen
         shown = true;
         PlaceColumns((int)(savedColumn * Zoom));
+        FitStatus();
     }
 
     // How much larger than designed this screen draws the window.
@@ -1311,7 +1630,8 @@ class MainForm : Form
         bool ready = Native.IsClipboardFormatAvailable(Native.CF_UNICODETEXT);
         Icon = ready ? readyIcon : emptyIcon;
         tray.Icon = ready ? readyTrayIcon : emptyTrayIcon;
-        tray.Text = Program.AppName + (ready ? ": testo pronto negli appunti" : ": appunti senza testo");
+        tray.Text = Program.AppName + (ready ? ": testo pronto negli appunti" : ": appunti senza testo")
+            + (paused ? ", cattura in pausa" : "");
     }
 
     // Greyscale copy of the icon, in the requested size.
@@ -1360,22 +1680,31 @@ class MainForm : Form
     void UpdateHotkeys()
     {
         if (!IsHandleCreated) return;
-        bool typeFailed = !Register(hotkeyBox, HotkeyId, HotkeyModifiers, HotkeyKey);
-        bool pickFailed = !Register(pickBox, PickId, PickModifiers, PickKey);
+        if (capturing != null)
+        {
+            // New keys were being awaited: no longer, and the buttons show again the ones in use.
+            capturing = null;
+            NameHotkeys();
+        }
+        bool typeFailed = !Register(hotkeyBox, HotkeyId, typeKeys);
+        bool pickFailed = !Register(pickBox, PickId, pickKeys);
         if (busy) return;
-        if (typeFailed) status.Text = HotkeyName + " è già usata da un altro programma: usa il pulsante.";
-        else if (pickFailed) status.Text = PickName + " è già usata da un altro programma: apri la finestra dall'icona.";
+        const string remedy = " è già usata da un altro programma: dalle altri tasti nelle opzioni, oppure ";
+        if (typeFailed) status.Text = HotkeyName + remedy + "usa il pulsante.";
+        else if (pickFailed) status.Text = PickName + remedy + "apri la finestra dall'icona.";
         else ShowIdle();
     }
 
     // Registers a hotkey if its checkbox is ticked. If Windows refuses it, unticks the checkbox and returns false;
     // the checkbox is remembered as 'refused', so that the setting is saved as the user left it and the next
     // start tries again.
-    bool Register(CheckBox box, int id, uint modifiers, Keys key)
+    bool Register(CheckBox box, int id, Keys keys)
     {
         Native.UnregisterHotKey(Handle, id);
         if (!box.Checked) return true;
-        if (Native.RegisterHotKey(Handle, id, modifiers | Native.MOD_NOREPEAT, (uint)key))
+        uint modifiers = ((keys & Keys.Control) != 0 ? Native.MOD_CONTROL : 0) | ((keys & Keys.Alt) != 0 ? Native.MOD_ALT : 0)
+            | ((keys & Keys.Shift) != 0 ? Native.MOD_SHIFT : 0);
+        if (Native.RegisterHotKey(Handle, id, modifiers | Native.MOD_NOREPEAT, (uint)(keys & Keys.KeyCode)))
         {
             refused.Remove(box);
             return true;
@@ -1408,7 +1737,7 @@ class MainForm : Form
         else if (m.Msg == Native.WM_CLIPBOARDUPDATE)
         {
             ShowClipboardState();
-            if (historyBox.Checked && Native.GetClipboardSequenceNumber() != ownCopy) Texts.Remember();
+            if (historyBox.Checked && !paused && Native.GetClipboardSequenceNumber() != ownCopy) Texts.Remember();
             Reload();
         }
         base.WndProc(ref m);
@@ -1436,12 +1765,22 @@ class MainForm : Form
         base.OnResize(e);
         if (WindowState == FormWindowState.Minimized && trayBox.Checked) HideToTray();
         // A narrower window may leave too little to the copied entries: the saved ones give some back.
-        else if (shown && WindowState != FormWindowState.Minimized) PlaceColumns(savedCard.Width);
+        else if (shown && WindowState != FormWindowState.Minimized)
+        {
+            PlaceColumns(savedCard.Width);
+            FitStatus();   // in a wider window the same message may take one line less
+        }
     }
 
     protected override void Dispose(bool disposing)
     {
-        if (disposing) tray.Dispose();   // otherwise the icon would stay in the notification area after exit
+        if (disposing)
+        {
+            tray.Dispose();   // otherwise the icon would stay in the notification area after exit
+            peek.Dispose();
+            rest.Dispose();
+            fade.Dispose();
+        }
         base.Dispose(disposing);
     }
 
@@ -1469,6 +1808,7 @@ class MainForm : Form
     async void Run(int seconds)
     {
         if (busy) return;
+        EndCapture();
         busy = true;
         cancel = false;
         typeButton.Text = "Annulla";
@@ -1709,6 +2049,8 @@ class MainForm : Form
         altCodeBox.Checked = Transfer(key, save, "AltCodes", altCodeBox.Checked);
         hotkeyBox.Checked = Transfer(key, save, "Hotkey", hotkeyBox.Checked || refused.Contains(hotkeyBox));
         pickBox.Checked = Transfer(key, save, "PickHotkey", pickBox.Checked || refused.Contains(pickBox));
+        typeKeys = Sound(Transfer(key, save, "HotkeyKeys", (int)typeKeys), DefaultTypeKeys);
+        pickKeys = Sound(Transfer(key, save, "PickKeys", (int)pickKeys), DefaultPickKeys);
         historyBox.Checked = Transfer(key, save, "History", historyBox.Checked);
         Retention = Transfer(key, save, "KeepDays", Retention);
         trayBox.Checked = Transfer(key, save, "Tray", trayBox.Checked);
@@ -1732,6 +2074,12 @@ class MainForm : Form
         if (!save) return (int)key.GetValue(name, value);
         key.SetValue(name, value);
         return value;
+    }
+
+    // The keys of a hotkey as the registry gives them, or the ones it starts with if they cannot be used.
+    static Keys Sound(int keys, Keys fallback)
+    {
+        return Usable((Keys)keys) ? (Keys)keys : fallback;
     }
 
     static bool Transfer(RegistryKey key, bool save, string name, bool value)

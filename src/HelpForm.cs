@@ -15,8 +15,9 @@ class HelpForm : Form
     const char KeyEnd = '\t';                       // in a line that explains a key, between the key and what it does
 
     // The guide itself. A line starting with '#' is a heading, one starting with '-' a point of a list, one
-    // with a tab a key and what it does. Names, keys and numbers come from where the program defines them.
-    static readonly string[] Lines =
+    // with a tab a key and what it does. Names, keys and numbers come from where the program defines them;
+    // it is written anew each time the guide opens, because the user can change the keys of the hotkeys.
+    readonly string[] Lines =
     {
         "# A cosa serve",
         Program.AppName + " tiene da parte quello che copi e i testi che scegli di salvare, per riaverli negli "
@@ -34,6 +35,9 @@ class HelpForm : Form
             + ", ti riportano alla finestra in cui stavi lavorando.",
         "- A quel punto la incolli con Ctrl+V, oppure la digiti con " + MainForm.HotkeyName + ".",
         "- Il tasto destro seleziona la voce e apre il suo menu, senza toccare gli appunti.",
+        "- Fermando il puntatore su una voce copiata che nella riga non ci sta tutta, dopo un attimo compare "
+            + "per intero in un riquadro: il testo con tutte le sue righe, l'immagine più grande. Sparisce "
+            + "appena sposti il puntatore.",
         "- La stellina all'estremità destra di una voce copiata (Ctrl+" + MainForm.PinKey + ") la tiene in cima "
             + "alla colonna: compare sbiadita quando ci passi sopra, e un clic la accende o la spegne. Una voce "
             + "con la stellina non scade con i giorni della cronologia e resta lì finché non la togli; copiare "
@@ -41,6 +45,9 @@ class HelpForm : Form
         "Il segno colorato a sinistra dice che cos'è la voce: un testo, un indirizzo web, un testo salvato. Le "
             + "immagini mostrano una miniatura. A destra c'è l'ora della copia (il giorno, se non è di oggi) o il "
             + "giorno del salvataggio.",
+        "Per non ricordare quello che stai per copiare, «Sospendi la cattura» sta nel menu del tasto destro "
+            + "dell'elenco e in quello dell'icona vicino all'orologio: sopra la colonna compare «in pausa» finché "
+            + "non scegli «Riprendi la cattura». Al prossimo avvio la cattura è di nuovo attiva.",
         "Lo spazio tra le due colonne si trascina, per dare più o meno posto ai testi salvati: la larghezza "
             + "scelta resta anche al prossimo avvio, e un doppio clic lì torna a quella di partenza.",
         "La colonna dei copiati mostra le " + MainForm.MaxShown + " voci più recenti: le altre si trovano con la ricerca.",
@@ -57,11 +64,15 @@ class HelpForm : Form
         "- «Nuova cartella» sta nel menu del tasto destro (Ctrl+Maiusc+" + MainForm.NewKey + ").",
         "- Un clic sul nome di una cartella, o Invio, la apre e la chiude; il numero a destra dice quanti testi "
             + "contiene. Aperte e chiuse, le ritrovi come le hai lasciate.",
-        "- «Sposta in», nel menu del tasto destro di un testo salvato, lo mette in una cartella o lo toglie. La "
-            + "stessa scelta c'è nella finestra in cui lo scrivi, a sinistra dei pulsanti.",
+        "- Un testo salvato si trascina dentro una cartella: sulla cartella stessa o su uno dei suoi testi. "
+            + "Lasciato su un testo fuori dalle cartelle, o sotto l'ultima riga, esce da quella in cui era.",
+        "- «Sposta in», nel menu del tasto destro di un testo salvato, fa lo stesso. La stessa scelta c'è "
+            + "nella finestra in cui lo scrivi, a sinistra dei pulsanti.",
         "- Con una cartella selezionata, «Rinomina» le cambia il nome ed «Elimina» toglie la cartella soltanto: "
             + "i testi che conteneva restano tra i salvati.",
         "- La ricerca trova anche dentro le cartelle chiuse, e il nome di una cartella trova i suoi testi.",
+        "- «Mostra il contenuto», nel menu del tasto destro di un testo salvato, lo fa vedere in un riquadro "
+            + "per qualche secondo: l'elenco ne mostra solo il nome, e passarci sopra con il puntatore non basta.",
         "I testi salvati stanno nel registro di Windows, cifrati per il tuo utente: un altro utente dello stesso "
             + "PC non li può leggere. Quando ne rimetti uno negli appunti viene segnato come riservato, perché "
             + "la cronologia di Windows (Win+V) e gli altri gestori di appunti lo ignorino. Le immagini non si "
@@ -95,8 +106,14 @@ class HelpForm : Form
         "Ctrl+" + MainForm.SaveKey + "\tSalva la voce copiata, o modifica quella salvata.",
         "Ctrl+" + MainForm.DeleteKey + "\tElimina la voce selezionata.",
         "Ctrl+" + MainForm.PinKey + "\tTiene in alto la voce copiata, o la lascia andare.",
-        "Le prime due funzionano ovunque, e si possono spegnere nelle opzioni; le altre valgono nell'elenco. Finché "
-            + "è attiva, " + MainForm.PickName + " non arriva più agli altri programmi.",
+        "Le prime due funzionano ovunque; le altre valgono nell'elenco. Finché è attiva, " + MainForm.PickName
+            + " non arriva più agli altri programmi.",
+        "Nelle opzioni, sotto «Scorciatoie», le prime due si spengono e si cambiano: il pulsante accanto a "
+            + "ciascuna mostra i suoi tasti, e premendolo aspetta quelli nuovi.",
+        "- Servono Ctrl o Alt, anche con Maiusc, insieme a una lettera, una cifra o un tasto funzione.",
+        "- Esc lascia i tasti di adesso, Canc torna a quelli di partenza.",
+        "- Con Ctrl+Alt evita le lettere che con AltGr scrivono un simbolo, come la E dell'euro: la "
+            + "scorciatoia scatterebbe mentre lo scrivi.",
 
         "# La cronologia",
         "Quello che copi resta nell'elenco per un numero di giorni che decidi tu (" + Texts.DefaultKeepDays
@@ -117,7 +134,7 @@ class HelpForm : Form
         "- Digitazione: quanti secondi aspettare prima di digitare (da " + MainForm.MinDelay + " a "
             + MainForm.MaxDelay + "), se il server usa la tastiera americana, se premere Invio alla fine, se "
             + "svuotare gli appunti dopo, la digitazione lenta e i simboli composti con Alt+codice.",
-        "- Scorciatoie: accende e spegne " + MainForm.HotkeyName + " e " + MainForm.PickName + ".",
+        "- Scorciatoie: accende e spegne " + MainForm.HotkeyName + " e " + MainForm.PickName + ", e dà loro altri tasti.",
         "- Cronologia: se ricordare ciò che copi, per quanti giorni, il collegamento alla cartella dei file e "
             + "il pulsante che la pulisce subito.",
         "- Programma: se restare attivo nell'area di notifica, se partire insieme a Windows, e i pulsanti per "
@@ -151,8 +168,9 @@ class HelpForm : Form
             + "cattura tutte le scorciatoie. Usa il pulsante.",
         "- Windows blocca l'invio dei tasti: il programma di desktop remoto è avviato come amministratore. Avvia "
             + "così anche " + Program.AppName + ".",
-        "- Una scorciatoia si spegne da sola: la sta già usando un altro programma.",
-        "La riga sopra i pulsanti dice sempre che cosa è appena successo, e perché."
+        "- Una scorciatoia si spegne da sola: la sta già usando un altro programma. Dalle altri tasti nelle opzioni.",
+        "La riga sopra i pulsanti dice che cosa è appena successo, e perché. Le conferme spariscono dopo "
+            + "qualche secondo e lasciano il posto all'elenco; avvisi ed errori restano fino al messaggio dopo."
     };
 
     readonly RichTextBox text = new RichTextBox();
@@ -163,7 +181,7 @@ class HelpForm : Form
         SuspendLayout();
         AutoScaleDimensions = new SizeF(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
-        Font = SystemFonts.MessageBoxFont;
+        Font = Look.TextFont;
         Text = "Guida di " + Program.AppName;
         MaximizeBox = false;
         MinimizeBox = false;

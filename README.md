@@ -16,12 +16,12 @@ presses the keys one by one, as if you were typing.
 
 Formerly called PasswordPaste: the first start under the new name takes over its settings and saved texts.
 
-- One portable `.exe`, about 170 KB. No installer, no dependencies, no network access.
+- One portable `.exe`, about 240 KB. No installer, no dependencies, no network access.
 - A handful of C# source files in `src`, compiled with the compiler already shipped with Windows.
 - Stops typing the moment the target window loses focus, so a password never lands in the wrong place.
 - The history of copied items is kept for the number of days you choose, or in memory only; saved texts are
   encrypted for your Windows account.
-- Neutral warm-grey interface with small coloured signs.
+- Neutral warm-grey interface with small coloured signs, in the font of Windows 11 where it is installed.
 
 > **Note:** the user interface is in Italian. The tables below translate the keys and every option.
 
@@ -68,9 +68,18 @@ reaches the rest. On the right, **Salvati**: the texts you saved under a name, w
 | Click | Puts the entry back on the clipboard; the window stays, so you can still save or delete it |
 | Enter, or a double click | Puts the entry back on the clipboard and returns to the window you came from |
 | Right click | Opens the menu of the entry |
+| Resting the pointer on a copied entry | Shows it whole in a small box when its row cuts it: every line of a text, a larger picture. It goes away as the pointer moves on |
+| Dragging a saved text | Onto a folder, or onto a text inside one, moves it there; onto a text outside the folders, or below the last row, takes it out |
 | Dragging the gap between the columns | Gives the saved texts more room, or less; the width is remembered. A double click there restores it |
 | The star at the right end of a copied entry, or Ctrl+P | Keeps the entry at the top of its column, also beyond the days of the history, until you take the star off |
 | F1, or the **?** button | Opens the guide: everything the program does, in Italian |
+
+Of a saved text the list shows the name only: **Mostra il contenuto** ("Show the content") in its right-click
+menu shows the text in the same small box for a few seconds.
+
+**Sospendi la cattura** ("Pause capture"), in the right-click menu of the list and in the menu of the tray icon,
+stops remembering what you copy until you choose **Riprendi la cattura**. It is not a setting: the next start
+always listens again.
 
 Three buttons under the lists manage the saved texts; each opens a small window with a name and a content box.
 
@@ -111,13 +120,18 @@ The options are grouped under four titles: **Digitazione** (typing), **Scorciato
 | Svuota gli appunti dopo aver digitato | Clear the clipboard after a successful run. Windows clipboard history (Win+V) is not touched. |
 | Digitazione lenta | Slow typing, for remote sessions that drop or reorder characters. |
 | Alt+codice per i simboli che la tastiera non ha | Type symbols that your keyboard has no key for with Alt+numpad codes instead of Unicode input. Works only when the remote machine runs Windows. |
-| Scorciatoia globale Ctrl+Alt+V | Enable the global hotkey. Turn it off if it clashes with another program. |
-| Scorciatoia Ctrl+D per aprire l'elenco | Enable the global hotkey that brings up the window with the list. While it is on, Ctrl+D no longer reaches other programs: turn it off if you need it there. |
+| Digita gli appunti, with a button showing **Ctrl+Alt+V** | Enable the global hotkey that types the clipboard. The button shows its keys: click it and press the new ones to change them. |
+| Apri l'elenco, with a button showing **Ctrl+D** | Enable the global hotkey that brings up the window with the list. While it is on, those keys no longer reach other programs: change them with the button, or turn the hotkey off. |
 | Ricorda i testi e le immagini copiati | Keep the copied texts and pictures in the list. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. Turning it off also deletes the history on disk. |
 | Giorni su disco (0: solo in memoria) | For how many days, 0 to 365, what you copy stays in the history, also after the program closes. With 0 nothing is written to disk: the last 30 copied items, of which at most 5 pictures, stay in memory and are gone when the program closes. |
 | Pulendo, tieni gli ultimi giorni (0: niente), with the button **Pulisci ora…** | Deletes at once, from memory and disk, what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Starred entries and saved texts are not touched. |
 | Resta attivo nell'area di notifica (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Esci** to quit. |
-| Avvia insieme a Windows | Start SmartClip when you sign in, already hidden in the notification area (minimised, if the option above is off). It is the entry Windows shows in Task Manager > Startup apps: the checkbox reflects it, and follows the program if you move the `.exe`. |
+| Avvia insieme a Windows | Start SmartClip when you sign in, already hidden in the notification area (minimised, if the option above is off). It is the entry Windows shows in Task Manager > Startup apps: the switch reflects it, and follows the program if you move the `.exe`. |
+
+A hotkey takes Ctrl or Alt, with Shift if you like, and a letter, a digit or a function key. While the button
+waits for the new keys, Esc keeps the current ones and Del goes back to the default. On keyboards where AltGr
+types symbols, avoid Ctrl+Alt with a letter that has one (E for the euro sign, for example): the hotkey would
+fire while you type it. The key names in this page are the defaults.
 
 Under **Programma**, the buttons **Esporta…** and **Importa…** write the saved texts, with their folders, to a
 plain text file that Notepad opens, and read such a file back, on this PC or another. Each asks whether to take
@@ -147,7 +161,8 @@ Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key t
   remembered. A password typed with **Svuota gli appunti dopo aver digitato** on is dropped from the list and
   from the history file too.
 - Saved texts are stored in the `Saved` subkey of the registry key above, encrypted with Windows DPAPI for your
-  user account: they cannot be read by another user or copied to another PC. Only their names are shown.
+  user account: they cannot be read by another user or copied to another PC. Only their names are shown, until
+  you ask for the content from the right-click menu.
 - A saved text put back on the clipboard is marked as private, so that Windows clipboard history (Win+V) and other
   clipboard managers skip it.
 - An entry is chosen when you release Enter, so a held key cannot repeat into the window the focus returns to.

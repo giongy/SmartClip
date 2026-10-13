@@ -443,6 +443,37 @@ static class TestProgram
             Application.DoEvents();
             Save(form, path + "-countdown.png");
 
+            // The status line takes room only while it says something: silent, it leaves it to the lists.
+            int crowded = recent.Parent.Height;
+            status.Text = "";
+            Console.WriteLine("[{0}] a silent status line leaves its room to the lists: {1} then {2}",
+                recent.Parent.Height > crowded ? "PASS" : "FAIL", crowded, recent.Parent.Height);
+
+            // The keys of a global hotkey: how they are named, which can be used, and how new ones are taken.
+            BindingFlags shared = BindingFlags.NonPublic | BindingFlags.Static;
+            Func<Keys, string> name = delegate(Keys keys) { return (string)typeof(MainForm).GetMethod("NameOf", shared).Invoke(null, new object[] { keys }); };
+            Func<Keys, bool> usable = delegate(Keys keys) { return (bool)typeof(MainForm).GetMethod("Usable", shared).Invoke(null, new object[] { keys }); };
+            Console.WriteLine("[{0}] hotkey names: {1}, {2}", name(Keys.Control | Keys.Alt | Keys.V) == "Ctrl+Alt+V"
+                && name(Keys.Control | Keys.Shift | Keys.D1) == "Ctrl+Maiusc+1" ? "PASS" : "FAIL",
+                name(Keys.Control | Keys.Alt | Keys.V), name(Keys.Control | Keys.Shift | Keys.D1));
+            Console.WriteLine("[{0}] a hotkey needs Ctrl or Alt and a letter, a digit or a function key",
+                usable(Keys.Alt | Keys.F9) && !usable(Keys.V) && !usable(Keys.Shift | Keys.V) && !usable(Keys.Control | Keys.Enter) ? "PASS" : "FAIL");
+            object typeBox = typeof(MainForm).GetField("hotkeyBox", hidden).GetValue(form);
+            Action<Keys> press = delegate(Keys keys)
+            {
+                if (typeof(MainForm).GetField("capturing", hidden).GetValue(form) == null)
+                    typeof(MainForm).GetMethod("AwaitKeys", hidden).Invoke(form, new object[] { typeBox });
+                typeof(MainForm).GetMethod("TakeKeys", hidden).Invoke(form, new object[] { keys });
+            };
+            string before = MainForm.HotkeyName;
+            press(Keys.Control | MainForm.SaveKey);   // the list answers to it: refused, and still waiting
+            bool refusedTaken = MainForm.HotkeyName == before && typeof(MainForm).GetField("capturing", hidden).GetValue(form) != null;
+            press(Keys.Control | Keys.Alt | Keys.F11);
+            bool taken = MainForm.HotkeyName == "Ctrl+Alt+F11" && typeof(MainForm).GetField("capturing", hidden).GetValue(form) == null;
+            press(Keys.Delete);   // back to the keys it starts with
+            Console.WriteLine("[{0}] new keys for a hotkey: refused if the list uses them {1}, taken {2}, back to {3}",
+                refusedTaken && taken && MainForm.HotkeyName == "Ctrl+Alt+V" ? "PASS" : "FAIL", refusedTaken, taken, MainForm.HotkeyName);
+
             Console.WriteLine("form {0}x{1}, client {2}x{3}, icon {4}", form.Width, form.Height,
                 form.ClientSize.Width, form.ClientSize.Height, form.Icon == null ? "none" : form.Icon.Size.ToString());
         }
@@ -454,6 +485,21 @@ static class TestProgram
             edit.Show();
             Application.DoEvents();
             Save(edit, path + "-edit.png");
+        }
+
+        // The small window that shows an entry whole: a text of several lines, then a picture.
+        using (Peek peek = new Peek())
+        using (Bitmap picture = SamplePicture())
+        {
+            peek.Location = new Point(-30000, -30000);
+            peek.Fill(new Entry(null, "ssh admin@srv-database-01\r\ncd /var/log\r\n\ttail -f syslog\r\n\r\n"
+                + "Una riga più lunga del riquadro, che va a capo da sola quando arriva al bordo destro e continua sotto."), 1f);
+            peek.Show();
+            Application.DoEvents();
+            Save(peek, path + "-peek.png");
+            peek.Fill(new Entry(picture), 1f);
+            Application.DoEvents();
+            Save(peek, path + "-peek-picture.png");
         }
         return 0;
     }
@@ -470,6 +516,14 @@ static class TestProgram
             FillSample(form);
             form.Show();
             Snap(form, path + "-real-list.png");
+            // The entry that does not fit its row, shown whole as when the pointer rests on it.
+            ListBox recent = (ListBox)typeof(MainForm).GetField("recentList", hidden).GetValue(form);
+            typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, 2, false });
+            Form shownPeek = (Form)typeof(MainForm).GetField("peek", hidden).GetValue(form);
+            Snap(form, path + "-real-peek.png");
+            Console.WriteLine("[{0}] an entry cut by its row is shown whole, one that fits is not", shownPeek.Visible
+                && !(bool)typeof(MainForm).GetMethod("Cut", hidden).Invoke(form, new object[] { recent, recent.Items[0], recent.GetItemRectangle(0) })
+                ? "PASS" : "FAIL");
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
             Snap(form, path + "-real-options.png");
             using (ShotEdit edit = new ShotEdit(new Entry("Firma email", "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567"), "Lavoro", new List<string>(new string[] { "Lavoro", "Casa" })))

@@ -19,7 +19,8 @@ su GitHub).
     `- ` punto, tabulazione tra un tasto e ciò che fa), e prende nomi, tasti e numeri dalle costanti pubbliche
     di `MainForm` e `Texts`. Non è modale: resta aperta accanto alla finestra. **Va aggiornata quando cambia
     una funzione**, come il README.
-  - `Look.cs` — colori e controlli disegnati: `Look`, `Card`, `RoundButton`, `Toggle`.
+  - `Look.cs` — colori, carattere (`Look.TextFont`) e controlli disegnati: `Look`, `Card`, `RoundButton`, `Toggle`.
+  - `Peek.cs` — il riquadro che mostra una voce per intero (`Peek`), accanto alla sua riga.
   - `Texts.cs` — `Entry` e `Texts`: le voci dell'elenco, la cronologia su disco, i testi salvati.
   - `Backup.cs` — esportazione e importazione in un file di testo (`Backup`, `BackupResult`).
   - `Typer.cs` — mappa dei tasti e invio (`Typer`, `Stroke`, `TypeOptions`, `TypeResult`).
@@ -143,6 +144,21 @@ su GitHub).
   i copiati tornano con la loro ora e la stellina nel file del loro giorno (`Texts.Restore`), tranne quelli che
   l'elenco ha già; con la cronologia spenta non si importano. Per farci stare i pulsanti senza alzare la
   finestra è sceso `ListExtra`.
+- Le voci stanno su una riga sola, con una spaziatura comoda (`RowPadding`) e l'ora a destra (`When`). Le righe
+  a due livelli, con sotto ora, caratteri e righe, sono state provate e scartate dall'utente: il numero di
+  caratteri non gli serve.
+- Anteprima (voluta dall'utente «con il mouse che resta sopra un po'»): il puntatore fermo `RestMs` su una voce
+  copiata che la riga taglia (`Cut`) la mostra per intero in `Peek`, sotto la riga (`ShowPeek`, timer `rest`
+  avviato da `Hover`). `Peek` non prende il primo piano e lascia passare il puntatore (`HTTRANSPARENT`), così
+  l'elenco continua a seguire il mouse; sparisce a ogni tasto, clic, rotella, ricarica dell'elenco. Dei testi
+  salvati **non** compare passandoci sopra (potrebbero essere password, scelta mia da confermare con l'utente):
+  c'è «Mostra il contenuto» nel menu del tasto destro, che lo lascia in vista `AskedMs` (`peekAsked`).
+- Pausa della cattura (voluta dall'utente): «Sospendi/Riprendi la cattura» nel menu dell'icona e in quello
+  dell'elenco (`Pause`, `paused`, `pauseItems`). Non è un'impostazione: a ogni avvio si riparte in ascolto.
+  Lo dicono il titolo della colonna, la colonna vuota e il suggerimento dell'icona.
+- Un testo salvato si trascina in una cartella (voluto dall'utente): `DoDragDrop` parte da `MouseMove` solo
+  oltre `DragSize`, così un clic resta un clic; `GroupAt` dice la cartella della riga sotto il puntatore
+  (nessuna fuori dalle cartelle), `Aim` la illumina, il rilascio passa da `MoveTo` come «Sposta in».
 - I testi salvati si scrivono in `EditForm` (nome e contenuto), aperta da `Edit`: testo nuovo, voce copiata
   da tenere, voce salvata da cambiare. Le stesse tre azioni stanno nei pulsanti sotto l'elenco, nel menu del
   tasto destro e in Ctrl+N/S/E. Il nome scritto nella casella di ricerca è stato provato e scartato dall'utente
@@ -157,8 +173,11 @@ su GitHub).
   (`DwmSetWindowAttribute`, solo Windows 11: altrove fallisce senza danni), pulsanti piatti con un solo
   pulsante in colore d'accento, righe dell'elenco disegnate a mano (`DrawEntry`) con il segno ★/▣ in colonna.
   I controlli che Windows non lascia scurire sono stati sostituiti: le caselle di testo stanno senza bordo
-  dentro un pannello (`Look.Frame`), le spunte sono disegnate (`Toggle`), l'attesa è una casella di testo
-  numerica e la tastiera del server una spunta (prima `NumericUpDown` e `ComboBox`, rimasti chiari).
+  dentro un pannello (`Look.Frame`), le spunte sono interruttori disegnati (`Toggle`, restano `CheckBox`; voluti
+  dall'utente al posto dei quadratini), l'attesa è una casella di testo
+  numerica e la tastiera del server un interruttore (prima `NumericUpDown` e `ComboBox`, rimasti chiari).
+  Il carattere è Segoe UI Variable Text dove c'è (Windows 11), altrimenti quello dei messaggi di sistema:
+  `Look.TextFont`, usato da tutte le finestre.
   Barra del titolo e barre di scorrimento scure non compaiono nelle immagini di `tests.exe shot`: per
   vederle c'è `tests.exe real <prefisso>`, che mostra le finestre un attimo e fotografa lo schermo.
   Forme arrotondate (l'utente trovava la finestra piatta e asettica, ma i colori vanno bene): ricerca, colonne
@@ -172,6 +191,11 @@ su GitHub).
   poi le colonne (o le opzioni), sotto la riga di stato e un'unica fila di pulsanti piccoli: a sinistra quelli
   della voce selezionata, a destra «Digita gli appunti», «Opzioni»/«Elenco» e il quadratino «?» della guida
   (una scritta «Guida» nella fila non ci sta).
+  La riga di stato occupa solo lo spazio di ciò che dice (`FitStatus`: nessuna, una o due righe; il resto va
+  alle colonne) e a riposo tace (`ShowIdle`): come si digita una password sta nel suggerimento del pulsante.
+  Le conferme si scrivono con `Say` e spariscono dopo `FadeMs`; avvisi, errori e ciò che riguarda la
+  digitazione si assegnano a `status.Text` e restano fino al messaggio dopo (l'esito di una digitazione fatta
+  a finestra nascosta deve potersi leggere riaprendola).
 
 - La finestra è ridimensionabile (voluto dall'utente), mai più piccola di come nasce (`MinimumSize` in
   `OnLoad`). La dimensione non si salva: a ogni avvio torna quella di default; si ricorda solo la posizione.
@@ -185,7 +209,8 @@ su GitHub).
 
 - Nessun valore duplicato: ogni default, nome o numero sta in un posto solo (costanti in cima a `MainForm`,
   costanti di Windows in `Native` con i nomi ufficiali, scorciatoia definita una volta sola).
-- Aggiungere un'opzione: una riga `PlaceOption` (`PlaceNumber` se è un numero) sotto il titolo della sua
+- Aggiungere un'opzione: una riga `PlaceOption` (`PlaceNumber` se è un numero, `PlaceHotkey` se è una
+  scorciatoia globale) sotto il titolo della sua
   categoria (`PlaceTitle`), una in `TransferSettings` e il suggerimento `Tip`. In `optionControls` entra da sola.
   Le categorie sono su due colonne (volute dall'utente, l'elenco unico era caotico): a sinistra «Digitazione»
   e «Programma», a destra «Scorciatoie» e «Cronologia» (così le due colonne sono alte uguali e la finestra non
@@ -205,8 +230,19 @@ su GitHub).
   riesce.
 - Ctrl+Alt equivale ad AltGr: una scorciatoia con una lettera che sulla tastiera italiana ha un simbolo con
   AltGr (E per €, è ò à +) scatterebbe scrivendo quel simbolo. V non ne ha.
-- La scorciatoia dell'elenco è Ctrl+D, scelta dall'utente al posto di Ditto: da globale toglie Ctrl+D agli
+- La scorciatoia dell'elenco nasce Ctrl+D, scelta dall'utente al posto di Ditto: da globale toglie Ctrl+D agli
   altri programmi, ed è scritto nel suggerimento. Per questo nell'elenco «elimina» è Ctrl+E.
+- Le due scorciatoie globali si cambiano dalle opzioni (voluto dall'utente): il pulsante accanto
+  all'interruttore mostra i tasti e ne aspetta di nuovi (`AwaitKeys`, `TakeKeys` da `ProcessCmdKey`). Durante
+  l'attesa le due scorciatoie si tolgono, altrimenti Windows le prenderebbe prima della finestra. Valgono Ctrl
+  o Alt (anche con Maiusc) più lettera, cifra o tasto funzione (`Usable`); si rifiutano i tasti dell'altra e
+  quelli dell'elenco (`ListKeys`). Sono `typeKeys` e `pickKeys`, **statici** perché la guida ne legge i nomi
+  (`HotkeyName`, `PickName`): per questo `HelpForm.Lines` non è più statico e i suggerimenti che li nominano
+  si riscrivono in `NameHotkeys`. Impostazioni `HotkeyKeys` e `PickKeys`.
+- `TextRenderer.MeasureText` con `EndEllipsis` e nessuna larghezza proposta risponde la larghezza dei soli
+  puntini: per sapere se un testo sta nella riga (`Cut`) si misura senza.
+- `ListBox.IndexFromPoint` risponde la riga più vicina anche sotto l'ultima: per sapere su quale riga è il
+  puntatore c'è `RowAt` (prima un clic nel vuoto sceglieva di nuovo la voce selezionata).
 - Nell'elenco Invio agisce al rilascio (`OnKeyUp`, con `enterDown`): alla pressione il tasto tenuto giù
   continuerebbe a ripetersi nella finestra a cui torna il primo piano. Il primo piano si restituisce prima di
   nascondere la finestra, finché il programma ha ancora il diritto di assegnarlo.
@@ -258,5 +294,8 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - La cronologia su disco dal vivo: provata solo da `tests.exe texts`, mai con migliaia di voci né con il
   programma vero che scrive a ogni copia.
 
+- Le ultime aggiunte dal vivo: l'anteprima con il puntatore fermo (vista solo chiamando `ShowPeek` da
+  `tests.exe real`), il puntatore che la attraversa, il trascinamento in una cartella, i tasti nuovi premuti
+  davvero (provata solo la logica, da `tests.exe shot`), la pausa, le conferme che spariscono.
 - L'avvio vero all'accesso a Windows: provati la voce nel registro e l'avvio nascosto con un programmino usa e
   getta, mai una disconnessione e un nuovo accesso.

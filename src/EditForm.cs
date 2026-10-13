@@ -40,7 +40,7 @@ class EditForm : Form
         SuspendLayout();
         AutoScaleDimensions = new SizeF(96F, 96F);
         AutoScaleMode = AutoScaleMode.Dpi;
-        Font = SystemFonts.MessageBoxFont;
+        Font = Look.TextFont;
         Text = title;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;

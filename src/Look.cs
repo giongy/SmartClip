@@ -3,39 +3,41 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
-// A checkbox drawn in the colours of the window: the system one cannot be made dark.
+// A checkbox drawn as a switch in the colours of the window: the system one cannot be coloured. The knob is
+// on the right, on the accent colour, while it is on.
 class Toggle : CheckBox
 {
-    const int TextGap = 7;   // between the box and its text, in pixels at 96 dpi
+    const int TextGap = 8;        // between the switch and its text, in pixels at 96 dpi
+    const float Stretch = 1.8f;   // how many times its height the switch is wide
+    const int KnobInset = 3;      // between the edge of the switch and its knob
 
     int Side { get { return Font.Height; } }
+    int Track { get { return (int)(Side * Stretch); } }
 
     public override Size GetPreferredSize(Size proposed)
     {
         Size text = TextRenderer.MeasureText(Text, Font, Size.Empty, TextFormatFlags.NoPrefix);
-        return new Size(Side + TextGap + text.Width, Math.Max(Side, text.Height) + 2);
+        return new Size(Track + TextGap + text.Width, Math.Max(Side, text.Height) + 2);
     }
 
     protected override void OnPaint(PaintEventArgs e)
     {
         Graphics g = e.Graphics;
         g.Clear(Parent.BackColor);
-        g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-        Rectangle box = new Rectangle(0, (Height - Side) / 2, Side - 1, Side - 1);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        Rectangle box = new Rectangle(0, (Height - Side) / 2, Track - 1, Side - 1);
+        int knob = box.Height - 2 * KnobInset;
+        using (GraphicsPath shape = new GraphicsPath())
         using (Brush fill = new SolidBrush(Checked ? Look.Accent : Look.Well))
-        using (Pen edge = new Pen(Checked ? Look.Accent : Focused ? Look.Ink : Look.Border))
-        using (Pen tick = new Pen(Look.Back, Side / 8f))
+        using (Pen edge = new Pen(Focused ? Look.Ink : Checked ? Look.Accent : Look.Border))
+        using (Brush dot = new SolidBrush(Checked ? Color.White : Look.Muted))
         {
-            g.FillRectangle(fill, box);
-            g.DrawRectangle(edge, box);
-            float unit = box.Width / 16f;
-            if (Checked)
-                g.DrawLines(tick, new PointF[]
-                {
-                    new PointF(box.Left + 4 * unit, box.Top + 8.5f * unit),
-                    new PointF(box.Left + 7 * unit, box.Top + 11.5f * unit),
-                    new PointF(box.Left + 12.5f * unit, box.Top + 5 * unit)
-                });
+            shape.AddArc(box.Left, box.Top, box.Height, box.Height, 90, 180);
+            shape.AddArc(box.Right - box.Height, box.Top, box.Height, box.Height, 270, 180);
+            shape.CloseFigure();
+            g.FillPath(fill, shape);
+            g.DrawPath(edge, shape);
+            g.FillEllipse(dot, Checked ? box.Right - KnobInset - knob : box.Left + KnobInset, box.Top + KnobInset, knob, knob);
         }
         Rectangle text = Rectangle.FromLTRB(box.Right + 1 + TextGap, 0, Width, Height);
         TextRenderer.DrawText(g, Text, Font, text, ForeColor,
@@ -136,6 +138,17 @@ static class Look
 {
     const int FramePadding = 6;   // between the edge of a framed text box and its text
     const int Radius = 6;         // of the rounded corners
+    const string ModernFont = "Segoe UI Variable Text";   // what Windows 11 writes its own windows in
+
+    // The font of every window: the modern one where Windows has it, in the size the user set for message
+    // boxes; elsewhere the font of the message boxes itself.
+    public static readonly Font TextFont = FindFont();
+
+    static Font FindFont()
+    {
+        Font usual = SystemFonts.MessageBoxFont, modern = new Font(ModernFont, usual.SizeInPoints);
+        return modern.Name == ModernFont ? modern : usual;   // a font that is not there is replaced without a word
+    }
 
     public static GraphicsPath Rounded(Rectangle area)
     {
@@ -324,5 +337,14 @@ static class Look
         Native.DwmSetWindowAttribute(form.Handle, Native.DWMWA_USE_IMMERSIVE_DARK_MODE, ref dark, sizeof(int));
         Native.DwmSetWindowAttribute(form.Handle, Native.DWMWA_CAPTION_COLOR, ref back, sizeof(int));
         Native.DwmSetWindowAttribute(form.Handle, Native.DWMWA_TEXT_COLOR, ref text, sizeof(int));
+    }
+
+    // Rounded corners and a thin edge for a window without a frame (Windows 11). Returns false where Windows
+    // refuses: the window then draws an edge of its own.
+    public static bool Round(Form form)
+    {
+        int round = Native.DWMWCP_ROUND, edge = ColorTranslator.ToWin32(Border);
+        return Native.DwmSetWindowAttribute(form.Handle, Native.DWMWA_WINDOW_CORNER_PREFERENCE, ref round, sizeof(int)) == 0
+            && Native.DwmSetWindowAttribute(form.Handle, Native.DWMWA_BORDER_COLOR, ref edge, sizeof(int)) == 0;
     }
 }
