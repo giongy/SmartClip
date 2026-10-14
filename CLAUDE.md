@@ -23,8 +23,10 @@ su GitHub).
     - `MainForm.Hotkeys.cs` — le scorciatoie globali: nomi, cambio dei tasti, registrazione.
     - `MainForm.Typing.cs` — la digitazione: `Run`, `WaitForTarget`, esito.
   - `EditForm.cs` — la finestra «Nuovo/Modifica».
-  - `HelpForm.cs` — la guida (pulsante «?» o F1): il testo sta in `Lines`, una riga per paragrafo (`# ` titolo,
-    `- ` punto, tabulazione tra un tasto e ciò che fa), e prende nomi, tasti e numeri dalle costanti pubbliche
+  - `HelpForm.cs` — la guida (pulsante «?» o F1), divisa in argomenti scelti da una colonna a sinistra (voluta
+    dall'utente: tutta di fila era illeggibile), disegnata come le righe dell'elenco (`DrawTopic`); a destra
+    solo l'argomento scelto (`Write`). Il testo sta in `Lines`, una riga per paragrafo (`# ` apre un argomento e
+    gli dà il nome, che deve stare nella colonna; `- ` punto, tabulazione tra un tasto e ciò che fa), e prende nomi, tasti e numeri dalle costanti pubbliche
     di `MainForm` e `Texts`. Non è modale: resta aperta accanto alla finestra. **Va aggiornata quando cambia
     una funzione**, come il README.
   - `Look.cs` — colori, carattere (`Look.TextFont`) e controlli disegnati: `Look`, `Card`, `RoundButton`, `Toggle`.

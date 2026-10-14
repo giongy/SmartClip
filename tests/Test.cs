@@ -600,6 +600,10 @@ static class TestProgram
             {
                 help.Show(form);
                 Snap(help, path + "-real-help.png");
+                // A subject with keys in a column of their own.
+                ListBox topics = (ListBox)typeof(HelpForm).GetField("topics", hidden).GetValue(help);
+                topics.SelectedIndex = topics.Items.Count / 2;
+                Snap(help, path + "-real-help-keys.png");
             }
         }
         return 0;

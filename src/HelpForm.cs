@@ -1,12 +1,15 @@
 using System;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
-// The window with the guide: what the program does, one section per subject. It stays open beside the main
-// window, so that it can be read while trying things out.
+// The window with the guide: what the program does, one subject at a time, chosen from the column on the
+// left. It stays open beside the main window, so that it can be read while trying things out.
 class HelpForm : Form
 {
-    const int Edge = 12, TextWidth = 560, TextHeight = 470;   // in pixels at 96 dpi
+    const int Edge = 12, TextWidth = 520, TextHeight = 470;   // in pixels at 96 dpi
+    const int TopicsWidth = 190, Gap = 10;     // the column of the subjects, and the room between it and the text
+    const int TopicPadding = 14, TopicInset = 12;   // added to the text height to get a subject's row; text from its left
     const int ButtonWidth = 90, ButtonHeight = 26;
     const int TextPadding = 10;                // between the rounded edge and the text
     const int BulletIndent = 14, KeyColumn = 120;   // where the text of a point starts, and that of a key
@@ -14,8 +17,8 @@ class HelpForm : Form
     const string Heading = "# ", Bullet = "- ";    // how a line of the guide says what it is
     const char KeyEnd = '\t';                       // in a line that explains a key, between the key and what it does
 
-    // The guide itself. A line starting with '#' is a heading, one starting with '-' a point of a list, one
-    // with a tab a key and what it does. Names, keys and numbers come from where the program defines them;
+    // The guide itself. A line starting with '#' begins a subject and names it, one starting with '-' is a
+    // point of a list, one with a tab a key and what it does. Names, keys and numbers come from where the program defines them;
     // it is written anew each time the guide opens, because the user can change the keys of the hotkeys.
     readonly string[] Lines =
     {
@@ -60,7 +63,17 @@ class HelpForm : Form
             + "puoi ritoccarne il contenuto.",
         "- «Modifica» (Ctrl+" + MainForm.SaveKey + "), su una voce salvata, ne cambia il nome o il contenuto.",
         "- «Elimina» (Ctrl+" + MainForm.DeleteKey + ") cancella il testo salvato, oppure toglie dall'elenco la voce copiata.",
-        "Quando diventano tanti puoi raccoglierli in cartelle, e le cartelle in altre cartelle:",
+        "- «Mostra il contenuto», nel menu del tasto destro di un testo salvato, lo fa vedere in un riquadro "
+            + "per qualche secondo: l'elenco ne mostra solo il nome, e passarci sopra con il puntatore non basta.",
+        "- I testi salvati sono anche nel menu dell'icona vicino all'orologio: sceglierne uno lo rimette negli "
+            + "appunti senza aprire la finestra.",
+        "I testi salvati stanno nel registro di Windows, cifrati per il tuo utente: un altro utente dello stesso "
+            + "PC non li può leggere. Quando ne rimetti uno negli appunti viene segnato come riservato, perché "
+            + "la cronologia di Windows (Win+V) e gli altri gestori di appunti lo ignorino. Le immagini non si "
+            + "possono salvare.",
+
+        "# Le cartelle",
+        "Quando i testi salvati diventano tanti puoi raccoglierli in cartelle, e le cartelle in altre cartelle.",
         "- «Nuova cartella» sta nel menu del tasto destro (Ctrl+Maiusc+" + MainForm.NewKey + "): nasce dentro la "
             + "cartella selezionata, o quella del testo selezionato, ma nella sua finestra puoi scegliere dove metterla.",
         "- Un clic sul nome di una cartella, o Invio, la apre e la chiude; il numero a destra dice quanti testi "
@@ -74,15 +87,8 @@ class HelpForm : Form
             + "soltanto: quello che conteneva, testi e cartelle, sale nella cartella che la conteneva, o resta "
             + "tra i salvati fuori dalle cartelle.",
         "- Nel nome di una cartella non può esserci «" + Texts.Separator + "».",
-        "- I testi salvati sono anche nel menu dell'icona vicino all'orologio, con le stesse cartelle: "
-            + "sceglierne uno lo rimette negli appunti senza aprire la finestra.",
+        "- Nel menu dell'icona vicino all'orologio ogni cartella è un sottomenu con i suoi testi.",
         "- La ricerca trova anche dentro le cartelle chiuse, e il nome di una cartella trova i suoi testi.",
-        "- «Mostra il contenuto», nel menu del tasto destro di un testo salvato, lo fa vedere in un riquadro "
-            + "per qualche secondo: l'elenco ne mostra solo il nome, e passarci sopra con il puntatore non basta.",
-        "I testi salvati stanno nel registro di Windows, cifrati per il tuo utente: un altro utente dello stesso "
-            + "PC non li può leggere. Quando ne rimetti uno negli appunti viene segnato come riservato, perché "
-            + "la cronologia di Windows (Win+V) e gli altri gestori di appunti lo ignorino. Le immagini non si "
-            + "possono salvare.",
 
         "# Digitare una password",
         "Dove Ctrl+V non funziona, " + Program.AppName + " scrive il testo degli appunti un tasto alla volta, "
@@ -158,7 +164,7 @@ class HelpForm : Form
         "- Il file si può ritoccare a mano: il testo di ogni voce sta nelle righe che iniziano con una "
             + "tabulazione, che va lasciata al suo posto.",
 
-        "# L'icona vicino all'orologio",
+        "# L'icona del tray",
         "Con l'opzione attiva, chiudere o ridurre a icona la finestra la nasconde soltanto: il programma resta "
             + "in funzione e le scorciatoie continuano a rispondere.",
         "- Un clic sull'icona riapre la finestra; tasto destro e poi «Esci» chiude davvero.",
@@ -185,6 +191,7 @@ class HelpForm : Form
     };
 
     readonly RichTextBox text = new RichTextBox();
+    readonly ListBox topics = new ListBox();       // the subjects: each item is the index of its heading in Lines
     readonly Button closeButton = new RoundButton();
 
     public HelpForm()
@@ -202,30 +209,86 @@ class HelpForm : Form
         BackColor = Look.Back;
         ForeColor = Look.Ink;
 
+        // On the left the subjects, drawn like the rows of the main list; the arrows move among them.
+        topics.BorderStyle = BorderStyle.None;
+        topics.IntegralHeight = false;
+        topics.DrawMode = DrawMode.OwnerDrawFixed;
+        for (int i = 0; i < Lines.Length; i++)
+            if (Lines[i].StartsWith(Heading)) topics.Items.Add(i);
+        topics.SetBounds(Edge, Edge, TopicsWidth, TextHeight);
+        Look.Field(topics);
+        Panel topicsCard = Look.Wrap(topics, TextPadding / 2);
+        topics.DrawItem += DrawTopic;
+        topics.SelectedIndexChanged += delegate { Write(); };
+        topics.MouseMove += delegate(object sender, MouseEventArgs e)
+        {
+            int index = topics.IndexFromPoint(e.Location);
+            int row = index >= 0 && topics.GetItemRectangle(index).Contains(e.Location) ? index : -1;
+            if (Equals(topics.Tag, row)) return;
+            topics.Tag = row;   // the row under the pointer, which lights up
+            topics.Cursor = row >= 0 ? Cursors.Hand : Cursors.Default;
+            topics.Invalidate();
+        };
+        topics.MouseLeave += delegate
+        {
+            topics.Tag = null;
+            topics.Invalidate();
+        };
+
         text.ReadOnly = true;
         text.BorderStyle = BorderStyle.None;
         text.ScrollBars = RichTextBoxScrollBars.Vertical;
         text.DetectUrls = false;
         text.TabStop = false;
-        text.SetBounds(Edge, Edge, TextWidth, TextHeight);
+        text.SetBounds(topicsCard.Right + Gap, Edge, TextWidth, TextHeight);
         Look.Field(text);
         Panel card = Look.Wrap(text, TextPadding);
 
         int buttonTop = card.Bottom + Edge;
         closeButton.Text = "Chiudi";
-        closeButton.SetBounds(Edge + TextWidth - ButtonWidth, buttonTop, ButtonWidth, ButtonHeight);
+        closeButton.SetBounds(card.Right - ButtonWidth, buttonTop, ButtonWidth, ButtonHeight);
         closeButton.Click += delegate { Close(); };
         Look.Style(closeButton, true);
-        ClientSize = new Size(Edge + TextWidth + Edge, buttonTop + ButtonHeight + Edge);
+        ClientSize = new Size(card.Right + Edge, buttonTop + ButtonHeight + Edge);
         AcceptButton = closeButton;
         CancelButton = closeButton;   // Esc closes too
 
+        topicsCard.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left;
         card.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
         closeButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
-        Controls.AddRange(new Control[] { card, closeButton });
-        ActiveControl = closeButton;
+        Controls.AddRange(new Control[] { topicsCard, card, closeButton });
+        ActiveControl = topics;
         ResumeLayout(false);
         PerformLayout();
+    }
+
+    // A subject in the column: its name, on a rounded shape with a mark in the accent colour when it is the
+    // one shown, on a fainter shape under the pointer.
+    void DrawTopic(object sender, DrawItemEventArgs e)
+    {
+        if (e.Index < 0) return;
+        bool selected = (e.State & DrawItemState.Selected) != 0, hovered = Equals(topics.Tag, e.Index);
+        using (Brush back = new SolidBrush(topics.BackColor))
+        {
+            e.Graphics.FillRectangle(back, e.Bounds);
+        }
+        Rectangle row = Rectangle.FromLTRB(e.Bounds.Left + 1, e.Bounds.Top + 1, e.Bounds.Right - 2, e.Bounds.Bottom - 1);
+        if (selected || hovered)
+        {
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using (GraphicsPath shape = Look.Rounded(row))
+            using (Brush fill = new SolidBrush(selected ? Look.Selected : Look.Soft))
+            using (Brush mark = new SolidBrush(Look.Accent))
+            {
+                e.Graphics.FillPath(fill, shape);
+                if (selected) e.Graphics.FillRectangle(mark, row.Left + 3, row.Top + 5, 3, row.Height - 10);
+            }
+        }
+        float scale = CurrentAutoScaleDimensions.Width / 96f;
+        string name = Lines[(int)topics.Items[e.Index]].Substring(Heading.Length);
+        TextRenderer.DrawText(e.Graphics, name, e.Font, Rectangle.FromLTRB(row.Left + (int)(TopicInset * scale), row.Top,
+            row.Right - (int)(TopicInset * scale) / 2, row.Bottom), Look.Ink, TextFormatFlags.VerticalCenter
+            | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -240,7 +303,9 @@ class HelpForm : Form
     {
         base.OnLoad(e);
         MinimumSize = Size;
-        Write();
+        // Rows as tall as the window's scale wants them; choosing the first subject writes it.
+        topics.ItemHeight = topics.Font.Height + (int)(TopicPadding * CurrentAutoScaleDimensions.Width / 96f);
+        topics.SelectedIndex = 0;
         if (Owner == null) return;
         Rectangle screen = Screen.FromControl(Owner).WorkingArea;
         int x = Owner.Left + (Owner.Width - Width) / 2, y = Owner.Top + (Owner.Height - Height) / 2;
@@ -248,22 +313,26 @@ class HelpForm : Form
             Math.Max(screen.Top, Math.Min(y, screen.Bottom - Height)));
     }
 
-    // Fills the box from 'Lines', each with the look of what it is. Written once the window has its scale.
+    // Fills the box with the subject chosen on the left, from its heading in 'Lines' to the next one, each line
+    // with the look of what it is. Written once the window has its scale.
     void Write()
     {
+        if (topics.SelectedIndex < 0) return;
         float scale = CurrentAutoScaleDimensions.Width / 96f;   // the sizes above are for 96 dpi
         int bullet = (int)(BulletIndent * scale), key = (int)(KeyColumn * scale);
+        int start = (int)topics.SelectedItem;
+        text.Clear();
         using (Font heading = new Font(Font.FontFamily, Font.Size * HeadingGrowth, FontStyle.Bold))
         using (Font strong = new Font(Font, FontStyle.Bold))
+        using (Font air = new Font(Font.FontFamily, Font.Size / 2))   // half a line, between paragraphs
         {
-            foreach (string line in Lines)
+            Add(Lines[start].Substring(Heading.Length), heading, 0, 0);
+            for (int i = start + 1; i < Lines.Length && !Lines[i].StartsWith(Heading); i++)
             {
-                if (line.StartsWith(Heading))
-                {
-                    if (text.TextLength > 0) Add("", Font, 0, 0);   // air above a section
-                    Add(line.Substring(Heading.Length), heading, 0, 0);
-                }
-                else if (line.StartsWith(Bullet))
+                string line = Lines[i];
+                // Some air under the heading and before a paragraph; a list stays with the paragraph that opens it.
+                if (i == start + 1 || !line.StartsWith(Bullet) && line.IndexOf(KeyEnd) < 0) Add("", air, 0, 0);
+                if (line.StartsWith(Bullet))
                 {
                     Add("•\t" + line.Substring(Bullet.Length), Font, bullet, bullet);
                 }
