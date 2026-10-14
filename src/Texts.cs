@@ -93,11 +93,17 @@ class Entry
     {
         get
         {
-            if (Name != null) return Name;
+            if (Name != null) return IsGroup ? Texts.Leaf(Name) : Name;   // a folder by its own name, not its path
             if (Picture) return "Immagine " + Width + "×" + Height;   // when it was copied is shown beside it
             string line = Text.Trim().Replace('\r', ' ').Replace('\n', ' ').Replace('\t', ' ');
             return line.Length > MaxPreview ? line.Substring(0, MaxPreview) + "…" : line;
         }
+    }
+
+    // How many folders it is inside of: zero for a folder or a text outside them all.
+    public int Level
+    {
+        get { return IsGroup ? Texts.Depth(Name) - 1 : Texts.Depth(Group); }
     }
 
     // The sign that tells a saved text and a picture from a copied text.
@@ -137,6 +143,9 @@ static class Texts
     // The folders of the saved texts ("groups" here: Folder is where the history is). Under the saved texts,
     // the groups by name, each with 1 if it is open, and the group of each text that has one, under its name.
     const string GroupsKey = "Folders", PlacesKey = "Places";
+    // Groups hold groups too: a group is known by its path, the names from the outermost down joined by this
+    // sign, which a name cannot contain. Those made before there were groups inside groups are outermost.
+    public const char Separator = '\\';
     // Clipboard formats with which password managers and private browser windows mark what must not be
     // recorded: the first two by merely being there, the others by holding a zero.
     public const string PrivateMarker = "ExcludeClipboardContentFromMonitorProcessing";
@@ -561,10 +570,12 @@ static class Texts
     }
 
     // Everything the list can offer: the saved texts by name, those in no group first and then each group
-    // followed by its own; after them the copied ones from the newest, the pinned ones before the others.
+    // followed by its own texts and then by the groups inside it; after them the copied ones from the newest,
+    // the pinned ones before the others.
     public static List<Entry> Load()
     {
         List<Entry> entries = new List<Entry>(), grouped = new List<Entry>();
+        List<string> known = Groups();
         using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SavedKey))
         using (RegistryKey dates = key == null ? null : key.OpenSubKey(DatesKey))
         using (RegistryKey groups = key == null ? null : key.OpenSubKey(GroupsKey))
@@ -585,7 +596,7 @@ static class Texts
                     Entry entry = new Entry(name, Encoding.UTF8.GetString(plain), dated ? new DateTime((long)ticks) : DateTime.MinValue);
                     // A text whose group is gone is simply in none.
                     string group = places == null ? null : places.GetValue(name) as string;
-                    if (group != null && groups != null && groups.GetValue(group) != null) entry.Group = group;
+                    if (group != null && known.Exists(delegate(string other) { return SameName(other, group); })) entry.Group = group;
                     (entry.Group == null ? entries : grouped).Add(entry);
                 }
                 catch (CryptographicException)
@@ -593,11 +604,11 @@ static class Texts
                     // Saved by another user or on another PC: it cannot be read here.
                 }
             }
-            foreach (string group in Groups())
+            foreach (string group in known)
             {
                 Entry header = new Entry(group, "", DateTime.MinValue);
                 header.IsGroup = true;
-                header.Open = !Equals(groups.GetValue(group), 0);
+                header.Open = groups == null || !Equals(groups.GetValue(group), 0);
                 entries.Add(header);
                 entries.AddRange(grouped.FindAll(delegate(Entry entry) { return SameName(entry.Group, group); }));
             }
@@ -655,15 +666,80 @@ static class Texts
         }
     }
 
-    // The names of the groups, in the order the list shows them.
+    // The paths of the groups, in the order the list shows them: each just before what it holds, those side by
+    // side by name. A group whose outer one is missing from the registry (written by hand) has it all the same.
     public static List<string> Groups()
     {
         using (RegistryKey groups = Registry.CurrentUser.OpenSubKey(SavedKey + @"\" + GroupsKey))
         {
-            List<string> names = new List<string>(groups == null ? new string[0] : groups.GetValueNames());
-            names.Sort(StringComparer.CurrentCultureIgnoreCase);
-            return names;
+            List<string> paths = new List<string>();
+            HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+            foreach (string value in groups == null ? new string[0] : groups.GetValueNames())
+                for (string path = value; path != null; path = Parent(path))
+                    if (seen.Add(path)) paths.Add(path);
+            paths.Sort(ByPath);
+            return paths;
         }
+    }
+
+    // Name by name from the outermost, so that a group comes right before those inside it.
+    static int ByPath(string one, string other)
+    {
+        string[] a = one.Split(Separator), b = other.Split(Separator);
+        for (int i = 0; i < Math.Min(a.Length, b.Length); i++)
+        {
+            int order = StringComparer.CurrentCultureIgnoreCase.Compare(a[i], b[i]);
+            if (order != 0) return order;
+        }
+        return a.Length.CompareTo(b.Length);
+    }
+
+    // The last name of a path: what the list shows of a group.
+    public static string Leaf(string path)
+    {
+        return path.Substring(path.LastIndexOf(Separator) + 1);
+    }
+
+    // The group a group is in, or null for one outside them all.
+    public static string Parent(string path)
+    {
+        int at = path == null ? -1 : path.LastIndexOf(Separator);
+        return at < 0 ? null : path.Substring(0, at);
+    }
+
+    // The path of a group called 'name' inside 'parent', or outside them all if that is null.
+    public static string Join(string parent, string name)
+    {
+        return parent == null ? name : parent + Separator + name;
+    }
+
+    // How many names a path has: zero for none.
+    public static int Depth(string path)
+    {
+        return path == null ? 0 : path.Split(Separator).Length;
+    }
+
+    // Whether 'path' is the group 'group' itself or one somewhere inside it.
+    public static bool Within(string path, string group)
+    {
+        return path != null && group != null
+            && (SameName(path, group) || path.StartsWith(group + Separator, StringComparison.OrdinalIgnoreCase));
+    }
+
+    // A path as the user reads it: "Lavoro › Server".
+    public static string Display(string path)
+    {
+        return path.Replace(Separator.ToString(), " › ");
+    }
+
+    // A path written by hand, in an exported file: without empty names or spaces around them. Null if nothing is left.
+    public static string CleanPath(string path)
+    {
+        if (path == null) return null;
+        List<string> names = new List<string>();
+        foreach (string name in path.Split(Separator))
+            if (name.Trim().Length > 0) names.Add(name.Trim());
+        return names.Count == 0 ? null : string.Join(Separator.ToString(), names);
     }
 
     // Creates a group, or opens and closes one that is there.
@@ -675,22 +751,45 @@ static class Texts
         }
     }
 
-    // Gives a group another name, or none ('name' is null): then its texts stay, in no group.
+    // Opens a group and those it is inside of, so that what it holds is seen; null is no group.
+    public static void Reveal(string path)
+    {
+        for (; path != null; path = Parent(path)) SetGroup(path, true);
+    }
+
+    // Gives a group another path, which moves it if its outer part changes, along with the groups inside it
+    // and every text they hold. With 'name' null the group goes, and what it held moves up into the group
+    // that held it: its texts are too easily passwords to go along.
     public static void RenameGroup(string old, string name)
     {
         using (RegistryKey groups = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + GroupsKey))
         using (RegistryKey places = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + PlacesKey))
         {
-            object open = groups.GetValue(old) ?? 1;
-            groups.DeleteValue(old, false);   // first, or a change of letter case alone would not show
-            if (name != null) groups.SetValue(name, open, RegistryValueKind.DWord);
+            foreach (string group in groups.GetValueNames())
+            {
+                string moved = Rebase(group, old, name);
+                if (moved == group) continue;   // compared exactly: a change of letter case alone counts
+                object open = groups.GetValue(group);
+                groups.DeleteValue(group, false);   // first, or a change of letter case alone would not show
+                if (name != null || !SameName(group, old)) groups.SetValue(moved, open, RegistryValueKind.DWord);
+            }
             foreach (string text in places.GetValueNames())
             {
-                if (!SameName(places.GetValue(text) as string, old)) continue;
-                if (name != null) places.SetValue(text, name);
+                string place = places.GetValue(text) as string, moved = Rebase(place, old, name);
+                if (moved == place) continue;
+                if (moved != null) places.SetValue(text, moved);
                 else places.DeleteValue(text, false);
             }
         }
+    }
+
+    // Where a path goes when the group 'old' becomes 'name': the same place under the new path. With 'name'
+    // null, one level up, which for the group itself is the group that held it.
+    static string Rebase(string path, string old, string name)
+    {
+        if (!Within(path, old)) return path;
+        string root = name ?? Parent(old);
+        return SameName(path, old) ? root : Join(root, path.Substring(old.Length + 1));
     }
 
     // Every word of the query must appear somewhere, in any order; case and accents do not count.

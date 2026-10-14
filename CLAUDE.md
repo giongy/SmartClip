@@ -12,8 +12,16 @@ su GitHub).
 - `src\` — il programma, un file per responsabilità (fino alla 2.0 era un solo `SmartClip.cs`, diviso quando ha
   superato le 2000 righe; nessuno spazio dei nomi, le classi si vedono tutte tra loro):
   - `Program.cs` — avvio, istanza unica, attributi dell'assembly.
-  - `MainForm.cs` — la finestra: disposizione, elenco, opzioni, tray, impostazioni, digitazione. È il file
-    grande; dividerlo ancora sarebbe una ristrutturazione, non uno spostamento.
+  - `MainForm*.cs` — la finestra, una sola classe `partial` divisa in cinque file quando ha superato di nuovo
+    le 2000 righe (i nomi dei membri non sono cambiati: i test li cercano per riflessione):
+    - `MainForm.cs` — costanti e campi (tutti qui, in cima), costruttore con la disposizione, viste, riga di
+      stato, tray, icona, messaggi di Windows, chiusura.
+    - `MainForm.List.cs` — le due colonne: `WireLists` (menu, mouse, trascinamento), riempimento e disegno
+      delle righe, anteprima, scelta, modifica, cartelle, tasti dell'elenco, larghezza delle colonne.
+    - `MainForm.Options.cs` — `PlaceOptions` (le opzioni e i loro suggerimenti), i `Place…`, esportazione,
+      importazione, pulizia, `TransferSettings` e `AdoptOldSettings`.
+    - `MainForm.Hotkeys.cs` — le scorciatoie globali: nomi, cambio dei tasti, registrazione.
+    - `MainForm.Typing.cs` — la digitazione: `Run`, `WaitForTarget`, esito.
   - `EditForm.cs` — la finestra «Nuovo/Modifica».
   - `HelpForm.cs` — la guida (pulsante «?» o F1): il testo sta in `Lines`, una riga per paragrafo (`# ` titolo,
     `- ` punto, tabulazione tra un tasto e ciò che fa), e prende nomi, tasti e numeri dalle costanti pubbliche
@@ -124,17 +132,32 @@ su GitHub).
   per l'utente (`ProtectedData`, in `System.Security.dll` che `csc` riferisce già da solo). L'elenco ne mostra
   solo il nome e, a destra, il giorno in cui è stato salvato: sta nella sottochiave `Saved\Dates`, sotto lo
   stesso nome, così il formato dei testi non cambia e quelli salvati prima restano semplicemente senza data.
-- Cartelle dei testi salvati (volute dall'utente), a un solo livello. Nel codice si chiamano «group», perché
+- Cartelle dei testi salvati (volute dall'utente), anche una dentro l'altra (sottocartelle volute dopo, dalla
+  3.8). Nel codice si chiamano «group», perché
   `Texts.Folder` è già la cartella della cronologia. Stanno in due sottochiavi di `Saved`: `Folders` (un valore
   per cartella, 1 se aperta: lo stato si ricorda) e `Places` (nome del testo → cartella), così il formato dei
-  testi non cambia. Nell'elenco una cartella è una `Entry` con `IsGroup`, messa da `Texts.Load` subito prima
-  dei suoi testi: per questo dove si scorre `entries` cercando i testi va escluso `IsGroup`. Clic o Invio la
-  aprono e chiudono (`Accept`, `ToggleGroup`), «Rinomina…» ed «Elimina» sono gli stessi pulsanti dei testi;
-  eliminarla lascia i testi tra i salvati (scelta dell'utente: potrebbero essere password). «Nuova cartella…»
-  (Ctrl+Maiusc+N) e «Sposta in» stanno nel menu del tasto destro, che ora si apre anche senza selezione. In
-  `EditForm` la cartella si sceglie da un pulsante che apre un menu (un `ComboBox` resterebbe chiaro); la
-  stessa finestra, con il solo nome, chiede come si chiama una cartella. In una ricerca le cartelle compaiono
-  solo se contengono risultati, anche da chiuse.
+  testi non cambia. Una cartella è il suo **percorso**, i nomi uniti da `Texts.Separator` (`\`, vietato nei
+  nomi, `Refused`): `Lavoro\Server`. Le cartelle di prima sono semplicemente al primo livello. Gli aiuti
+  stanno in `Texts` (`Parent`, `Leaf`, `Join`, `Within`, `Depth`, `Display` con « › », `CleanPath` per i file
+  esportati); `Groups` ordina nome per nome (`ByPath`) e aggiunge le cartelle esterne mancanti. Nell'elenco una
+  cartella è una `Entry` con `IsGroup` e `Name` uguale al percorso (`Label` ne mostra l'ultimo nome, `Level`
+  dà il rientro), messa da `Texts.Load` subito prima dei suoi testi e poi delle sue sottocartelle: per questo
+  dove si scorre `entries` cercando i testi va escluso `IsGroup`. Una cartella chiusa nasconde anche quelle
+  dentro (`InView`). Clic o Invio la
+  aprono e chiudono (`Accept`, `ToggleGroup`), «Rinomina…» ed «Elimina» sono gli stessi pulsanti dei testi.
+  `RenameGroup` cambia il percorso di una cartella e di tutto ciò che contiene (`Rebase`): è anche lo
+  spostamento; con `null` elimina la cartella e il contenuto sale di un livello (scelta dell'utente: i testi
+  potrebbero essere password). «Nuova cartella…»
+  (Ctrl+Maiusc+N, nasce dentro la cartella della selezione) e «Sposta in» (anche per le cartelle, mai dentro
+  se stesse: `CanGo`) stanno nel menu del tasto destro, che ora si apre anche senza selezione. In
+  `EditForm` la cartella si sceglie da un pulsante che apre un menu (un `ComboBox` resterebbe chiaro), con il
+  percorso accorciato da sinistra se non ci sta; la stessa finestra, senza contenuto, chiede nome e posto di
+  una cartella. In una ricerca le cartelle compaiono solo se contengono risultati, anche da chiuse, insieme a
+  quelle che le contengono.
+- I testi salvati stanno anche nel menu dell'icona del tray (voluto dall'utente: «prenderli senza aprire
+  l'app»), dopo «Apri», ogni cartella un sottomenu, aperta o chiusa che sia: `ShowSaved`, rifatto a ogni
+  apertura del menu da `entries`. La scelta passa da `Use` come nell'elenco: solo appunti, niente digitazione.
+  Si vedono solo i nomi.
 - «Esporta…» e «Importa…» nelle opzioni, sotto «Programma» (voluti dall'utente, con la scelta «solo i testi
   salvati» o «tutto» in un menu sotto ciascun pulsante, `Choice`). Il file è testo UTF-8 con BOM, leggibile dal
   Blocco note e **in chiaro** (prima di esportare si chiede conferma): un segno per voce (`[Cartella]`,
@@ -156,7 +179,7 @@ su GitHub).
 - Pausa della cattura (voluta dall'utente): «Sospendi/Riprendi la cattura» nel menu dell'icona e in quello
   dell'elenco (`Pause`, `paused`, `pauseItems`). Non è un'impostazione: a ogni avvio si riparte in ascolto.
   Lo dicono il titolo della colonna, la colonna vuota e il suggerimento dell'icona.
-- Un testo salvato si trascina in una cartella (voluto dall'utente): `DoDragDrop` parte da `MouseMove` solo
+- Un testo salvato, o una cartella, si trascina in una cartella (voluto dall'utente): `DoDragDrop` parte da `MouseMove` solo
   oltre `DragSize`, così un clic resta un clic; `GroupAt` dice la cartella della riga sotto il puntatore
   (nessuna fuori dalle cartelle), `Aim` la illumina, il rilascio passa da `MoveTo` come «Sposta in».
 - I testi salvati si scrivono in `EditForm` (nome e contenuto), aperta da `Edit`: testo nuovo, voce copiata
@@ -209,9 +232,9 @@ su GitHub).
 
 - Nessun valore duplicato: ogni default, nome o numero sta in un posto solo (costanti in cima a `MainForm`,
   costanti di Windows in `Native` con i nomi ufficiali, scorciatoia definita una volta sola).
-- Aggiungere un'opzione: una riga `PlaceOption` (`PlaceNumber` se è un numero, `PlaceHotkey` se è una
-  scorciatoia globale) sotto il titolo della sua
-  categoria (`PlaceTitle`), una in `TransferSettings` e il suggerimento `Tip`. In `optionControls` entra da sola.
+- Aggiungere un'opzione: il campo in cima a `MainForm`, una riga `PlaceOption` (`PlaceNumber` se è un numero,
+  `PlaceHotkey` se è una scorciatoia globale) in `PlaceOptions` sotto il titolo della sua
+  categoria (`PlaceTitle`), una in `TransferSettings` e il suggerimento `Tip`, tutto in `MainForm.Options.cs`. In `optionControls` entra da sola.
   Le categorie sono su due colonne (volute dall'utente, l'elenco unico era caotico): a sinistra «Digitazione»
   e «Programma», a destra «Scorciatoie» e «Cronologia» (così le due colonne sono alte uguali e la finestra non
   cresce: l'utente non la voleva più alta). I titoli sono in grassetto con una riga sotto: il colore
@@ -281,7 +304,8 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 
 ## Mai verificato
 
-- Una sessione remota vera (RDP o altro), compreso se il client inoltra i caratteri Unicode.
+- Se il client remoto inoltra i caratteri Unicode. La digitazione in una sessione remota vera invece funziona:
+  provata dall'utente il 14/10/2026.
 - I simboli della tabella americana (controllati a mano), i tasti morti, schermi oltre il 100% di scala.
 - Il clic reale sull'icona del tray e il fumetto di avviso.
 - Il passaggio dell'icona a grigio con gli appunti vuoti (visto solo lo stato "testo presente" e le due immagini).
@@ -297,5 +321,8 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - Le ultime aggiunte dal vivo: l'anteprima con il puntatore fermo (vista solo chiamando `ShowPeek` da
   `tests.exe real`), il puntatore che la attraversa, il trascinamento in una cartella, i tasti nuovi premuti
   davvero (provata solo la logica, da `tests.exe shot`), la pausa, le conferme che spariscono.
+- Le sottocartelle e il menu del tray dal vivo: provati solo `RenameGroup`, l'ordine, `Filter` e la struttura
+  del menu (`texts`, `shot`), mai il clic vero su una voce del tray, il trascinamento di una cartella, la
+  finestra di una cartella con la scelta del posto.
 - L'avvio vero all'accesso a Windows: provati la voce nel registro e l'avvio nascosto con un programmino usa e
   getta, mai una disconnessione e un nuovo accesso.

@@ -69,7 +69,7 @@ reaches the rest. On the right, **Salvati**: the texts you saved under a name, w
 | Enter, or a double click | Puts the entry back on the clipboard and returns to the window you came from |
 | Right click | Opens the menu of the entry |
 | Resting the pointer on a copied entry | Shows it whole in a small box when its row cuts it: every line of a text, a larger picture. It goes away as the pointer moves on |
-| Dragging a saved text | Onto a folder, or onto a text inside one, moves it there; onto a text outside the folders, or below the last row, takes it out |
+| Dragging a saved text or a folder | Onto a folder, or onto a text inside one, moves it there; onto a text outside the folders, or below the last row, takes it out |
 | Dragging the gap between the columns | Gives the saved texts more room, or less; the width is remembered. A double click there restores it |
 | The star at the right end of a copied entry, or Ctrl+P | Keeps the entry at the top of its column, also beyond the days of the history, until you take the star off |
 | F1, or the **?** button | Opens the guide: everything the program does, in Italian |
@@ -83,11 +83,15 @@ always listens again.
 
 Three buttons under the lists manage the saved texts; each opens a small window with a name and a content box.
 
-Saved texts can be gathered in folders, one level deep. **Nuova cartella…** ("New folder") is in the right-click
-menu (Ctrl+Shift+N), and so is **Sposta in** ("Move to") for a saved text; the window of a text has the same
-choice beside its buttons. A click on a folder opens and closes it, and it is found as it was left. With a
-folder selected the buttons rename it or delete it: deleting a folder never deletes its texts, which go back
-among the others. The search also looks inside closed folders.
+Saved texts can be gathered in folders, and folders in other folders. **Nuova cartella…** ("New folder") is in
+the right-click menu (Ctrl+Shift+N) and creates the folder inside the selected one; **Sposta in** ("Move to")
+moves a saved text or a whole folder, and the window of a text or a folder has the same choice beside its
+buttons. A click on a folder opens and closes it, and it is found as it was left. With a folder selected the
+buttons rename or move it, or delete it: deleting a folder never deletes what it holds, which moves up one
+level. The search also looks inside closed folders. A folder name cannot contain `\`.
+
+The saved texts are also in the right-click menu of the tray icon, each folder a submenu: choosing one puts it
+on the clipboard without opening the window. Only the names are shown there, as in the list.
 
 ![Saving a text](docs/screenshot-edit.png)
 
@@ -125,7 +129,7 @@ The options are grouped under four titles: **Digitazione** (typing), **Scorciato
 | Ricorda i testi e le immagini copiati | Keep the copied texts and pictures in the list. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. Turning it off also deletes the history on disk. |
 | Giorni su disco (0: solo in memoria) | For how many days, 0 to 365, what you copy stays in the history, also after the program closes. With 0 nothing is written to disk: the last 30 copied items, of which at most 5 pictures, stay in memory and are gone when the program closes. |
 | Pulendo, tieni gli ultimi giorni (0: niente), with the button **Pulisci ora…** | Deletes at once, from memory and disk, what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Starred entries and saved texts are not touched. |
-| Resta attivo nell'area di notifica (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Esci** to quit. |
+| Resta attivo nell'area di notifica (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Esci** to quit; the same menu lists the saved texts. |
 | Avvia insieme a Windows | Start SmartClip when you sign in, already hidden in the notification area (minimised, if the option above is off). It is the entry Windows shows in Task Manager > Startup apps: the switch reflects it, and follows the program if you move the `.exe`. |
 
 A hotkey takes Ctrl or Alt, with Shift if you like, and a letter, a digit or a function key. While the button

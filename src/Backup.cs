@@ -75,16 +75,16 @@ static class Backup
         Action close = delegate
         {
             string content = text == null ? "" : string.Join("\r\n", text);
-            if (mark == GroupMark && !string.IsNullOrEmpty(name))
+            if (mark == GroupMark && Texts.CleanPath(name) != null)
             {
-                Entry folder = new Entry(name, "", DateTime.MinValue);
+                Entry folder = new Entry(Texts.CleanPath(name), "", DateTime.MinValue);
                 folder.IsGroup = true;
                 entries.Add(folder);
             }
             else if (mark == SavedMark && !string.IsNullOrEmpty(name) && content.Trim().Length > 0)
             {
                 Entry saved = new Entry(name, content, time);
-                saved.Group = string.IsNullOrEmpty(group) ? null : group;
+                saved.Group = Texts.CleanPath(group);   // a folder inside another is its path, as in the registry
                 entries.Add(saved);
             }
             else if (mark == CopiedMark && content.Trim().Length > 0)

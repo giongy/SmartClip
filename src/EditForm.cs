@@ -3,8 +3,8 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-// The window where a saved text gets its name, its content and its folder. The same window, with the name
-// alone, asks what a folder is called.
+// The window where a saved text gets its name, its content and its folder. The same window, without the
+// content, asks what a folder is called and which folder it is in.
 class EditForm : Form
 {
     const int Edge = 12, FieldWidth = 420, ContentHeight = 190;   // in pixels at 96 dpi
@@ -12,15 +12,19 @@ class EditForm : Form
     const int LabelRow = 20, NameHeight = 26;      // a description above its box, and the box of a name
     const int MaxNameLength = 60;
     const int MaxGroupLength = 24;                 // the name of a folder has to fit on the button that shows it
+    const int ButtonPadding = 16;                  // left to the edges of that button, beyond its text
     readonly TextBox nameBox = new TextBox(), contentBox = new TextBox();
     readonly Button saveButton = new RoundButton(), cancelButton = new RoundButton();
     readonly Button groupButton = new RoundButton();
     readonly bool nameOnly;
+    readonly string within, outside;               // what the folder button says: before a folder, and with none
 
     // For a new text ('source' is null), a copied one to keep or a saved one to change. 'group' is the folder
     // proposed for it, 'groups' those it can go into.
     public EditForm(Entry source, string group, List<string> groups)
     {
+        within = "Cartella: ";
+        outside = "Nessuna cartella";
         Build(source == null ? "Nuovo testo" : source.Name == null ? "Salva il testo copiato" : "Modifica il testo salvato",
             "Nome (è ciò che si vede nell'elenco):", MaxNameLength, source == null ? "" : source.Name ?? "", groups);
         // The box breaks lines only at CR LF, while a copied text may hold bare LF.
@@ -28,11 +32,16 @@ class EditForm : Form
         Choose(group);
     }
 
-    // For a new folder ('name' is null), or to call one otherwise.
-    public EditForm(string name)
+    // For a new folder ('path' is null), or to call one otherwise or move it. 'parent' is the folder proposed
+    // to hold it, 'parents' those that can.
+    public EditForm(string path, string parent, List<string> parents)
     {
         nameOnly = true;
-        Build(name == null ? "Nuova cartella" : "Rinomina la cartella", "Nome della cartella:", MaxGroupLength, name ?? "", null);
+        within = "Dentro: ";
+        outside = "Fuori dalle cartelle";
+        Build(path == null ? "Nuova cartella" : "Rinomina la cartella", "Nome della cartella:", MaxGroupLength,
+            path == null ? "" : Texts.Leaf(path), parents);
+        Choose(parent);
     }
 
     void Build(string title, string description, int maxLength, string name, List<string> groups)
@@ -83,17 +92,17 @@ class EditForm : Form
         Look.Style(cancelButton, false);
         Controls.AddRange(new Control[] { saveButton, cancelButton });
 
-        // On the left of the buttons, the folder of the text: a click lists those there are. Without folders
-        // there is nothing to choose.
+        // On the left of the buttons, the folder of the text: a click lists those there are, each by its path.
+        // Without folders there is nothing to choose.
         if (groups != null && groups.Count > 0)
         {
             ContextMenuStrip menu = new ContextMenuStrip();
             Look.Style(menu);
-            menu.Items.Add(NoGroup, null, delegate { Choose(null); });
+            menu.Items.Add(outside, null, delegate { Choose(null); });
             foreach (string each in groups)
             {
                 string group = each;   // a variable of its own for the delegate
-                menu.Items.Add(group, null, delegate { Choose(group); });
+                menu.Items.Add(Texts.Display(group), null, delegate { Choose(group); });
             }
             groupButton.SetBounds(Edge, buttonTop, saveButton.Left - Edge - Edge, ButtonHeight);
             groupButton.Click += delegate { menu.Show(groupButton, 0, groupButton.Height); };
@@ -110,12 +119,25 @@ class EditForm : Form
         PerformLayout();
     }
 
-    const string NoGroup = "Nessuna cartella";
-
+    // The button says the path of the folder chosen; if it is too long for it, the outer folders give way.
     void Choose(string group)
     {
         Group = group;
-        groupButton.Text = group == null ? NoGroup : "Cartella: " + group;
+        if (group == null)
+        {
+            groupButton.Text = outside;
+            return;
+        }
+        string shown = Texts.Display(group);
+        for (string inner = group; ; )
+        {
+            groupButton.Text = within + shown;
+            if (TextRenderer.MeasureText(groupButton.Text, Font).Width + ButtonPadding <= groupButton.Width) return;
+            int at = inner.IndexOf(Texts.Separator);
+            if (at < 0) return;   // only its own name is left, and that is short enough by itself
+            inner = inner.Substring(at + 1);
+            shown = "… › " + Texts.Display(inner);
+        }
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -126,7 +148,7 @@ class EditForm : Form
 
     public string EntryName { get { return nameBox.Text.Trim(); } }
     public string Content { get { return contentBox.Text; } }
-    public string Group { get; private set; }   // the folder chosen for the text, or null
+    public string Group { get; private set; }   // the folder chosen for the text, or for the folder; or null
 
     static Label NewLabel(string text, int y)
     {

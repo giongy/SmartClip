@@ -181,6 +181,37 @@ static class TestProgram
             Texts.RenameGroup(group + " 2", null);
             Check(Texts.Load().Exists(delegate(Entry e) { return e.Name == name && e.Group == null; })
                 && !Texts.Groups().Contains(group + " 2"), "a deleted folder leaves its texts among the saved ones");
+
+            // Folders inside folders, all inside the test folder: each comes before what it holds, and takes it
+            // along wherever it goes.
+            string outer = Texts.Join(group, "a"), inner = Texts.Join(outer, "dentro"), deepest = Texts.Join(inner, "in fondo");
+            string renamed = Texts.Join(group, "b"), moved = Texts.Join(group, "dentro");
+            Texts.SetGroup(deepest, true);
+            Texts.Save(name, text, inner);
+            List<string> paths = Texts.Groups();
+            Check(paths.IndexOf(group) >= 0 && paths.IndexOf(group) + 1 == paths.IndexOf(outer) && paths.IndexOf(outer) + 1 == paths.IndexOf(inner)
+                && paths.IndexOf(inner) + 1 == paths.IndexOf(deepest), "the folders a folder is inside of are there too, each before those it holds");
+            listed = Texts.Load();
+            at = listed.FindIndex(delegate(Entry e) { return e.IsGroup && e.Name == inner; });
+            Check(at >= 0 && listed[at].Label == "dentro" && listed[at].Level == 2 && listed[at + 1].Name == name
+                && listed[at + 1].Level == 3 && listed[at + 2].Name == deepest, "a folder shows its own name, its texts come before the folders inside it");
+            Texts.RenameGroup(outer, renamed);
+            Check(Texts.Load().Exists(delegate(Entry e) { return e.Name == name && e.Group == Texts.Join(renamed, "dentro"); })
+                && Texts.Groups().Contains(Texts.Join(Texts.Join(renamed, "dentro"), "in fondo"))
+                && !Texts.Groups().Exists(delegate(string path) { return Texts.Within(path, outer); }),
+                "a renamed folder takes along the folders inside it and their texts");
+            Texts.RenameGroup(Texts.Join(renamed, "dentro"), moved);
+            Check(Texts.Load().Exists(delegate(Entry e) { return e.Name == name && e.Group == moved; })
+                && Texts.Groups().Contains(Texts.Join(moved, "in fondo")), "a folder moves out of the one it was in");
+            Texts.RenameGroup(moved, Texts.Join(renamed, "dentro"));
+            Texts.RenameGroup(renamed, null);
+            Check(Texts.Load().Exists(delegate(Entry e) { return e.Name == name && e.Group == moved; })
+                && Texts.Groups().Contains(Texts.Join(moved, "in fondo")) && !Texts.Groups().Contains(renamed),
+                "a deleted folder leaves what it holds one level up");
+            Check(Texts.Within(deepest, group) && Texts.Within(group, group) && !Texts.Within(group + " 2", group)
+                && Texts.Parent(group) == null && Texts.Parent(inner) == outer && Texts.Display(inner) == group + " › a › dentro"
+                && Texts.CleanPath(@" a \\ b\ ") == @"a\b" && Texts.CleanPath(@" \ ") == null, "paths of folders");
+            Texts.Save(name, text, null);
             Texts.Save(name, "other", null);
             Check(Texts.Load().FindAll(delegate(Entry e) { return e.Name == name; }).Count == 1, "saving again replaces");
             Texts.Save(name.ToUpper(), "other", null);
@@ -190,8 +221,10 @@ static class TestProgram
         finally
         {
             Texts.Delete(name);
-            Texts.RenameGroup(group, null);
-            Texts.RenameGroup(group + " 2", null);
+            // From the innermost, so that nothing moves up out of the test folders.
+            foreach (string top in new string[] { group, group + " 2" })
+                for (string last; (last = Texts.Groups().FindLast(delegate(string other) { return Texts.Within(other, top); })) != null; )
+                    Texts.RenameGroup(last, null);
         }
         Check(!Texts.Load().Exists(delegate(Entry e) { return e.Name == name; }), "a deleted text is gone");
         using (Microsoft.Win32.RegistryKey dates = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(MainForm.SettingsKey + @"\Saved\Dates"))
@@ -422,13 +455,43 @@ static class TestProgram
             ListBox recent = (ListBox)typeof(MainForm).GetField("recentList", hidden).GetValue(form);
             ListBox saved = (ListBox)typeof(MainForm).GetField("savedList", hidden).GetValue(form);
             Console.WriteLine("[{0}] copied and saved entries go to their own column: {1} and {2}",
-                recent.Items.Count == 5 && saved.Items.Count == 5 ? "PASS" : "FAIL", recent.Items.Count, saved.Items.Count);
+                recent.Items.Count == 5 && saved.Items.Count == 6 ? "PASS" : "FAIL", recent.Items.Count, saved.Items.Count);
             saved.SelectedIndex = 2;
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
             Console.WriteLine("[{0}] the selection survives a refill: saved {1}, copied {2}",
                 saved.SelectedIndex == 2 && recent.SelectedIndex < 0 ? "PASS" : "FAIL", saved.SelectedIndex, recent.SelectedIndex);
             recent.SelectedIndex = 0;
             Console.WriteLine("[{0}] selecting in a column clears the other", saved.SelectedIndex < 0 ? "PASS" : "FAIL");
+
+            // A closed folder hides the folders inside it too; a search shows the folders around what it finds.
+            List<Entry> sample = (List<Entry>)typeof(MainForm).GetField("entries", hidden).GetValue(form);
+            Entry work = sample.Find(delegate(Entry e) { return e.IsGroup && e.Name == "Lavoro"; });
+            work.Open = false;
+            typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
+            int closedRows = saved.Items.Count;
+            work.Open = true;
+            TextBox search = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
+            search.Text = "prova";
+            Console.WriteLine("[{0}] a closed folder hides those inside it: {1} rows; a search shows the folders around a result: {2}",
+                closedRows == 3 && saved.Items.Count == 3 && ((Entry)saved.Items[0]).Name == "Lavoro" && ((Entry)saved.Items[1]).Label == "Server"
+                ? "PASS" : "FAIL", closedRows, saved.Items.Count);
+            search.Text = "";
+
+            // The icon menu: the saved texts between «Apri» and the rest, each folder a submenu.
+            ContextMenuStrip menu = new ContextMenuStrip();
+            menu.Items.Add("Apri");
+            menu.Items.Add("Esci");
+            MethodInfo fill = typeof(MainForm).GetMethod("ShowSaved", hidden);
+            fill.Invoke(form, new object[] { menu });
+            fill.Invoke(form, new object[] { menu });   // made anew, not added twice
+            ToolStripMenuItem workMenu = menu.Items[3] as ToolStripMenuItem;
+            ToolStripMenuItem serverMenu = workMenu == null ? null : workMenu.DropDownItems[1] as ToolStripMenuItem;
+            Console.WriteLine("[{0}] the icon menu lists the saved texts by folder: {1} items", menu.Items.Count == 7
+                && menu.Items[1] is ToolStripSeparator && menu.Items[2].Text == "Firma email" && workMenu != null && workMenu.Text == "Lavoro"
+                && workMenu.DropDownItems[0].Text == "Indirizzo ufficio" && serverMenu != null && serverMenu.Text == "Server"
+                && serverMenu.DropDownItems[0].Text == "Password del server di prova" && menu.Items[4].Text == "Casa"
+                && menu.Items[5] is ToolStripSeparator && menu.Items[6].Text == "Esci" ? "PASS" : "FAIL", menu.Items.Count);
+            menu.Dispose();
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
             Application.DoEvents();
             Save(form, path + "-options.png");
@@ -562,13 +625,14 @@ static class TestProgram
         BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
         List<Entry> entries = new List<Entry>();
         entries.Add(new Entry("Firma email", "Cordiali saluti"));
-        // Two folders, one open and one closed, each right before its texts.
-        foreach (string name in new string[] { "Lavoro", "Password del server di prova", "Indirizzo ufficio", "Casa", "Wi-Fi di casa" })
+        // Folders, one open with another inside it and one closed, each right before its texts.
+        string server = Texts.Join("Lavoro", "Server");
+        foreach (string name in new string[] { "Lavoro", "Indirizzo ufficio", server, "Password del server di prova", "Casa", "Wi-Fi di casa" })
         {
-            bool folder = name == "Lavoro" || name == "Casa";
+            bool folder = name == "Lavoro" || name == server || name == "Casa";
             Entry entry = new Entry(name, folder ? "" : "not shown", folder ? DateTime.MinValue : DateTime.Now);
             entry.IsGroup = folder;
-            entry.Open = name == "Lavoro";
+            entry.Open = name != "Casa";
             if (!entry.IsGroup) entry.Group = entries[entries.Count - 1].IsGroup ? entries[entries.Count - 1].Name : entries[entries.Count - 1].Group;
             entries.Add(entry);
         }

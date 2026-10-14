@@ -60,16 +60,22 @@ class HelpForm : Form
             + "puoi ritoccarne il contenuto.",
         "- «Modifica» (Ctrl+" + MainForm.SaveKey + "), su una voce salvata, ne cambia il nome o il contenuto.",
         "- «Elimina» (Ctrl+" + MainForm.DeleteKey + ") cancella il testo salvato, oppure toglie dall'elenco la voce copiata.",
-        "Quando diventano tanti puoi raccoglierli in cartelle:",
-        "- «Nuova cartella» sta nel menu del tasto destro (Ctrl+Maiusc+" + MainForm.NewKey + ").",
+        "Quando diventano tanti puoi raccoglierli in cartelle, e le cartelle in altre cartelle:",
+        "- «Nuova cartella» sta nel menu del tasto destro (Ctrl+Maiusc+" + MainForm.NewKey + "): nasce dentro la "
+            + "cartella selezionata, o quella del testo selezionato, ma nella sua finestra puoi scegliere dove metterla.",
         "- Un clic sul nome di una cartella, o Invio, la apre e la chiude; il numero a destra dice quanti testi "
-            + "contiene. Aperte e chiuse, le ritrovi come le hai lasciate.",
-        "- Un testo salvato si trascina dentro una cartella: sulla cartella stessa o su uno dei suoi testi. "
-            + "Lasciato su un testo fuori dalle cartelle, o sotto l'ultima riga, esce da quella in cui era.",
-        "- «Sposta in», nel menu del tasto destro di un testo salvato, fa lo stesso. La stessa scelta c'è "
-            + "nella finestra in cui lo scrivi, a sinistra dei pulsanti.",
-        "- Con una cartella selezionata, «Rinomina» le cambia il nome ed «Elimina» toglie la cartella soltanto: "
-            + "i testi che conteneva restano tra i salvati.",
+            + "contiene, anche nelle cartelle al suo interno. Aperte e chiuse, le ritrovi come le hai lasciate.",
+        "- Un testo salvato, o una cartella con tutto quello che contiene, si trascina dentro un'altra cartella: "
+            + "sulla cartella stessa o su uno dei suoi testi. Lasciato su un testo fuori dalle cartelle, o sotto "
+            + "l'ultima riga, esce da quella in cui era.",
+        "- «Sposta in», nel menu del tasto destro di un testo salvato o di una cartella, fa lo stesso. La stessa "
+            + "scelta c'è nella finestra in cui lo scrivi, a sinistra dei pulsanti.",
+        "- Con una cartella selezionata, «Rinomina» le cambia il nome o il posto ed «Elimina» toglie la cartella "
+            + "soltanto: quello che conteneva, testi e cartelle, sale nella cartella che la conteneva, o resta "
+            + "tra i salvati fuori dalle cartelle.",
+        "- Nel nome di una cartella non può esserci «" + Texts.Separator + "».",
+        "- I testi salvati sono anche nel menu dell'icona vicino all'orologio, con le stesse cartelle: "
+            + "sceglierne uno lo rimette negli appunti senza aprire la finestra.",
         "- La ricerca trova anche dentro le cartelle chiuse, e il nome di una cartella trova i suoi testi.",
         "- «Mostra il contenuto», nel menu del tasto destro di un testo salvato, lo fa vedere in un riquadro "
             + "per qualche secondo: l'elenco ne mostra solo il nome, e passarci sopra con il puntatore non basta.",
@@ -156,6 +162,8 @@ class HelpForm : Form
         "Con l'opzione attiva, chiudere o ridurre a icona la finestra la nasconde soltanto: il programma resta "
             + "in funzione e le scorciatoie continuano a rispondere.",
         "- Un clic sull'icona riapre la finestra; tasto destro e poi «Esci» chiude davvero.",
+        "- Nel menu del tasto destro ci sono anche i testi salvati, ogni cartella un sottomenu: sceglierne uno "
+            + "lo rimette negli appunti, pronto per Ctrl+V o per " + MainForm.HotkeyName + ", senza aprire la finestra.",
         "- L'icona è a colori se negli appunti c'è del testo, grigia se non c'è.",
         "- Avviare il programma una seconda volta fa ricomparire la finestra di quello già aperto.",
 
