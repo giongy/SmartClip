@@ -39,6 +39,10 @@ partial class MainForm
           + "una cifra o un tasto funzione. Esc lascia quelli di adesso, Canc torna a quelli di partenza.\n"
           + "Con Ctrl+Alt evita le lettere che con AltGr scrivono un simbolo (E, per l'euro): la\n"
           + "scorciatoia scatterebbe scrivendolo.", typeKeysButton, pickKeysButton);
+        Tip("Quando clicchi su un altro programma la finestra torna nell'area di notifica, come\n"
+          + "chiudendola: la riapri con l'icona o con " + PickName + ". Spenta, resta aperta dietro le altre.\n"
+          + "Vale solo con l'opzione qui sopra attiva. Non succede mentre aspetta o digita, né mentre\n"
+          + "scrivi un testo salvato o rispondi a una domanda: intanto puoi copiare altrove.", leaveBox);
         Tip("Digita il testo degli appunti un tasto alla volta, dove incollare non funziona:\n"
           + "copia la password, premi qui e clicca nel campo della finestra remota.\n"
           + "Oppure premi " + HotkeyName + " direttamente nel campo.", typeButton);

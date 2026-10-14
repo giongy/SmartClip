@@ -78,6 +78,9 @@ static class Native
     [DllImport("user32.dll")]
     public static extern bool SetForegroundWindow(IntPtr window);
 
+    [DllImport("user32.dll")]
+    public static extern bool IsWindowEnabled(IntPtr window);
+
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern int GetWindowText(IntPtr window, StringBuilder text, int capacity);
 

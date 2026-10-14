@@ -27,6 +27,8 @@ partial class MainForm
         PlaceTitle("Programma", left, ref top);
         PlaceOption(trayBox, "Resta attivo nell'area di notifica (tray)", left, ref top);
         trayBox.Checked = true;
+        PlaceOption(leaveBox, "Nascondi passando a un altro programma", left, ref top);
+        leaveBox.Checked = true;
         PlaceOption(startBox, "Avvia insieme a Windows", left, ref top);
         // Side by side, each with its two choices: the saved texts alone, or what was copied too.
         ContextMenuStrip exportMenu = Choice(Export), importMenu = Choice(Import);
@@ -93,8 +95,7 @@ partial class MainForm
         Tip("Attiva: chiudendo o riducendo a icona la finestra il programma resta in funzione\n"
           + "come icona vicino all'orologio, e la scorciatoia continua a funzionare.\n"
           + "Clic sull'icona per riaprire la finestra, tasto destro e poi Esci per chiudere.\n"
-          + "Disattiva: finestra normale, che chiudendola termina il programma.", trayBox);
-        Tip("Avvia " + Program.AppName + " quando accedi a Windows, già nascosto nell'area di notifica\n"
+          + "Disattiva: finestra normale, che chiudendola termina il programma.", trayBox);        Tip("Avvia " + Program.AppName + " quando accedi a Windows, già nascosto nell'area di notifica\n"
           + "(ridotto a icona, se l'opzione qui sopra è spenta).\n"
           + "Vale per questo eseguibile: se lo sposti, al primo avvio da lì la voce si aggiorna da sola.\n"
           + "È la stessa voce di Gestione attività > App di avvio: spenta lì, risulta spenta anche qui.", startBox);
@@ -391,6 +392,7 @@ partial class MainForm
         historyBox.Checked = Transfer(key, save, "History", historyBox.Checked);
         Retention = Transfer(key, save, "KeepDays", Retention);
         trayBox.Checked = Transfer(key, save, "Tray", trayBox.Checked);
+        leaveBox.Checked = Transfer(key, save, "HideOnLeave", leaveBox.Checked);
         savedColumn = Transfer(key, save, "SavedWidth", savedColumn);   // applied when the window loads
 
         // Window position. Reading starts from a point outside every screen: it stays there, and is ignored,

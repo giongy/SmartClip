@@ -14,6 +14,7 @@ partial class MainForm
         busy = true;
         cancel = false;
         typeButton.Text = "Annulla";
+        TopMost = true;   // countdown and cancel button in view over the window being clicked into
         try
         {
             string copied = Clipboard.ContainsText() ? Clipboard.GetText() : "";
@@ -66,6 +67,7 @@ partial class MainForm
         {
             busy = false;
             typeButton.Text = ButtonText;
+            TopMost = false;
             if (closePending) Close();
         }
     }

@@ -30,7 +30,7 @@ partial class MainForm : Form
     public const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
     const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
-    const int ListExtra = 115;                  // height given to the lists beyond what the options need
+    const int ListExtra = 91;                   // height given to the lists beyond what the options need
     const int ColumnGap = 20, ColumnWidth = (ContentWidth - ColumnGap) / 2;   // the two columns of the options
     const int TitleRow = 30, SectionGap = 10;          // the title of a category of options, and the air above it
     const int RuleGap = 8;                             // between the line under such a title and the first option
@@ -119,6 +119,7 @@ partial class MainForm : Form
     readonly CheckBox pickBox = new Toggle();
     readonly CheckBox historyBox = new Toggle();
     readonly CheckBox trayBox = new Toggle();
+    readonly CheckBox leaveBox = new Toggle();   // hides the window when another program comes to the foreground
     readonly CheckBox startBox = new Toggle();   // not among the settings: it shows what the Run key of Windows says
     bool startHidden;   // the first request to show the window is not obeyed
     readonly NotifyIcon tray = new NotifyIcon();
@@ -152,7 +153,8 @@ partial class MainForm : Form
         // The window can be made larger, never smaller than it starts (see OnLoad); its size is not remembered,
         // so that it always opens as it was designed.
         StartPosition = FormStartPosition.CenterScreen;
-        TopMost = true;
+        // An ordinary window, which others can cover: it stays on top only while it waits and types (see Run),
+        // so that the countdown and the cancel button are in view over the remote window.
         KeyPreview = true;
         BackColor = Look.Back;
         ForeColor = Look.Ink;
@@ -565,6 +567,15 @@ partial class MainForm : Form
             // The user moved on to another program: a later choice must not jump back to where the list
             // hotkey was pressed long before.
             previous = IntPtr.Zero;
+            // With the option, the window goes to the notification area. Not while it waits and types, when
+            // the user is meant to click elsewhere, nor while a window of ours (a text being written, a
+            // question, a file to choose) holds it disabled: something may be copied elsewhere for it.
+            if (leaveBox.Checked && trayBox.Checked && Visible && !busy && Native.IsWindowEnabled(Handle)
+                && WindowState != FormWindowState.Minimized)
+            {
+                if (help != null && !help.IsDisposed) help.Close();   // with no taskbar button, it would be lost
+                Hide();
+            }
         }
         else if (m.Msg == Native.WM_CLIPBOARDUPDATE)
         {

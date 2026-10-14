@@ -55,8 +55,7 @@ class EditForm : Form
         MaximizeBox = false;
         MinimizeBox = false;
         ShowInTaskbar = false;
-        StartPosition = FormStartPosition.CenterParent;
-        TopMost = true;
+        StartPosition = FormStartPosition.CenterParent;   // and above it, as its owner
         BackColor = Look.Back;
         ForeColor = Look.Ink;
 

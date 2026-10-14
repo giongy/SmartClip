@@ -76,6 +76,14 @@ su GitHub).
 - Impostazioni in `HKCU\Software\SmartClip`, lette e scritte da un unico elenco (`TransferSettings`).
 - Tray: con l'opzione attiva, X e riduzione a icona nascondono la finestra; si esce da «Esci» nel menu
   dell'icona. Una sola istanza: un secondo avvio fa ricomparire la finestra esistente.
+- La finestra non è più sempre in primo piano (l'utente non lo voleva): `TopMost` vale solo mentre `Run`
+  aspetta e digita, perché conto alla rovescia e «Annulla» restino visibili sopra la finestra remota. Guida e
+  `EditForm` stanno sopra perché ne sono proprietarie. «Nascondi passando a un altro programma» (`leaveBox`,
+  impostazione `HideOnLeave`, accesa di default, scelta dell'utente) nasconde la finestra nel tray a
+  `WM_ACTIVATEAPP`, solo con il tray attivo, mai durante la digitazione né con la finestra disabilitata da
+  una finestra modale nostra (`IsWindowEnabled`: «Modifica», domande, scelta del file), così intanto si può
+  copiare altrove. La guida si chiude con lei: senza pulsante sulla barra resterebbe persa. Per farci stare la
+  riga senza alzare la finestra è sceso ancora `ListExtra`.
 
 - Avvio con Windows (`Startup`, in `Program.cs`): un valore nella chiave `Run` dell'utente, con l'argomento
   `/tray`. Non è tra le impostazioni (`TransferSettings`): la spunta mostra ciò che dice Windows, così non
@@ -321,6 +329,9 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - Le ultime aggiunte dal vivo: l'anteprima con il puntatore fermo (vista solo chiamando `ShowPeek` da
   `tests.exe real`), il puntatore che la attraversa, il trascinamento in una cartella, i tasti nuovi premuti
   davvero (provata solo la logica, da `tests.exe shot`), la pausa, le conferme che spariscono.
+- La finestra che si nasconde cliccando altrove, dal vivo: in particolare il clic sull'icona del tray e sul
+  pulsante della barra delle applicazioni a finestra aperta (Explorer prende il primo piano: la finestra si
+  nasconde e poi il clic la riapre?) e la riapertura senza `TopMost`.
 - Le sottocartelle e il menu del tray dal vivo: provati solo `RenameGroup`, l'ordine, `Filter` e la struttura
   del menu (`texts`, `shot`), mai il clic vero su una voce del tray, il trascinamento di una cartella, la
   finestra di una cartella con la scelta del posto.

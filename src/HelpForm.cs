@@ -162,6 +162,9 @@ class HelpForm : Form
         "Con l'opzione attiva, chiudere o ridurre a icona la finestra la nasconde soltanto: il programma resta "
             + "in funzione e le scorciatoie continuano a rispondere.",
         "- Un clic sull'icona riapre la finestra; tasto destro e poi «Esci» chiude davvero.",
+        "- Con «Nascondi passando a un altro programma» la finestra torna qui anche quando clicchi altrove; "
+            + "spenta, resta aperta dietro le altre. Mentre aspetta e digita, invece, sta sopra a tutto: "
+            + "il conto alla rovescia e «Annulla» restano in vista.",
         "- Nel menu del tasto destro ci sono anche i testi salvati, ogni cartella un sottomenu: sceglierne uno "
             + "lo rimette negli appunti, pronto per Ctrl+V o per " + MainForm.HotkeyName + ", senza aprire la finestra.",
         "- L'icona è a colori se negli appunti c'è del testo, grigia se non c'è.",
@@ -195,8 +198,7 @@ class HelpForm : Form
         MinimizeBox = false;
         ShowInTaskbar = false;
         ShowIcon = false;
-        StartPosition = FormStartPosition.Manual;   // placed over its owner when it loads
-        TopMost = true;
+        StartPosition = FormStartPosition.Manual;   // placed over its owner when it loads; it stays above it
         BackColor = Look.Back;
         ForeColor = Look.Ink;
 
