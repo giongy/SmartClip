@@ -133,8 +133,9 @@ static class Texts
     const int HeaderSize = sizeof(byte) + sizeof(long) + sizeof(int), PictureHeader = 3 * sizeof(int);
     public const string DayFormat = "yyyy-MM-dd";
     const string Extension = ".clips";
-    public static string Folder = Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Program.AppName, "History");
+    // From the Store package, inside the data folder Windows gives it, which Explorer can open as it is.
+    public static string Folder = Path.Combine(Packaged.Family != null ? Packaged.DataFolder
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Program.AppName), "History");
     static int keepDays;       // zero: nothing goes to disk
     static DateTime pruned;    // the day the expired files were last removed
     static bool loaded;        // the history files were read: before that, nobody knows which hold a pinned entry

@@ -21,6 +21,30 @@ class ShotEdit : EditForm
     protected override bool ShowWithoutActivation { get { return true; } }
 }
 
+// The plain background the Store pictures are taken on: the colours of the icon, without text or logos.
+class Backdrop : Form
+{
+    public Backdrop(Rectangle area)
+    {
+        FormBorderStyle = FormBorderStyle.None;
+        ShowInTaskbar = false;
+        StartPosition = FormStartPosition.Manual;
+        Bounds = area;
+        TopMost = true;   // above the taskbar too, where the screen is small
+    }
+
+    protected override bool ShowWithoutActivation { get { return true; } }
+
+    protected override void OnPaintBackground(PaintEventArgs e)
+    {
+        using (System.Drawing.Drawing2D.LinearGradientBrush brush = new System.Drawing.Drawing2D.LinearGradientBrush(
+            ClientRectangle, Color.FromArgb(150, 178, 240), Color.FromArgb(196, 172, 236), 35f))
+        {
+            e.Graphics.FillRectangle(brush, ClientRectangle);
+        }
+    }
+}
+
 class ShotHelp : HelpForm
 {
     protected override bool ShowWithoutActivation { get { return true; } }
@@ -43,7 +67,8 @@ static class TestProgram
         if (mode == "type") return TypeTest();
         if (mode == "texts") return TextsTest();
         if (mode == "real") return Real(args[1]);
-        Console.WriteLine("usage: map | texts | shot <png> | type");
+        if (mode == "store") return Store(args[1]);
+        Console.WriteLine("usage: map | texts | shot <png> | real <png> | store <folder> | type");
         return 64;
     }
 
@@ -609,6 +634,144 @@ static class TestProgram
         return 0;
     }
 
+    // The pictures of the Store listing: the windows as the screen shows them, with made-up entries, on a plain
+    // background of the size the Store asks for (1366 x 768, or 1920 x 1080 where the windows need it), and the
+    // icon at 300 x 300. The windows appear for a moment, without taking the focus; SmartClip must be closed,
+    // or its hotkeys are taken and the status line says so.
+    static int Store(string folder)
+    {
+        const int Top = 40;   // the windows high up: the Store may lay text over the bottom third
+        System.IO.Directory.CreateDirectory(folder);
+        BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
+        SaveTile(System.IO.Path.Combine(folder, "tile-300.png"));
+        using (ShotForm form = new ShotForm())
+        {
+            form.TopMost = true;
+            form.ShowInTaskbar = false;
+            form.StartPosition = FormStartPosition.Manual;
+            form.Location = new Point(-30000, -30000);
+            FillSample(form);
+            form.Show();   // now it has the size of this screen's scale
+            Rectangle screen = Screen.PrimaryScreen.Bounds;
+            Size size = form.Width + 2 * Top <= 1366 && form.Height + 2 * Top <= 768 ? new Size(1366, 768) : new Size(1920, 1080);
+            if (size.Width > screen.Width || size.Height > screen.Height)
+            {
+                Console.WriteLine("FAIL: the screen is smaller than {0} x {1}", size.Width, size.Height);
+                return 1;
+            }
+            Rectangle area = new Rectangle(screen.Location, size);
+            using (Backdrop backdrop = new Backdrop(area))
+            {
+                backdrop.Show();
+                form.Location = new Point(area.Left + (area.Width - form.Width) / 2, area.Top + Top);
+                form.BringToFront();   // above the backdrop, which came later
+                Label status = (Label)typeof(MainForm).GetField("status", hidden).GetValue(form);
+                status.Text = "";
+                ListBox recent = (ListBox)typeof(MainForm).GetField("recentList", hidden).GetValue(form);
+                recent.SelectedIndex = 0;
+                SnapArea(area, System.IO.Path.Combine(folder, "1-elenco.png"));
+
+                // Typing a password: the countdown, with the button that cancels it.
+                Button typeButton = (Button)typeof(MainForm).GetField("typeButton", hidden).GetValue(form);
+                status.Text = "Digito tra 3 s in «srv-database-01 - Connessione Desktop remoto». Premi Annulla per fermare.";
+                typeButton.Text = "Annulla";
+                SnapArea(area, System.IO.Path.Combine(folder, "2-digitazione.png"));
+                status.Text = "";
+                typeButton.Text = MainForm.ButtonText;
+
+                // An entry the row cuts, shown whole.
+                typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, 2, false });
+                SnapArea(area, System.IO.Path.Combine(folder, "3-anteprima.png"));
+                typeof(MainForm).GetMethod("HidePeek", hidden).Invoke(form, null);
+
+                // A copied text being saved under a name, into a folder.
+                using (ShotEdit edit = new ShotEdit(new Entry(null, "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567"),
+                    Texts.Join("Lavoro", "Server"), new List<string>(new string[] { "Lavoro", Texts.Join("Lavoro", "Server"), "Casa" })))
+                {
+                    edit.TopMost = true;
+                    edit.StartPosition = FormStartPosition.Manual;
+                    ((TextBox)typeof(EditForm).GetField("nameBox", hidden).GetValue(edit)).Text = "Firma email";
+                    edit.Show();
+                    edit.Location = new Point(form.Left + (form.Width - edit.Width) / 2, form.Top + (form.Height - edit.Height) / 2);
+                    SnapArea(area, System.IO.Path.Combine(folder, "4-salva.png"));
+                }
+
+                // The menu of the icon by the clock, with the saved texts in their folders, alone on the background.
+                form.Hide();
+                using (ContextMenuStrip menu = new ContextMenuStrip())
+                {
+                    menu.Items.Add("Apri");
+                    menu.Items.Add("Sospendi la cattura");
+                    menu.Items.Add("Esci");
+                    Look.Style(menu);
+                    typeof(MainForm).GetMethod("ShowSaved", hidden).Invoke(form, new object[] { menu });
+                    menu.Show(new Point(area.Left + area.Width / 3, area.Top + Top * 3));
+                    ToolStripMenuItem work = (ToolStripMenuItem)menu.Items[3];
+                    work.ShowDropDown();
+                    ((ToolStripMenuItem)work.DropDownItems[1]).ShowDropDown();
+                    SnapArea(area, System.IO.Path.Combine(folder, "5-menu-tray.png"));
+                    menu.Close();
+                }
+                form.Show();
+                form.BringToFront();
+
+                typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
+                SnapArea(area, System.IO.Path.Combine(folder, "6-opzioni.png"));
+                typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { false });
+
+                // The guide, open at how a password is typed.
+                using (ShotHelp help = new ShotHelp())
+                {
+                    help.TopMost = true;
+                    help.Show(form);
+                    help.Location = new Point(area.Left + (area.Width - help.Width) / 2, area.Top + Top);
+                    ListBox topics = (ListBox)typeof(HelpForm).GetField("topics", hidden).GetValue(help);
+                    for (int i = 0; i < topics.Items.Count; i++)
+                        if (((string[])typeof(HelpForm).GetField("Lines", hidden).GetValue(help))[(int)topics.Items[i]] == "# Digitare una password")
+                            topics.SelectedIndex = i;
+                    SnapArea(area, System.IO.Path.Combine(folder, "7-guida.png"));
+                }
+            }
+        }
+        Console.WriteLine("pictures in {0}", folder);
+        return 0;
+    }
+
+    // The icon for the Store listing, 300 x 300: its largest frame, a PNG inside the .ico, in the middle as it
+    // is, rather than enlarged.
+    static void SaveTile(string path)
+    {
+        byte[] bytes = System.IO.File.ReadAllBytes(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\SmartClip.ico"));
+        int best = -1, side = 0;
+        for (int i = 0; i < BitConverter.ToUInt16(bytes, 4); i++)
+        {
+            int entry = 6 + 16 * i, width = bytes[entry] == 0 ? 256 : bytes[entry];
+            if (width > side) { side = width; best = entry; }
+        }
+        int length = BitConverter.ToInt32(bytes, best + 8), offset = BitConverter.ToInt32(bytes, best + 12);
+        using (System.IO.MemoryStream png = new System.IO.MemoryStream(bytes, offset, length))
+        using (Image icon = Image.FromStream(png))
+        using (Bitmap tile = new Bitmap(300, 300))
+        {
+            using (Graphics g = Graphics.FromImage(tile)) g.DrawImage(icon, (300 - icon.Width) / 2, (300 - icon.Height) / 2, icon.Width, icon.Height);
+            tile.Save(path, ImageFormat.Png);
+        }
+    }
+
+    static void SnapArea(Rectangle area, string path)
+    {
+        for (int i = 0; i < 40; i++)
+        {
+            Application.DoEvents();
+            Thread.Sleep(10);
+        }
+        using (Bitmap bmp = new Bitmap(area.Width, area.Height))
+        {
+            using (Graphics g = Graphics.FromImage(bmp)) g.CopyFromScreen(area.Location, Point.Empty, area.Size);
+            bmp.Save(path, ImageFormat.Png);
+        }
+    }
+
     static void Snap(Form form, string path)
     {
         for (int i = 0; i < 40; i++)
@@ -640,13 +803,16 @@ static class TestProgram
             if (!entry.IsGroup) entry.Group = entries[entries.Count - 1].IsGroup ? entries[entries.Count - 1].Name : entries[entries.Count - 1].Group;
             entries.Add(entry);
         }
-        Entry pinned = new Entry(null, "ssh admin@srv-database-01");
+        // Copied this morning, whatever the time the pictures are taken.
+        DateTime morning = DateTime.Today.AddHours(10).AddMinutes(24);
+        Entry pinned = new Entry(null, "ssh admin@srv-database-01", morning);
         pinned.Pinned = true;
         entries.Add(pinned);
-        using (Bitmap picture = SamplePicture()) entries.Add(new Entry(picture));
-        entries.Add(new Entry(null, "Una frase copiata più lunga della finestra, che finisce tagliata sul bordo destro con i puntini"));
-        entries.Add(new Entry(null, "prima riga\r\nseconda riga"));
-        entries.Add(new Entry(null, "https://github.com/giongy/SmartClip"));
+        using (Bitmap picture = SamplePicture())
+            entries.Add(new Entry(new Bitmap(picture, 213, 120), picture.Width, picture.Height, morning.AddMinutes(-7)));
+        entries.Add(new Entry(null, "Una frase copiata più lunga della finestra, che finisce tagliata sul bordo destro con i puntini", morning.AddMinutes(-19)));
+        entries.Add(new Entry(null, "prima riga\r\nseconda riga", morning.AddMinutes(-33)));
+        entries.Add(new Entry(null, "https://github.com/giongy/SmartClip", morning.AddMinutes(-52)));
         typeof(MainForm).GetField("entries", hidden).SetValue(form, entries);
         typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
     }

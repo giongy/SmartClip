@@ -35,6 +35,21 @@ su GitHub).
   - `Backup.cs` — esportazione e importazione in un file di testo (`Backup`, `BackupResult`).
   - `Typer.cs` — mappa dei tasti e invio (`Typer`, `Stroke`, `TypeOptions`, `TypeResult`).
   - `Native.cs` — funzioni e costanti di Windows.
+  - `Packaged.cs` — quando il programma gira dal pacchetto del Microsoft Store (`Packaged.Family` non nullo):
+    avvio con Windows con la `StartupTask` del pacchetto invece della chiave `Run` (`Startup` lo chiama), avvio
+    all'accesso riconosciuto dall'attivazione invece che da `/tray`, cronologia in `LocalState` del pacchetto
+    (quella sotto `%LOCALAPPDATA%` Windows la sposterebbe in una copia nascosta che Esplora file non vede). È
+    l'unico file con tipi di Windows Runtime: fuori dal pacchetto non vanno chiamati.
+- `packaging\` — il pacchetto MSIX per lo Store: `AppxManifest.xml` (identità da Partner Center, ancora
+  segnaposto finché l'utente non prenota il nome) e `pack.ps1` (immagini da `SmartClip.ico`, versione da
+  `AssemblyVersion`, poi `makepri` e `makeappx` del Windows SDK; senza SDK scrive solo `out\layout`). Lo Store
+  vuole la quarta cifra della versione a zero. Il flusso di release crea il pacchetto e lo lascia tra gli
+  artifact (non nella release: senza la firma dello Store non si installa); lanciato a mano, lo crea anche se
+  la release esiste già.
+- `store\` — la scheda dello Store pronta da copiare in Partner Center (`README.md`: passi, testi in italiano e
+  inglese, didascalie, note per i tester) e le immagini (`images\`, da `tests.exe store store\images` a
+  programma chiuso). `PRIVACY.md` è l'informativa indicata allo Store: va tenuta vera (oggi il programma non
+  usa la rete).
 - `build.cmd` — compila `src\*.cs` in `SmartClip.exe`. `SmartClip.ico` è facoltativa. L'eseguibile non sta
   più in git (`.gitignore`): si scarica dalle release.
 - `.github/workflows/release.yml` — pubblica l'eseguibile come release di GitHub. **Per fare una release si
@@ -60,6 +75,10 @@ su GitHub).
   `out var`, membri a espressione, `readonly struct`, costruttori primari. I suggerimenti di VS Code che li
   propongono vanno ignorati. Lo scopo è poter ricompilare sul PC del lavoro senza installare nulla.
 - Il sorgente è UTF-8 senza BOM con lettere accentate: serve `/codepage:65001` (già in `build.cmd`).
+- `Packaged.cs` usa Windows Runtime: `build.cmd` e `test.cmd` riferiscono `Windows.ApplicationModel.winmd` e
+  `Windows.Foundation.winmd` da `%WINDIR%\System32\WinMetadata` e `System.Runtime.dll` accanto a `csc`, tutti già
+  in Windows 10 e 11. Niente `AsTask` (vorrebbe `Windows.winmd` dell'SDK): le operazioni asincrone si aspettano
+  con `Completed` (`Packaged.Wait`). Compilando a mano vanno aggiunti gli stessi `/r:`.
 - `build.cmd` e `test.cmd` finiscono con `pause`: da riga di comando lanciarli con `< NUL`.
 - La compilazione fallisce se `SmartClip.exe` è in esecuzione (può essere nascosto nel tray): controllare
   prima con `Get-Process SmartClip`.
@@ -307,6 +326,9 @@ su GitHub).
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.
 - `tests.exe shot <prefisso>` — non è in `test.cmd`: salva immagini PNG della finestra (elenco con voci
   finte, opzioni, stati lunghi) per controllare l'aspetto senza mostrarla.
+- `tests.exe store <cartella>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno sfondo nei
+  colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), e l'icona 300 × 300. Mostra le finestre
+  qualche secondo; a programma chiuso e salvando prima le impostazioni, come `real`.
 
 Il tray è stato verificato con un programmino usa e getta (non nel progetto) che crea `MainForm`, legge i campi
 `tray` e `trayBox` per riflessione e aziona le voci del menu con `PerformClick`: X nasconde, Apri riapre anche
@@ -331,6 +353,10 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - Le ultime aggiunte dal vivo: l'anteprima con il puntatore fermo (vista solo chiamando `ShowPeek` da
   `tests.exe real`), il puntatore che la attraversa, il trascinamento in una cartella, i tasti nuovi premuti
   davvero (provata solo la logica, da `tests.exe shot`), la pausa, le conferme che spariscono.
+- Il pacchetto dello Store: `pack.ps1` provato solo senza SDK (cartella e immagini), mai `makepri`/`makeappx`
+  né il pacchetto installato; dal pacchetto non sono mai state provate la `StartupTask`, l'avvio all'accesso
+  riconosciuto da `Packaged.StartedAtSignIn`, la cartella `LocalState`, né se il registro (impostazioni, testi
+  salvati) finisce virtualizzato nel pacchetto o nel registro vero.
 - La finestra che si nasconde cliccando altrove, dal vivo: in particolare il clic sull'icona del tray e sul
   pulsante della barra delle applicazioni a finestra aperta (Explorer prende il primo piano: la finestra si
   nasconde e poi il clic la riapre?) e la riapertura senza `TopMost`.

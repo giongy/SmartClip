@@ -2,7 +2,9 @@ name: Release
 
 # Publishes SmartClip.exe as a GitHub release whenever the version number changes: the number is the
 # AssemblyVersion line of src/Program.cs, and a release is created only if none carries it yet. So a
-# release is made by changing that line and pushing; every other push ends at the first step.
+# release is made by changing that line and pushing; every other push ends at the first step. Each release
+# also leaves the Microsoft Store package (MSIX) among the artifacts of the run; started by hand, the
+# workflow makes the package even when the release exists already.
 on:
   push:
     branches: [main]
@@ -10,6 +12,7 @@ on:
       - "src/**"
       - "build.cmd"
       - "SmartClip.ico"
+      - "packaging/**"
       - ".github/workflows/release.yml"
   workflow_dispatch:
 
@@ -41,11 +44,27 @@ jobs:
           Write-Host "$tag, to publish: $publish"
           exit 0
 
-      # "< NUL" lets build.cmd continue past the final "pause".
+      # "< NUL" lets build.cmd continue past the final "pause". Started by hand, the workflow also builds
+      # when the release exists already: to get the Store package.
       - name: Compila
-        if: steps.version.outputs.publish == 'true'
+        if: steps.version.outputs.publish == 'true' || github.event_name == 'workflow_dispatch'
         shell: cmd
         run: build.cmd < NUL
+
+      # The MSIX for Partner Center, among the artifacts of the run rather than on the release: unsigned, it
+      # installs nowhere until the Store signs it.
+      - name: Crea il pacchetto per lo Store
+        if: steps.version.outputs.publish == 'true' || github.event_name == 'workflow_dispatch'
+        shell: pwsh
+        run: ./packaging/pack.ps1
+
+      - name: Carica il pacchetto per lo Store
+        if: steps.version.outputs.publish == 'true' || github.event_name == 'workflow_dispatch'
+        uses: actions/upload-artifact@v4
+        with:
+          name: SmartClip-msix
+          path: packaging/out/*.msix
+          if-no-files-found: error
 
       - name: Crea la release
         if: steps.version.outputs.publish == 'true'

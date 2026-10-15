@@ -14,6 +14,7 @@ static class Native
         DWMWA_CAPTION_COLOR = 35, DWMWA_TEXT_COLOR = 36;
     public const int DWMWCP_ROUND = 2;
     public const uint CF_UNICODETEXT = 13;
+    public const int ERROR_SUCCESS = 0, ERROR_INSUFFICIENT_BUFFER = 122;
     public const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002, MOD_SHIFT = 0x0004, MOD_NOREPEAT = 0x4000;
     public const int VK_SHIFT = 0x10, VK_CONTROL = 0x11, VK_MENU = 0x12, VK_CAPITAL = 0x14, VK_SPACE = 0x20,
         VK_LWIN = 0x5B, VK_RWIN = 0x5C;
@@ -80,6 +81,10 @@ static class Native
 
     [DllImport("user32.dll")]
     public static extern bool IsWindowEnabled(IntPtr window);
+
+    // ERROR_INSUFFICIENT_BUFFER asks for a larger buffer; APPMODEL_ERROR_NO_PACKAGE: not run from a package.
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    public static extern int GetCurrentPackageFamilyName(ref int length, StringBuilder name);
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern int GetWindowText(IntPtr window, StringBuilder text, int capacity);

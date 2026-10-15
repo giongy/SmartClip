@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The Microsoft Store package of SmartClip (MSIX), put together by packaging\pack.ps1. The Store signs it.
+
+  Identity Name, Publisher and PublisherDisplayName are the values Partner Center shows under
+  Product identity once the name is reserved: until they replace the placeholders below, the package installs
+  for testing but the Store refuses it. Version is written by pack.ps1 from AssemblyVersion in src\Program.cs.
+-->
+<Package
+  xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+  xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+  xmlns:desktop="http://schemas.microsoft.com/appx/manifest/desktop/windows10"
+  xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+  IgnorableNamespaces="uap desktop rescap">
+
+  <Identity
+    Name="PLACEHOLDER.SmartClip"
+    Publisher="CN=00000000-0000-0000-0000-000000000000"
+    Version="0.0.0.0"
+    ProcessorArchitecture="neutral" />
+
+  <Properties>
+    <DisplayName>SmartClip</DisplayName>
+    <PublisherDisplayName>PLACEHOLDER</PublisherDisplayName>
+    <Logo>Assets\StoreLogo.png</Logo>
+    <Description>Gestore degli appunti che sa anche digitarli dove l'incolla non funziona</Description>
+  </Properties>
+
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
+  </Dependencies>
+
+  <!-- The program speaks Italian only. -->
+  <Resources>
+    <Resource Language="it-IT" />
+  </Resources>
+
+  <Applications>
+    <Application Id="SmartClip" Executable="SmartClip.exe" EntryPoint="Windows.FullTrustApplication">
+      <uap:VisualElements
+        DisplayName="SmartClip"
+        Description="Gestore degli appunti che sa anche digitarli dove l'incolla non funziona"
+        BackgroundColor="transparent"
+        Square150x150Logo="Assets\Square150x150Logo.png"
+        Square44x44Logo="Assets\Square44x44Logo.png">
+        <uap:DefaultTile Wide310x150Logo="Assets\Wide310x150Logo.png" />
+      </uap:VisualElements>
+      <Extensions>
+        <!-- Starting with Windows: off until the user turns it on from the options (src\Packaged.cs). -->
+        <desktop:Extension Category="windows.startupTask" Executable="SmartClip.exe" EntryPoint="Windows.FullTrustApplication">
+          <desktop:StartupTask TaskId="SmartClipStartup" Enabled="false" DisplayName="SmartClip" />
+        </desktop:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <Capabilities>
+    <!-- A desktop program: it reads the clipboard, registers hotkeys and sends key presses (SendInput). -->
+    <rescap:Capability Name="runFullTrust" />
+  </Capabilities>
+</Package>

@@ -339,7 +339,10 @@ partial class MainForm : Form
             bool wanted = startBox.Checked;
             bool done = Change(delegate { Startup.Enabled = wanted; });
             Change(delegate { startBox.Checked = Startup.Enabled; });
-            if (done) Say(wanted ? "All'accesso a Windows " + Program.AppName + " partirà da solo, senza mostrare la finestra."
+            // Windows may say no: once the user, or the organisation, has turned it off in its Settings.
+            if (done && startBox.Checked != wanted)
+                status.Text = "Windows non lo permette: attivalo da Impostazioni > App > Avvio.";
+            else if (done) Say(wanted ? "All'accesso a Windows " + Program.AppName + " partirà da solo, senza mostrare la finestra."
                 : Program.AppName + " non parte più insieme a Windows.");
         };
         // Started at sign-in: hidden in the notification area, or minimised if that option is off.

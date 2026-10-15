@@ -159,7 +159,8 @@ Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key t
 - Nothing is typed while Caps Lock is on.
 - The program waits for you to release the hotkey keys before typing, so they cannot alter the output.
 - Copied texts and pictures are never sent anywhere. The history is written **unencrypted** to
-  `%LOCALAPPDATA%\SmartClip\History`, one file per day, and each file is deleted when its day expires. Set the days
+  `%LOCALAPPDATA%\SmartClip\History` (in the Store version, under the package's own folder in
+  `%LOCALAPPDATA%\Packages`), one file per day, and each file is deleted when its day expires. Set the days
   to 0 to keep everything in memory only. An entry you remove from the list is overwritten with zeros in its file.
   With **Ricorda i testi e le immagini copiati** off, the clipboard is read only when you start a run.
 - What password managers and private browser windows mark as private (KeePass, Bitwarden and others do) is never
@@ -194,6 +195,18 @@ build.cmd
 `build.cmd` uses the `csc.exe` that ships with Windows in `%WINDIR%\Microsoft.NET\Framework64\v4.0.30319`. No Visual
 Studio, SDK or package restore is involved. That compiler stops at C# 5, so the source avoids newer syntax on
 purpose. Close SmartClip before building, including an instance hidden in the tray, or the output file is locked.
+The few Windows Runtime calls used by the Store package take their metadata from `%WINDIR%\System32\WinMetadata`,
+which Windows 10 and 11 include.
+
+### Microsoft Store package
+
+`packaging\pack.ps1` turns the built `SmartClip.exe` into an MSIX package for the Microsoft Store: it generates
+the tile and taskbar images from `SmartClip.ico` and takes the version from `src\Program.cs`. It needs the
+Windows SDK (`makeappx`, `makepri`); without it, it writes only the package layout, which can be tried with
+Developer Mode on. The release workflow builds the package too and leaves it among the artifacts of the run.
+From the package, SmartClip starts with Windows through a startup task instead of the `Run` key, and keeps its
+history in the package's own data folder. The Store listing texts and pictures are in [`store`](store/README.md),
+the privacy policy in [`PRIVACY.md`](PRIVACY.md).
 
 ## Tests
 
@@ -208,9 +221,10 @@ purpose. Close SmartClip before building, including an instance hidden in the tr
   symbols, Unicode, Alt codes, Tab and Enter. It then checks that a wrong window and a cancel both stop everything.
   It takes the keyboard focus for a couple of seconds, so keep your hands off while it runs.
 
-Two more modes are not part of `test.cmd` and only produce pictures: `tests.exe shot <prefix>` draws the windows
-off screen, `tests.exe real <prefix>` shows them for a moment and photographs the screen. The screenshots in this
-page come from the second one.
+Three more modes are not part of `test.cmd` and only produce pictures: `tests.exe shot <prefix>` draws the windows
+off screen, `tests.exe real <prefix>` shows them for a moment and photographs the screen, and
+`tests.exe store <folder>` does the same on a plain background at the size the Store asks for, plus the 300 × 300
+icon. The screenshots in this page come from `real`.
 
 ## Limitations
 

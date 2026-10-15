@@ -8,7 +8,7 @@ using Microsoft.Win32;
 [assembly: AssemblyDescription("Gestore degli appunti che sa anche digitarli dove l'incolla non funziona")]
 [assembly: AssemblyProduct(Program.AppName)]
 // Changing this number and pushing publishes a new release (.github/workflows/release.yml).
-[assembly: AssemblyVersion("3.8.2")]
+[assembly: AssemblyVersion("3.8.3")]
 
 // A small clipboard manager that can also type the clipboard content as real key presses (scancodes),
 // so it works even where paste is disabled (lock screens of remote desktops).
@@ -30,8 +30,9 @@ static class Program
     [STAThread]
     static void Main(string[] args)
     {
-        // Started by Windows at sign-in: the window stays out of the way.
-        bool hidden = Array.IndexOf(args, Startup.HiddenArgument) >= 0;
+        // Started by Windows at sign-in: the window stays out of the way. From the package, the startup task
+        // says so instead of the argument.
+        bool hidden = Array.IndexOf(args, Startup.HiddenArgument) >= 0 || Packaged.Family != null && Packaged.StartedAtSignIn;
         bool first;
         using (new Mutex(true, AppName + ".SingleInstance", out first))
         {
@@ -53,7 +54,8 @@ static class Program
     }
 }
 
-// Starting with Windows: a value under the Run key of the user, which is also where the setting lives.
+// Starting with Windows: a value under the Run key of the user, which is also where the setting lives. From
+// the Store package, the startup task that the package declares instead (see Packaged).
 static class Startup
 {
     public const string HiddenArgument = "/tray";
@@ -70,6 +72,7 @@ static class Startup
     {
         get
         {
+            if (Packaged.Family != null) return Packaged.StartsWithWindows;
             using (RegistryKey run = Registry.CurrentUser.OpenSubKey(RunKey))
             using (RegistryKey approved = Registry.CurrentUser.OpenSubKey(ApprovedKey))
             {
@@ -81,6 +84,11 @@ static class Startup
         }
         set
         {
+            if (Packaged.Family != null)
+            {
+                Packaged.StartsWithWindows = value;
+                return;
+            }
             using (RegistryKey run = Registry.CurrentUser.CreateSubKey(RunKey))
             using (RegistryKey approved = Registry.CurrentUser.CreateSubKey(ApprovedKey))
             {
@@ -92,8 +100,10 @@ static class Startup
     }
 
     // The program may have been moved since it was told to start with Windows: the command follows it.
+    // A package never moves, and does not use the Run key.
     public static void Follow()
     {
+        if (Packaged.Family != null) return;
         try
         {
             using (RegistryKey run = Registry.CurrentUser.OpenSubKey(RunKey, true))
