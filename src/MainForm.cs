@@ -280,6 +280,7 @@ partial class MainForm : Form
         WireLists();
 
         tips.AutoPopDelay = 30000;
+        Look.Style(tips);
         Tip(string.Format(Strings.NewTip, NameOf(NewKeys)), newButton);
         Tip(string.Format(Strings.SaveTip, NameOf(SaveKeys)), saveButton);
         Tip(string.Format(Strings.HelpTip, NameOf(HelpKey)), helpButton);
@@ -389,8 +390,7 @@ partial class MainForm : Form
 
     bool Ask(string question)
     {
-        return MessageBox.Show(this, question, Text, MessageBoxButtons.YesNo, MessageBoxIcon.Question,
-            MessageBoxDefaultButton.Button2) == DialogResult.Yes;
+        return AskForm.Ask(this, question, false);
     }
 
     // Stops remembering what is copied, or starts again. Not a setting: the next start always listens.
@@ -573,6 +573,11 @@ partial class MainForm : Form
                 if (help != null && !help.IsDisposed) help.Close();   // with no taskbar button, it would be lost
                 Hide();
             }
+        }
+        else if (m.Msg == Native.WM_SETTINGCHANGE && m.LParam != IntPtr.Zero
+            && System.Runtime.InteropServices.Marshal.PtrToStringUni(m.LParam) == Look.ThemeChange)
+        {
+            Look.Follow();   // Windows went from light to dark or back: so do the open windows
         }
         else if (m.Msg == Native.WM_CLIPBOARDUPDATE)
         {

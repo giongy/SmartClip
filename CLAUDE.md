@@ -38,7 +38,9 @@ condiviso su GitHub).
     lingua dimentica resta in inglese. I testi con valori usano `{0}`, `{1}` e `string.Format`. Le date dei
     giorni (`DayFormat`) e le virgolette (`Quote`) cambiano con la lingua; i nomi dei tasti Maiusc/Canc/Invio
     sono quelli delle tastiere di ogni lingua (`ShiftName`, usato anche da `MainForm.NameOf`).
-  - `Look.cs` — colori, carattere (`Look.TextFont`) e controlli disegnati: `Look`, `Card`, `RoundButton`, `Toggle`.
+  - `Look.cs` — colori chiari e scuri, carattere (`Look.TextFont`), menu, suggerimenti e controlli disegnati:
+    `Look`, `Card`, `RoundButton`, `Toggle`.
+  - `AskForm.cs` — le domande e gli avvisi, al posto di `MessageBox` (`AskForm.Ask`, `AskForm.Tell`).
   - `Peek.cs` — il riquadro che mostra una voce per intero (`Peek`), accanto alla sua riga.
   - `Texts.cs` — `Entry` e `Texts`: le voci dell'elenco, la cronologia su disco, i testi salvati.
   - `Backup.cs` — esportazione e importazione in un file di testo (`Backup`, `BackupResult`).
@@ -60,7 +62,11 @@ condiviso su GitHub).
 - `store\` — la scheda dello Store pronta da copiare in Partner Center (`README.md`: passi, una scheda per lingua
   con descrizioni, caratteristiche, termini di ricerca e didascalie, note per i tester sull'interfaccia
   inglese) e le immagini (`images\<lingua>\`, da `tests.exe store store\images <lingua>` a programma chiuso;
-  `images\tile-300.png` è unica). `PRIVACY.md` è l'informativa indicata allo Store: va tenuta vera (oggi il programma non
+  `images\tile-300.png` è unica). `make-listing.ps1 <csv esportato da Partner Center>` scrive
+  `store\import\SmartClip-listing` (CSV compilato per tutte le lingue + immagini) da importare con *Store
+  listings → Import listings → Import folder*: legge i testi da `README.md`, quindi i blocchi di codice di
+  ogni lingua vanno tenuti in quell'ordine (nome, descrizione breve, descrizione, caratteristiche, termini, novità della versione da riscrivere a ogni invio) e i
+  titoli delle sezioni con il codice tra parentesi, «## English (en-US)». `PRIVACY.md` è l'informativa indicata allo Store: va tenuta vera (oggi il programma non
   usa la rete).
 - `build.cmd` — compila `src\*.cs` in `SmartClip.exe`. `SmartClip.ico` è facoltativa. L'eseguibile non sta
   più in git (`.gitignore`): si scarica dalle release.
@@ -234,6 +240,28 @@ condiviso su GitHub).
   segni (`Sign`, disegnati da `Look.Draw` su una griglia di 16, senza immagini) dicono cos'è una voce — testo,
   indirizzo, salvato — e stanno sui pulsanti (`RoundButton.Sign`). Barra del titolo e barre di scorrimento
   seguono da sole la luminosità dello sfondo (`Look.Dark`).
+- Chiaro o scuro come Windows per le app (voluto dall'utente il 15/10/2026: «il più moderno possibile»
+  restando in WinForms, rinunciando a WinUI per non perdere la compilazione senza installare nulla), dalla
+  chiave `Themes\Personalize`, `AppsUseLightTheme`. Lo scuro è un grigio neutro alla Windows 11 (aree un
+  tono più chiare della finestra), con i segni un po' più accesi; l'accento resta lo stesso blu fisso (scelta
+  dell'utente, non quello di Windows). Le due tavolozze stanno in `Look.Use`. Il cambio si segue a programma
+  aperto: `WM_SETTINGCHANGE` con «ImmersiveColorSet» → `Look.Follow` → `Switch`, che ricolora ogni finestra
+  aperta (`Recolor`): un colore assegnato a un controllo è sempre uno della tavolozza, e quello vecchio dice per
+  posizione (`Palette`) quale diventa. **Un colore nuovo va messo in tutte e due le tavolozze e in `Palette`**,
+  e le due non devono avere colori in comune, altrimenti `Recolor` sbaglia. Ciò che è disegnato a mano legge la
+  tavolozza mentre dipinge; chi ha bisogni suoi ascolta `Look.Changed` (la guida, il cui testo ha il colore
+  con cui è stato scritto); `Peek` prende i colori a ogni `Reveal`. I menu che disegna Windows (quello delle
+  caselle di testo) si scuriscono con `SetPreferredAppMode` di uxtheme, non documentata e chiamata per numero,
+  solo da Windows 10 1903. I test fotografano l'uno o l'altro con `dark`/`light` in fondo agli argomenti, e
+  `shot` prova il cambio a finestra aperta (`Look.Switch`).
+- Modernità alla Windows 11 (stessa richiesta): menu arrotondati da Windows (`DWMWCP_ROUNDSMALL`), con righe
+  alte, testo spostato a destra e una forma arrotondata sotto il puntatore (`MenuLook`, `Look.Style` del
+  menu); suggerimenti disegnati nei colori della finestra (`Look.Style` del `ToolTip`); le domande in una
+  finestra del programma (`AskForm`) invece di `MessageBox`, che resterebbe bianca nello scuro: testo su
+  un'area più chiara e pulsanti sotto, con quello colorato su «No», che è anche quello di Invio ed Esc;
+  interruttori con la manopola che scorre e cresce sotto il puntatore; pulsanti con il bordo più scuro in
+  basso; anello del focus solo usando la tastiera (`ShowFocusCues`). Mica non si usa: con i controlli GDI lo
+  sfondo trasparente non regge.
 - Aspetto (`Look`): barra del titolo nel colore della finestra
   (`DwmSetWindowAttribute`, solo Windows 11: altrove fallisce senza danni), pulsanti piatti con un solo
   pulsante in colore d'accento, righe dell'elenco disegnate a mano (`DrawEntry`) con il segno ★/▣ in colonna.
@@ -246,7 +274,8 @@ condiviso su GitHub).
   Barra del titolo e barre di scorrimento scure non compaiono nelle immagini di `tests.exe shot`: per
   vederle c'è `tests.exe real <prefisso>`, che mostra le finestre un attimo e fotografa lo schermo.
   Forme arrotondate (l'utente trovava la finestra piatta e asettica, ma i colori vanno bene): ricerca, colonne
-  e caselle stanno in un `Card` (bordo sottile, d'accento quando il contenuto ha il focus; `Look.Wrap`), i
+  e caselle stanno in un `Card` (bordo sottile, d'accento quando il contenuto ha il focus; `Look.Wrap`; attorno
+  a una casella di testo invece, come in Windows 11, una riga d'accento sul fondo, `Card.Underline`), i
   pulsanti sono `RoundButton`, la riga selezionata è una forma arrotondata con una tacca d'accento e quella
   sotto il puntatore si illumina (`Hover`, indice in `ListBox.Tag`). Le voci copiate mostrano a destra l'ora
   (o il giorno, se non è oggi); sopra ogni colonna il numero di voci; una colonna vuota dice perché.
@@ -300,7 +329,8 @@ condiviso su GitHub).
   l'eseguibile con `/restart` (`Program.RestartArgument`) e si chiude salvando le impostazioni; il nuovo aspetta
   fino a dieci secondi che il vecchio liberi il mutex dell'istanza unica, poi si riapre sulle opzioni
   (`ShowOptions`). Per far stare la riga è sceso ancora `ListExtra`.
-- I pulsanti Sì/No di `MessageBox` seguono la lingua di Windows, non quella scelta: è Windows a disegnarli.
+- Le domande non usano `MessageBox`, i cui pulsanti Sì/No seguirebbero la lingua di Windows: `AskForm` scrive
+  `Strings.Yes`, `No`, `Ok`. Restano nella lingua di Windows le finestre di scelta dei file.
 
 ## Trappole già incontrate
 
@@ -362,13 +392,15 @@ condiviso su GitHub).
 - `tests.exe shot <prefisso>` — non è in `test.cmd`: salva immagini PNG della finestra (elenco con voci
   finte, opzioni, stati lunghi) per controllare l'aspetto senza mostrarla.
 - `tests.exe store <cartella> <lingua>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno
-  sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>`, e
+  sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>` (in chiaro, tranne l'ultima, `8-dark`), e
   l'icona 300 × 300 in `<cartella>`. Mostra le finestre qualche secondo; a programma chiuso e salvando prima le
   impostazioni, come `real`.
 - `shot`, `real` e `store` accettano la lingua come ultimo argomento (`en`, `es`, `fr`, `it`; senza, inglese) e
   usano voci finte in quella lingua (`Sample`). Per le immagini vere `tests.exe` va compilato con
   `/resource:SmartClip.ico,SmartClip.ico`, altrimenti la barra del titolo ha l'icona generica; `real` mette dietro
-  le finestre lo stesso sfondo di `store`, perché ai bordi non compaia lo schermo.
+  le finestre lo stesso sfondo di `store`, perché ai bordi non compaia lo schermo. Dopo la lingua accettano
+  `dark` o `light` (senza, il tema di Windows). `real` fotografa anche una domanda (`-real-ask`), il menu del
+  tray con una cartella aperta (`-real-menu`) e un suggerimento (`-real-tip`).
 
 Il tray è stato verificato con un programmino usa e getta (non nel progetto) che crea `MainForm`, legge i campi
 `tray` e `trayBox` per riflessione e aziona le voci del menu con `PerformClick`: X nasconde, Apri riapre anche
@@ -409,3 +441,6 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   finestra di una cartella con la scelta del posto.
 - L'avvio vero all'accesso a Windows: provati la voce nel registro e l'avvio nascosto con un programmino usa e
   getta, mai una disconnessione e un nuovo accesso.
+- Il tema dal vivo: il cambio da Impostazioni di Windows a programma aperto (provati solo `Look.Switch` da
+  `shot` e le immagini di `real` in chiaro e in scuro), il menu delle caselle di testo scurito da
+  `SetPreferredAppMode`, l'interruttore che scorre, l'anello del focus, `AskForm` aperta dal programma vero.

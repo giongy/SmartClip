@@ -55,6 +55,7 @@ static partial class Strings
         DeleteFolderTop = "\n\nLo que contiene no se elimina: queda entre los guardados, fuera de las carpetas.";
         DeleteFolderUp = "\n\nLo que contiene no se elimina: pasa a la carpeta «{0}».";
         AskDelete = "¿Quieres eliminar «{0}»?";
+        Yes = "Sí"; No = "No"; Ok = "Aceptar";
 
         Cancel = "Cancelar";
         NoText = "No hay texto en el portapapeles: copia antes la contraseña.";

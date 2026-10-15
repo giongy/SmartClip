@@ -74,13 +74,11 @@ partial class MainForm
 
     bool ConfirmUnusual(string text)
     {
-        // A message box whose owner is hidden or minimised would stay invisible.
+        // A question whose owner is hidden or minimised would stay invisible.
         RestoreWindow();
         int lines = text.Split('\n').Length;
         string what = Count(text.Length) + (lines > 1 ? string.Format(Strings.OnLines, lines) : "");
-        return MessageBox.Show(this,
-            string.Format(Strings.AskUnusual, what),
-            Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
+        return AskForm.Ask(this, string.Format(Strings.AskUnusual, what), true);
     }
 
     // Waits for another program's window to stay in the foreground for 'seconds' seconds and returns it.

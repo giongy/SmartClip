@@ -56,6 +56,7 @@ static partial class Strings
         DeleteFolderTop = "\n\nSon contenu n'est pas supprimé : il reste parmi les textes enregistrés, hors des dossiers.";
         DeleteFolderUp = "\n\nSon contenu n'est pas supprimé : il passe dans le dossier « {0} ».";
         AskDelete = "Voulez-vous supprimer « {0} » ?";
+        Yes = "Oui"; No = "Non"; Ok = "OK";
 
         Cancel = "Annuler";
         NoText = "Il n'y a pas de texte dans le presse-papiers : copiez d'abord le mot de passe.";

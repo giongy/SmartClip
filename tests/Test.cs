@@ -112,6 +112,9 @@ static class TestProgram
         string mode = args.Length > 0 ? args[0] : "";
         // The pictures can be taken in any language: "shot <png> it". Everything else runs in English.
         if (args.Length > 2 && (mode == "shot" || mode == "real" || mode == "store")) Strings.Use(args[2]);
+        // And in either theme, whatever Windows has: "shot <png> it dark".
+        if (Array.IndexOf(args, "dark") > 0) Look.Use(true);
+        else if (Array.IndexOf(args, "light") > 0) Look.Use(false);
         if (mode == "map") return MapTest();
         if (mode == "shot") return Shot(args[1]);
         if (mode == "type") return TypeTest();
@@ -625,6 +628,20 @@ static class TestProgram
             Save(form, path + "-options.png");
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { false });
 
+            // Windows going dark or light with the window open: every colour given to a control follows.
+            Look.Switch(!Look.Dark);
+            Application.DoEvents();
+            Save(form, path + "-switched.png");
+            Panel searchCard = (Panel)search.Parent;
+            Label count = (Label)typeof(MainForm).GetField("recentCount", hidden).GetValue(form);
+            Button typing = (Button)typeof(MainForm).GetField("typeButton", hidden).GetValue(form);
+            Console.WriteLine("[{0}] a change of theme recolours the open window",
+                form.BackColor == Look.Back && form.ForeColor == Look.Ink && recent.BackColor == Look.Well && search.BackColor == Look.Well
+                && searchCard.BackColor == Look.Well && count.ForeColor == Look.Muted && typing.BackColor == Look.Accent
+                && typing.FlatAppearance.BorderColor == Look.Accent ? "PASS" : "FAIL");
+            Look.Switch(!Look.Dark);
+            Console.WriteLine("[{0}] and back", form.BackColor == Look.Back && recent.BackColor == Look.Well ? "PASS" : "FAIL");
+
             Label status = (Label)typeof(MainForm).GetField("status", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(form);
             status.Text = string.Format(Strings.DoneMany, 24) + string.Format(Strings.UnicodeMany, 2) + Strings.UnicodeHint;
             Application.DoEvents();
@@ -731,6 +748,37 @@ static class TestProgram
                 edit.Show();
                 Snap(edit, path + "-real-edit.png");
             }
+            // A question of the program's own, in place of a message box of Windows.
+            using (Form ask = (Form)Activator.CreateInstance(typeof(AskForm), hidden, null,
+                new object[] { string.Format(Strings.AskDelete, Sample.Current.Signature), true }, null))
+            {
+                ask.TopMost = true;
+                ask.StartPosition = FormStartPosition.Manual;
+                ask.Location = new Point(80, 80);
+                ask.Show();
+                Snap(ask, path + "-real-ask.png");
+            }
+            // The menu of the icon with a folder open, and a tooltip, over the window.
+            typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { false });
+            using (ContextMenuStrip menu = new ContextMenuStrip())
+            {
+                menu.Items.Add(Strings.Open);
+                menu.Items.Add(Strings.Pause);
+                menu.Items.Add(Strings.Exit);
+                Look.Style(menu);
+                typeof(MainForm).GetMethod("ShowSaved", hidden).Invoke(form, new object[] { menu });
+                menu.Show(new Point(form.Left + 60, form.Top + 120));
+                ToolStripMenuItem work = (ToolStripMenuItem)menu.Items[3];
+                work.ShowDropDown();
+                work.DropDownItems[0].Select();
+                SnapArea(new Rectangle(form.Left + 40, form.Top + 100, 520, 300), path + "-real-menu.png");
+                menu.Close();
+            }
+            ToolTip tips = (ToolTip)typeof(MainForm).GetField("tips", hidden).GetValue(form);
+            Button helpButton = (Button)typeof(MainForm).GetField("helpButton", hidden).GetValue(form);
+            tips.Show(tips.GetToolTip(helpButton), helpButton, -200, -40);
+            SnapArea(Rectangle.Inflate(form.Bounds, 40, 40), path + "-real-tip.png");
+            tips.Hide(helpButton);
             using (ShotHelp help = new ShotHelp())
             {
                 help.TopMost = true;
@@ -756,6 +804,7 @@ static class TestProgram
         string pictures = System.IO.Path.Combine(folder, Strings.Code);
         System.IO.Directory.CreateDirectory(pictures);
         BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
+        Look.Use(false);   // light, whatever Windows has: only the last picture is dark
         SaveTile(System.IO.Path.Combine(folder, "tile-300.png"));
         using (ShotForm form = new ShotForm())
         {
@@ -842,6 +891,11 @@ static class TestProgram
                     ((ListBox)typeof(HelpForm).GetField("topics", hidden).GetValue(help)).SelectedIndex = 4;
                     SnapArea(area, System.IO.Path.Combine(pictures, "7-guide.png"));
                 }
+
+                // The same list in the dark, as when Windows is set so for its apps.
+                Look.Switch(true);
+                SnapArea(area, System.IO.Path.Combine(pictures, "8-dark.png"));
+                Look.Switch(false);
             }
         }
         Console.WriteLine("pictures in {0}", pictures);

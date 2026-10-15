@@ -89,6 +89,10 @@ class HelpForm : Form
         closeButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
         Controls.AddRange(new Control[] { topicsCard, card, closeButton });
         ActiveControl = topics;
+        // The text keeps the colour it was written in: when Windows goes dark or light, it is written again.
+        EventHandler rewrite = delegate { Write(); };
+        Look.Changed += rewrite;
+        Disposed += delegate { Look.Changed -= rewrite; };   // also when it goes without being closed
         ResumeLayout(false);
         PerformLayout();
     }

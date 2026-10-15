@@ -638,7 +638,7 @@ partial class MainForm
         string why = name.IndexOf(Texts.Separator) >= 0 ? string.Format(Strings.FolderNoSeparator, Texts.Separator)
             : !Texts.SameName(path, old) && GroupNames().Exists(delegate(string other) { return Texts.SameName(other, path); })
             ? string.Format(Strings.FolderExists, Texts.Display(path)) : null;
-        if (why != null) MessageBox.Show(this, why, Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
+        if (why != null) AskForm.Tell(this, why);
         return why != null;
     }
 

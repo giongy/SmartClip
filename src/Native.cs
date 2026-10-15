@@ -5,14 +5,15 @@ using System.Text;
 // Windows functions and constants, with their official names.
 static class Native
 {
-    public const int WM_ACTIVATEAPP = 0x001C, WM_NCHITTEST = 0x0084, WM_HOTKEY = 0x0312, WM_CLIPBOARDUPDATE = 0x031D,
-        EM_SETCUEBANNER = 0x1501;
+    public const int WM_SETTINGCHANGE = 0x001A, WM_ACTIVATEAPP = 0x001C, WM_NCHITTEST = 0x0084, WM_HOTKEY = 0x0312,
+        WM_CLIPBOARDUPDATE = 0x031D, EM_SETCUEBANNER = 0x1501;
     public const int HTTRANSPARENT = -1;
     public const int WS_EX_TOPMOST = 0x00000008, WS_EX_TOOLWINDOW = 0x00000080, WS_EX_NOACTIVATE = 0x08000000;
     public const int CS_DROPSHADOW = 0x00020000;
     public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20, DWMWA_WINDOW_CORNER_PREFERENCE = 33, DWMWA_BORDER_COLOR = 34,
         DWMWA_CAPTION_COLOR = 35, DWMWA_TEXT_COLOR = 36;
-    public const int DWMWCP_ROUND = 2;
+    public const int DWMWCP_ROUND = 2, DWMWCP_ROUNDSMALL = 3;
+    public const int ForceDark = 2, ForceLight = 3;   // modes of SetPreferredAppMode
     public const uint CF_UNICODETEXT = 13;
     public const int ERROR_SUCCESS = 0, ERROR_INSUFFICIENT_BUFFER = 122;
     public const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002, MOD_SHIFT = 0x0004, MOD_NOREPEAT = 0x4000;
@@ -139,4 +140,13 @@ static class Native
 
     [DllImport("dwmapi.dll")]
     public static extern int DwmSetWindowAttribute(IntPtr window, int attribute, ref int value, int size);
+
+    // Not documented, though there since Windows 10 1903 (in 1809 the first was AllowDarkModeForApp, which
+    // takes the same values well enough): the only way to darken the menus Windows draws itself, such as the
+    // one of a text box. Exported by number alone.
+    [DllImport("uxtheme.dll", EntryPoint = "#135")]
+    public static extern int SetPreferredAppMode(int mode);
+
+    [DllImport("uxtheme.dll", EntryPoint = "#136")]
+    public static extern void FlushMenuThemes();
 }

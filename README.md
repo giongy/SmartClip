@@ -21,8 +21,11 @@ Formerly called PasswordPaste: the first start under the new name takes over its
 - Stops typing the moment the target window loses focus, so a password never lands in the wrong place.
 - The history of copied items is kept for the number of days you choose, or in memory only; saved texts are
   encrypted for your Windows account.
-- Neutral warm-grey interface with small coloured signs, in the font of Windows 11 where it is installed.
+- Light or dark as Windows is set for apps, switching on the fly: warm grey in the light, neutral grey in the
+  dark, small coloured signs, rounded menus and the font of Windows 11 where it is installed.
 - In English, Spanish, French and Italian, chosen in the options (English by default).
+
+![The SmartClip window in the dark](docs/screenshot-dark.png)
 
 ## Download
 
@@ -224,7 +227,8 @@ the privacy policy in [`PRIVACY.md`](PRIVACY.md).
 Three more modes are not part of `test.cmd` and only produce pictures: `tests.exe shot <prefix>` draws the windows
 off screen, `tests.exe real <prefix>` shows them for a moment and photographs the screen, and
 `tests.exe store <folder>` does the same on a plain background at the size the Store asks for, plus the 300 × 300
-icon. The screenshots in this page come from `real`.
+icon. After the language they take `dark` or `light`, whatever Windows has. The screenshots in this page come
+from `real`.
 
 ## Limitations
 

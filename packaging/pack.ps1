@@ -100,6 +100,14 @@ if (-not $tools) {
 $config = Join-Path $Out 'priconfig.xml'
 & (Join-Path $tools 'makepri.exe') createconfig /cf $config /dq en-US /pv 10.0.0 /o | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'makepri createconfig failed' }
+# The configuration it writes splits the scales into resource packages of their own, which only a bundle has:
+# in a single package their indexes would be left unread, and Windows would enlarge the 100% images. One index
+# for every scale instead.
+$priConfig = New-Object Xml.XmlDocument
+$priConfig.Load($config)
+$split = $priConfig.SelectSingleNode('//packaging')
+if ($split) { [void]$split.ParentNode.RemoveChild($split) }
+$priConfig.Save($config)
 & (Join-Path $tools 'makepri.exe') new /pr $layout /cf $config /mn (Join-Path $layout 'AppxManifest.xml') /of (Join-Path $layout 'resources.pri') /o | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'makepri new failed' }
 $msix = Join-Path $Out "SmartClip-$version.msix"

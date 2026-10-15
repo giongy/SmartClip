@@ -90,6 +90,8 @@ static partial class Strings
     public static string DeleteFolderTop = "\n\nWhat it holds is not deleted: it stays among the saved texts, outside the folders.";
     public static string DeleteFolderUp = "\n\nWhat it holds is not deleted: it moves into the folder “{0}”.";
     public static string AskDelete = "Delete “{0}”?";
+    // The buttons of the questions, which the program asks in a window of its own (AskForm).
+    public static string Yes = "Yes", No = "No", Ok = "OK";
 
     // --- Typing ---
     public static string Cancel = "Cancel";
