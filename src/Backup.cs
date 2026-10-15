@@ -12,14 +12,40 @@ class BackupResult
     public int Kept;            // saved texts of the file left out of an import, because the name was taken
 }
 
+// The words that structure an exported file, in one language: the mark that opens each entry and the names
+// of its fields.
+class BackupWords
+{
+    public readonly string Group, Saved, Copied, Name, Folder, Time, Text, Pinned;
+
+    public BackupWords(string group, string saved, string copied, string name, string folder, string time, string text, string pinned)
+    {
+        Group = group;
+        Saved = saved;
+        Copied = copied;
+        Name = name;
+        Folder = folder;
+        Time = time;
+        Text = text;
+        Pinned = pinned;
+    }
+}
+
 // The saved texts, and on request what was copied, written as they are to a text file that Notepad shows,
 // and read back from it. Each entry is a mark on a line of its own, a few fields, then its text: one line of
-// the file per line of text, each after a tab, which is what tells it from the rest.
+// the file per line of text, each after a tab, which is what tells it from the rest. The file is written in
+// the language in use and read in any of them: a file can go to a PC set to another language, and those
+// written before there were languages are in Italian.
 static class Backup
 {
-    const string GroupMark = "[Cartella]", SavedMark = "[Salvato]", CopiedMark = "[Copiato]";
-    const string NameField = "Nome: ", GroupField = "Cartella: ", TimeField = "Data: ", TextField = "Testo:";
-    const string PinnedField = "In alto: sì";
+    static readonly Dictionary<string, BackupWords> Words = new Dictionary<string, BackupWords>
+    {
+        { "en", new BackupWords("[Folder]", "[Saved]", "[Copied]", "Name: ", "Folder: ", "Date: ", "Text:", "Pinned: yes") },
+        { "es", new BackupWords("[Carpeta]", "[Guardado]", "[Copiado]", "Nombre: ", "Carpeta: ", "Fecha: ", "Texto:", "Arriba: sí") },
+        { "fr", new BackupWords("[Dossier]", "[Enregistré]", "[Copié]", "Nom : ", "Dossier : ", "Date : ", "Texte :", "En haut : oui") },
+        { "it", new BackupWords("[Cartella]", "[Salvato]", "[Copiato]", "Nome: ", "Cartella: ", "Data: ", "Testo:", "In alto: sì") }
+    };
+    const int NoMark = 0, GroupMark = 1, SavedMark = 2, CopiedMark = 3;   // what an entry of the file is
     const string Indent = "\t";
     const string TimeFormat = "yyyy-MM-dd HH:mm:ss";
     public const string Extension = ".txt";
@@ -42,24 +68,54 @@ static class Backup
 
     public static List<string> Lines(List<Entry> entries, bool all)
     {
+        BackupWords words;
+        if (!Words.TryGetValue(Strings.Code, out words)) words = Words["en"];
         List<string> lines = new List<string>();
-        lines.Add(Program.AppName + " " + Program.Version + ": esportazione del " + DateTime.Now.ToString("dd/MM/yyyy HH:mm"));
-        lines.Add("Attenzione: qui i testi sono in chiaro, password comprese.");
-        lines.Add("Il testo di ogni voce sta nelle righe che iniziano con una tabulazione: se modifichi il file, lasciala al suo posto.");
+        lines.Add(string.Format(Strings.ExportHeader, Program.AppName, Program.Version, DateTime.Now.ToString("g", Strings.Culture)));
+        lines.Add(Strings.ExportClearWarning);
+        lines.Add(Strings.ExportEditNote);
         foreach (Entry entry in entries)
         {
             if (entry.Picture || entry.Name == null && !all) continue;
             lines.Add("");
-            lines.Add(entry.IsGroup ? GroupMark : entry.Name != null ? SavedMark : CopiedMark);
-            if (entry.Name != null) lines.Add(NameField + entry.Name);
-            if (entry.Group != null) lines.Add(GroupField + entry.Group);
-            if (entry.Time != DateTime.MinValue) lines.Add(TimeField + entry.Time.ToString(TimeFormat, CultureInfo.InvariantCulture));
-            if (entry.Pinned) lines.Add(PinnedField);
+            lines.Add(entry.IsGroup ? words.Group : entry.Name != null ? words.Saved : words.Copied);
+            if (entry.Name != null) lines.Add(words.Name + entry.Name);
+            if (entry.Group != null) lines.Add(words.Folder + entry.Group);
+            if (entry.Time != DateTime.MinValue) lines.Add(words.Time + entry.Time.ToString(TimeFormat, CultureInfo.InvariantCulture));
+            if (entry.Pinned) lines.Add(words.Pinned);
             if (entry.IsGroup) continue;
-            lines.Add(TextField);
+            lines.Add(words.Text);
             foreach (string line in entry.Text.Replace("\r\n", "\n").Split('\n')) lines.Add(Indent + line);
         }
         return lines;
+    }
+
+    // What a line opens, in any of the languages: an entry of the file, or none.
+    static int MarkOf(string line)
+    {
+        foreach (BackupWords words in Words.Values)
+        {
+            if (line == words.Group) return GroupMark;
+            if (line == words.Saved) return SavedMark;
+            if (line == words.Copied) return CopiedMark;
+        }
+        return NoMark;
+    }
+
+    // The value of a field, if the line is that field in any of the languages; otherwise null.
+    static string Field(string line, Func<BackupWords, string> name)
+    {
+        foreach (BackupWords words in Words.Values)
+            if (line.StartsWith(name(words))) return line.Substring(name(words).Length).Trim();
+        return null;
+    }
+
+    // Whether the line is exactly that word, in any of the languages.
+    static bool Is(string line, Func<BackupWords, string> word)
+    {
+        foreach (BackupWords words in Words.Values)
+            if (line == word(words)) return true;
+        return false;
     }
 
     // The entries of an exported file, as it is or after the user changed it by hand: what makes no sense is
@@ -67,7 +123,8 @@ static class Backup
     public static List<Entry> Parse(IEnumerable<string> lines)
     {
         List<Entry> entries = new List<Entry>();
-        string mark = null, name = null, group = null;
+        int mark = NoMark;
+        string name = null, group = null;
         DateTime time = DateTime.MinValue;
         bool pinned = false;
         List<string> text = null;   // the lines of the text, once its field is met
@@ -93,7 +150,8 @@ static class Backup
                 copied.Pinned = pinned;
                 entries.Add(copied);
             }
-            mark = name = group = null;
+            mark = NoMark;
+            name = group = null;
             time = DateTime.MinValue;
             pinned = false;
             text = null;
@@ -101,25 +159,25 @@ static class Backup
         };
         foreach (string line in lines)
         {
+            string value;
             if (text != null && line.StartsWith(Indent))
             {
                 for (; blanks > 0; blanks--) text.Add("");
                 text.Add(line.Substring(Indent.Length));
             }
             else if (text != null && line.Length == 0) blanks++;
-            else if (line == GroupMark || line == SavedMark || line == CopiedMark)
+            else if (MarkOf(line) != NoMark)
             {
                 close();
-                mark = line;
+                mark = MarkOf(line);
             }
-            else if (mark == null || text != null) continue;   // the heading of the file, or something after a text
-            else if (line.StartsWith(NameField)) name = line.Substring(NameField.Length).Trim();
-            else if (line.StartsWith(GroupField)) group = line.Substring(GroupField.Length).Trim();
-            else if (line.StartsWith(TimeField))
-                DateTime.TryParseExact(line.Substring(TimeField.Length).Trim(), TimeFormat, CultureInfo.InvariantCulture,
-                    DateTimeStyles.None, out time);
-            else if (line == PinnedField) pinned = true;
-            else if (line == TextField) text = new List<string>();
+            else if (mark == NoMark || text != null) continue;   // the heading of the file, or something after a text
+            else if ((value = Field(line, delegate(BackupWords words) { return words.Name; })) != null) name = value;
+            else if ((value = Field(line, delegate(BackupWords words) { return words.Folder; })) != null) group = value;
+            else if ((value = Field(line, delegate(BackupWords words) { return words.Time; })) != null)
+                DateTime.TryParseExact(value, TimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
+            else if (Is(line, delegate(BackupWords words) { return words.Pinned; })) pinned = true;
+            else if (Is(line, delegate(BackupWords words) { return words.Text; })) text = new List<string>();
         }
         close();
         return entries;

@@ -5,10 +5,10 @@ using System.Windows.Forms;
 using Microsoft.Win32;
 
 [assembly: AssemblyTitle(Program.AppName)]
-[assembly: AssemblyDescription("Gestore degli appunti che sa anche digitarli dove l'incolla non funziona")]
+[assembly: AssemblyDescription("Clipboard manager that can also type the clipboard where paste does not work")]
 [assembly: AssemblyProduct(Program.AppName)]
 // Changing this number and pushing publishes a new release (.github/workflows/release.yml).
-[assembly: AssemblyVersion("3.8.3")]
+[assembly: AssemblyVersion("3.9.0")]
 
 // A small clipboard manager that can also type the clipboard content as real key presses (scancodes),
 // so it works even where paste is disabled (lock screens of remote desktops).
@@ -26,6 +26,10 @@ static class Program
     }
 
     public static readonly uint ShowMessage = Native.RegisterWindowMessage(AppName + ".Show");
+    const string SingleInstance = AppName + ".SingleInstance";
+    // The program starting itself again, after a change of language: it waits for the old one to close.
+    public const string RestartArgument = "/restart";
+    const int RestartPollMs = 100, RestartTries = 100;   // ten seconds at most
 
     [STAThread]
     static void Main(string[] args)
@@ -33,8 +37,16 @@ static class Program
         // Started by Windows at sign-in: the window stays out of the way. From the package, the startup task
         // says so instead of the argument.
         bool hidden = Array.IndexOf(args, Startup.HiddenArgument) >= 0 || Packaged.Family != null && Packaged.StartedAtSignIn;
+        bool restarting = Array.IndexOf(args, RestartArgument) >= 0;
         bool first;
-        using (new Mutex(true, AppName + ".SingleInstance", out first))
+        Mutex single = new Mutex(true, SingleInstance, out first);
+        for (int i = 0; !first && restarting && i < RestartTries; i++)
+        {
+            single.Dispose();
+            Thread.Sleep(RestartPollMs);
+            single = new Mutex(true, SingleInstance, out first);
+        }
+        using (single)
         {
             if (!first)
             {
@@ -45,11 +57,14 @@ static class Program
                 return;
             }
 
+            Strings.Use(MainForm.SavedLanguage());   // before any window: every text comes from here
             Native.SetProcessDPIAware();
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Startup.Follow();
-            Application.Run(new MainForm(hidden));
+            MainForm form = new MainForm(hidden);
+            if (restarting) form.ShowOptions();   // the language was changed there
+            Application.Run(form);
         }
     }
 }

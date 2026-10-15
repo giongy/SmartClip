@@ -3,9 +3,10 @@
 Piccolo gestore degli appunti per Windows che sa anche digitarne il contenuto come pressioni di tasti reali, per
 inserire password dove l'incolla non funziona (schermate di blocco dei desktop remoti). Fino alla versione 1.2
 si chiamava PasswordPaste (il repository GitHub è `giongy/SmartClip`), e alla
-prima apertura `AdoptOldSettings` sposta impostazioni e testi salvati da `HKCU\Software\PasswordPaste`. L'utente è italiano: interfaccia e
-risposte in italiano. I commenti nel codice e nei file di configurazione sono in inglese (il progetto è condiviso
-su GitHub).
+prima apertura `AdoptOldSettings` sposta impostazioni e testi salvati da `HKCU\Software\PasswordPaste`. L'utente è italiano: risposte in
+italiano. L'interfaccia è in inglese (la lingua di default, voluta dall'utente per renderla internazionale),
+spagnolo, francese e italiano. I commenti nel codice e nei file di configurazione sono in inglese (il progetto è
+condiviso su GitHub).
 
 ## File
 
@@ -25,10 +26,18 @@ su GitHub).
   - `EditForm.cs` — la finestra «Nuovo/Modifica».
   - `HelpForm.cs` — la guida (pulsante «?» o F1), divisa in argomenti scelti da una colonna a sinistra (voluta
     dall'utente: tutta di fila era illeggibile), disegnata come le righe dell'elenco (`DrawTopic`); a destra
-    solo l'argomento scelto (`Write`). Il testo sta in `Lines`, una riga per paragrafo (`# ` apre un argomento e
-    gli dà il nome, che deve stare nella colonna; `- ` punto, tabulazione tra un tasto e ciò che fa), e prende nomi, tasti e numeri dalle costanti pubbliche
-    di `MainForm` e `Texts`. Non è modale: resta aperta accanto alla finestra. **Va aggiornata quando cambia
-    una funzione**, come il README.
+    solo l'argomento scelto (`Write`). Il testo è `Strings.Guide()`, uno per lingua (`EnglishGuide` in
+    `Strings.cs`, gli altri nei file delle lingue), una riga per paragrafo (`# ` apre un argomento e gli dà il
+    nome, che deve stare nella colonna; `- ` punto, tabulazione tra un tasto e ciò che fa), e prende nomi, tasti
+    e numeri dalle costanti pubbliche di `MainForm` e `Texts` e dagli altri campi di `Strings`. Le quattro guide
+    hanno gli stessi argomenti nello stesso ordine (lo controlla `tests.exe texts`). Non è modale: resta aperta
+    accanto alla finestra. **Va aggiornata in tutte le lingue quando cambia una funzione**, come il README.
+  - `Strings.cs` — **ogni testo che il programma mostra**, come campo statico con il valore inglese (inglese =
+    default ed elenco unico dei testi), più la scelta della lingua (`Use`, una volta sola all'avvio da `Main`,
+    prima di ogni finestra). `Strings.Italian.cs`, `.Spanish.cs`, `.French.cs` sostituiscono i valori; ciò che una
+    lingua dimentica resta in inglese. I testi con valori usano `{0}`, `{1}` e `string.Format`. Le date dei
+    giorni (`DayFormat`) e le virgolette (`Quote`) cambiano con la lingua; i nomi dei tasti Maiusc/Canc/Invio
+    sono quelli delle tastiere di ogni lingua (`ShiftName`, usato anche da `MainForm.NameOf`).
   - `Look.cs` — colori, carattere (`Look.TextFont`) e controlli disegnati: `Look`, `Card`, `RoundButton`, `Toggle`.
   - `Peek.cs` — il riquadro che mostra una voce per intero (`Peek`), accanto alla sua riga.
   - `Texts.cs` — `Entry` e `Texts`: le voci dell'elenco, la cronologia su disco, i testi salvati.
@@ -46,9 +55,10 @@ su GitHub).
   vuole la quarta cifra della versione a zero. Il flusso di release crea il pacchetto e lo lascia tra gli
   artifact (non nella release: senza la firma dello Store non si installa); lanciato a mano, lo crea anche se
   la release esiste già.
-- `store\` — la scheda dello Store pronta da copiare in Partner Center (`README.md`: passi, testi in italiano e
-  inglese, didascalie, note per i tester) e le immagini (`images\`, da `tests.exe store store\images` a
-  programma chiuso). `PRIVACY.md` è l'informativa indicata allo Store: va tenuta vera (oggi il programma non
+- `store\` — la scheda dello Store pronta da copiare in Partner Center (`README.md`: passi, una scheda per lingua
+  con descrizioni, caratteristiche, termini di ricerca e didascalie, note per i tester sull'interfaccia
+  inglese) e le immagini (`images\<lingua>\`, da `tests.exe store store\images <lingua>` a programma chiuso;
+  `images\tile-300.png` è unica). `PRIVACY.md` è l'informativa indicata allo Store: va tenuta vera (oggi il programma non
   usa la rete).
 - `build.cmd` — compila `src\*.cs` in `SmartClip.exe`. `SmartClip.ico` è facoltativa. L'eseguibile non sta
   più in git (`.gitignore`): si scarica dalle release.
@@ -59,10 +69,10 @@ su GitHub).
   quarta cifra conta solo se non è zero: `2.1.0.0` è `v2.1.0`, `2.1.0.1` è `v2.1.0.1`.
 - `tests/Test.cs`, `tests/test.cmd` — controlli automatici (vedi sotto).
 - `LICENSE` — licenza MIT.
-- `README.md` — presentazione per GitHub, in inglese. Traduce le etichette delle opzioni: va aggiornato quando se
-  ne aggiunge o rinomina una. Mostra `docs/screenshot.png`, `docs/screenshot-options.png` e `docs/screenshot-edit.png`, fatti con
-  `tests.exe real` (immagini `-real-list`, `-real-options` e `-real-edit`, con voci finte e a programma
-  chiuso: altrimenti le scorciatoie risultano occupate)
+- `README.md` — presentazione per GitHub, in inglese. Cita le etichette inglesi delle opzioni: va aggiornato
+  quando se ne aggiunge o rinomina una. Mostra `docs/screenshot.png`, `docs/screenshot-options.png` e `docs/screenshot-edit.png`, fatti con
+  `tests.exe real <prefisso> en` (immagini `-real-list`, `-real-options` e `-real-edit`, con voci finte e a
+  programma chiuso: altrimenti le scorciatoie risultano occupate)
   compilato aggiungendo `/resource:SmartClip.ico,SmartClip.ico`, altrimenti manca l'icona.
 
 - `.github/workflows/codeql.yml` — analisi CodeQL su GitHub con compilazione vera (`build-mode: manual`, lancia
@@ -189,8 +199,9 @@ su GitHub).
   Si vedono solo i nomi.
 - «Esporta…» e «Importa…» nelle opzioni, sotto «Programma» (voluti dall'utente, con la scelta «solo i testi
   salvati» o «tutto» in un menu sotto ciascun pulsante, `Choice`). Il file è testo UTF-8 con BOM, leggibile dal
-  Blocco note e **in chiaro** (prima di esportare si chiede conferma): un segno per voce (`[Cartella]`,
-  `[Salvato]`, `[Copiato]`), pochi campi, poi il testo, una riga per riga dopo una tabulazione: è la
+  Blocco note e **in chiaro** (prima di esportare si chiede conferma): un segno per voce (`[Folder]`,
+  `[Saved]`, `[Copied]` in inglese, `[Cartella]`… in italiano: il file si scrive nella lingua in uso e si legge
+  in tutte, `BackupWords` in `Backup.cs`; quelli scritti prima delle lingue sono in italiano), pochi campi, poi il testo, una riga per riga dopo una tabulazione: è la
   tabulazione a distinguerlo dal resto, quindi un testo può contenere qualsiasi cosa. Le immagini non si
   esportano. L'importazione aggiunge: per i salvati con un nome già preso chiede una volta sola se sostituire;
   i copiati tornano con la loro ora e la stellina nel file del loro giorno (`Texts.Restore`), tranne quelli che
@@ -264,13 +275,35 @@ su GitHub).
 - Aggiungere un'opzione: il campo in cima a `MainForm`, una riga `PlaceOption` (`PlaceNumber` se è un numero,
   `PlaceHotkey` se è una scorciatoia globale) in `PlaceOptions` sotto il titolo della sua
   categoria (`PlaceTitle`), una in `TransferSettings` e il suggerimento `Tip`, tutto in `MainForm.Options.cs`. In `optionControls` entra da sola.
+  Etichetta e suggerimento sono campi di `Strings` (inglese) tradotti nelle altre tre lingue.
+- **Nessun testo visibile scritto nel codice**: ogni testo nuovo è un campo di `Strings.cs` in inglese e una riga
+  in ciascuno dei tre file delle lingue, con gli stessi `{0}`. `tests.exe texts` controlla che nessuna traduzione
+  chieda più valori dell'inglese (sarebbe un `FormatException` a programma avviato), che le guide abbiano gli
+  stessi argomenti, ed elenca i testi rimasti uguali all'inglese. Gli spazi sono tarati sull'italiano, che è
+  tra le lingue più lunghe: dopo aver cambiato etichette guardare `tests.exe shot <png> <lingua>` in tutte e
+  quattro (francese e spagnolo sono i più a rischio).
   Le categorie sono su due colonne (volute dall'utente, l'elenco unico era caotico): a sinistra «Digitazione»
   e «Programma», a destra «Scorciatoie» e «Cronologia» (così le due colonne sono alte uguali e la finestra non
   cresce: l'utente non la voleva più alta). I titoli sono in grassetto con una riga sotto: il colore
   d'accento resta a ciò che si clicca (il link `PlaceLink` alla cartella della cronologia, prima indistinguibile
   dai titoli). L'altezza della finestra si calcola da sola.
 
+## Lingua
+
+- Scelta in «Program» con un pulsante che apre l'elenco delle lingue, ognuna con il proprio nome
+  (`PlacePicker`, `ChangeLanguage`); l'etichetta dice anche «Language» in ogni lingua, per chi ci arriva per
+  sbaglio. Impostazione `Language` (stringa, `LanguageSetting`), letta da `Main` con `SavedLanguage` prima di
+  creare la finestra; senza impostazione vale l'inglese (voluto dall'utente).
+- Cambiare lingua **riavvia** il programma invece di riscrivere ogni testo al volo: `ChangeLanguage` lancia
+  l'eseguibile con `/restart` (`Program.RestartArgument`) e si chiude salvando le impostazioni; il nuovo aspetta
+  fino a dieci secondi che il vecchio liberi il mutex dell'istanza unica, poi si riapre sulle opzioni
+  (`ShowOptions`). Per far stare la riga è sceso ancora `ListExtra`.
+- I pulsanti Sì/No di `MessageBox` seguono la lingua di Windows, non quella scelta: è Windows a disegnarli.
+
 ## Trappole già incontrate
+
+- `NotifyIcon.Text` rifiuta più di 63 caratteri (eccezione): il suggerimento dell'icona si taglia
+  (`TrayTextLimit`), perché in spagnolo e francese supera il limite.
 
 - `VkKeyScan` per `.` propone il punto del tastierino numerico, che con Bloc Num spento è Canc: per questo la
   mappa dei tasti non lo usa.
@@ -326,9 +359,14 @@ su GitHub).
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.
 - `tests.exe shot <prefisso>` — non è in `test.cmd`: salva immagini PNG della finestra (elenco con voci
   finte, opzioni, stati lunghi) per controllare l'aspetto senza mostrarla.
-- `tests.exe store <cartella>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno sfondo nei
-  colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), e l'icona 300 × 300. Mostra le finestre
-  qualche secondo; a programma chiuso e salvando prima le impostazioni, come `real`.
+- `tests.exe store <cartella> <lingua>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno
+  sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>`, e
+  l'icona 300 × 300 in `<cartella>`. Mostra le finestre qualche secondo; a programma chiuso e salvando prima le
+  impostazioni, come `real`.
+- `shot`, `real` e `store` accettano la lingua come ultimo argomento (`en`, `es`, `fr`, `it`; senza, inglese) e
+  usano voci finte in quella lingua (`Sample`). Per le immagini vere `tests.exe` va compilato con
+  `/resource:SmartClip.ico,SmartClip.ico`, altrimenti la barra del titolo ha l'icona generica; `real` mette dietro
+  le finestre lo stesso sfondo di `store`, perché ai bordi non compaia lo schermo.
 
 Il tray è stato verificato con un programmino usa e getta (non nel progetto) che crea `MainForm`, legge i campi
 `tray` e `trayBox` per riflessione e aziona le voci del menu con `PerformClick`: X nasconde, Apri riapre anche
@@ -353,6 +391,10 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - Le ultime aggiunte dal vivo: l'anteprima con il puntatore fermo (vista solo chiamando `ShowPeek` da
   `tests.exe real`), il puntatore che la attraversa, il trascinamento in una cartella, i tasti nuovi premuti
   davvero (provata solo la logica, da `tests.exe shot`), la pausa, le conferme che spariscono.
+- Il cambio di lingua dal vivo: provato con il programma vero che un avvio con `/restart` aspetta la chiusura di
+  quello aperto e si riapre nella lingua salvata sulle opzioni; mai il clic sul menu delle lingue (che fa
+  `Process.Start` e chiude), né dal pacchetto, dove l'eseguibile avviato così dovrebbe restare nel pacchetto. Le
+  traduzioni spagnola e francese non le ha rilette un madrelingua.
 - Il pacchetto dello Store: `pack.ps1` provato solo senza SDK (cartella e immagini), mai `makepri`/`makeappx`
   né il pacchetto installato; dal pacchetto non sono mai state provate la `StartupTask`, l'avvio all'accesso
   riconosciuto da `Packaged.StartedAtSignIn`, la cartella `LocalState`, né se il registro (impostazioni, testi

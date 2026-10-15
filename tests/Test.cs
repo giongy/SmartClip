@@ -21,6 +21,54 @@ class ShotEdit : EditForm
     protected override bool ShowWithoutActivation { get { return true; } }
 }
 
+// The made-up entries of the pictures, in the language of the pictures: a list in Italian with English entries
+// would not look like anybody's.
+class Sample
+{
+    public string Signature, SignatureText, Work, Address, Servers, ServerPassword, Home, Wifi, Long, TwoLines, Remote;
+    public string Probe;   // a word found only in the server password, for a search
+
+    public static Sample Current
+    {
+        get
+        {
+            Sample s = new Sample();
+            switch (Strings.Code)
+            {
+                case "it":
+                    s.Signature = "Firma email"; s.SignatureText = "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567";
+                    s.Work = "Lavoro"; s.Address = "Indirizzo ufficio"; s.Servers = "Server";
+                    s.ServerPassword = "Password del server di prova"; s.Home = "Casa"; s.Wifi = "Wi-Fi di casa";
+                    s.Long = "Una frase copiata più lunga della finestra, che finisce tagliata sul bordo destro con i puntini";
+                    s.TwoLines = "prima riga\r\nseconda riga"; s.Remote = "srv-database-01 - Connessione Desktop remoto"; s.Probe = "prova";
+                    break;
+                case "es":
+                    s.Signature = "Firma de correo"; s.SignatureText = "Saludos cordiales,\nMaría García\n\nOficina técnica\nTel. 91 123 45 67";
+                    s.Work = "Trabajo"; s.Address = "Dirección de la oficina"; s.Servers = "Servidores";
+                    s.ServerPassword = "Contraseña del servidor de pruebas"; s.Home = "Casa"; s.Wifi = "Wi-Fi de casa";
+                    s.Long = "Una frase copiada más larga que la ventana, que termina cortada en el borde derecho con puntos suspensivos";
+                    s.TwoLines = "primera línea\r\nsegunda línea"; s.Remote = "srv-database-01 - Conexión a Escritorio remoto"; s.Probe = "pruebas";
+                    break;
+                case "fr":
+                    s.Signature = "Signature e-mail"; s.SignatureText = "Cordialement,\nMarie Dupont\n\nBureau technique\nTél. 01 23 45 67 89";
+                    s.Work = "Travail"; s.Address = "Adresse du bureau"; s.Servers = "Serveurs";
+                    s.ServerPassword = "Mot de passe du serveur de test"; s.Home = "Maison"; s.Wifi = "Wi-Fi de la maison";
+                    s.Long = "Une phrase copiée plus longue que la fenêtre, coupée au bord droit par des points de suspension";
+                    s.TwoLines = "première ligne\r\ndeuxième ligne"; s.Remote = "srv-database-01 - Connexion Bureau à distance"; s.Probe = "test";
+                    break;
+                default:
+                    s.Signature = "Email signature"; s.SignatureText = "Kind regards,\nJohn Smith\n\nTechnical office\nTel. 020 7946 0958";
+                    s.Work = "Work"; s.Address = "Office address"; s.Servers = "Servers";
+                    s.ServerPassword = "Test server password"; s.Home = "Home"; s.Wifi = "Home Wi-Fi";
+                    s.Long = "A copied sentence longer than the window, which ends cut short at the right edge with an ellipsis";
+                    s.TwoLines = "first line\r\nsecond line"; s.Remote = "srv-database-01 - Remote Desktop Connection"; s.Probe = "test";
+                    break;
+            }
+            return s;
+        }
+    }
+}
+
 // The plain background the Store pictures are taken on: the colours of the icon, without text or logos.
 class Backdrop : Form
 {
@@ -62,13 +110,15 @@ static class TestProgram
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
         string mode = args.Length > 0 ? args[0] : "";
+        // The pictures can be taken in any language: "shot <png> it". Everything else runs in English.
+        if (args.Length > 2 && (mode == "shot" || mode == "real" || mode == "store")) Strings.Use(args[2]);
         if (mode == "map") return MapTest();
         if (mode == "shot") return Shot(args[1]);
         if (mode == "type") return TypeTest();
         if (mode == "texts") return TextsTest();
         if (mode == "real") return Real(args[1]);
         if (mode == "store") return Store(args[1]);
-        Console.WriteLine("usage: map | texts | shot <png> | real <png> | store <folder> | type");
+        Console.WriteLine("usage: map | texts | shot <png> [lang] | real <png> [lang] | store <folder> [lang] | type");
         return 64;
     }
 
@@ -124,7 +174,7 @@ static class TestProgram
             Check(Texts.Recent.Count == 2 && Texts.Recent[0].Picture, "the same picture announced twice is kept once");
             Check(Texts.Recent[0].Preview != null && Texts.Recent[0].Preview.Width == 40 && Texts.Recent[1].Preview == null,
             "a picture has a preview, a text has none");
-        Check(Texts.Recent[0].ToString().IndexOf("40×30") > 0 && Texts.Matches(Texts.Recent[0], "immagine 40"),
+        Check(Texts.Recent[0].ToString().IndexOf("40×30") > 0 && Texts.Matches(Texts.Recent[0], "picture 40"),
                 "a picture is described by its size and found by it");
             using (Image back = Image.FromStream(new System.IO.MemoryStream(Texts.Recent[0].LoadPng())))
             using (Bitmap pixels = new Bitmap(back))
@@ -259,7 +309,59 @@ static class TestProgram
         int firstCopied = all.FindIndex(delegate(Entry e) { return e.Name == null; });
         Check(firstCopied >= 0 && !all.GetRange(firstCopied, all.Count - firstCopied).Exists(delegate(Entry e) { return e.Name != null; }),
             "saved texts come before the copied ones");
+        LanguagesTest();
         return failed == 0 ? 0 : 1;
+    }
+
+    // Every language: no text asks for more values than the program gives it (string.Format would throw), the
+    // guide has the same subjects, an exported file is read back whatever its language, and what is left in
+    // English is listed. Each language starts again from English, as the program does at its start.
+    static void LanguagesTest()
+    {
+        Dictionary<FieldInfo, object> english = new Dictionary<FieldInfo, object>();
+        foreach (FieldInfo field in typeof(Strings).GetFields(BindingFlags.Public | BindingFlags.Static))
+            if (!field.IsInitOnly) english[field] = field.GetValue(null);
+        Func<string[], int> subjects = delegate(string[] lines)
+        {
+            return Array.FindAll(lines, delegate(string line) { return line.StartsWith("# "); }).Length;
+        };
+        int englishSubjects = subjects(Strings.Guide());
+        Entry folder = new Entry("A", "", DateTime.MinValue);
+        folder.IsGroup = true;
+        Entry text = new Entry("B", "riga\r\n\tuna tabulazione", new DateTime(2026, 5, 6, 7, 8, 9));
+        text.Group = "A";
+        Entry copied = new Entry(null, "copied", new DateTime(2026, 5, 6, 7, 8, 9));
+        copied.Pinned = true;
+        List<Entry> sent = new List<Entry>(new Entry[] { folder, text, copied });
+        foreach (string code in Strings.Codes)
+        {
+            foreach (KeyValuePair<FieldInfo, object> pair in english) pair.Key.SetValue(null, pair.Value);
+            Strings.Use(code);
+            List<string> tooMany = new List<string>(), same = new List<string>();
+            foreach (KeyValuePair<FieldInfo, object> pair in english)
+            {
+                string original = pair.Value as string, now = pair.Key.GetValue(null) as string;
+                if (original == null) continue;
+                if (Highest(now) > Highest(original)) tooMany.Add(pair.Key.Name);
+                if (code != Strings.Codes[0] && now == original) same.Add(pair.Key.Name);
+            }
+            Check(tooMany.Count == 0, code + ": every text fits the values it is given" + (tooMany.Count == 0 ? "" : ": " + string.Join(", ", tooMany.ToArray())));
+            Check(subjects(Strings.Guide()) == englishSubjects, code + ": the guide has the " + englishSubjects + " subjects");
+            List<Entry> read = Backup.Parse(Backup.Lines(sent, true));
+            Check(read.Count == 3 && read[0].IsGroup && read[1].Text == text.Text && read[1].Group == "A" && read[2].Pinned,
+                code + ": an exported file comes back");
+            if (same.Count > 0) Console.WriteLine("       same as English: " + string.Join(", ", same.ToArray()));
+        }
+        foreach (KeyValuePair<FieldInfo, object> pair in english) pair.Key.SetValue(null, pair.Value);
+    }
+
+    // The highest {n} a text asks string.Format for, or -1.
+    static int Highest(string text)
+    {
+        int highest = -1;
+        foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(text ?? "", @"\{(\d+)\}"))
+            highest = Math.Max(highest, int.Parse(match.Groups[1].Value));
+        return highest;
     }
 
     // The history on disk, in a folder of its own instead of the user's.
@@ -489,33 +591,34 @@ static class TestProgram
             Console.WriteLine("[{0}] selecting in a column clears the other", saved.SelectedIndex < 0 ? "PASS" : "FAIL");
 
             // A closed folder hides the folders inside it too; a search shows the folders around what it finds.
+            Sample s = Sample.Current;
             List<Entry> sample = (List<Entry>)typeof(MainForm).GetField("entries", hidden).GetValue(form);
-            Entry work = sample.Find(delegate(Entry e) { return e.IsGroup && e.Name == "Lavoro"; });
+            Entry work = sample.Find(delegate(Entry e) { return e.IsGroup && e.Name == s.Work; });
             work.Open = false;
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
             int closedRows = saved.Items.Count;
             work.Open = true;
             TextBox search = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
-            search.Text = "prova";
+            search.Text = s.Probe;
             Console.WriteLine("[{0}] a closed folder hides those inside it: {1} rows; a search shows the folders around a result: {2}",
-                closedRows == 3 && saved.Items.Count == 3 && ((Entry)saved.Items[0]).Name == "Lavoro" && ((Entry)saved.Items[1]).Label == "Server"
+                closedRows == 3 && saved.Items.Count == 3 && ((Entry)saved.Items[0]).Name == s.Work && ((Entry)saved.Items[1]).Label == s.Servers
                 ? "PASS" : "FAIL", closedRows, saved.Items.Count);
             search.Text = "";
 
-            // The icon menu: the saved texts between «Apri» and the rest, each folder a submenu.
+            // The icon menu: the saved texts between the first item and the rest, each folder a submenu.
             ContextMenuStrip menu = new ContextMenuStrip();
-            menu.Items.Add("Apri");
-            menu.Items.Add("Esci");
+            menu.Items.Add(Strings.Open);
+            menu.Items.Add(Strings.Exit);
             MethodInfo fill = typeof(MainForm).GetMethod("ShowSaved", hidden);
             fill.Invoke(form, new object[] { menu });
             fill.Invoke(form, new object[] { menu });   // made anew, not added twice
             ToolStripMenuItem workMenu = menu.Items[3] as ToolStripMenuItem;
             ToolStripMenuItem serverMenu = workMenu == null ? null : workMenu.DropDownItems[1] as ToolStripMenuItem;
             Console.WriteLine("[{0}] the icon menu lists the saved texts by folder: {1} items", menu.Items.Count == 7
-                && menu.Items[1] is ToolStripSeparator && menu.Items[2].Text == "Firma email" && workMenu != null && workMenu.Text == "Lavoro"
-                && workMenu.DropDownItems[0].Text == "Indirizzo ufficio" && serverMenu != null && serverMenu.Text == "Server"
-                && serverMenu.DropDownItems[0].Text == "Password del server di prova" && menu.Items[4].Text == "Casa"
-                && menu.Items[5] is ToolStripSeparator && menu.Items[6].Text == "Esci" ? "PASS" : "FAIL", menu.Items.Count);
+                && menu.Items[1] is ToolStripSeparator && menu.Items[2].Text == s.Signature && workMenu != null && workMenu.Text == s.Work
+                && workMenu.DropDownItems[0].Text == s.Address && serverMenu != null && serverMenu.Text == s.Servers
+                && serverMenu.DropDownItems[0].Text == s.ServerPassword && menu.Items[4].Text == s.Home
+                && menu.Items[5] is ToolStripSeparator && menu.Items[6].Text == Strings.Exit ? "PASS" : "FAIL", menu.Items.Count);
             menu.Dispose();
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
             Application.DoEvents();
@@ -523,11 +626,11 @@ static class TestProgram
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { false });
 
             Label status = (Label)typeof(MainForm).GetField("status", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(form);
-            status.Text = "Fatto: 24 caratteri digitati. Attenzione: 2 caratteri senza tasto sulla tastiera, inviati come Unicode: se l'accesso fallisce prova «Alt+codice».";
+            status.Text = string.Format(Strings.DoneMany, 24) + string.Format(Strings.UnicodeMany, 2) + Strings.UnicodeHint;
             Application.DoEvents();
             Save(form, path + "-long.png");
 
-            status.Text = "Digito tra 3 s in «srv-database-produzione-01 - Connessione Desktop remo…». Premi Annulla per fermare.";
+            status.Text = string.Format(Strings.Countdown, 3, string.Format(Strings.Quote, s.Remote));
             Application.DoEvents();
             Save(form, path + "-countdown.png");
 
@@ -539,10 +642,10 @@ static class TestProgram
 
             // The keys of a global hotkey: how they are named, which can be used, and how new ones are taken.
             BindingFlags shared = BindingFlags.NonPublic | BindingFlags.Static;
-            Func<Keys, string> name = delegate(Keys keys) { return (string)typeof(MainForm).GetMethod("NameOf", shared).Invoke(null, new object[] { keys }); };
+            Func<Keys, string> name = MainForm.NameOf;
             Func<Keys, bool> usable = delegate(Keys keys) { return (bool)typeof(MainForm).GetMethod("Usable", shared).Invoke(null, new object[] { keys }); };
             Console.WriteLine("[{0}] hotkey names: {1}, {2}", name(Keys.Control | Keys.Alt | Keys.V) == "Ctrl+Alt+V"
-                && name(Keys.Control | Keys.Shift | Keys.D1) == "Ctrl+Maiusc+1" ? "PASS" : "FAIL",
+                && name(Keys.Control | Keys.Shift | Keys.D1) == "Ctrl+" + Strings.ShiftName + "+1" ? "PASS" : "FAIL",
                 name(Keys.Control | Keys.Alt | Keys.V), name(Keys.Control | Keys.Shift | Keys.D1));
             Console.WriteLine("[{0}] a hotkey needs Ctrl or Alt and a letter, a digit or a function key",
                 usable(Keys.Alt | Keys.F9) && !usable(Keys.V) && !usable(Keys.Shift | Keys.V) && !usable(Keys.Control | Keys.Enter) ? "PASS" : "FAIL");
@@ -566,7 +669,7 @@ static class TestProgram
                 form.ClientSize.Width, form.ClientSize.Height, form.Icon == null ? "none" : form.Icon.Size.ToString());
         }
 
-        using (ShotEdit edit = new ShotEdit(new Entry("Firma email", "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567"), "Lavoro", new List<string>(new string[] { "Lavoro", "Casa" })))
+        using (ShotEdit edit = new ShotEdit(new Entry(Sample.Current.Signature, Sample.Current.SignatureText), Sample.Current.Work, new List<string>(new string[] { Sample.Current.Work, Sample.Current.Home })))
         {
             edit.StartPosition = FormStartPosition.Manual;
             edit.Location = new Point(-30000, -30000);
@@ -596,13 +699,19 @@ static class TestProgram
     // and boxes) is missing from the pictures of 'shot'. The windows appear for a moment, without taking the focus.
     static int Real(string path)
     {
+        // Behind the windows the plain background of the Store pictures, not whatever is on the screen: the
+        // corners and the invisible border of a window let it show.
+        using (Backdrop backdrop = new Backdrop(Screen.PrimaryScreen.Bounds))
         using (ShotForm form = new ShotForm())
         {
+            backdrop.Show();
+            form.TopMost = true;
             form.StartPosition = FormStartPosition.Manual;
             form.Location = new Point(80, 80);
             BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
             FillSample(form);
             form.Show();
+            form.BringToFront();
             Snap(form, path + "-real-list.png");
             // The entry that does not fit its row, shown whole as when the pointer rests on it.
             ListBox recent = (ListBox)typeof(MainForm).GetField("recentList", hidden).GetValue(form);
@@ -614,8 +723,9 @@ static class TestProgram
                 ? "PASS" : "FAIL");
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
             Snap(form, path + "-real-options.png");
-            using (ShotEdit edit = new ShotEdit(new Entry("Firma email", "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567"), "Lavoro", new List<string>(new string[] { "Lavoro", "Casa" })))
+            using (ShotEdit edit = new ShotEdit(new Entry(Sample.Current.Signature, Sample.Current.SignatureText), Sample.Current.Work, new List<string>(new string[] { Sample.Current.Work, Sample.Current.Home })))
             {
+                edit.TopMost = true;
                 edit.StartPosition = FormStartPosition.Manual;
                 edit.Location = new Point(80, 80);
                 edit.Show();
@@ -623,6 +733,7 @@ static class TestProgram
             }
             using (ShotHelp help = new ShotHelp())
             {
+                help.TopMost = true;
                 help.Show(form);
                 Snap(help, path + "-real-help.png");
                 // A subject with keys in a column of their own.
@@ -641,7 +752,9 @@ static class TestProgram
     static int Store(string folder)
     {
         const int Top = 40;   // the windows high up: the Store may lay text over the bottom third
-        System.IO.Directory.CreateDirectory(folder);
+        // The pictures in a folder of their language; the icon, the same for all, beside those folders.
+        string pictures = System.IO.Path.Combine(folder, Strings.Code);
+        System.IO.Directory.CreateDirectory(pictures);
         BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
         SaveTile(System.IO.Path.Combine(folder, "tile-300.png"));
         using (ShotForm form = new ShotForm())
@@ -669,71 +782,69 @@ static class TestProgram
                 status.Text = "";
                 ListBox recent = (ListBox)typeof(MainForm).GetField("recentList", hidden).GetValue(form);
                 recent.SelectedIndex = 0;
-                SnapArea(area, System.IO.Path.Combine(folder, "1-elenco.png"));
+                SnapArea(area, System.IO.Path.Combine(pictures, "1-list.png"));
 
                 // Typing a password: the countdown, with the button that cancels it.
                 Button typeButton = (Button)typeof(MainForm).GetField("typeButton", hidden).GetValue(form);
-                status.Text = "Digito tra 3 s in «srv-database-01 - Connessione Desktop remoto». Premi Annulla per fermare.";
-                typeButton.Text = "Annulla";
-                SnapArea(area, System.IO.Path.Combine(folder, "2-digitazione.png"));
+                status.Text = string.Format(Strings.Countdown, 3, string.Format(Strings.Quote, Sample.Current.Remote));
+                typeButton.Text = Strings.Cancel;
+                SnapArea(area, System.IO.Path.Combine(pictures, "2-typing.png"));
                 status.Text = "";
-                typeButton.Text = MainForm.ButtonText;
+                typeButton.Text = Strings.TypeButton;
 
                 // An entry the row cuts, shown whole.
                 typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, 2, false });
-                SnapArea(area, System.IO.Path.Combine(folder, "3-anteprima.png"));
+                SnapArea(area, System.IO.Path.Combine(pictures, "3-preview.png"));
                 typeof(MainForm).GetMethod("HidePeek", hidden).Invoke(form, null);
 
                 // A copied text being saved under a name, into a folder.
-                using (ShotEdit edit = new ShotEdit(new Entry(null, "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567"),
-                    Texts.Join("Lavoro", "Server"), new List<string>(new string[] { "Lavoro", Texts.Join("Lavoro", "Server"), "Casa" })))
+                Sample s = Sample.Current;
+                string servers = Texts.Join(s.Work, s.Servers);
+                using (ShotEdit edit = new ShotEdit(new Entry(null, s.SignatureText), servers, new List<string>(new string[] { s.Work, servers, s.Home })))
                 {
                     edit.TopMost = true;
                     edit.StartPosition = FormStartPosition.Manual;
-                    ((TextBox)typeof(EditForm).GetField("nameBox", hidden).GetValue(edit)).Text = "Firma email";
+                    ((TextBox)typeof(EditForm).GetField("nameBox", hidden).GetValue(edit)).Text = s.Signature;
                     edit.Show();
                     edit.Location = new Point(form.Left + (form.Width - edit.Width) / 2, form.Top + (form.Height - edit.Height) / 2);
-                    SnapArea(area, System.IO.Path.Combine(folder, "4-salva.png"));
+                    SnapArea(area, System.IO.Path.Combine(pictures, "4-save.png"));
                 }
 
                 // The menu of the icon by the clock, with the saved texts in their folders, alone on the background.
                 form.Hide();
                 using (ContextMenuStrip menu = new ContextMenuStrip())
                 {
-                    menu.Items.Add("Apri");
-                    menu.Items.Add("Sospendi la cattura");
-                    menu.Items.Add("Esci");
+                    menu.Items.Add(Strings.Open);
+                    menu.Items.Add(Strings.Pause);
+                    menu.Items.Add(Strings.Exit);
                     Look.Style(menu);
                     typeof(MainForm).GetMethod("ShowSaved", hidden).Invoke(form, new object[] { menu });
                     menu.Show(new Point(area.Left + area.Width / 3, area.Top + Top * 3));
                     ToolStripMenuItem work = (ToolStripMenuItem)menu.Items[3];
                     work.ShowDropDown();
                     ((ToolStripMenuItem)work.DropDownItems[1]).ShowDropDown();
-                    SnapArea(area, System.IO.Path.Combine(folder, "5-menu-tray.png"));
+                    SnapArea(area, System.IO.Path.Combine(pictures, "5-tray-menu.png"));
                     menu.Close();
                 }
                 form.Show();
                 form.BringToFront();
 
                 typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
-                SnapArea(area, System.IO.Path.Combine(folder, "6-opzioni.png"));
+                SnapArea(area, System.IO.Path.Combine(pictures, "6-options.png"));
                 typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { false });
 
-                // The guide, open at how a password is typed.
+                // The guide, open at how a password is typed: the fifth subject in every language.
                 using (ShotHelp help = new ShotHelp())
                 {
                     help.TopMost = true;
                     help.Show(form);
                     help.Location = new Point(area.Left + (area.Width - help.Width) / 2, area.Top + Top);
-                    ListBox topics = (ListBox)typeof(HelpForm).GetField("topics", hidden).GetValue(help);
-                    for (int i = 0; i < topics.Items.Count; i++)
-                        if (((string[])typeof(HelpForm).GetField("Lines", hidden).GetValue(help))[(int)topics.Items[i]] == "# Digitare una password")
-                            topics.SelectedIndex = i;
-                    SnapArea(area, System.IO.Path.Combine(folder, "7-guida.png"));
+                    ((ListBox)typeof(HelpForm).GetField("topics", hidden).GetValue(help)).SelectedIndex = 4;
+                    SnapArea(area, System.IO.Path.Combine(pictures, "7-guide.png"));
                 }
             }
         }
-        Console.WriteLine("pictures in {0}", folder);
+        Console.WriteLine("pictures in {0}", pictures);
         return 0;
     }
 
@@ -790,16 +901,17 @@ static class TestProgram
     static void FillSample(MainForm form)
     {
         BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
+        Sample s = Sample.Current;
         List<Entry> entries = new List<Entry>();
-        entries.Add(new Entry("Firma email", "Cordiali saluti"));
+        entries.Add(new Entry(s.Signature, s.SignatureText));
         // Folders, one open with another inside it and one closed, each right before its texts.
-        string server = Texts.Join("Lavoro", "Server");
-        foreach (string name in new string[] { "Lavoro", "Indirizzo ufficio", server, "Password del server di prova", "Casa", "Wi-Fi di casa" })
+        string server = Texts.Join(s.Work, s.Servers);
+        foreach (string name in new string[] { s.Work, s.Address, server, s.ServerPassword, s.Home, s.Wifi })
         {
-            bool folder = name == "Lavoro" || name == server || name == "Casa";
+            bool folder = name == s.Work || name == server || name == s.Home;
             Entry entry = new Entry(name, folder ? "" : "not shown", folder ? DateTime.MinValue : DateTime.Now);
             entry.IsGroup = folder;
-            entry.Open = name != "Casa";
+            entry.Open = name != s.Home;
             if (!entry.IsGroup) entry.Group = entries[entries.Count - 1].IsGroup ? entries[entries.Count - 1].Name : entries[entries.Count - 1].Group;
             entries.Add(entry);
         }
@@ -810,8 +922,8 @@ static class TestProgram
         entries.Add(pinned);
         using (Bitmap picture = SamplePicture())
             entries.Add(new Entry(new Bitmap(picture, 213, 120), picture.Width, picture.Height, morning.AddMinutes(-7)));
-        entries.Add(new Entry(null, "Una frase copiata più lunga della finestra, che finisce tagliata sul bordo destro con i puntini", morning.AddMinutes(-19)));
-        entries.Add(new Entry(null, "prima riga\r\nseconda riga", morning.AddMinutes(-33)));
+        entries.Add(new Entry(null, s.Long, morning.AddMinutes(-19)));
+        entries.Add(new Entry(null, s.TwoLines, morning.AddMinutes(-33)));
         entries.Add(new Entry(null, "https://github.com/giongy/SmartClip", morning.AddMinutes(-52)));
         typeof(MainForm).GetField("entries", hidden).SetValue(form, entries);
         typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);

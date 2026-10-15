@@ -20,18 +20,18 @@ partial class MainForm
         deleteButton.Click += delete;
         ToolStripItem changeItem = listMenu.Items.Add("", null, change);
         // Only for a saved text, of which the list shows the name alone: its content, for a while.
-        ToolStripItem showItem = listMenu.Items.Add("Mostra il contenuto", null, delegate
+        ToolStripItem showItem = listMenu.Items.Add(Strings.ShowContent, null, delegate
         {
             if (savedList.SelectedIndex >= 0) ShowPeek(savedList, savedList.SelectedIndex, true);
         });
         // Only for a copied entry: the same as a click on its star.
         ToolStripItem pinItem = listMenu.Items.Add("", null, delegate { TogglePin(Selected); });
         // Only for a saved text, once there are folders: they are listed when the menu opens.
-        ToolStripMenuItem moveItem = new ToolStripMenuItem("Sposta in");
+        ToolStripMenuItem moveItem = new ToolStripMenuItem(Strings.MoveTo);
         listMenu.Items.Add(moveItem);
         ToolStripItem deleteItem = listMenu.Items.Add(deleteButton.Text, null, delete);
         listMenu.Items.Add(newButton.Text, null, create);
-        listMenu.Items.Add("Nuova cartella…", null, delegate { EditGroup(null); });
+        listMenu.Items.Add(Strings.NewFolder, null, delegate { EditGroup(null); });
         listMenu.Items.Add(new ToolStripSeparator());
         pauseItems.Add(listMenu.Items.Add("", null, delegate { Pause(!paused); }));
         // With nothing selected the menu still opens: a first folder can be made in an empty list.
@@ -44,7 +44,7 @@ partial class MainForm
             changeItem.Visible = deleteItem.Visible = entry != null;
             showItem.Visible = entry != null && entry.Name != null && !entry.IsGroup;
             pinItem.Visible = entry != null && entry.Name == null;
-            pinItem.Text = entry != null && entry.Pinned ? "Togli dall'alto" : "Tieni in alto";
+            pinItem.Text = entry != null && entry.Pinned ? Strings.Unpin : Strings.Pin;
             // A saved text or a folder, wherever else it can go: a folder never into itself or one it holds.
             List<string> groups = entry == null ? new List<string>()
                 : GroupNames().FindAll(delegate(string group) { return !entry.IsGroup || !Texts.Within(group, entry.Name); });
@@ -54,7 +54,7 @@ partial class MainForm
             moveItem.DropDownItems.Clear();
             if (!movable) return;
             // The place where it already is cannot be chosen.
-            moveItem.DropDownItems.Add("Fuori dalle cartelle", null, delegate { MoveTo(entry, null); }).Enabled = PlaceOf(entry) != null;
+            moveItem.DropDownItems.Add(Strings.OutOfFolders, null, delegate { MoveTo(entry, null); }).Enabled = PlaceOf(entry) != null;
             foreach (string each in groups)
             {
                 string group = each;   // a variable of its own for the delegate
@@ -225,14 +225,15 @@ partial class MainForm
         ShowActions();
 
         int copied = entries.FindAll(delegate(Entry entry) { return entry.Name == null; }).Count;
-        recentCount.Text = recentList.Items.Count == copied ? copied.ToString() : recentList.Items.Count + " di " + copied;
+        recentCount.Text = recentList.Items.Count == copied ? copied.ToString()
+            : string.Format(Strings.CountOf, recentList.Items.Count, copied);
         // Of the saved ones the texts are counted, not the folders; those in a closed folder are there all the same.
         int saved = entries.FindAll(delegate(Entry entry) { return entry.Name != null && !entry.IsGroup; }).Count, found = 0;
         foreach (Entry entry in savedList.Items) if (!entry.IsGroup) found++;
-        savedCount.Text = searching && found != saved ? found + " di " + saved : saved.ToString();
-        recentEmpty.Text = searching ? "Nessun risultato" : !historyBox.Checked ? "La cronologia è spenta"
-            : paused ? "In pausa: quello che copi non viene ricordato" : "Quello che copi comparirà qui";
-        savedEmpty.Text = searching ? "Nessun risultato" : "Nessun testo salvato";
+        savedCount.Text = searching && found != saved ? string.Format(Strings.CountOf, found, saved) : saved.ToString();
+        recentEmpty.Text = searching ? Strings.NoResults : !historyBox.Checked ? Strings.HistoryOffEmpty
+            : paused ? Strings.PausedEmpty : Strings.CopyHint;
+        savedEmpty.Text = searching ? Strings.NoResults : Strings.NoSaved;
         recentEmpty.Visible = recentList.Items.Count == 0;
         savedEmpty.Visible = savedList.Items.Count == 0;
     }
@@ -332,7 +333,7 @@ partial class MainForm
     {
         if (entry.IsGroup || entry.Time == DateTime.MinValue) return null;
         return entry.Time.ToString(entry.Name == null && entry.Time.Date == DateTime.Today ? "HH:mm"
-            : entry.Time.Year == DateTime.Today.Year ? "dd/MM" : "dd/MM/yy");
+            : entry.Time.Year == DateTime.Today.Year ? Strings.DayFormat : Strings.YearDayFormat, Strings.Culture);
     }
 
     // What that takes of the row, with the air before it.
@@ -396,7 +397,7 @@ partial class MainForm
     {
         Entry entry = Selected;
         bool saved = entry != null && entry.Name != null;
-        saveButton.Text = saved && entry.IsGroup ? "Rinomina…" : saved ? "Modifica…" : "Salva…";
+        saveButton.Text = saved && entry.IsGroup ? Strings.RenameDots : saved ? Strings.EditDots : Strings.SaveDots;
         saveButton.Sign = saved ? Sign.Edit : Sign.Star;
         saveButton.Enabled = entry != null && !entry.Picture;
         deleteButton.Enabled = entry != null;
@@ -494,7 +495,7 @@ partial class MainForm
     {
         if (entry == null || entry.Name != null) return;
         Change(delegate { Texts.Pin(entry, !entry.Pinned); });
-        Say((entry.Pinned ? "Resta in alto: " : "Non è più in alto: ") + Shorten(entry.ToString()) + ".");
+        Say(string.Format(entry.Pinned ? Strings.Pinned : Strings.Unpinned, Shorten(entry.ToString())));
         Reload();
     }
 
@@ -538,11 +539,11 @@ partial class MainForm
         }
         catch (Exception ex)   // the clipboard locked by another program, or a picture the history file no longer gives
         {
-            status.Text = "Errore: " + ex.Message;
+            status.Text = string.Format(Strings.Error, ex.Message);
             return false;
         }
-        Say("Negli appunti: " + Shorten(entry.ToString()) + ". Incollalo con Ctrl+V"
-            + (hotkeyBox.Checked && !entry.Picture ? " o digitalo con " + HotkeyName : "") + ".");
+        Say(string.Format(hotkeyBox.Checked && !entry.Picture ? Strings.OnClipboardOrType : Strings.OnClipboard,
+            Shorten(entry.ToString()), HotkeyName));
         return true;
     }
 
@@ -595,7 +596,7 @@ partial class MainForm
                 string name = edit.EntryName, oldName = source == null ? null : source.Name;
                 bool renamed = !Texts.SameName(name, oldName);
                 bool taken = renamed && entries.Exists(delegate(Entry entry) { return !entry.IsGroup && Texts.SameName(entry.Name, name); });
-                if (taken && !Ask("«" + name + "» esiste già. Vuoi sostituirlo?")) continue;
+                if (taken && !Ask(string.Format(Strings.AskReplace, name))) continue;
                 if (!Change(delegate
                 {
                     Texts.Save(name, edit.Content, edit.Group);   // first, so that a failure leaves the old one in place
@@ -603,7 +604,7 @@ partial class MainForm
                     Texts.Reveal(edit.Group);   // or the text would not be seen
                 })) continue;
                 if (source != null && source.Name == null) Texts.Remove(source);   // it now has a line among the saved ones
-                Say("Salvato «" + Shorten(name) + "».");
+                Say(string.Format(Strings.SavedSay, Shorten(name)));
                 break;
             }
         }
@@ -634,9 +635,9 @@ partial class MainForm
     bool Refused(string name, string parent, string old)
     {
         string path = Texts.Join(parent, name);
-        string why = name.IndexOf(Texts.Separator) >= 0 ? "Il nome di una cartella non può contenere «" + Texts.Separator + "»."
+        string why = name.IndexOf(Texts.Separator) >= 0 ? string.Format(Strings.FolderNoSeparator, Texts.Separator)
             : !Texts.SameName(path, old) && GroupNames().Exists(delegate(string other) { return Texts.SameName(other, path); })
-            ? "La cartella «" + Texts.Display(path) + "» esiste già." : null;
+            ? string.Format(Strings.FolderExists, Texts.Display(path)) : null;
         if (why != null) MessageBox.Show(this, why, Text, MessageBoxButtons.OK, MessageBoxIcon.Information);
         return why != null;
     }
@@ -660,8 +661,8 @@ partial class MainForm
                     else Texts.RenameGroup(old, path);
                     Texts.Reveal(edit.Group);   // or the folder would not be seen
                 })) continue;
-                Say((old == null ? "Creata la cartella «" : Texts.SameName(Texts.Parent(path), Texts.Parent(old))
-                    ? "La cartella ora si chiama «" : "La cartella ora è «") + Shorten(Texts.Display(path)) + "».");
+                Say(string.Format(old == null ? Strings.FolderCreated : Texts.SameName(Texts.Parent(path), Texts.Parent(old))
+                    ? Strings.FolderRenamed : Strings.FolderMoved, Shorten(Texts.Display(path))));
                 break;
             }
         }
@@ -678,8 +679,8 @@ partial class MainForm
             else Texts.Move(entry.Name, group);
             Texts.Reveal(group);
         })) return;
-        string what = "«" + Shorten(entry.Label) + "»";
-        Say(group == null ? what + " non è più in una cartella." : what + " è nella cartella «" + Shorten(Texts.Display(group)) + "».");
+        Say(group == null ? string.Format(Strings.LeftFolder, Shorten(entry.Label))
+            : string.Format(Strings.InFolder, Shorten(entry.Label), Shorten(Texts.Display(group))));
         Reload();
     }
 
@@ -703,12 +704,11 @@ partial class MainForm
                 return other != entry && (Texts.Within(other.Group, entry.Name) || other.IsGroup && Texts.Within(other.Name, entry.Name));
             });
             string parent = Texts.Parent(entry.Name);
-            if (!Ask("Vuoi eliminare la cartella «" + Texts.Display(entry.Name) + "»?"
-                + (!holds ? "" : parent == null ? "\n\nQuello che contiene non viene eliminato: resta tra i salvati, fuori dalle cartelle."
-                    : "\n\nQuello che contiene non viene eliminato: passa nella cartella «" + Texts.Display(parent) + "»."))
+            if (!Ask(string.Format(Strings.AskDeleteFolder, Texts.Display(entry.Name))
+                + (!holds ? "" : parent == null ? Strings.DeleteFolderTop : string.Format(Strings.DeleteFolderUp, Texts.Display(parent))))
                 || !Change(delegate { Texts.RenameGroup(entry.Name, null); })) return;
         }
-        else if (!Ask("Vuoi eliminare «" + entry.Name + "»?") || !Change(delegate { Texts.Delete(entry.Name); })) return;
+        else if (!Ask(string.Format(Strings.AskDelete, entry.Name)) || !Change(delegate { Texts.Delete(entry.Name); })) return;
         Reload();
     }
 

@@ -13,7 +13,7 @@ partial class MainForm
         EndCapture();
         busy = true;
         cancel = false;
-        typeButton.Text = "Annulla";
+        typeButton.Text = Strings.Cancel;
         TopMost = true;   // countdown and cancel button in view over the window being clicked into
         try
         {
@@ -21,12 +21,12 @@ partial class MainForm
             string text = copied.Replace("\r\n", "\n").Replace('\r', '\n').TrimEnd('\n');
             if (text.Length == 0)
             {
-                status.Text = "Negli appunti non c'è testo: copia prima la password.";
+                status.Text = Strings.NoText;
                 return;
             }
             if ((text.Length > UnusualLength || text.IndexOf('\n') >= 0) && !ConfirmUnusual(text))
             {
-                status.Text = "Annullato.";
+                status.Text = Strings.Cancelled;
                 return;
             }
 
@@ -34,7 +34,7 @@ partial class MainForm
             if (target == IntPtr.Zero) return;
             if ((Native.GetKeyState(Native.VK_CAPITAL) & 1) != 0)   // the low bit tells whether the lock is on
             {
-                status.Text = "Bloc Maiusc è attivo: disattivalo e riprova.";
+                status.Text = Strings.CapsLock;
                 return;
             }
 
@@ -44,7 +44,7 @@ partial class MainForm
             options.PressEnter = enterBox.Checked;
             options.KeyDelayMs = slowBox.Checked ? SlowKeyDelayMs : KeyDelayMs;
 
-            status.Text = "Digitazione in corso in " + WindowTitle(target) + "…";
+            status.Text = string.Format(Strings.TypingInto, WindowTitle(target));
             TypeResult result = await Task.Run(delegate
             {
                 return Typer.TypeText(text, target, options, delegate { return cancel; });
@@ -61,12 +61,12 @@ partial class MainForm
         }
         catch (Exception ex)   // for example the clipboard locked by another program
         {
-            status.Text = "Errore: " + ex.Message;
+            status.Text = string.Format(Strings.Error, ex.Message);
         }
         finally
         {
             busy = false;
-            typeButton.Text = ButtonText;
+            typeButton.Text = Strings.TypeButton;
             TopMost = false;
             if (closePending) Close();
         }
@@ -77,9 +77,9 @@ partial class MainForm
         // A message box whose owner is hidden or minimised would stay invisible.
         RestoreWindow();
         int lines = text.Split('\n').Length;
-        string what = Count(text.Length) + (lines > 1 ? " su " + lines + " righe" : "");
+        string what = Count(text.Length) + (lines > 1 ? string.Format(Strings.OnLines, lines) : "");
         return MessageBox.Show(this,
-            "Gli appunti contengono " + what + ": non sembra una password.\n\nVuoi digitarli comunque?",
+            string.Format(Strings.AskUnusual, what),
             Text, MessageBoxButtons.YesNo, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button2) == DialogResult.Yes;
     }
 
@@ -103,12 +103,11 @@ partial class MainForm
                 }
                 double left = seconds - (now - candidateSince);
                 if (left <= 0) return foreground;
-                status.Text = "Digito tra " + Math.Ceiling(left) + " s in " + WindowTitle(foreground)
-                    + ". Premi Annulla per fermare.";
+                status.Text = string.Format(Strings.Countdown, Math.Ceiling(left), WindowTitle(foreground));
             }
             else if (now > ArmedSeconds)
             {
-                status.Text = "Tempo scaduto: non hai scelto la finestra in cui digitare.";
+                status.Text = Strings.TimeUp;
                 return IntPtr.Zero;
             }
             else
@@ -117,11 +116,11 @@ partial class MainForm
                 // wait of its own, time is needed to click into the field.
                 candidate = IntPtr.Zero;
                 seconds = Math.Max(seconds, MinDelay);
-                status.Text = "Clicca ora nel campo password della finestra remota…";
+                status.Text = Strings.ClickNow;
             }
             await Task.Delay(PollMs);
         }
-        status.Text = "Annullato.";
+        status.Text = Strings.Cancelled;
         return IntPtr.Zero;
     }
 
@@ -141,8 +140,7 @@ partial class MainForm
         StringBuilder buffer = new StringBuilder(256);
         Native.GetWindowText(window, buffer, buffer.Capacity);
         string title = buffer.ToString().Trim();
-        if (title.Length == 0) return "una finestra senza titolo";
-        return "«" + Shorten(title) + "»";
+        return title.Length == 0 ? Strings.Untitled : string.Format(Strings.Quote, Shorten(title));
     }
 
     static string Shorten(string text)
@@ -155,28 +153,26 @@ partial class MainForm
         switch (result.Outcome)
         {
             case TypeOutcome.KeysHeld:
-                return "Rilascia i tasti che stai tenendo premuti e riprova.";
+                return Strings.KeysHeld;
             case TypeOutcome.Blocked:
-                return "Windows ha bloccato l'invio dei tasti. Se il programma di desktop remoto è avviato come "
-                    + "amministratore, avvia così anche " + Program.AppName + ".";
+                return string.Format(Strings.Blocked, Program.AppName);
             case TypeOutcome.Cancelled:
-                return result.Typed == 0 ? "Annullato." : "Interrotto dopo " + Count(result.Typed) + ".";
+                return result.Typed == 0 ? Strings.Cancelled : string.Format(Strings.StoppedAfter, Count(result.Typed));
             case TypeOutcome.FocusLost:
-                return "Interrotto dopo " + Count(result.Typed) + ": la finestra attiva è cambiata.";
+                return string.Format(Strings.FocusLost, Count(result.Typed));
         }
 
-        string done = "Fatto: " + Count(result.Typed) + (result.Typed == 1 ? " digitato." : " digitati.");
+        string done = result.Typed == 1 ? Strings.DoneOne : string.Format(Strings.DoneMany, result.Typed);
         if (result.AltCoded > 0)
-            done += " " + Count(result.AltCoded) + " con Alt+codice.";
+            done += string.Format(Strings.AltCoded, Count(result.AltCoded));
         if (result.Unicode > 0)
-            done += " Attenzione: " + Count(result.Unicode) + " senza tasto sulla tastiera, "
-                + (result.Unicode == 1 ? "inviato" : "inviati") + " come Unicode"
-                + (options.AltCodes ? "." : ": se l'accesso fallisce prova «Alt+codice».");
+            done += (result.Unicode == 1 ? Strings.UnicodeOne : string.Format(Strings.UnicodeMany, result.Unicode))
+                + (options.AltCodes ? "." : Strings.UnicodeHint);
         return done;
     }
 
     static string Count(int characters)
     {
-        return Count(characters, "carattere", "caratteri");
+        return Count(characters, Strings.Character, Strings.Characters);
     }
 }

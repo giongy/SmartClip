@@ -30,7 +30,7 @@ partial class MainForm : Form
     public const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
     const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
-    const int ListExtra = 91;                   // height given to the lists beyond what the options need
+    const int ListExtra = 54;                   // height given to the lists beyond what the options need
     const int ColumnGap = 20, ColumnWidth = (ContentWidth - ColumnGap) / 2;   // the two columns of the options
     const int TitleRow = 30, SectionGap = 10;          // the title of a category of options, and the air above it
     const int RuleGap = 8;                             // between the line under such a title and the first option
@@ -62,11 +62,11 @@ partial class MainForm : Form
         DeleteKeys = Keys.Control | DeleteKey, PinKeys = Keys.Control | PinKey;
     // What the list itself answers to: a global hotkey on the same keys would take them away from it.
     static readonly Keys[] ListKeys = { NewKeys, GroupKeys, SaveKeys, DeleteKeys, PinKeys };
-    public const string ButtonText = "Digita gli appunti";
-    const string RecentTitle = "Copiati di recente";
     const TextFormatFlags LineFlags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;   // one line of a row
     public const string SettingsKey = @"Software\" + Program.AppName;
     const string OldSettingsKey = @"Software\PasswordPaste";   // the name of the program up to version 1.2
+    const string LanguageSetting = "Language";                 // read before the window exists: see SavedLanguage
+    const int TrayTextLimit = 63;                              // the most a NotifyIcon accepts as its tooltip
 
     // Desktop, taskbar, Start menu and Alt+Tab switcher: never the intended target.
     static readonly string[] ShellClasses =
@@ -137,6 +137,8 @@ partial class MainForm : Form
     uint ownCopy;       // clipboard sequence number of what was put there from the list: not to be remembered again
     readonly List<CheckBox> refused = new List<CheckBox>();   // hotkey checkboxes unticked by Windows, not by the user
     readonly List<ToolStripItem> traySaved = new List<ToolStripItem>();   // what the icon menu lists of the saved texts
+    readonly RoundButton languageButton = new RoundButton();   // shows the language and opens the list of the others
+    string language = Strings.Code;   // saved with the settings: another one only on the way to a restart
 
     public MainForm() : this(false)
     {
@@ -163,7 +165,7 @@ partial class MainForm : Form
             if (icon != null) Icon = new Icon(icon);
         }
 
-        typeButton.Text = ButtonText;
+        typeButton.Text = Strings.TypeButton;
         typeButton.Click += delegate { if (busy) cancel = true; else Run(Delay); };
         viewButton.Click += delegate { ShowView(!optionsShown); };
         helpButton.Click += delegate { ShowHelp(); };
@@ -194,13 +196,13 @@ partial class MainForm : Form
         int areaBottom = top + 4 + ListExtra, statusTop = areaBottom + Gap, actionTop = statusTop + StatusHeight + Gap;
         ClientSize = new Size(Edge + ContentWidth + Edge, actionTop + ActionHeight + Edge);
         status.SetBounds(Edge, statusTop, ContentWidth, StatusHeight);
-        newButton.Text = "Nuovo…";
+        newButton.Text = Strings.New;
         newButton.Sign = Sign.Plus;
         deleteButton.Sign = Sign.Delete;
         typeButton.Sign = Sign.Keys;
         newButton.SetBounds(Edge, actionTop, ActionWidth, ActionHeight);
         saveButton.SetBounds(newButton.Right + Gap, actionTop, ActionWidth, ActionHeight);
-        deleteButton.Text = "Elimina";
+        deleteButton.Text = Strings.Delete;
         deleteButton.SetBounds(saveButton.Right + Gap, actionTop, ActionWidth, ActionHeight);
         helpButton.Sign = Sign.Help;
         helpButton.SetBounds(Edge + ContentWidth - ActionHeight, actionTop, ActionHeight, ActionHeight);   // a square
@@ -219,8 +221,8 @@ partial class MainForm : Form
         // each its title and, on the right, how many entries it lists.
         int titleTop = searchFrame.Bottom + Gap + 2, listTop = titleTop + TitleHeight, listHeight = areaBottom - listTop;
         int savedLeft = Edge + ContentWidth - SavedWidth;
-        recentTitle = NewLabel(RecentTitle, titleTop);
-        savedTitle = NewLabel("Salvati", titleTop);
+        recentTitle = NewLabel(Strings.RecentTitle, titleTop);
+        savedTitle = NewLabel(Strings.SavedTitle, titleTop);
         savedTitle.Left = savedLeft;
         recentTitle.Font = savedTitle.Font = new Font(Font, FontStyle.Bold);
         recentList.SetBounds(Edge, listTop, savedLeft - Edge - Edge, listHeight);
@@ -278,17 +280,11 @@ partial class MainForm : Form
         WireLists();
 
         tips.AutoPopDelay = 30000;
-        Tip("Scrive un testo nuovo da tenere, con il suo nome (Ctrl+" + NewKey + ").", newButton);
-        Tip("Su una voce copiata: la salva con un nome, e puoi ritoccarne il contenuto.\n"
-          + "Su una voce salvata: ne cambia il nome o il contenuto (Ctrl+" + SaveKey + ").\n"
-          + "Su una cartella: le cambia il nome.\n"
-          + "Le immagini restano solo in memoria e non si salvano.", saveButton);
-        Tip("Apre la guida: tutto quello che il programma sa fare (" + HelpKey + ").", helpButton);
-        Tip("Elimina il testo salvato, o toglie dall'elenco la voce copiata (Ctrl+" + DeleteKey + ").\n"
-          + "Di una cartella elimina solo la cartella: i suoi testi restano tra i salvati.", deleteButton);
-
-        Tip("Trascina per dare più o meno spazio ai testi salvati.\n"
-          + "Doppio clic: la larghezza di partenza.", divider);
+        Tip(string.Format(Strings.NewTip, NameOf(NewKeys)), newButton);
+        Tip(string.Format(Strings.SaveTip, NameOf(SaveKeys)), saveButton);
+        Tip(string.Format(Strings.HelpTip, NameOf(HelpKey)), helpButton);
+        Tip(string.Format(Strings.DeleteTip, NameOf(DeleteKeys)), deleteButton);
+        Tip(Strings.DividerTip, divider);
         listControls = new Control[] { searchFrame, recentTitle, savedTitle, recentCount, savedCount, recentCard, savedCard, divider,
             newButton, saveButton, deleteButton };
         Controls.AddRange(new Control[] { typeButton, viewButton, helpButton, status });
@@ -310,9 +306,9 @@ partial class MainForm : Form
         ActiveControl = search;
 
         ContextMenuStrip trayMenu = new ContextMenuStrip();
-        trayMenu.Items.Add("Apri", null, delegate { RestoreWindow(); });
+        trayMenu.Items.Add(Strings.Open, null, delegate { RestoreWindow(); });
         pauseItems.Add(trayMenu.Items.Add("", null, delegate { Pause(!paused); }));
-        trayMenu.Items.Add("Esci", null, delegate { exiting = true; Close(); });
+        trayMenu.Items.Add(Strings.Exit, null, delegate { exiting = true; Close(); });
         trayMenu.Opening += delegate { ShowSaved(trayMenu); };
         ShowPause();
         tray.ContextMenuStrip = trayMenu;
@@ -341,9 +337,8 @@ partial class MainForm : Form
             Change(delegate { startBox.Checked = Startup.Enabled; });
             // Windows may say no: once the user, or the organisation, has turned it off in its Settings.
             if (done && startBox.Checked != wanted)
-                status.Text = "Windows non lo permette: attivalo da Impostazioni > App > Avvio.";
-            else if (done) Say(wanted ? "All'accesso a Windows " + Program.AppName + " partirà da solo, senza mostrare la finestra."
-                : Program.AppName + " non parte più insieme a Windows.");
+                status.Text = Strings.StartupRefused;
+            else if (done) Say(string.Format(wanted ? Strings.StartupOn : Strings.StartupOff, Program.AppName));
         };
         // Started at sign-in: hidden in the notification area, or minimised if that option is off.
         if (hidden && trayBox.Checked) startHidden = true;
@@ -372,7 +367,7 @@ partial class MainForm : Form
         optionsShown = options;
         foreach (Control control in optionControls) control.Visible = options;
         foreach (Control control in listControls) control.Visible = !options;
-        viewButton.Text = options ? "Elenco" : "Opzioni";
+        viewButton.Text = options ? Strings.List : Strings.Options;
         viewButton.Sign = options ? Sign.List : Sign.Options;
         if (!options) search.Focus();
     }
@@ -387,7 +382,7 @@ partial class MainForm : Form
         }
         catch (Exception ex)
         {
-            status.Text = "Errore: " + ex.Message;
+            status.Text = string.Format(Strings.Error, ex.Message);
             return false;
         }
     }
@@ -404,15 +399,14 @@ partial class MainForm : Form
         paused = pause;
         ShowPause();
         Filter();   // an empty column says why
-        Say(pause ? "In pausa: quello che copi non viene ricordato, finché non riprendi la cattura."
-            : "La cattura è ripresa: quello che copi torna nell'elenco.");
+        Say(pause ? Strings.PausedSay : Strings.ResumedSay);
     }
 
     // Says whether the capture is paused where it shows: in the menus, above the column and on the icon.
     void ShowPause()
     {
-        foreach (ToolStripItem item in pauseItems) item.Text = paused ? "Riprendi la cattura" : "Sospendi la cattura";
-        recentTitle.Text = RecentTitle + (paused ? " (in pausa)" : "");
+        foreach (ToolStripItem item in pauseItems) item.Text = paused ? Strings.Resume : Strings.Pause;
+        recentTitle.Text = Strings.RecentTitle + (paused ? Strings.PausedSuffix : "");
         if (IsHandleCreated) ShowClipboardState();
     }
 
@@ -491,7 +485,7 @@ partial class MainForm : Form
     {
         base.OnHandleCreated(e);
         Look.Caption(this);
-        Native.SendMessage(search.Handle, Native.EM_SETCUEBANNER, (IntPtr)1, "Cerca…");   // 1: shown also while the box has the focus
+        Native.SendMessage(search.Handle, Native.EM_SETCUEBANNER, (IntPtr)1, Strings.SearchCue);   // 1: shown also while the box has the focus
         UpdateHotkeys();
         Native.AddClipboardFormatListener(Handle);
         ShowClipboardState();
@@ -504,8 +498,8 @@ partial class MainForm : Form
         bool ready = Native.IsClipboardFormatAvailable(Native.CF_UNICODETEXT);
         Icon = ready ? readyIcon : emptyIcon;
         tray.Icon = ready ? readyTrayIcon : emptyTrayIcon;
-        tray.Text = Program.AppName + (ready ? ": testo pronto negli appunti" : ": appunti senza testo")
-            + (paused ? ", cattura in pausa" : "");
+        string tip = Program.AppName + (ready ? Strings.TrayReady : Strings.TrayEmpty) + (paused ? Strings.TrayPaused : "");
+        tray.Text = tip.Length > TrayTextLimit ? tip.Substring(0, TrayTextLimit - 1) + "…" : tip;
     }
 
     // Greyscale copy of the icon, in the requested size.
@@ -603,7 +597,7 @@ partial class MainForm : Form
         if (trayHintShown) return;
         trayHintShown = true;
         tray.ShowBalloonTip(4000, Program.AppName,
-            "Sono ancora attivo qui. Clic per riaprire, tasto destro e poi Esci per chiudere.", ToolTipIcon.Info);
+            string.Format(Strings.TrayHint, Strings.Exit), ToolTipIcon.Info);
     }
 
     // The saved texts in the icon menu, after «Apri», as the list has them: each folder a submenu, open or
@@ -637,7 +631,7 @@ partial class MainForm : Form
         }
         // An empty folder says so: with no submenu it would look like a text to click.
         foreach (ToolStripMenuItem folder in folders.Values)
-            if (folder.DropDownItems.Count == 0) folder.DropDownItems.Add("Vuota").Enabled = false;
+            if (folder.DropDownItems.Count == 0) folder.DropDownItems.Add(Strings.EmptyFolder).Enabled = false;
         foreach (ToolStripItem item in outside.DropDownItems) traySaved.Add(item);
         if (traySaved.Count > 0)   // set apart from what the menu always has
         {

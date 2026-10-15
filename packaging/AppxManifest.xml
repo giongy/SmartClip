@@ -23,15 +23,18 @@
     <DisplayName>SmartClip</DisplayName>
     <PublisherDisplayName>PLACEHOLDER</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
-    <Description>Gestore degli appunti che sa anche digitarli dove l'incolla non funziona</Description>
+    <Description>Clipboard manager that can also type the clipboard where paste does not work</Description>
   </Properties>
 
   <Dependencies>
     <TargetDeviceFamily Name="Windows.Desktop" MinVersion="10.0.17763.0" MaxVersionTested="10.0.26100.0" />
   </Dependencies>
 
-  <!-- The program speaks Italian only. -->
+  <!-- The languages of the program (src\Strings*.cs), English first: the default. -->
   <Resources>
+    <Resource Language="en-US" />
+    <Resource Language="es-ES" />
+    <Resource Language="fr-FR" />
     <Resource Language="it-IT" />
   </Resources>
 
@@ -39,7 +42,7 @@
     <Application Id="SmartClip" Executable="SmartClip.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
         DisplayName="SmartClip"
-        Description="Gestore degli appunti che sa anche digitarli dove l'incolla non funziona"
+        Description="Clipboard manager that can also type the clipboard where paste does not work"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
         Square44x44Logo="Assets\Square44x44Logo.png">

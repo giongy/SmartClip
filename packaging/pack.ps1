@@ -98,7 +98,7 @@ if (-not $tools) {
     exit 0
 }
 $config = Join-Path $Out 'priconfig.xml'
-& (Join-Path $tools 'makepri.exe') createconfig /cf $config /dq it-IT /pv 10.0.0 /o | Out-Null
+& (Join-Path $tools 'makepri.exe') createconfig /cf $config /dq en-US /pv 10.0.0 /o | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'makepri createconfig failed' }
 & (Join-Path $tools 'makepri.exe') new /pr $layout /cf $config /mn (Join-Path $layout 'AppxManifest.xml') /of (Join-Path $layout 'resources.pri') /o | Out-Null
 if ($LASTEXITCODE -ne 0) { throw 'makepri new failed' }

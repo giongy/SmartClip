@@ -1,0 +1,396 @@
+using System.Windows.Forms;
+
+// The texts in Italian: the language the program was written in.
+static partial class Strings
+{
+    static void Italian()
+    {
+        ShiftName = "Maiusc"; DeleteKeyName = "Canc"; EnterKeyName = "Invio"; ArrowsName = "Su / Giù";
+        DayFormat = "dd/MM"; YearDayFormat = "dd/MM/yy";
+        Quote = "«{0}»";
+
+        TypeButton = "Digita gli appunti";
+        RecentTitle = "Copiati di recente"; SavedTitle = "Salvati"; PausedSuffix = " (in pausa)";
+        New = "Nuovo…"; SaveDots = "Salva…"; EditDots = "Modifica…"; RenameDots = "Rinomina…"; Delete = "Elimina";
+        Options = "Opzioni"; List = "Elenco"; SearchCue = "Cerca…";
+        CountOf = "{0} di {1}";
+        NoResults = "Nessun risultato"; HistoryOffEmpty = "La cronologia è spenta";
+        PausedEmpty = "In pausa: quello che copi non viene ricordato"; CopyHint = "Quello che copi comparirà qui";
+        NoSaved = "Nessun testo salvato";
+        NewTip = "Scrive un testo nuovo da tenere, con il suo nome ({0}).";
+        SaveTip = "Su una voce copiata: la salva con un nome, e puoi ritoccarne il contenuto.\n"
+            + "Su una voce salvata: ne cambia il nome o il contenuto ({0}).\n"
+            + "Su una cartella: le cambia il nome o il posto.\n"
+            + "Le immagini restano solo in memoria e non si salvano.";
+        HelpTip = "Apre la guida: tutto quello che il programma sa fare ({0}).";
+        DeleteTip = "Elimina il testo salvato, o toglie dall'elenco la voce copiata ({0}).\n"
+            + "Di una cartella elimina solo la cartella: quello che contiene sale di un livello.";
+        DividerTip = "Trascina per dare più o meno spazio ai testi salvati.\nDoppio clic: la larghezza di partenza.";
+        Error = "Errore: {0}";
+
+        Open = "Apri"; Exit = "Esci"; Pause = "Sospendi la cattura"; Resume = "Riprendi la cattura";
+        ShowContent = "Mostra il contenuto"; MoveTo = "Sposta in"; NewFolder = "Nuova cartella…";
+        Pin = "Tieni in alto"; Unpin = "Togli dall'alto"; OutOfFolders = "Fuori dalle cartelle"; EmptyFolder = "Vuota";
+
+        TrayReady = ": testo pronto negli appunti"; TrayEmpty = ": appunti senza testo"; TrayPaused = ", cattura in pausa";
+        TrayHint = "Sono ancora attivo qui. Clic per riaprire, tasto destro e poi {0} per chiudere.";
+
+        StartupRefused = "Windows non lo permette: attivalo da Impostazioni > App > Avvio.";
+        StartupOn = "All'accesso a Windows {0} partirà da solo, senza mostrare la finestra.";
+        StartupOff = "{0} non parte più insieme a Windows.";
+        PausedSay = "In pausa: quello che copi non viene ricordato, finché non riprendi la cattura.";
+        ResumedSay = "La cattura è ripresa: quello che copi torna nell'elenco.";
+        Pinned = "Resta in alto: {0}."; Unpinned = "Non è più in alto: {0}.";
+        OnClipboard = "Negli appunti: {0}. Incollalo con Ctrl+V.";
+        OnClipboardOrType = "Negli appunti: {0}. Incollalo con Ctrl+V o digitalo con {1}.";
+        AskReplace = "«{0}» esiste già. Vuoi sostituirlo?";
+        SavedSay = "Salvato «{0}».";
+        FolderNoSeparator = "Il nome di una cartella non può contenere «{0}».";
+        FolderExists = "La cartella «{0}» esiste già.";
+        FolderCreated = "Creata la cartella «{0}»."; FolderRenamed = "La cartella ora si chiama «{0}».";
+        FolderMoved = "La cartella ora è «{0}».";
+        LeftFolder = "«{0}» non è più in una cartella."; InFolder = "«{0}» è nella cartella «{1}».";
+        AskDeleteFolder = "Vuoi eliminare la cartella «{0}»?";
+        DeleteFolderTop = "\n\nQuello che contiene non viene eliminato: resta tra i salvati, fuori dalle cartelle.";
+        DeleteFolderUp = "\n\nQuello che contiene non viene eliminato: passa nella cartella «{0}».";
+        AskDelete = "Vuoi eliminare «{0}»?";
+
+        Cancel = "Annulla";
+        NoText = "Negli appunti non c'è testo: copia prima la password.";
+        Cancelled = "Annullato.";
+        CapsLock = "Bloc Maiusc è attivo: disattivalo e riprova.";
+        TypingInto = "Digitazione in corso in {0}…";
+        AskUnusual = "Gli appunti contengono {0}: non sembra una password.\n\nVuoi digitarli comunque?";
+        OnLines = " su {0} righe";
+        Countdown = "Digito tra {0} s in {1}. Premi Annulla per fermare.";
+        TimeUp = "Tempo scaduto: non hai scelto la finestra in cui digitare.";
+        ClickNow = "Clicca ora nel campo password della finestra remota…";
+        Untitled = "una finestra senza titolo";
+        KeysHeld = "Rilascia i tasti che stai tenendo premuti e riprova.";
+        Blocked = "Windows ha bloccato l'invio dei tasti. Se il programma di desktop remoto è avviato come "
+            + "amministratore, avvia così anche {0}.";
+        StoppedAfter = "Interrotto dopo {0}."; FocusLost = "Interrotto dopo {0}: la finestra attiva è cambiata.";
+        DoneOne = "Fatto: 1 carattere digitato."; DoneMany = "Fatto: {0} caratteri digitati.";
+        AltCoded = " {0} con Alt+codice.";
+        UnicodeOne = " Attenzione: 1 carattere senza tasto sulla tastiera, inviato come Unicode";
+        UnicodeMany = " Attenzione: {0} caratteri senza tasto sulla tastiera, inviati come Unicode";
+        UnicodeHint = ": se l'accesso fallisce prova l'opzione Alt+codice.";
+        Character = "carattere"; Characters = "caratteri";
+
+        HotkeyTip = "{0} digita subito gli appunti nella finestra attiva, senza attesa.\n"
+            + "Non funziona se il desktop remoto è a schermo intero e cattura tutte le\n"
+            + "scorciatoie: in quel caso usa il pulsante «{1}».";
+        PickTip = "{0} porta in primo piano questa finestra con l'elenco, da qualsiasi programma.\n"
+            + "Scelta una voce, il controllo torna alla finestra da cui sei partito: lì la incolli\n"
+            + "con Ctrl+V o la digiti con {1}.\n"
+            + "Finché è attiva, {0} non arriva più agli altri programmi.";
+        ChangeKeysNote = "\nIl pulsante a destra mostra i suoi tasti: premilo per dargliene altri.";
+        KeysTip = "Premi qui e poi i tasti nuovi: Ctrl o Alt, anche con {0}, insieme a una lettera,\n"
+            + "una cifra o un tasto funzione. Esc lascia quelli di adesso, {1} torna a quelli di partenza.\n"
+            + "Con Ctrl+Alt evita le lettere che con AltGr scrivono un simbolo (E, per l'euro): la\n"
+            + "scorciatoia scatterebbe scrivendolo.";
+        LeaveTip = "Quando clicchi su un altro programma la finestra torna nell'area di notifica, come\n"
+            + "chiudendola: la riapri con l'icona o con {0}. Spenta, resta aperta dietro le altre.\n"
+            + "Vale solo con l'opzione qui sopra attiva. Non succede mentre aspetta o digita, né mentre\n"
+            + "scrivi un testo salvato o rispondi a una domanda: intanto puoi copiare altrove.";
+        TypeTip = "Digita il testo degli appunti un tasto alla volta, dove incollare non funziona:\n"
+            + "copia la password, premi qui e clicca nel campo della finestra remota.\n"
+            + "Oppure premi {0} direttamente nel campo.";
+        SearchTip = "Scrivi per cercare nelle due colonne: parole in qualsiasi ordine, senza badare a\n"
+            + "maiuscole e accenti. Le frecce scorrono la colonna, Tab passa all'altra.\n"
+            + "{0} o un clic rimettono la voce negli appunti: poi la incolli con Ctrl+V o la\n"
+            + "digiti con {1}. Con un clic la finestra resta aperta, con {0} o un\n"
+            + "doppio clic torni dov'eri. Il tasto destro apre il menu della voce.\n"
+            + "Fermando il puntatore su una voce copiata la vedi per intero.\n"
+            + "La stellina a destra di una voce copiata ({2}) la tiene in cima all'elenco,\n"
+            + "anche oltre i giorni della cronologia, finché non la togli.\n"
+            + "I testi salvati restano nel registro di Windows, cifrati per il tuo utente, e\n"
+            + "se ne vede solo il nome. Si possono raccogliere in cartelle: «Nuova cartella» è nel\n"
+            + "menu del tasto destro ({3}); un testo ci entra trascinandolo, o con\n"
+            + "«Sposta in». Un clic sulla cartella la apre e la chiude.";
+        PressKeys = "Premi i tasti…";
+        PressKeysStatus = "Premi i tasti nuovi: Ctrl o Alt con una lettera, una cifra o un tasto funzione. "
+            + "Esc lascia quelli di adesso, {0} torna a quelli di partenza.";
+        KeysUnusable = "{0} non va bene: serve Ctrl o Alt con una lettera, una cifra o un tasto funzione.";
+        KeysTaken = "{0} serve già al programma: scegline un'altra.";
+        TypeNowWith = "Per digitare gli appunti ora premi {0}."; OpenNowWith = "Per aprire l'elenco ora premi {0}.";
+        HotkeyBusyType = "{0} è già usata da un altro programma: dalle altri tasti nelle opzioni, oppure usa il pulsante.";
+        HotkeyBusyPick = "{0} è già usata da un altro programma: dalle altri tasti nelle opzioni, oppure apri la "
+            + "finestra dall'icona.";
+
+        TypingTitle = "Digitazione"; ProgramTitle = "Programma"; HotkeysTitle = "Scorciatoie"; HistoryTitle = "Cronologia";
+        DelayOption = "Attesa prima di digitare (secondi):";
+        UsOption = "Il server usa la tastiera inglese (USA)";
+        EnterOption = "Premi Invio alla fine";
+        ClearOption = "Svuota gli appunti dopo aver digitato";
+        SlowOption = "Digitazione lenta";
+        AltCodeOption = "Alt+codice per i simboli che la tastiera non ha";
+        LanguageOption = "Lingua (Language):";
+        TrayOption = "Resta attivo nell'area di notifica (tray)";
+        LeaveOption = "Nascondi passando a un altro programma";
+        StartOption = "Avvia insieme a Windows";
+        ExportButton = "Esporta…"; ImportButton = "Importa…";
+        PickOption = "Apri l'elenco";
+        HistoryOption = "Ricorda i testi e le immagini copiati";
+        KeepOption = "Giorni su disco (0: solo in memoria):";
+        FolderLink = "Apri la cartella della cronologia";
+        SpareOption = "Pulendo, tieni gli ultimi giorni (0: niente):";
+        CleanButton = "Pulisci ora…";
+        DelayTip = "Per quanti secondi la finestra di destinazione deve restare in primo piano\n"
+            + "prima che parta la digitazione: è il tempo che hai per cliccare nel campo\ngiusto, o per annullare.";
+        UsTip = "Lasciala spenta per i normali desktop remoti: vale la tastiera di questo PC.\n"
+            + "Attivala se i simboli arrivano sbagliati perché il server usa la tastiera\n"
+            + "americana (capita con le console VMware, iLO, iDRAC e con alcune schermate\ndi accesso).";
+        EnterTip = "Preme Invio dopo l'ultimo carattere, per confermare subito l'accesso.";
+        ClearTip = "Cancella la password dagli appunti quando la digitazione è riuscita.\n"
+            + "La cronologia degli appunti di Windows (Win+V), se attiva, non viene toccata.";
+        SlowTip = "Attivala se sul server arrivano caratteri mancanti o in disordine.";
+        AltCodeTip = "I simboli che questa tastiera non ha (ad esempio ~ e ` su quella italiana)\n"
+            + "vengono normalmente inviati come caratteri Unicode, che non tutti i programmi\n"
+            + "di desktop remoto accettano. Con questa opzione vengono invece composti con\n"
+            + "Alt+codice sul tastierino numerico: funziona solo se il server è Windows.";
+        LanguageTip = "La lingua del programma. Cambiandola {0} si riavvia, e si riapre subito.";
+        HistoryTip = "L'elenco propone i testi e le immagini copiati mentre il programma è aperto.\n"
+            + "Ciò che i gestori di password segnano come riservato non viene ricordato.\n"
+            + "Disattivala se copi password da programmi che non lo fanno: nell'elenco si\n"
+            + "leggerebbero in chiaro. Spenta, cancella anche la cronologia su disco.";
+        KeepTip = "Per quanti giorni ciò che copi resta nella cronologia, anche dopo la chiusura.\n"
+            + "Sta in {0},\n"
+            + "un file per giorno, scritto in chiaro: i giorni scaduti si eliminano da soli.\n"
+            + "Con 0 niente va su disco: restano in memoria le ultime {1} cose copiate, di cui al\n"
+            + "massimo {2} immagini, e spariscono alla chiusura.\n"
+            + "L'elenco mostra le {3} più recenti: le altre si trovano con la ricerca.";
+        FolderTip = "Apre in Esplora file la cartella con i file della cronologia, uno per giorno:\n{0}";
+        CleanTip = "Elimina subito dalla cronologia, in memoria e su disco, quello che hai copiato prima\n"
+            + "degli ultimi giorni scritti qui sopra: con 1 resta solo oggi, con 0 non resta niente.\n"
+            + "Prima chiede conferma. Le voci con la stellina e i testi salvati non vengono toccati,\n"
+            + "e nemmeno gli appunti. I giorni su disco restano quelli impostati.";
+        TrayTip = "Attiva: chiudendo o riducendo a icona la finestra il programma resta in funzione\n"
+            + "come icona vicino all'orologio, e le scorciatoie continuano a funzionare.\n"
+            + "Clic sull'icona per riaprire la finestra, tasto destro e poi {0} per chiudere.\n"
+            + "Disattiva: finestra normale, che chiudendola termina il programma.";
+        StartTip = "Avvia {0} quando accedi a Windows, già nascosto nell'area di notifica\n"
+            + "(ridotto a icona, se l'opzione qui sopra è spenta).\n"
+            + "Vale per questo eseguibile: se lo sposti, al primo avvio da lì la voce si aggiorna da sola.\n"
+            + "È la stessa voce di Gestione attività > App di avvio: spenta lì, risulta spenta anche qui.";
+        ExportTip = "Scrive in un file di testo, che si apre con il Blocco note, i testi salvati con le loro\n"
+            + "cartelle; se lo chiedi, anche le cose copiate. Le immagini non ci vanno.\n"
+            + "Nel file i testi sono in chiaro, password comprese: tienilo in un posto sicuro.";
+        ImportTip = "Legge un file scritto da «Esporta», anche su un altro PC, e aggiunge ciò che contiene\n"
+            + "a quello che c'è già. Se un testo salvato ha il nome di uno esistente, chiede quale tenere.\n"
+            + "Le cose copiate che l'elenco ha già non vengono ripetute.";
+        OnlySaved = "Solo i testi salvati…"; Everything = "Tutto, anche le cose copiate…";
+        TextFiles = "File di testo";
+        AskExport = "Il file conterrà i testi in chiaro, password comprese: chiunque lo apra potrà leggerli.\n\nVuoi continuare?";
+        SavedOne = "testo salvato"; SavedMany = "testi salvati"; CopiedOne = "copiato"; CopiedMany = "copiati";
+        Exported = "Esportati: {0}."; ExportedAll = "Esportati: {0}, {1}.";
+        PicturesLeftOut = " Le immagini ({0}) non si esportano.";
+        ClashOne = "Un testo salvato del file ha il nome di uno che esiste già.";
+        ClashMany = "{0} testi salvati del file hanno il nome di uno che esiste già.";
+        ClashChoice = "\n\nSì: vale quello del file.\nNo: resta quello che c'è.";
+        NothingImported = "Nel file non c'era niente da importare.";
+        Imported = "Importati: {0}."; ImportedAll = "Importati: {0}, {1}.";
+        KeptAsWere = " Lasciati com'erano: {0}.";
+        HistoryOffImport = " La cronologia è spenta: i copiati non sono stati importati.";
+        CleanEverything = "tutto quello che hai copiato"; CleanBeforeToday = "quello che hai copiato prima di oggi";
+        CleanBeforeDays = "quello che hai copiato prima degli ultimi {0} giorni (oggi compreso)";
+        AskClean = "Vuoi eliminare {0}?\n\nLe voci con la stellina e i testi salvati restano.";
+        NothingToClean = "Niente da eliminare nella cronologia.";
+        CleanedOne = "Eliminata 1 voce dalla cronologia."; CleanedMany = "Eliminate {0} voci dalla cronologia.";
+        NoHistoryFolder = "La cartella della cronologia non esiste ancora: su disco non c'è niente.";
+
+        NewTextTitle = "Nuovo testo"; SaveCopiedTitle = "Salva il testo copiato"; EditSavedTitle = "Modifica il testo salvato";
+        NameLabel = "Nome (è ciò che si vede nell'elenco):"; ContentLabel = "Contenuto:";
+        FolderOf = "Cartella: "; NoFolder = "Nessuna cartella"; Inside = "Dentro: ";
+        NewFolderTitle = "Nuova cartella"; RenameFolderTitle = "Rinomina la cartella"; FolderNameLabel = "Nome della cartella:";
+        Save = "Salva";
+
+        PictureLabel = "Immagine {0}×{1}";
+        PictureToday = "Immagine {0}×{1}, copiata alle {2}"; PictureOn = "Immagine {0}×{1}, copiata il {2} alle {3}";
+        MoreOne = "… e un altro carattere"; MoreMany = "… e altri {0} caratteri";
+
+        ExportHeader = "{0} {1}: esportazione del {2}";
+        ExportClearWarning = "Attenzione: qui i testi sono in chiaro, password comprese.";
+        ExportEditNote = "Il testo di ogni voce sta nelle righe che iniziano con una tabulazione: se modifichi il file, "
+            + "lasciala al suo posto.";
+
+        HelpTitle = "Guida di {0}"; Close = "Chiudi";
+        Guide = ItalianGuide;
+    }
+
+    static string[] ItalianGuide()
+    {
+        string pick = MainForm.PickName, type = MainForm.HotkeyName, app = Program.AppName;
+        return new string[]
+        {
+            "# A cosa serve",
+            app + " tiene da parte quello che copi e i testi che scegli di salvare, per riaverli negli appunti quando "
+                + "servono. Sa anche digitare gli appunti come pressioni di tasti veri: serve per inserire una password "
+                + "dove incollare non funziona, ad esempio nelle schermate di blocco dei desktop remoti.",
+
+            "# L'elenco",
+            "A sinistra ci sono le cose copiate di recente, testi e immagini, dalla più nuova. A destra i testi salvati, "
+                + "che restano finché non li elimini.",
+            "- Scrivi nella casella in alto per cercare in tutte e due le colonne: le parole valgono in qualsiasi "
+                + "ordine, senza badare a maiuscole e accenti.",
+            "- Un clic mette la voce negli appunti e lascia la finestra aperta, così puoi ancora salvarla o eliminarla.",
+            "- " + EnterKeyName + " o un doppio clic la mettono negli appunti e, se avevi aperto l'elenco con " + pick
+                + ", ti riportano alla finestra in cui stavi lavorando.",
+            "- A quel punto la incolli con Ctrl+V, oppure la digiti con " + type + ".",
+            "- Il tasto destro seleziona la voce e apre il suo menu, senza toccare gli appunti.",
+            "- Fermando il puntatore su una voce copiata che nella riga non ci sta tutta, dopo un attimo compare per "
+                + "intero in un riquadro: il testo con tutte le sue righe, l'immagine più grande. Sparisce appena "
+                + "sposti il puntatore.",
+            "- La stellina all'estremità destra di una voce copiata (" + Key(Keys.Control | MainForm.PinKey) + ") la "
+                + "tiene in cima alla colonna: compare sbiadita quando ci passi sopra, e un clic la accende o la spegne. "
+                + "Una voce con la stellina non scade con i giorni della cronologia e resta lì finché non la togli; "
+                + "copiare di nuovo lo stesso testo non la sposta.",
+            "Il segno colorato a sinistra dice che cos'è la voce: un testo, un indirizzo web, un testo salvato. Le "
+                + "immagini mostrano una miniatura. A destra c'è l'ora della copia (il giorno, se non è di oggi) o il "
+                + "giorno del salvataggio.",
+            "Per non ricordare quello che stai per copiare, «" + Pause + "» sta nel menu del tasto destro dell'elenco "
+                + "e in quello dell'icona vicino all'orologio: sopra la colonna compare «in pausa» finché non scegli «"
+                + Resume + "». Al prossimo avvio la cattura è di nuovo attiva.",
+            "Lo spazio tra le due colonne si trascina, per dare più o meno posto ai testi salvati: la larghezza scelta "
+                + "resta anche al prossimo avvio, e un doppio clic lì torna a quella di partenza.",
+            "La colonna dei copiati mostra le " + MainForm.MaxShown + " voci più recenti: le altre si trovano con la ricerca.",
+
+            "# I testi salvati",
+            "Sono le cose che vuoi avere sempre a portata di mano: una firma, un indirizzo, una password. Ognuno ha un "
+                + "nome, ed è solo il nome che si vede nell'elenco.",
+            "- «" + New + "» (" + Key(Keys.Control | MainForm.NewKey) + ") scrive un testo da zero.",
+            "- «" + SaveDots + "» (" + Key(Keys.Control | MainForm.SaveKey) + "), su una voce copiata, la tiene con un "
+                + "nome; prima di salvare puoi ritoccarne il contenuto.",
+            "- «" + EditDots + "» (" + Key(Keys.Control | MainForm.SaveKey) + "), su una voce salvata, ne cambia il nome "
+                + "o il contenuto.",
+            "- «" + Delete + "» (" + Key(Keys.Control | MainForm.DeleteKey) + ") cancella il testo salvato, oppure toglie "
+                + "dall'elenco la voce copiata.",
+            "- «" + ShowContent + "», nel menu del tasto destro di un testo salvato, lo fa vedere in un riquadro per "
+                + "qualche secondo: l'elenco ne mostra solo il nome, e passarci sopra con il puntatore non basta.",
+            "- I testi salvati sono anche nel menu dell'icona vicino all'orologio: sceglierne uno lo rimette negli "
+                + "appunti senza aprire la finestra.",
+            "I testi salvati stanno nel registro di Windows, cifrati per il tuo utente: un altro utente dello stesso PC "
+                + "non li può leggere. Quando ne rimetti uno negli appunti viene segnato come riservato, perché la "
+                + "cronologia di Windows (Win+V) e gli altri gestori di appunti lo ignorino. Le immagini non si possono salvare.",
+
+            "# Le cartelle",
+            "Quando i testi salvati diventano tanti puoi raccoglierli in cartelle, e le cartelle in altre cartelle.",
+            "- «" + NewFolder + "» sta nel menu del tasto destro (" + Key(Keys.Control | Keys.Shift | MainForm.NewKey)
+                + "): nasce dentro la cartella selezionata, o quella del testo selezionato, ma nella sua finestra puoi "
+                + "scegliere dove metterla.",
+            "- Un clic sul nome di una cartella, o " + EnterKeyName + ", la apre e la chiude; il numero a destra dice "
+                + "quanti testi contiene, anche nelle cartelle al suo interno. Aperte e chiuse, le ritrovi come le hai lasciate.",
+            "- Un testo salvato, o una cartella con tutto quello che contiene, si trascina dentro un'altra cartella: "
+                + "sulla cartella stessa o su uno dei suoi testi. Lasciato su un testo fuori dalle cartelle, o sotto "
+                + "l'ultima riga, esce da quella in cui era.",
+            "- «" + MoveTo + "», nel menu del tasto destro di un testo salvato o di una cartella, fa lo stesso. La stessa "
+                + "scelta c'è nella finestra in cui lo scrivi, a sinistra dei pulsanti.",
+            "- Con una cartella selezionata, «" + RenameDots + "» le cambia il nome o il posto ed «" + Delete + "» toglie "
+                + "la cartella soltanto: quello che conteneva, testi e cartelle, sale nella cartella che la conteneva, "
+                + "o resta tra i salvati fuori dalle cartelle.",
+            "- Nel nome di una cartella non può esserci «" + Texts.Separator + "».",
+            "- Nel menu dell'icona vicino all'orologio ogni cartella è un sottomenu con i suoi testi.",
+            "- La ricerca trova anche dentro le cartelle chiuse, e il nome di una cartella trova i suoi testi.",
+
+            "# Digitare una password",
+            "Dove Ctrl+V non funziona, " + app + " scrive il testo degli appunti un tasto alla volta, come faresti tu "
+                + "sulla tastiera.",
+            "- Copia la password.",
+            "- Premi «" + TypeButton + "».",
+            "- Clicca nel campo della finestra remota: hai " + MainForm.ArmedSeconds + " secondi per farlo.",
+            "- Quando quella finestra è rimasta in primo piano per il tempo dell'attesa, parte la digitazione.",
+            "In alternativa premi " + type + " direttamente nel campo: digita subito, senza attesa.",
+            "Per non mandare una password nel posto sbagliato:",
+            "- la digitazione si ferma da sola se la finestra di destinazione perde il primo piano;",
+            "- durante l'attesa e la digitazione lo stesso pulsante diventa «" + Cancel + "»;",
+            "- desktop, barra delle applicazioni e menu Start non sono mai una destinazione;",
+            "- se gli appunti contengono più di " + MainForm.UnusualLength + " caratteri o più righe, viene chiesta una conferma;",
+            "- con Bloc Maiusc attivo non si digita: va spento prima.",
+
+            "# I tasti",
+            pick + "\tApre l'elenco, da qualsiasi programma.",
+            type + "\tDigita subito gli appunti nella finestra attiva.",
+            "F1\tApre questa guida.",
+            ArrowsName + "\tScorre la colonna.",
+            "Tab\tPassa all'altra colonna.",
+            EnterKeyName + "\tSceglie la voce e torna alla finestra di partenza.",
+            "Esc\tTorna alla finestra di partenza senza scegliere.",
+            Key(Keys.Control | MainForm.NewKey) + "\tNuovo testo salvato.",
+            Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "\tNuova cartella.",
+            Key(Keys.Control | MainForm.SaveKey) + "\tSalva la voce copiata, o modifica quella salvata.",
+            Key(Keys.Control | MainForm.DeleteKey) + "\tElimina la voce selezionata.",
+            Key(Keys.Control | MainForm.PinKey) + "\tTiene in alto la voce copiata, o la lascia andare.",
+            "Le prime due funzionano ovunque; le altre valgono nell'elenco. Finché è attiva, " + pick + " non arriva "
+                + "più agli altri programmi.",
+            "Nelle opzioni, sotto «" + HotkeysTitle + "», le prime due si spengono e si cambiano: il pulsante accanto a "
+                + "ciascuna mostra i suoi tasti, e premendolo aspetta quelli nuovi.",
+            "- Servono Ctrl o Alt, anche con " + ShiftName + ", insieme a una lettera, una cifra o un tasto funzione.",
+            "- Esc lascia i tasti di adesso, " + DeleteKeyName + " torna a quelli di partenza.",
+            "- Con Ctrl+Alt evita le lettere che con AltGr scrivono un simbolo, come la E dell'euro: la scorciatoia "
+                + "scatterebbe mentre lo scrivi.",
+
+            "# La cronologia",
+            "Quello che copi resta nell'elenco per un numero di giorni che decidi tu (" + Texts.DefaultKeepDays
+                + " se non lo cambi), anche dopo aver chiuso il programma o spento il PC.",
+            "- Sta in " + Texts.Folder + ", un file per giorno, scritto in chiaro. I giorni scaduti si eliminano da soli.",
+            "- Con 0 giorni niente va su disco: restano in memoria le ultime " + Texts.MaxRecent + " cose copiate, di "
+                + "cui al massimo " + Texts.MaxPictures + " immagini, e spariscono alla chiusura.",
+            "- Quello che i gestori di password segnano come riservato non viene ricordato.",
+            "- Le voci con la stellina restano anche oltre quei giorni.",
+            "- Nelle opzioni, «" + CleanButton + "» elimina subito quello che hai copiato prima degli ultimi giorni che "
+                + "scrivi accanto: con 1 resta solo oggi, con 0 non resta niente. Chiede conferma, e non tocca le voci "
+                + "con la stellina né i testi salvati.",
+            "- Spegnendo la cronologia nelle opzioni si svuotano l'elenco e i file su disco, stelline comprese.",
+
+            "# Le opzioni",
+            "Il pulsante «" + Options + "» le mostra al posto dell'elenco, e «" + List + "» torna indietro. Fermando il "
+                + "puntatore su un'opzione ne compare la spiegazione completa.",
+            "- " + TypingTitle + ": quanti secondi aspettare prima di digitare (da " + MainForm.MinDelay + " a "
+                + MainForm.MaxDelay + "), se il server usa la tastiera americana, se premere Invio alla fine, se "
+                + "svuotare gli appunti dopo, la digitazione lenta e i simboli composti con Alt+codice.",
+            "- " + HotkeysTitle + ": accende e spegne " + type + " e " + pick + ", e dà loro altri tasti.",
+            "- " + HistoryTitle + ": se ricordare ciò che copi, per quanti giorni, il collegamento alla cartella dei "
+                + "file e il pulsante che la pulisce subito.",
+            "- " + ProgramTitle + ": la lingua, se restare attivo nell'area di notifica e nascondersi passando a un "
+                + "altro programma, se partire insieme a Windows, e i pulsanti per esportare e importare.",
+
+            "# Esportare e importare",
+            "Nelle opzioni, sotto «" + ProgramTitle + "», due pulsanti portano i tuoi testi fuori dal programma e li "
+                + "riprendono, per una copia di sicurezza o per passarli a un altro PC. Ognuno chiede se vuoi solo i "
+                + "testi salvati o tutto, cioè anche le cose copiate.",
+            "- «" + ExportButton + "» scrive un file di testo che si apre con il Blocco note: i testi salvati con le "
+                + "loro cartelle e, se lo chiedi, le cose copiate con l'ora e la stellina. Le immagini non ci vanno.",
+            "- Nel file i testi sono in chiaro, password comprese: tienilo in un posto sicuro.",
+            "- «" + ImportButton + "» legge un file così e aggiunge ciò che contiene a quello che c'è già. Se un testo "
+                + "salvato ha il nome di uno esistente chiede quale tenere; le cose copiate che l'elenco ha già non si "
+                + "ripetono. Un file esportato in un'altra lingua si legge lo stesso.",
+            "- Il file si può ritoccare a mano: il testo di ogni voce sta nelle righe che iniziano con una "
+                + "tabulazione, che va lasciata al suo posto.",
+
+            "# L'icona del tray",
+            "Con l'opzione attiva, chiudere o ridurre a icona la finestra la nasconde soltanto: il programma resta in "
+                + "funzione e le scorciatoie continuano a rispondere.",
+            "- Un clic sull'icona riapre la finestra; tasto destro e poi «" + Exit + "» chiude davvero.",
+            "- Con «" + LeaveOption + "» la finestra torna qui anche quando clicchi altrove; spenta, resta aperta "
+                + "dietro le altre. Mentre aspetta e digita, invece, sta sopra a tutto: il conto alla rovescia e «"
+                + Cancel + "» restano in vista.",
+            "- Nel menu del tasto destro ci sono anche i testi salvati, ogni cartella un sottomenu: sceglierne uno lo "
+                + "rimette negli appunti, pronto per Ctrl+V o per " + type + ", senza aprire la finestra.",
+            "- L'icona è a colori se negli appunti c'è del testo, grigia se non c'è.",
+            "- Avviare il programma una seconda volta fa ricomparire la finestra di quello già aperto.",
+
+            "# Se qualcosa non va",
+            "- I simboli arrivano sbagliati: il server usa un'altra tastiera. Prova l'opzione della tastiera inglese (USA).",
+            "- Mancano caratteri, o arrivano in disordine: attiva la digitazione lenta.",
+            "- Non arrivano i simboli che la tua tastiera non ha (~ e ` su quella italiana): attiva Alt+codice, che "
+                + "funziona se il server è Windows.",
+            "- " + type + " non fa niente con il desktop remoto a schermo intero: quel programma cattura tutte le "
+                + "scorciatoie. Usa il pulsante.",
+            "- Windows blocca l'invio dei tasti: il programma di desktop remoto è avviato come amministratore. Avvia "
+                + "così anche " + app + ".",
+            "- Una scorciatoia si spegne da sola: la sta già usando un altro programma. Dalle altri tasti nelle opzioni.",
+            "La riga sopra i pulsanti dice che cosa è appena successo, e perché. Le conferme spariscono dopo qualche "
+                + "secondo e lasciano il posto all'elenco; avvisi ed errori restano fino al messaggio dopo."
+        };
+    }
+}

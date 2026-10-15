@@ -62,8 +62,8 @@ Everything stays on your PC, in your Windows user profile:
 
 ## How to delete your data
 
-- In the options, «Pulisci ora» deletes the history at once, and turning off «Ricorda i testi e le immagini
-  copiati» deletes all of it.
+- In the options, “Clean now…” deletes the history at once, and turning off “Remember copied texts and
+  pictures” deletes all of it.
 - A saved text is deleted from the list.
 - Uninstalling the Microsoft Store version makes Windows remove the program's data folder, with the history. To
   be sure the saved texts go too, delete them in the program before uninstalling it.

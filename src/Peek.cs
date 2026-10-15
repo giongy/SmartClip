@@ -94,7 +94,7 @@ class Peek : Form
             int left = whole.Length - text.Length;
             Size needed = TextRenderer.MeasureText(text, Font, new Size(room.Width, 0), Flags);
             content = new Size(Math.Min(needed.Width, room.Width), Math.Min(needed.Height, room.Height));
-            if (left > 0) more = left == 1 ? "… e un altro carattere" : "… e altri " + left + " caratteri";
+            if (left > 0) more = left == 1 ? Strings.MoreOne : string.Format(Strings.MoreMany, left);
             else if (needed.Height > room.Height) more = "…";
         }
         ClientSize = new Size(content.Width + 2 * inset, content.Height + 2 * inset + (more == null ? 0 : Font.Height));

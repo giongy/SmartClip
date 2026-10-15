@@ -13,99 +13,89 @@ partial class MainForm
     int PlaceOptions()
     {
         int left = Edge, top = Edge;
-        PlaceTitle("Digitazione", left, ref top);
+        PlaceTitle(Strings.TypingTitle, left, ref top);
         // Confirming a number brings what was written back within its limits.
-        Label delayLabel = PlaceNumber(delayBox, "Attesa prima di digitare (secondi):", MaxDelay,
-            delegate { Delay = Delay; }, left, ref top);
+        Label delayLabel = PlaceNumber(delayBox, Strings.DelayOption, MaxDelay, delegate { Delay = Delay; }, left, ref top);
         Delay = DefaultDelay;
-        PlaceOption(usBox, "Il server usa la tastiera inglese (USA)", left, ref top);
-        PlaceOption(enterBox, "Premi Invio alla fine", left, ref top);
-        PlaceOption(clearBox, "Svuota gli appunti dopo aver digitato", left, ref top);
-        PlaceOption(slowBox, "Digitazione lenta", left, ref top);
-        PlaceOption(altCodeBox, "Alt+codice per i simboli che la tastiera non ha", left, ref top);
+        PlaceOption(usBox, Strings.UsOption, left, ref top);
+        PlaceOption(enterBox, Strings.EnterOption, left, ref top);
+        PlaceOption(clearBox, Strings.ClearOption, left, ref top);
+        PlaceOption(slowBox, Strings.SlowOption, left, ref top);
+        PlaceOption(altCodeBox, Strings.AltCodeOption, left, ref top);
         // On the left too, where there is room: under the history the window would have to grow.
-        PlaceTitle("Programma", left, ref top);
-        PlaceOption(trayBox, "Resta attivo nell'area di notifica (tray)", left, ref top);
+        PlaceTitle(Strings.ProgramTitle, left, ref top);
+        // The language: its button shows the one in use and opens the list, each by the name it gives itself.
+        ContextMenuStrip languageMenu = new ContextMenuStrip();
+        for (int i = 0; i < Strings.Codes.Length; i++)
+        {
+            string code = Strings.Codes[i];   // a variable of its own for the delegate
+            languageMenu.Items.Add(Strings.Names[i], null, delegate { ChangeLanguage(code); }).Enabled = code != Strings.Code;
+        }
+        Look.Style(languageMenu);
+        Label languageLabel = PlacePicker(languageButton, Strings.Names[Array.IndexOf(Strings.Codes, Strings.Code)],
+            Strings.LanguageOption, languageMenu, left, ref top);
+        PlaceOption(trayBox, Strings.TrayOption, left, ref top);
         trayBox.Checked = true;
-        PlaceOption(leaveBox, "Nascondi passando a un altro programma", left, ref top);
+        PlaceOption(leaveBox, Strings.LeaveOption, left, ref top);
         leaveBox.Checked = true;
-        PlaceOption(startBox, "Avvia insieme a Windows", left, ref top);
+        PlaceOption(startBox, Strings.StartOption, left, ref top);
         // Side by side, each with its two choices: the saved texts alone, or what was copied too.
         ContextMenuStrip exportMenu = Choice(Export), importMenu = Choice(Import);
         top += Gap;
-        PlaceButton(exportButton, "Esporta…", delegate { exportMenu.Show(exportButton, 0, exportButton.Height); }, left, ref top);
+        PlaceButton(exportButton, Strings.ExportButton, delegate { exportMenu.Show(exportButton, 0, exportButton.Height); }, left, ref top);
         top -= NumberRow;
-        PlaceButton(importButton, "Importa…", delegate { importMenu.Show(importButton, 0, importButton.Height); },
+        PlaceButton(importButton, Strings.ImportButton, delegate { importMenu.Show(importButton, 0, importButton.Height); },
             left + OptionButtonWidth + Gap, ref top);
         int leftBottom = top;
 
         left += ColumnWidth + ColumnGap;
         top = Edge;
-        PlaceTitle("Scorciatoie", left, ref top);
-        PlaceHotkey(hotkeyBox, typeKeysButton, ButtonText, left, ref top);
+        PlaceTitle(Strings.HotkeysTitle, left, ref top);
+        PlaceHotkey(hotkeyBox, typeKeysButton, Strings.TypeButton, left, ref top);
         hotkeyBox.Checked = true;
-        PlaceHotkey(pickBox, pickKeysButton, "Apri l'elenco", left, ref top);
+        PlaceHotkey(pickBox, pickKeysButton, Strings.PickOption, left, ref top);
         pickBox.Checked = true;
-        PlaceTitle("Cronologia", left, ref top);
-        PlaceOption(historyBox, "Ricorda i testi e le immagini copiati", left, ref top);
+        PlaceTitle(Strings.HistoryTitle, left, ref top);
+        PlaceOption(historyBox, Strings.HistoryOption, left, ref top);
         historyBox.Checked = true;
-        Label keepLabel = PlaceNumber(keepBox, "Giorni su disco (0: solo in memoria):", Texts.MaxKeepDays,
+        Label keepLabel = PlaceNumber(keepBox, Strings.KeepOption, Texts.MaxKeepDays,
             delegate { Retention = Retention; ApplyHistory(); Reload(); }, left, ref top);
         Retention = Texts.DefaultKeepDays;
-        LinkLabel folderLink = PlaceLink("Apri la cartella della cronologia", OpenFolder, left, ref top);
+        LinkLabel folderLink = PlaceLink(Strings.FolderLink, OpenFolder, left, ref top);
         // Not a setting: what to spare when the button below is pressed.
-        Label cleanLabel = PlaceNumber(cleanBox, "Pulendo, tieni gli ultimi giorni (0: niente):", Texts.MaxKeepDays,
-            delegate { Spared = Spared; }, left, ref top);
+        Label cleanLabel = PlaceNumber(cleanBox, Strings.SpareOption, Texts.MaxKeepDays, delegate { Spared = Spared; }, left, ref top);
         Spared = 0;
-        PlaceButton(cleanButton, "Pulisci ora…", CleanHistory, left, ref top);
+        PlaceButton(cleanButton, Strings.CleanButton, CleanHistory, left, ref top);
         cleanButton.Sign = Sign.Delete;
         top = Math.Max(top, leftBottom);
 
-        Tip("Per quanti secondi la finestra di destinazione deve restare in primo piano\n"
-          + "prima che parta la digitazione: è il tempo che hai per cliccare nel campo\n"
-          + "giusto, o per annullare.", delayLabel, delayBox);
-        Tip("Lasciala spenta per i normali desktop remoti: vale la tastiera di questo PC.\n"
-          + "Attivala se i simboli arrivano sbagliati perché il server usa la tastiera\n"
-          + "americana (capita con le console VMware, iLO, iDRAC e con alcune schermate\n"
-          + "di accesso).", usBox);
-        Tip("Preme Invio dopo l'ultimo carattere, per confermare subito l'accesso.", enterBox);
-        Tip("Cancella la password dagli appunti quando la digitazione è riuscita.\n"
-          + "La cronologia degli appunti di Windows (Win+V), se attiva, non viene toccata.", clearBox);
-        Tip("Attivala se sul server arrivano caratteri mancanti o in disordine.", slowBox);
-        Tip("I simboli che questa tastiera non ha (ad esempio ~ e ` su quella italiana)\n"
-          + "vengono normalmente inviati come caratteri Unicode, che non tutti i programmi\n"
-          + "di desktop remoto accettano. Con questa opzione vengono invece composti con\n"
-          + "Alt+codice sul tastierino numerico: funziona solo se il server è Windows.", altCodeBox);
-        Tip("L'elenco propone i testi e le immagini copiati mentre il programma è aperto.\n"
-          + "Ciò che i gestori di password segnano come riservato non viene ricordato.\n"
-          + "Disattivala se copi password da programmi che non lo fanno: nell'elenco si\n"
-          + "leggerebbero in chiaro. Spenta, cancella anche la cronologia su disco.", historyBox);
-        Tip("Per quanti giorni ciò che copi resta nella cronologia, anche dopo la chiusura.\n"
-          + "Sta in " + Texts.Folder + ",\n"
-          + "un file per giorno, scritto in chiaro: i giorni scaduti si eliminano da soli.\n"
-          + "Con 0 niente va su disco: restano in memoria le ultime " + Texts.MaxRecent + " cose copiate, di cui al\n"
-          + "massimo " + Texts.MaxPictures + " immagini, e spariscono alla chiusura.\n"
-          + "L'elenco mostra le " + MaxShown + " più recenti: le altre si trovano con la ricerca.", keepLabel, keepBox);
-        Tip("Apre in Esplora file la cartella con i file della cronologia, uno per giorno:\n"
-          + Texts.Folder, folderLink);
-        Tip("Elimina subito dalla cronologia, in memoria e su disco, quello che hai copiato prima\n"
-          + "degli ultimi giorni scritti qui sopra: con 1 resta solo oggi, con 0 non resta niente.\n"
-          + "Prima chiede conferma. Le voci con la stellina e i testi salvati non vengono toccati,\n"
-          + "e nemmeno gli appunti. I giorni su disco restano quelli impostati.", cleanLabel, cleanBox, cleanButton);
-        Tip("Attiva: chiudendo o riducendo a icona la finestra il programma resta in funzione\n"
-          + "come icona vicino all'orologio, e la scorciatoia continua a funzionare.\n"
-          + "Clic sull'icona per riaprire la finestra, tasto destro e poi Esci per chiudere.\n"
-          + "Disattiva: finestra normale, che chiudendola termina il programma.", trayBox);        Tip("Avvia " + Program.AppName + " quando accedi a Windows, già nascosto nell'area di notifica\n"
-          + "(ridotto a icona, se l'opzione qui sopra è spenta).\n"
-          + "Vale per questo eseguibile: se lo sposti, al primo avvio da lì la voce si aggiorna da sola.\n"
-          + "È la stessa voce di Gestione attività > App di avvio: spenta lì, risulta spenta anche qui.", startBox);
-        Tip("Scrive in un file di testo, che si apre con il Blocco note, i testi salvati con le loro\n"
-          + "cartelle; se lo chiedi, anche le cose copiate. Le immagini non ci vanno.\n"
-          + "Nel file i testi sono in chiaro, password comprese: tienilo in un posto sicuro.", exportButton);
-        Tip("Legge un file scritto da «Esporta», anche su un altro PC, e aggiunge ciò che contiene\n"
-          + "a quello che c'è già. Se un testo salvato ha il nome di uno esistente, chiede quale tenere.\n"
-          + "Le cose copiate che l'elenco ha già non vengono ripetute.", importButton);
+        Tip(Strings.DelayTip, delayLabel, delayBox);
+        Tip(Strings.UsTip, usBox);
+        Tip(Strings.EnterTip, enterBox);
+        Tip(Strings.ClearTip, clearBox);
+        Tip(Strings.SlowTip, slowBox);
+        Tip(Strings.AltCodeTip, altCodeBox);
+        Tip(string.Format(Strings.LanguageTip, Program.AppName), languageLabel, languageButton);
+        Tip(Strings.HistoryTip, historyBox);
+        Tip(string.Format(Strings.KeepTip, Texts.Folder, Texts.MaxRecent, Texts.MaxPictures, MaxShown), keepLabel, keepBox);
+        Tip(string.Format(Strings.FolderTip, Texts.Folder), folderLink);
+        Tip(Strings.CleanTip, cleanLabel, cleanBox, cleanButton);
+        Tip(string.Format(Strings.TrayTip, Strings.Exit), trayBox);
+        Tip(string.Format(Strings.StartTip, Program.AppName), startBox);
+        Tip(Strings.ExportTip, exportButton);
+        Tip(Strings.ImportTip, importButton);
         return top;
+    }
+
+    // A row with something to choose from a menu: its description on the left, at the right edge of the column
+    // the button that shows the choice made and opens the menu. Returns the description, for its tooltip.
+    Label PlacePicker(RoundButton button, string choice, string text, ContextMenuStrip menu, int left, ref int top)
+    {
+        Label label = NewLabel(text, top + 5);
+        label.Left = left;
+        optionControls.Add(label);
+        PlaceButton(button, choice, delegate { menu.Show(button, 0, button.Height); }, left + ColumnWidth - OptionButtonWidth, ref top);
+        return label;
     }
 
     // The wait before typing, in seconds: whatever is written in its box, kept within the limits.
@@ -223,21 +213,21 @@ partial class MainForm
     static ContextMenuStrip Choice(Action<bool> act)
     {
         ContextMenuStrip menu = new ContextMenuStrip();
-        menu.Items.Add("Solo i testi salvati…", null, delegate { act(false); });
-        menu.Items.Add("Tutto, anche le cose copiate…", null, delegate { act(true); });
+        menu.Items.Add(Strings.OnlySaved, null, delegate { act(false); });
+        menu.Items.Add(Strings.Everything, null, delegate { act(true); });
         Look.Style(menu);
         return menu;
     }
 
     static string BackupFilter
     {
-        get { return "File di testo (*" + Backup.Extension + ")|*" + Backup.Extension; }
+        get { return Strings.TextFiles + " (*" + Backup.Extension + ")|*" + Backup.Extension; }
     }
 
     // Writes the saved texts, and with 'all' what was copied too, to a text file chosen by the user.
     void Export(bool all)
     {
-        if (!Ask("Il file conterrà i testi in chiaro, password comprese: chiunque lo apra potrà leggerli.\n\nVuoi continuare?")) return;
+        if (!Ask(Strings.AskExport)) return;
         using (SaveFileDialog dialog = new SaveFileDialog())
         {
             dialog.Filter = BackupFilter;
@@ -245,9 +235,10 @@ partial class MainForm
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
             BackupResult result = null;
             if (!Change(delegate { result = Backup.Export(dialog.FileName, all); })) return;
-            Say("Esportati: " + Count(result.Saved, "testo salvato", "testi salvati")
-                + (all ? ", " + Count(result.Copied, "copiato", "copiati") : "")
-                + (result.Pictures > 0 ? ". Le immagini (" + result.Pictures + ") non si esportano" : "") + ".");
+            string saved = Count(result.Saved, Strings.SavedOne, Strings.SavedMany);
+            Say((all ? string.Format(Strings.ExportedAll, saved, Count(result.Copied, Strings.CopiedOne, Strings.CopiedMany))
+                : string.Format(Strings.Exported, saved))
+                + (result.Pictures > 0 ? string.Format(Strings.PicturesLeftOut, result.Pictures) : ""));
         }
     }
 
@@ -264,16 +255,15 @@ partial class MainForm
             {
                 result = Backup.Import(dialog.FileName, copied, delegate(int clashes)
                 {
-                    return Ask((clashes == 1 ? "Un testo salvato del file ha il nome di uno che esiste già."
-                        : clashes + " testi salvati del file hanno il nome di uno che esiste già.")
-                        + "\n\nSì: vale quello del file.\nNo: resta quello che c'è.");
+                    return Ask((clashes == 1 ? Strings.ClashOne : string.Format(Strings.ClashMany, clashes)) + Strings.ClashChoice);
                 });
             })) return;
-            Say(result.Saved + result.Copied + result.Kept == 0 ? "Nel file non c'era niente da importare."
-                : "Importati: " + Count(result.Saved, "testo salvato", "testi salvati")
-                + (copied ? ", " + Count(result.Copied, "copiato", "copiati") : "")
-                + (result.Kept > 0 ? ". Lasciati com'erano: " + result.Kept : "")
-                + (all && !copied ? ". La cronologia è spenta: i copiati non sono stati importati" : "") + ".");
+            string saved = Count(result.Saved, Strings.SavedOne, Strings.SavedMany);
+            Say(result.Saved + result.Copied + result.Kept == 0 ? Strings.NothingImported
+                : (copied ? string.Format(Strings.ImportedAll, saved, Count(result.Copied, Strings.CopiedOne, Strings.CopiedMany))
+                    : string.Format(Strings.Imported, saved))
+                + (result.Kept > 0 ? string.Format(Strings.KeptAsWere, result.Kept) : "")
+                + (all && !copied ? Strings.HistoryOffImport : ""));
         }
         Reload();
     }
@@ -287,14 +277,13 @@ partial class MainForm
     void CleanHistory()
     {
         int days = Spared;
-        string what = days == 0 ? "tutto quello che hai copiato" : days == 1 ? "quello che hai copiato prima di oggi"
-            : "quello che hai copiato prima degli ultimi " + days + " giorni (oggi compreso)";
-        if (!Ask("Vuoi eliminare " + what + "?\n\nLe voci con la stellina e i testi salvati restano.")) return;
+        string what = days == 0 ? Strings.CleanEverything : days == 1 ? Strings.CleanBeforeToday
+            : string.Format(Strings.CleanBeforeDays, days);
+        if (!Ask(string.Format(Strings.AskClean, what))) return;
         int before = Texts.Recent.Count;
         if (!Change(delegate { Texts.Clean(days); })) return;
         int removed = before - Texts.Recent.Count;
-        Say(removed == 0 ? "Niente da eliminare nella cronologia."
-            : removed == 1 ? "Eliminata 1 voce dalla cronologia." : "Eliminate " + removed + " voci dalla cronologia.");
+        Say(removed == 0 ? Strings.NothingToClean : removed == 1 ? Strings.CleanedOne : string.Format(Strings.CleanedMany, removed));
         Reload();
     }
 
@@ -302,7 +291,7 @@ partial class MainForm
     void OpenFolder()
     {
         if (Directory.Exists(Texts.Folder)) Change(delegate { Process.Start(Texts.Folder); });
-        else Say("La cartella della cronologia non esiste ancora: su disco non c'è niente.");
+        else Say(Strings.NoHistoryFolder);
     }
 
     void PlaceOption(CheckBox box, string text, int left, ref int top)
@@ -393,6 +382,7 @@ partial class MainForm
         Retention = Transfer(key, save, "KeepDays", Retention);
         trayBox.Checked = Transfer(key, save, "Tray", trayBox.Checked);
         leaveBox.Checked = Transfer(key, save, "HideOnLeave", leaveBox.Checked);
+        language = Transfer(key, save, LanguageSetting, language);   // read again by SavedLanguage, before the window
         savedColumn = Transfer(key, save, "SavedWidth", savedColumn);   // applied when the window loads
 
         // Window position. Reading starts from a point outside every screen: it stays there, and is ignored,
@@ -424,5 +414,53 @@ partial class MainForm
     static bool Transfer(RegistryKey key, bool save, string name, bool value)
     {
         return Transfer(key, save, name, value ? 1 : 0) != 0;
+    }
+
+    static string Transfer(RegistryKey key, bool save, string name, string value)
+    {
+        if (!save) return key.GetValue(name, value) as string ?? value;
+        key.SetValue(name, value);
+        return value;
+    }
+
+    // The language saved among the settings, or null. Read before the window exists: its texts come first.
+    public static string SavedLanguage()
+    {
+        try
+        {
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SettingsKey))
+            {
+                return key == null ? null : key.GetValue(LanguageSetting) as string;
+            }
+        }
+        catch (Exception)
+        {
+            return null;   // unreadable: the default language
+        }
+    }
+
+    // Another language: the settings are saved with it and the program starts again, which shows every text
+    // in it at once. The new start waits for this one to close (Program.RestartArgument).
+    void ChangeLanguage(string code)
+    {
+        if (busy || code == Strings.Code) return;
+        try
+        {
+            Process.Start(Application.ExecutablePath, Program.RestartArgument);
+        }
+        catch (Exception ex)
+        {
+            status.Text = string.Format(Strings.Error, ex.Message);
+            return;
+        }
+        language = code;
+        exiting = true;
+        Close();
+    }
+
+    // Started again after a change of language: back where the user was.
+    public void ShowOptions()
+    {
+        ShowView(true);
     }
 }

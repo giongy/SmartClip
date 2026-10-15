@@ -57,8 +57,8 @@ class Entry
         Width = width;
         Height = height;
         Time = time;
-        Text = "Immagine " + width + "×" + height + ", copiata "
-            + (time.Date == DateTime.Today ? "" : "il " + time.ToString("dd/MM") + " ") + "alle " + time.ToString("HH:mm:ss");
+        Text = time.Date == DateTime.Today ? string.Format(Strings.PictureToday, width, height, time.ToString("HH:mm:ss"))
+            : string.Format(Strings.PictureOn, width, height, time.ToString(Strings.DayFormat, Strings.Culture), time.ToString("HH:mm:ss"));
     }
 
     static Size PreviewSize(Image picture)
@@ -94,7 +94,7 @@ class Entry
         get
         {
             if (Name != null) return IsGroup ? Texts.Leaf(Name) : Name;   // a folder by its own name, not its path
-            if (Picture) return "Immagine " + Width + "×" + Height;   // when it was copied is shown beside it
+            if (Picture) return string.Format(Strings.PictureLabel, Width, Height);   // when it was copied is shown beside it
             string line = Text.Trim().Replace('\r', ' ').Replace('\n', ' ').Replace('\t', ' ');
             return line.Length > MaxPreview ? line.Substring(0, MaxPreview) + "…" : line;
         }

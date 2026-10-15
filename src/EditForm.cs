@@ -23,10 +23,10 @@ class EditForm : Form
     // proposed for it, 'groups' those it can go into.
     public EditForm(Entry source, string group, List<string> groups)
     {
-        within = "Cartella: ";
-        outside = "Nessuna cartella";
-        Build(source == null ? "Nuovo testo" : source.Name == null ? "Salva il testo copiato" : "Modifica il testo salvato",
-            "Nome (è ciò che si vede nell'elenco):", MaxNameLength, source == null ? "" : source.Name ?? "", groups);
+        within = Strings.FolderOf;
+        outside = Strings.NoFolder;
+        Build(source == null ? Strings.NewTextTitle : source.Name == null ? Strings.SaveCopiedTitle : Strings.EditSavedTitle,
+            Strings.NameLabel, MaxNameLength, source == null ? "" : source.Name ?? "", groups);
         // The box breaks lines only at CR LF, while a copied text may hold bare LF.
         if (source != null) contentBox.Text = source.Text.Replace("\r\n", "\n").Replace("\n", "\r\n");
         Choose(group);
@@ -37,9 +37,9 @@ class EditForm : Form
     public EditForm(string path, string parent, List<string> parents)
     {
         nameOnly = true;
-        within = "Dentro: ";
-        outside = "Fuori dalle cartelle";
-        Build(path == null ? "Nuova cartella" : "Rinomina la cartella", "Nome della cartella:", MaxGroupLength,
+        within = Strings.Inside;
+        outside = Strings.OutOfFolders;
+        Build(path == null ? Strings.NewFolderTitle : Strings.RenameFolderTitle, Strings.FolderNameLabel, MaxGroupLength,
             path == null ? "" : Texts.Leaf(path), parents);
         Choose(parent);
     }
@@ -68,7 +68,7 @@ class EditForm : Form
         int buttonTop = nameFrame.Bottom + Edge;
         if (!nameOnly)
         {
-            Label contentLabel = NewLabel("Contenuto:", nameFrame.Bottom + Edge);
+            Label contentLabel = NewLabel(Strings.ContentLabel, nameFrame.Bottom + Edge);
             contentBox.Multiline = true;
             contentBox.AcceptsReturn = true;
             contentBox.ScrollBars = ScrollBars.Vertical;
@@ -78,10 +78,10 @@ class EditForm : Form
             buttonTop = contentFrame.Bottom + Edge;
         }
 
-        cancelButton.Text = "Annulla";
+        cancelButton.Text = Strings.Cancel;
         cancelButton.DialogResult = DialogResult.Cancel;
         cancelButton.SetBounds(Edge + FieldWidth - ButtonWidth, buttonTop, ButtonWidth, ButtonHeight);
-        saveButton.Text = "Salva";
+        saveButton.Text = Strings.Save;
         saveButton.DialogResult = DialogResult.OK;
         saveButton.SetBounds(cancelButton.Left - Gap - ButtonWidth, buttonTop, ButtonWidth, ButtonHeight);
         ClientSize = new Size(Edge + FieldWidth + Edge, buttonTop + ButtonHeight + Edge);
