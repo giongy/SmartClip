@@ -9,8 +9,11 @@ con le sue schermate in [`images/<lingua>`](images). Si rifanno a programma chiu
 
 1. **Iscrizione** su [storedeveloper.microsoft.com](https://storedeveloper.microsoft.com) come sviluppatore
    individuale (gratuita: documento d'identità e selfie).
-2. **Prenota il nome** in Partner Center: *Apps and games → New product → MSIX or PWA app* → «SmartClip» (se
-   è preso, un'alternativa come «SmartClip Clipboard»: va cambiato anche `DisplayName` nel manifesto).
+2. **Prenota il nome** in Partner Center: *Apps and games → New product → MSIX or PWA app* →
+   «SmartClip – Clipboard & Typer» («SmartClip» da solo è già preso). Va scritto identico, con la lineetta
+   lunga «–» e la «&»: lo stesso nome sta in `DisplayName` nel manifesto, e Partner Center rifiuta un pacchetto
+   il cui nome non coincide con quello prenotato. Nel programma (titolo della finestra, impostazioni) resta
+   «SmartClip».
 3. **Identità del pacchetto**: in *Product management → Product identity* ci sono tre valori. Vanno in
    [`packaging/AppxManifest.xml`](../packaging/AppxManifest.xml) al posto dei segnaposto:
    - `Package/Identity/Name` ← il valore di **Package/Identity/Name**

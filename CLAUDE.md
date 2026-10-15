@@ -49,8 +49,10 @@ condiviso su GitHub).
     all'accesso riconosciuto dall'attivazione invece che da `/tray`, cronologia in `LocalState` del pacchetto
     (quella sotto `%LOCALAPPDATA%` Windows la sposterebbe in una copia nascosta che Esplora file non vede). È
     l'unico file con tipi di Windows Runtime: fuori dal pacchetto non vanno chiamati.
-- `packaging\` — il pacchetto MSIX per lo Store: `AppxManifest.xml` (identità da Partner Center, ancora
-  segnaposto finché l'utente non prenota il nome) e `pack.ps1` (immagini da `SmartClip.ico`, versione da
+- `packaging\` — il pacchetto MSIX per lo Store: `AppxManifest.xml` (identità da Partner Center, *Product
+  management → Product identity*: `lsgag.SmartClipClipboardTyper`, editore `ls_gag`; il nome sullo Store è «SmartClip – Clipboard & Typer», scelto
+  dall'utente perché «SmartClip» era preso e «ClipSmart» è già un gestore di appunti per Chrome: sta in
+  `DisplayName` identico a quello prenotato, mentre nel programma resta «SmartClip») e `pack.ps1` (immagini da `SmartClip.ico`, versione da
   `AssemblyVersion`, poi `makepri` e `makeappx` del Windows SDK; senza SDK scrive solo `out\layout`). Lo Store
   vuole la quarta cifra della versione a zero. Il flusso di release crea il pacchetto e lo lascia tra gli
   artifact (non nella release: senza la firma dello Store non si installa); lanciato a mano, lo crea anche se

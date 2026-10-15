@@ -2,9 +2,9 @@
 <!--
   The Microsoft Store package of SmartClip (MSIX), put together by packaging\pack.ps1. The Store signs it.
 
-  Identity Name, Publisher and PublisherDisplayName are the values Partner Center shows under
-  Product identity once the name is reserved: until they replace the placeholders below, the package installs
-  for testing but the Store refuses it. Version is written by pack.ps1 from AssemblyVersion in src\Program.cs.
+  Identity Name, Publisher and PublisherDisplayName are the values Partner Center shows under Product
+  management > Product identity for the reserved name: the Store refuses a package with others. Version is
+  written by pack.ps1 from AssemblyVersion in src\Program.cs.
 -->
 <Package
   xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
@@ -14,14 +14,15 @@
   IgnorableNamespaces="uap desktop rescap">
 
   <Identity
-    Name="PLACEHOLDER.SmartClip"
-    Publisher="CN=00000000-0000-0000-0000-000000000000"
+    Name="lsgag.SmartClipClipboardTyper"
+    Publisher="CN=147A2D45-68D8-4799-B725-7B8A87DE3BD5"
     Version="0.0.0.0"
     ProcessorArchitecture="neutral" />
 
   <Properties>
-    <DisplayName>SmartClip</DisplayName>
-    <PublisherDisplayName>PLACEHOLDER</PublisherDisplayName>
+    <!-- The name reserved in Partner Center, exactly as written there ("SmartClip" alone was taken). -->
+    <DisplayName>SmartClip – Clipboard &amp; Typer</DisplayName>
+    <PublisherDisplayName>ls_gag</PublisherDisplayName>
     <Logo>Assets\StoreLogo.png</Logo>
     <Description>Clipboard manager that can also type the clipboard where paste does not work</Description>
   </Properties>
@@ -41,7 +42,7 @@
   <Applications>
     <Application Id="SmartClip" Executable="SmartClip.exe" EntryPoint="Windows.FullTrustApplication">
       <uap:VisualElements
-        DisplayName="SmartClip"
+        DisplayName="SmartClip – Clipboard &amp; Typer"
         Description="Clipboard manager that can also type the clipboard where paste does not work"
         BackgroundColor="transparent"
         Square150x150Logo="Assets\Square150x150Logo.png"
