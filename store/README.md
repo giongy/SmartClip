@@ -60,11 +60,12 @@ ESRB Everyone.
 ## In tutte le schede
 
 - **Logo** (*Icona del riquadro dell'app 1:1, 300 × 300*): [`images/tile-300.png`](images/tile-300.png).
-- **Schermate**: le sette della cartella della lingua, nell'ordine dei nomi (1366 × 768).
+- **Schermate**: le otto della cartella della lingua, nell'ordine dei nomi (1366 × 768); l'ultima in tema scuro.
 - **Copyright e marchi**: `© 2026 Luca Andreoli`
 - **Termini di licenza aggiuntivi**: `Open source software under the MIT license: https://github.com/giongy/SmartClip/blob/main/LICENSE`
 - **Sviluppato da**: `Luca Andreoli`
-- **Novità di questa versione**: vuoto al primo invio; dagli aggiornamenti in poi, le novità della release.
+- **Novità di questa versione**: in ogni scheda, il blocco dopo i termini di ricerca (`make-listing.ps1` lo mette
+  in `ReleaseNotes`); da riscrivere a ogni versione inviata.
 
 ## English (en-US) — la scheda principale
 
@@ -73,7 +74,7 @@ Schermate: [`images/en`](images/en).
 ### Product name
 
 ```
-SmartClip
+SmartClip – Clipboard & Typer
 ```
 
 ### Short description
@@ -121,6 +122,7 @@ Pause capturing with one click
 Export and import to a text file
 Starts with Windows, hidden in the notification area
 Built-in guide, organized by topic
+Light and dark theme, following Windows
 In English, Spanish, French and Italian
 No account, no ads, no Internet connection
 ```
@@ -137,6 +139,12 @@ type clipboard
 paste blocked
 ```
 
+### What's new in this version
+
+```
+New look: the window follows the light or dark mode of Windows, even when it changes while the program is open. Rounded menus in the style of Windows 11, animated switches, and questions in the colours and the language of the program.
+```
+
 ### Screenshot captions
 
 | File | Caption |
@@ -148,6 +156,7 @@ paste blocked
 | `5-tray-menu.png` | Saved texts are also in the menu of the icon by the clock. |
 | `6-options.png` | Options for typing, hotkeys, history, language and starting with Windows. |
 | `7-guide.png` | A guide organized by topic, always one F1 away. |
+| `8-dark.png` | Light or dark, as Windows is set: it switches by itself. |
 
 ## Italiano (it-IT)
 
@@ -156,7 +165,7 @@ Schermate: [`images/it`](images/it).
 ### Nome del prodotto
 
 ```
-SmartClip
+SmartClip – Clipboard & Typer
 ```
 
 ### Descrizione breve
@@ -204,6 +213,7 @@ Cattura sospendibile con un clic
 Esportazione e importazione in un file di testo
 Avvio con Windows, nascosto nell'area di notifica
 Guida integrata, divisa per argomenti
+Tema chiaro e scuro, come Windows
 In italiano, inglese, spagnolo e francese
 Nessun account, nessuna pubblicità, nessuna connessione a Internet
 ```
@@ -220,6 +230,12 @@ gestore appunti
 digitare password
 ```
 
+### Novità di questa versione
+
+```
+Nuovo aspetto: la finestra segue il tema chiaro o scuro di Windows, anche quando cambia a programma aperto. Menu arrotondati nello stile di Windows 11, interruttori animati e domande nei colori e nella lingua del programma.
+```
+
 ### Didascalie delle schermate
 
 | File | Didascalia |
@@ -231,6 +247,7 @@ digitare password
 | `5-tray-menu.png` | I testi salvati anche nel menu dell'icona vicino all'orologio. |
 | `6-options.png` | Opzioni per la digitazione, le scorciatoie, la cronologia, la lingua e l'avvio con Windows. |
 | `7-guide.png` | Una guida divisa per argomenti, sempre a portata di F1. |
+| `8-dark.png` | Chiaro o scuro, come Windows: cambia da solo. |
 
 ## Español (es-ES)
 
@@ -239,7 +256,7 @@ Schermate: [`images/es`](images/es).
 ### Nombre del producto
 
 ```
-SmartClip
+SmartClip – Clipboard & Typer
 ```
 
 ### Descripción breve
@@ -287,6 +304,7 @@ Captura que se pausa con un clic
 Exportación e importación a un archivo de texto
 Inicio con Windows, oculto en el área de notificación
 Guía integrada, dividida por temas
+Tema claro y oscuro, como Windows
 En español, inglés, francés e italiano
 Sin cuenta, sin publicidad, sin conexión a Internet
 ```
@@ -303,6 +321,12 @@ teclear contraseña
 clipboard
 ```
 
+### Novedades de esta versión
+
+```
+Nuevo aspecto: la ventana sigue el modo claro u oscuro de Windows, incluso cuando cambia con el programa abierto. Menús redondeados al estilo de Windows 11, interruptores animados y preguntas con los colores y el idioma del programa.
+```
+
 ### Leyendas de las capturas
 
 | File | Leyenda |
@@ -314,6 +338,7 @@ clipboard
 | `5-tray-menu.png` | Los textos guardados también están en el menú del icono junto al reloj. |
 | `6-options.png` | Opciones de tecleo, atajos, historial, idioma e inicio con Windows. |
 | `7-guide.png` | Una guía dividida por temas, siempre a un F1 de distancia. |
+| `8-dark.png` | Claro u oscuro, como Windows: cambia solo. |
 
 ## Français (fr-FR)
 
@@ -322,7 +347,7 @@ Schermate: [`images/fr`](images/fr).
 ### Nom du produit
 
 ```
-SmartClip
+SmartClip – Clipboard & Typer
 ```
 
 ### Description courte
@@ -370,6 +395,7 @@ Capture suspendue en un clic
 Export et import dans un fichier texte
 Démarrage avec Windows, caché dans la zone de notification
 Guide intégré, organisé par sujet
+Thème clair et sombre, comme Windows
 En français, anglais, espagnol et italien
 Pas de compte, pas de publicité, pas de connexion à Internet
 ```
@@ -386,6 +412,12 @@ saisir mot de passe
 clipboard
 ```
 
+### Nouveautés de cette version
+
+```
+Nouvel aspect : la fenêtre suit le mode clair ou sombre de Windows, même quand il change pendant que le programme est ouvert. Menus arrondis dans le style de Windows 11, interrupteurs animés et questions aux couleurs et dans la langue du programme.
+```
+
 ### Légendes des captures
 
 | File | Légende |
@@ -397,6 +429,7 @@ clipboard
 | `5-tray-menu.png` | Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge. |
 | `6-options.png` | Options de saisie, raccourcis, historique, langue et démarrage avec Windows. |
 | `7-guide.png` | Un guide organisé par sujet, toujours à portée de F1. |
+| `8-dark.png` | Clair ou sombre, comme Windows : il change tout seul. |
 
 ## Note per la verifica
 
