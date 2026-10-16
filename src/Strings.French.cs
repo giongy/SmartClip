@@ -395,7 +395,8 @@ static partial class Strings
 
             "# Les options",
             "Le bouton « " + Options + " » les affiche à la place de la liste, et « " + List + " » revient en arrière. En "
-                + "laissant le pointeur sur une option, son explication complète apparaît.",
+                + "laissant le pointeur sur une option, son explication complète apparaît. Elles sont réparties en quatre pages, "
+                + "choisies dans la colonne de gauche comme les sujets de ce guide :",
             "- " + TypingTitle + " : combien de secondes attendre avant la saisie (de " + MainForm.MinDelay + " à "
                 + MainForm.MaxDelay + "), si le serveur a un clavier américain, s'il faut appuyer sur Entrée à la fin, "
                 + "s'il faut vider le presse-papiers ensuite, la saisie lente et les symboles composés avec des codes Alt.",

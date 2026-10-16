@@ -378,7 +378,8 @@ static partial class Strings
 
             "# Le opzioni",
             "Il pulsante «" + Options + "» le mostra al posto dell'elenco, e «" + List + "» torna indietro. Fermando il "
-                + "puntatore su un'opzione ne compare la spiegazione completa.",
+                + "puntatore su un'opzione ne compare la spiegazione completa. Stanno in quattro pagine, che si scelgono dalla "
+                + "colonna a sinistra come gli argomenti di questa guida:",
             "- " + TypingTitle + ": quanti secondi aspettare prima di digitare (da " + MainForm.MinDelay + " a "
                 + MainForm.MaxDelay + "), se il server usa la tastiera americana, se premere Invio alla fine, se "
                 + "svuotare gli appunti dopo, la digitazione lenta e i simboli composti con Alt+codice.",

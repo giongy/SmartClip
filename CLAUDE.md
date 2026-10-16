@@ -38,8 +38,11 @@ condiviso su GitHub).
     lingua dimentica resta in inglese. I testi con valori usano `{0}`, `{1}` e `string.Format`. Le date dei
     giorni (`DayFormat`) e le virgolette (`Quote`) cambiano con la lingua; i nomi dei tasti Maiusc/Canc/Invio
     sono quelli delle tastiere di ogni lingua (`ShiftName`, usato anche da `MainForm.NameOf`).
-  - `Look.cs` — colori chiari e scuri, carattere (`Look.TextFont`), menu, suggerimenti e controlli disegnati:
-    `Look`, `Card`, `RoundButton`, `Toggle`.
+  - `Look.cs` — colori chiari e scuri, caratteri (`Look.TextFont`, `StrongFont`, `TitleFont`), icone (`Draw`),
+    righe (`DrawRow`, `DrawTopic`), menu, suggerimenti e controlli disegnati: `Look`, `Card`, `RoundButton`, `Toggle`.
+  - `Motion.cs` — ciò che si muove: `Fade` (un valore che va verso 0 o 1 a piccoli passi), `Glow` (la luce sotto
+    il puntatore nelle righe di un elenco), `RowList` (un `ListBox` con la sua `Glow`, che avvisa quando scorre),
+    `Entrance` (una pagina che sale al suo posto), `Rail` (la barra di scorrimento sottile).
   - `AskForm.cs` — le domande e gli avvisi, al posto di `MessageBox` (`AskForm.Ask`, `AskForm.Tell`).
   - `Peek.cs` — il riquadro che mostra una voce per intero (`Peek`), accanto alla sua riga.
   - `Texts.cs` — `Entry` e `Texts`: le voci dell'elenco, la cronologia su disco, i testi salvati.
@@ -125,8 +128,7 @@ condiviso su GitHub).
   impostazione `HideOnLeave`, accesa di default, scelta dell'utente) nasconde la finestra nel tray a
   `WM_ACTIVATEAPP`, solo con il tray attivo, mai durante la digitazione né con la finestra disabilitata da
   una finestra modale nostra (`IsWindowEnabled`: «Modifica», domande, scelta del file), così intanto si può
-  copiare altrove. La guida si chiude con lei: senza pulsante sulla barra resterebbe persa. Per farci stare la
-  riga senza alzare la finestra è sceso ancora `ListExtra`.
+  copiare altrove. La guida si chiude con lei: senza pulsante sulla barra resterebbe persa.
 
 - Avvio con Windows (`Startup`, in `Program.cs`): un valore nella chiave `Run` dell'utente, con l'argomento
   `/tray`. Non è tra le impostazioni (`TransferSettings`): la spunta mostra ciò che dice Windows, così non
@@ -241,8 +243,7 @@ condiviso su GitHub).
   tabulazione a distinguerlo dal resto, quindi un testo può contenere qualsiasi cosa. Le immagini non si
   esportano. L'importazione aggiunge: per i salvati con un nome già preso chiede una volta sola se sostituire;
   i copiati tornano con la loro ora e la stellina nel file del loro giorno (`Texts.Restore`), tranne quelli che
-  l'elenco ha già; con la cronologia spenta non si importano. Per farci stare i pulsanti senza alzare la
-  finestra è sceso `ListExtra`.
+  l'elenco ha già; con la cronologia spenta non si importano.
 - Le voci stanno su una riga sola, con una spaziatura comoda (`RowPadding`) e l'ora a destra (`When`). Le righe
   a due livelli, con sotto ora, caratteri e righe, sono state provate e scartate dall'utente: il numero di
   caratteri non gli serve.
@@ -265,7 +266,8 @@ condiviso su GitHub).
 
 - Tema (voluto dall'utente, a cui lo scuro con accenti pastello di prima non piaceva più, ma nemmeno il
   bianco): grigio caldo neutro con tocchi di colore nelle icone. I colori stanno tutti in cima a `Look`; i
-  segni (`Sign`, disegnati da `Look.Draw` su una griglia di 16, senza immagini) dicono cos'è una voce — testo,
+  segni (`Sign`, le icone di Windows dal carattere Segoe Fluent Icons, o Segoe MDL2 Assets su Windows 10, in
+  `Look.Glyph`; senza nessuno dei due disegnati a mano su una griglia di 16) dicono cos'è una voce — testo,
   indirizzo, salvato — e stanno sui pulsanti (`RoundButton.Sign`). Barra del titolo e barre di scorrimento
   seguono da sole la luminosità dello sfondo (`Look.Dark`).
 - Chiaro o scuro come Windows per le app (voluto dall'utente il 15/10/2026: «il più moderno possibile»
@@ -287,7 +289,7 @@ condiviso su GitHub).
   (`ChangeTheme`, `Look.Choose`, `Look.Chosen`, enum `Theme`). A differenza della lingua cambia subito, senza
   riavvio. Impostazione `Theme` (numero), letta da `Main` con `SavedTheme` prima di creare la finestra, che
   nasce già nei suoi colori; `TransferSettings` la scrive soltanto. Con un tema scelto, `Follow` ignora i
-  cambi di Windows. Per far stare la riga `ListExtra` è sceso a 17.
+  cambi di Windows.
 - Modernità alla Windows 11 (stessa richiesta): menu arrotondati da Windows (`DWMWCP_ROUNDSMALL`), con righe
   alte, testo spostato a destra e una forma arrotondata sotto il puntatore (`MenuLook`, `Look.Style` del
   menu); suggerimenti disegnati nei colori della finestra (`Look.Style` del `ToolTip`); le domande in una
@@ -295,7 +297,18 @@ condiviso su GitHub).
   un'area più chiara e pulsanti sotto, con quello colorato su «No», che è anche quello di Invio ed Esc;
   interruttori con la manopola che scorre e cresce sotto il puntatore; pulsanti con il bordo più scuro in
   basso; anello del focus solo usando la tastiera (`ShowFocusCues`). Mica non si usa: con i controlli GDI lo
-  sfondo trasparente non regge.
+  sfondo trasparente non regge (un finto Mica dallo sfondo del desktop è stato proposto e non scelto).
+- Ancora più Windows 11 (voluto dall'utente il 16/10/2026, «restando fedeli al progetto light»): le icone di
+  Windows al posto dei segni disegnati; caratteri seminegretti di Segoe UI Variable (`StrongFont` per titoli delle
+  colonne e cartelle, `TitleFont`, più grande, per il nome di una pagina delle opzioni e i titoli della guida; GDI
+  vede il Display Semibold con il nome tagliato a 31 lettere, «Segoe UI Variable Display Semib»; su Windows 10
+  Segoe UI Semibold); righe e pulsanti che si illuminano e si spengono a piccoli passi (`Glow` nelle righe, `Fade`
+  in `RoundButton` e `Toggle`); l'anteprima che compare in dissolvenza (`Peek.appear`, `Opacity`); le pagine delle
+  opzioni che salgono al loro posto (`Entrance`); barre di scorrimento sottili (`Rail`): una linea che si allarga
+  sotto il puntatore, trascinabile, sopra la barra di Windows, che resta sotto di lei. Per questo gli elenchi e il
+  testo della guida tengono la barra sempre (`ScrollAlwaysVisible`, `ForcedVertical`): le righe non cambiano mai
+  larghezza e la rotaia ha sempre dove stare; la linea compare solo se c'è da scorrere. La tacca della riga
+  selezionata è corta e arrotondata, come nella colonna di Impostazioni (`MarkShare`).
 - Aspetto (`Look`): barra del titolo nel colore della finestra
   (`DwmSetWindowAttribute`, solo Windows 11: altrove fallisce senza danni), pulsanti piatti con un solo
   pulsante in colore d'accento, righe dell'elenco disegnate a mano (`DrawEntry`) con il segno ★/▣ in colonna.
@@ -311,7 +324,7 @@ condiviso su GitHub).
   e caselle stanno in un `Card` (bordo sottile, d'accento quando il contenuto ha il focus; `Look.Wrap`; attorno
   a una casella di testo invece, come in Windows 11, una riga d'accento sul fondo, `Card.Underline`), i
   pulsanti sono `RoundButton`, la riga selezionata è una forma arrotondata con una tacca d'accento e quella
-  sotto il puntatore si illumina (`Hover`, indice in `ListBox.Tag`). Le voci copiate mostrano a destra l'ora
+  sotto il puntatore si illumina (`Hover`, indice in `ListBox.Tag`, luce in `RowList.Glow`; `Look.DrawRow`). Le voci copiate mostrano a destra l'ora
   (o il giorno, se non è oggi); sopra ogni colonna il numero di voci; una colonna vuota dice perché.
   La descrizione sotto il pulsante deve stare in due righe: è il motivo della larghezza (`ContentWidth`).
 
@@ -338,8 +351,8 @@ condiviso su GitHub).
 - Nessun valore duplicato: ogni default, nome o numero sta in un posto solo (costanti in cima a `MainForm`,
   costanti di Windows in `Native` con i nomi ufficiali, scorciatoia definita una volta sola).
 - Aggiungere un'opzione: il campo in cima a `MainForm`, una riga `PlaceOption` (`PlaceNumber` se è un numero,
-  `PlaceHotkey` se è una scorciatoia globale) in `PlaceOptions` sotto il titolo della sua
-  categoria (`PlaceTitle`), una in `TransferSettings` e il suggerimento `Tip`, tutto in `MainForm.Options.cs`. In `optionControls` entra da sola.
+  `PlaceHotkey` se è una scorciatoia globale) in `PlaceOptions` sotto la sua pagina (`Page`), una in
+  `TransferSettings` e il suggerimento `Tip`, tutto in `MainForm.Options.cs`. Sulla pagina entra da sola.
   Etichetta e suggerimento sono campi di `Strings` (inglese) tradotti nelle altre tre lingue.
 - **Nessun testo visibile scritto nel codice**: ogni testo nuovo è un campo di `Strings.cs` in inglese e una riga
   in ciascuno dei tre file delle lingue, con gli stessi `{0}`. `tests.exe texts` controlla che nessuna traduzione
@@ -347,11 +360,15 @@ condiviso su GitHub).
   stessi argomenti, ed elenca i testi rimasti uguali all'inglese. Gli spazi sono tarati sull'italiano, che è
   tra le lingue più lunghe: dopo aver cambiato etichette guardare `tests.exe shot <png> <lingua>` in tutte e
   quattro (francese e spagnolo sono i più a rischio).
-  Le categorie sono su due colonne (volute dall'utente, l'elenco unico era caotico): a sinistra «Digitazione»
-  e «Programma», a destra «Scorciatoie» e «Cronologia» (così le due colonne sono alte uguali e la finestra non
-  cresce: l'utente non la voleva più alta). I titoli sono in grassetto con una riga sotto: il colore
-  d'accento resta a ciò che si clicca (il link `PlaceLink` alla cartella della cronologia, prima indistinguibile
-  dai titoli). L'altezza della finestra si calcola da sola.
+  Le opzioni stanno in pagine, una per categoria (voluto dall'utente il 16/10/2026: «fatte come la guida, schede
+  verticali, divise per argomento»; prima erano su due colonne, e prima ancora in un elenco unico, caotico): a
+  sinistra la colonna delle pagine (`pageList`, disegnata come gli argomenti della guida con `Look.DrawTopic`, con
+  l'icona di ciascuna), a destra la pagina scelta (`pagePane`, `ShowPage`), con il nome in grande in cima
+  (`PageTop`) e le opzioni in una colonna larga `PaneWidth`. Ordine: Digitazione, Scorciatoie, Cronologia,
+  Programma. Una pagina è un `Panel` con `Text` (il nome) e `Tag` (il segno), ed è lei l'elemento della colonna.
+  Il colore d'accento resta a ciò che si clicca (il link `PlaceLink` alla cartella della cronologia). L'altezza
+  della finestra è fissa (`AreaHeight`, quella di prima: l'utente non la voleva più alta), e le pagine ci stanno
+  con spazio avanzato.
 
 ## Lingua
 
@@ -362,7 +379,7 @@ condiviso su GitHub).
 - Cambiare lingua **riavvia** il programma invece di riscrivere ogni testo al volo: `ChangeLanguage` lancia
   l'eseguibile con `/restart` (`Program.RestartArgument`) e si chiude salvando le impostazioni; il nuovo aspetta
   fino a dieci secondi che il vecchio liberi il mutex dell'istanza unica, poi si riapre sulle opzioni
-  (`ShowOptions`). Per far stare la riga è sceso ancora `ListExtra`.
+  (`ShowOptions`), alla pagina «Programma».
 - Le domande non usano `MessageBox`, i cui pulsanti Sì/No seguirebbero la lingua di Windows: `AskForm` scrive
   `Strings.Yes`, `No`, `Ok`. Restano nella lingua di Windows le finestre di scelta dei file.
 
@@ -424,7 +441,7 @@ condiviso su GitHub).
   AltGr, Unicode, Alt+codice, Tab, Invio; poi verifica che finestra sbagliata e annullamento blocchino tutto.
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.
 - `tests.exe shot <prefisso>` — non è in `test.cmd`: salva immagini PNG della finestra (elenco con voci
-  finte, opzioni, stati lunghi) per controllare l'aspetto senza mostrarla.
+  finte, opzioni con ogni pagina in `-options-1`…`-4`, stati lunghi) per controllare l'aspetto senza mostrarla.
 - `tests.exe store <cartella> <lingua>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno
   sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>` (in chiaro, tranne l'ultima, `8-dark`), e
   l'icona 300 × 300 in `<cartella>`. Mostra le finestre qualche secondo; a programma chiuso e salvando prima le
@@ -435,7 +452,7 @@ condiviso su GitHub).
   le finestre lo stesso sfondo di `store`, perché ai bordi non compaia lo schermo. Dopo la lingua accettano
   `dark` o `light` (senza, il tema di Windows). `real` fotografa anche una domanda (`-real-ask`), il menu del
   tray con una cartella aperta (`-real-menu`), la scelta del numero di una voce
-  (`-real-number`) e un suggerimento (`-real-tip`).
+  (`-real-number`), un elenco lungo con la barra sottile (`-real-scroll`) e un suggerimento (`-real-tip`).
 
 Il tray è stato verificato con un programmino usa e getta (non nel progetto) che crea `MainForm`, legge i campi
 `tray` e `trayBox` per riflessione e aziona le voci del menu con `PerformClick`: X nasconde, Apri riapre anche
@@ -476,6 +493,10 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   finestra di una cartella con la scelta del posto.
 - L'avvio vero all'accesso a Windows: provati la voce nel registro e l'avvio nascosto con un programmino usa e
   getta, mai una disconnessione e un nuovo accesso.
+- Il movimento dal vivo: la luce che sfuma sulle righe e sui pulsanti, le pagine delle opzioni che salgono,
+  l'anteprima in dissolvenza (con `Opacity` la finestra diventa stratificata: angoli arrotondati da guardare), la
+  barra sottile trascinata, cliccata e con la rotella. Viste solo nelle immagini di `shot` e `real`, che le
+  colgono ferme.
 - I numeri delle voci dal vivo: Ctrl+Maiusc+cifra premuti davvero in un altro programma (anche in un desktop
   remoto), l'avviso dei tasti già usati, il clic su «Scorciatoia». Provati la logica (`texts`), la cattura dei
   tasti (`shot`), il menu aperto da `tests.exe real` e `Typer.Paste` in una finestrella (`type`).

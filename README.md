@@ -22,7 +22,8 @@ Formerly called PasswordPaste: the first start under the new name takes over its
 - The history of copied items is kept for the number of days you choose, or in memory only; saved texts are
   encrypted for your Windows account.
 - Light or dark theme, or the same as Windows sets for apps, switching on the fly: warm grey in the light,
-  neutral grey in the dark, small coloured signs, rounded menus and the font of Windows 11 where it is installed.
+  neutral grey in the dark, the icons of Windows itself (Segoe Fluent Icons), rounded menus, rows and buttons that
+  light up gradually, thin scroll bars and the font of Windows 11 where it is installed, all without extra libraries.
 - In English, Spanish, French and Italian, chosen in the options (English by default).
 
 ![The SmartClip window in the dark](docs/screenshot-dark.png)
@@ -128,7 +129,7 @@ together with any digit; the button says right away which of them another progra
 ## Options
 
 The **Options** button switches the lower part of the window from the list to the options; **List** switches back.
-The options are grouped under four titles: **Typing**, **Hotkeys**, **History** and **Program**. Resting the pointer
+The options are in four pages, **Typing**, **Hotkeys**, **History** and **Program**, chosen from a column on the left as in the Windows 11 Settings; each page slides into place. Resting the pointer
 on an option shows its full explanation.
 
 ![The options](docs/screenshot-options.png)

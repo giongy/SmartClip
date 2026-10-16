@@ -421,7 +421,8 @@ static partial class Strings
 
             "# Options",
             "The “" + Options + "” button shows them in place of the list, and “" + List + "” goes back. Resting the "
-                + "pointer on an option shows its full explanation.",
+                + "pointer on an option shows its full explanation. They are in four pages, chosen from the column on the left as "
+                + "the subjects of this guide are:",
             "- " + TypingTitle + ": how many seconds to wait before typing (" + MainForm.MinDelay + " to "
                 + MainForm.MaxDelay + "), whether the server uses a US keyboard, whether to press Enter at the end, "
                 + "whether to clear the clipboard afterwards, slow typing and symbols composed with Alt codes.",

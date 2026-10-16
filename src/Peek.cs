@@ -10,6 +10,7 @@ class Peek : Form
     const int MaxWidth = 460, MaxHeight = 320;   // of what it shows, in pixels at 96 dpi
     const int Inset = 10, RowGap = 2;            // around what it shows, and between the row and the window
     const int MaxLines = 20, MaxLength = 2000;   // of a text: beyond these it is cut, and says so
+    const int FadeSteps = 6, FadeMs = 15;        // it comes into view gradually, in this many steps
     const TextFormatFlags Flags = TextFormatFlags.WordBreak | TextFormatFlags.TextBoxControl | TextFormatFlags.NoPrefix
         | TextFormatFlags.ExpandTabs;
 
@@ -17,6 +18,7 @@ class Peek : Form
     Image picture;
     Size content;         // the room taken by the text or the picture
     bool plain;           // Windows gave the window no edge: it draws one
+    readonly Timer appear = new Timer();
 
     public Peek()
     {
@@ -25,6 +27,12 @@ class Peek : Form
         StartPosition = FormStartPosition.Manual;
         Font = Look.TextFont;
         DoubleBuffered = true;
+        appear.Interval = FadeMs;
+        appear.Tick += delegate
+        {
+            Opacity = Math.Min(1, Opacity + 1.0 / FadeSteps);
+            if (Opacity >= 1) appear.Stop();
+        };
     }
 
     protected override bool ShowWithoutActivation
@@ -114,7 +122,18 @@ class Peek : Form
         Rectangle screen = Screen.FromRectangle(row).WorkingArea;
         int gap = (int)(RowGap * zoom), x = Math.Max(screen.Left, Math.Min(row.Left, screen.Right - Width));
         Location = new Point(x, row.Bottom + gap + Height <= screen.Bottom ? row.Bottom + gap : row.Top - gap - Height);
+        if (Visible) return;   // moving from a row to another, it is in view already
+        Opacity = 0;
         Visible = true;
+        appear.Start();
+    }
+
+    protected override void OnVisibleChanged(EventArgs e)
+    {
+        base.OnVisibleChanged(e);
+        if (Visible) return;
+        appear.Stop();
+        Opacity = 1;   // hidden at once, as a tooltip is
     }
 
     protected override void OnPaint(PaintEventArgs e)
@@ -135,6 +154,7 @@ class Peek : Form
     protected override void Dispose(bool disposing)
     {
         if (disposing && picture != null) picture.Dispose();
+        if (disposing) appear.Dispose();
         base.Dispose(disposing);
     }
 }

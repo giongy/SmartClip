@@ -672,6 +672,15 @@ static class TestProgram
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
             Application.DoEvents();
             Save(form, path + "-options.png");
+            // Every page of the options, each in a picture of its own: -options-1 and on.
+            ListBox pages = (ListBox)typeof(MainForm).GetField("pageList", hidden).GetValue(form);
+            for (int i = 0; i < pages.Items.Count; i++)
+            {
+                pages.SelectedIndex = i;
+                Application.DoEvents();
+                Save(form, path + "-options-" + (i + 1) + ".png");
+            }
+            pages.SelectedIndex = 0;
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { false });
 
             // Windows going dark or light with the window open: every colour given to a control follows.
@@ -818,6 +827,13 @@ static class TestProgram
             Console.WriteLine("[{0}] an entry cut by its row is shown whole, one that fits is not", shownPeek.Visible
                 && !(bool)typeof(MainForm).GetMethod("Cut", hidden).Invoke(form, new object[] { recent, recent.Items[0], recent.GetItemRectangle(0) })
                 ? "PASS" : "FAIL");
+            // A long list, with the thin bar that scrolls it, moved a little way down.
+            List<Entry> many = (List<Entry>)typeof(MainForm).GetField("entries", hidden).GetValue(form);
+            for (int i = 0; i < 40; i++) many.Add(new Entry(null, Sample.Current.Long + " " + i, DateTime.Today.AddMinutes(i)));
+            typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
+            recent.TopIndex = 10;
+            Snap(form, path + "-real-scroll.png");
+            FillSample(form);
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
             Snap(form, path + "-real-options.png");
             using (ShotEdit edit = new ShotEdit(new Entry(Sample.Current.Signature, Sample.Current.SignatureText), Sample.Current.Work, new List<string>(new string[] { Sample.Current.Work, Sample.Current.Home })))
@@ -972,9 +988,13 @@ static class TestProgram
                 form.Show();
                 form.BringToFront();
 
+                // The options at the page of the hotkeys, where the numbers are pasted from.
+                ListBox pages = (ListBox)typeof(MainForm).GetField("pageList", hidden).GetValue(form);
+                pages.SelectedIndex = 1;
                 typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
                 SnapArea(area, System.IO.Path.Combine(pictures, "6-options.png"));
                 typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { false });
+                pages.SelectedIndex = 0;
 
                 // The guide, open at how a password is typed: the fifth subject in every language.
                 using (ShotHelp help = new ShotHelp())

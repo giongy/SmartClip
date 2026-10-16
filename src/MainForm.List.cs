@@ -227,6 +227,8 @@ partial class MainForm
         recentList.EndUpdate();
         savedList.EndUpdate();
         recentList.Tag = savedList.Tag = null;   // the rows changed under the pointer
+        ((RowList)recentList).Glow.Reset();
+        ((RowList)savedList).Glow.Reset();
         if (Selected == null) Pick(recentList.Items.Count > 0 ? recentList : savedList);
         ShowActions();
 
@@ -271,8 +273,7 @@ partial class MainForm
         if (old == index) return;
         list.Tag = index;
         list.Cursor = index >= 0 ? Cursors.Hand : Cursors.Default;
-        foreach (int row in new int[] { old, index })
-            if (row >= 0 && row < list.Items.Count) list.Invalidate(list.GetItemRectangle(row));
+        ((RowList)list).Glow.Set(index);   // the row lights up gradually, the one left fades
         // What was in view belonged to the row the pointer left; a copied entry is shown whole if it rests there.
         if (!peekAsked || index < 0) HidePeek();
         if (index < 0 || list != recentList) return;
@@ -425,25 +426,9 @@ partial class MainForm
         ListBox list = (ListBox)sender;
         Entry entry = (Entry)list.Items[e.Index];
         bool selected = (e.State & DrawItemState.Selected) != 0;
-        // Under the pointer, or the folder a dragged text would be dropped into.
-        bool hovered = Equals(list.Tag, e.Index) || entry.IsGroup && dropGroup != null && Texts.SameName(entry.Name, dropGroup);
-        using (Brush back = new SolidBrush(list.BackColor))
-        {
-            e.Graphics.FillRectangle(back, e.Bounds);
-        }
-        // The selected row is a rounded shape with a mark in the accent colour; the one under the pointer a fainter shape.
-        if (selected || hovered)
-        {
-            Rectangle row = Rectangle.FromLTRB(e.Bounds.Left + 1, e.Bounds.Top + 1, e.Bounds.Right - 2, e.Bounds.Bottom - 1);
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            using (GraphicsPath shape = Look.Rounded(row))
-            using (Brush fill = new SolidBrush(selected ? Look.Selected : Look.Soft))
-            using (Brush mark = new SolidBrush(Look.Accent))
-            {
-                e.Graphics.FillPath(fill, shape);
-                if (selected) e.Graphics.FillRectangle(mark, row.Left + 3, row.Top + 5, 3, row.Height - 10);
-            }
-        }
+        // How lit by the pointer it is; fully, the folder a dragged text would be dropped into.
+        float glow = entry.IsGroup && dropGroup != null && Texts.SameName(entry.Name, dropGroup) ? 1 : ((RowList)list).Glow.Of(e.Index);
+        Look.DrawRow(e.Graphics, e.Bounds, list.BackColor, selected, glow);
         Rectangle label = Content(list, entry, e.Bounds);
         string when = When(entry);
         if (when != null)
@@ -469,7 +454,8 @@ partial class MainForm
             // row where a click would light it.
             Rectangle star = StarArea(e.Bounds);
             if (entry.Pinned) Look.Draw(e.Graphics, Sign.Star, star, null);
-            else if (selected || hovered) Look.Draw(e.Graphics, Sign.Star, star, Look.Blend(Look.Muted, list.BackColor, 0.4f));
+            else if (selected || glow > 0)
+                Look.Draw(e.Graphics, Sign.Star, star, Look.Blend(list.BackColor, Look.Blend(Look.Muted, list.BackColor, 0.4f), selected ? 1 : glow));
         }
         if (entry.IsGroup)
         {
@@ -496,10 +482,9 @@ partial class MainForm
             Look.Draw(e.Graphics, SignOf(entry), new Rectangle(label.Left, e.Bounds.Top + (e.Bounds.Height - side) / 2, side, side), null);
             label = Rectangle.FromLTRB(label.Left + SignRoom, label.Top, label.Right, label.Bottom);
         }
-        using (Font font = new Font(e.Font, entry.IsGroup ? FontStyle.Bold : FontStyle.Regular))   // a folder stands out
-        {
-            TextRenderer.DrawText(e.Graphics, entry.Label, font, label, list.ForeColor, TextFormatFlags.VerticalCenter | LineFlags);
-        }
+        // A folder stands out.
+        TextRenderer.DrawText(e.Graphics, entry.Label, entry.IsGroup ? Look.StrongFont : e.Font, label, list.ForeColor,
+            TextFormatFlags.VerticalCenter | LineFlags);
     }
 
     // Where the star of a copied entry is drawn, at the right end of its row.

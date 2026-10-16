@@ -36,10 +36,11 @@ partial class MainForm : Form
     public const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
     const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
-    const int ListExtra = 17;                   // height given to the lists beyond what the options need
-    const int ColumnGap = 20, ColumnWidth = (ContentWidth - ColumnGap) / 2;   // the two columns of the options
-    const int TitleRow = 30, SectionGap = 10;          // the title of a category of options, and the air above it
-    const int RuleGap = 8;                             // between the line under such a title and the first option
+    const int AreaHeight = 437;                        // of the lists, or of the options in their place: the window follows
+    // The options are in pages, one per category, chosen from a column on the left as the subjects of the guide.
+    const int NavWidth = 170, NavGap = 20, PaneWidth = ContentWidth - NavWidth - NavGap;
+    const int NavInset = 12, NavPadding = 20;          // where a row of that column starts its sign; added to the text height for the row
+    const int PageTop = 48;                            // under the name of a page, where its options begin
     const int SavedWidth = 250, TitleHeight = 20;      // the column of the saved texts, and the title above each column
     const int MinColumn = 185;                         // the least a column can be dragged to
     const int GripHeight = 28;                         // of the mark between the columns, where they are dragged
@@ -92,7 +93,7 @@ partial class MainForm : Form
     readonly Label recentEmpty = new Label(), savedEmpty = new Label();   // what a column says while it has none
     readonly Label status = new Label();
     readonly TextBox search = new TextBox();
-    readonly ListBox recentList = new ListBox(), savedList = new ListBox();   // what was copied, and what was saved
+    readonly ListBox recentList = new RowList(), savedList = new RowList();   // what was copied, and what was saved
     ListBox active;     // the one of the two that holds the selected entry
     Panel recentCard, savedCard;                  // the rounded shapes the two lists are in
     Label recentTitle, savedTitle;
@@ -114,6 +115,10 @@ partial class MainForm : Form
     readonly RoundButton newButton = new RoundButton(), saveButton = new RoundButton(), deleteButton = new RoundButton();
     // The two views that take turns in the lower part of the window. The options add themselves as they are placed.
     readonly List<Control> optionControls = new List<Control>();
+    readonly RowList pageList = new RowList();   // the categories of the options: each item is the page of one
+    readonly Panel pagePane = new Panel();       // where the pages take turns
+    Panel page;                                  // the page being filled, while the options are placed
+    Panel programPage;                           // where the language is: the options reopen there after changing it
     readonly Control[] listControls;
     readonly TextBox delayBox = new TextBox(), keepBox = new TextBox(), cleanBox = new TextBox();
     readonly RoundButton cleanButton = new RoundButton(), exportButton = new RoundButton(), importButton = new RoundButton();
@@ -201,12 +206,10 @@ partial class MainForm : Form
             if (!busy) ShowIdle();
         };
 
-        // The options, stacked by category: the height of the window follows from them.
-        int top = PlaceOptions();
-
-        // Under the options, or the lists that take their place: the status line, then one row of small buttons.
+        // The lists, or the options in their place; under them the status line, then one row of small buttons.
         // On the left those that act on the selected entry, on the right typing and the switch between the views.
-        int areaBottom = top + 4 + ListExtra, statusTop = areaBottom + Gap, actionTop = statusTop + StatusHeight + Gap;
+        int areaBottom = Edge + AreaHeight, statusTop = areaBottom + Gap, actionTop = statusTop + StatusHeight + Gap;
+        PlaceOptions(areaBottom);
         ClientSize = new Size(Edge + ContentWidth + Edge, actionTop + ActionHeight + Edge);
         status.SetBounds(Edge, statusTop, ContentWidth, StatusHeight);
         newButton.Text = Strings.New;
@@ -237,7 +240,7 @@ partial class MainForm : Form
         recentTitle = NewLabel(Strings.RecentTitle, titleTop);
         savedTitle = NewLabel(Strings.SavedTitle, titleTop);
         savedTitle.Left = savedLeft;
-        recentTitle.Font = savedTitle.Font = new Font(Font, FontStyle.Bold);
+        recentTitle.Font = savedTitle.Font = Look.StrongFont;
         recentList.SetBounds(Edge, listTop, savedLeft - Edge - Edge, listHeight);
         savedList.SetBounds(savedLeft, listTop, SavedWidth, listHeight);
         recentCard = Look.Wrap(recentList, ListPadding);
@@ -276,6 +279,10 @@ partial class MainForm : Form
         savedCard.Controls.Add(savedEmpty);
         recentEmpty.BringToFront();
         savedEmpty.BringToFront();
+        // Thin scroll bars over those of the lists, which always have one so that their rows never change width.
+        recentList.ScrollAlwaysVisible = savedList.ScrollAlwaysVisible = true;
+        Rail.Over(recentList);
+        Rail.Over(savedList);
 
         // When the window grows, the column of the copied entries takes the room; the saved ones stay on the
         // right, status and buttons at the bottom.
@@ -385,6 +392,7 @@ partial class MainForm : Form
         viewButton.Text = options ? Strings.List : Strings.Options;
         viewButton.Sign = options ? Sign.List : Sign.Options;
         if (!options) search.Focus();
+        else ShowPage();   // it comes in as a page does
     }
 
     // Runs something that touches the saved texts; if the registry refuses it, says why and returns false.

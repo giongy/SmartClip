@@ -387,7 +387,8 @@ static partial class Strings
 
             "# Las opciones",
             "El botón «" + Options + "» las muestra en lugar de la lista, y «" + List + "» vuelve atrás. Si dejas el "
-                + "puntero sobre una opción aparece su explicación completa.",
+                + "puntero sobre una opción aparece su explicación completa. Están en cuatro páginas, que se eligen en la "
+                + "columna de la izquierda como los temas de esta guía:",
             "- " + TypingTitle + ": cuántos segundos esperar antes de teclear (de " + MainForm.MinDelay + " a "
                 + MainForm.MaxDelay + "), si el servidor usa el teclado estadounidense, si pulsar Intro al final, si "
                 + "vaciar el portapapeles después, el tecleo lento y los símbolos compuestos con códigos Alt.",

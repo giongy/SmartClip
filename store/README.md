@@ -129,7 +129,7 @@ Pause capturing with one click
 Export and import to a text file
 Starts with Windows, hidden in the notification area
 Built-in guide, organized by topic
-Light or dark theme, or the same as Windows
+Windows 11 look with the icons of Windows, light or dark theme
 In English, Spanish, French and Italian
 No account, no ads, no Internet connection
 ```
@@ -151,7 +151,7 @@ paste blocked
 ```
 Paste by number: from its right-click menu, give a saved text or a starred entry a number from 1 to 9; then Ctrl+Shift+1…9 pastes it straight into the window you are working in, from any program, without opening SmartClip. The keys can be changed in the options, which say if another program already uses them. The number shows in the list and in the menu of the tray icon.
 
-Also new: light or dark theme, chosen in the options or the same as Windows, following it even when it changes while the program is open. Rounded menus in the style of Windows 11, animated switches, and questions in the colours and the language of the program.
+A new look in the style of Windows 11: the icons of Windows itself, options in pages chosen from a column as in Settings, rows and buttons that light up gradually, pages that slide into place, thin scroll bars, rounded menus, and a light or dark theme chosen in the options or the same as Windows.
 ```
 
 ### Screenshot captions
@@ -163,7 +163,7 @@ Also new: light or dark theme, chosen in the options or the same as Windows, fol
 | `3-preview.png` | Rest the pointer on an entry to see all of it. |
 | `4-save.png` | Save a text under a name and put it in its folder. |
 | `5-tray-menu.png` | Saved texts are also in the menu of the icon by the clock. |
-| `6-options.png` | Options for typing, hotkeys, history, language and starting with Windows. |
+| `6-options.png` | Options in pages, like Windows Settings: typing, hotkeys, history and the program. |
 | `7-guide.png` | A guide organized by topic, always one F1 away. |
 | `8-dark.png` | Light or dark: choose it in the options, or let it follow Windows. |
 
@@ -223,7 +223,7 @@ Cattura sospendibile con un clic
 Esportazione e importazione in un file di testo
 Avvio con Windows, nascosto nell'area di notifica
 Guida integrata, divisa per argomenti
-Tema chiaro o scuro, oppure come Windows
+Aspetto da Windows 11 con le icone di Windows, tema chiaro o scuro
 In italiano, inglese, spagnolo e francese
 Nessun account, nessuna pubblicità, nessuna connessione a Internet
 ```
@@ -245,7 +245,7 @@ digitare password
 ```
 Incolla per numero: dal menu del tasto destro dai a un testo salvato o a una voce con la stellina un numero da 1 a 9; poi Ctrl+Maiusc+1…9 lo incolla subito nella finestra in cui stai lavorando, da qualsiasi programma, senza aprire SmartClip. I tasti si cambiano nelle opzioni, che dicono se un altro programma li usa già. Il numero si vede nell'elenco e nel menu dell'icona.
 
-Novità anche nell'aspetto: tema chiaro o scuro, scelto nelle opzioni o come Windows, seguito anche quando cambia a programma aperto. Menu arrotondati nello stile di Windows 11, interruttori animati e domande nei colori e nella lingua del programma.
+Un aspetto nuovo nello stile di Windows 11: le icone di Windows stesso, opzioni in pagine scelte da una colonna come in Impostazioni, righe e pulsanti che si illuminano gradualmente, pagine che scivolano al loro posto, barre di scorrimento sottili, menu arrotondati e tema chiaro o scuro, scelto nelle opzioni o come Windows.
 ```
 
 ### Didascalie delle schermate
@@ -257,7 +257,7 @@ Novità anche nell'aspetto: tema chiaro o scuro, scelto nelle opzioni o come Win
 | `3-preview.png` | Fermati su una voce per vederla per intero. |
 | `4-save.png` | Salva un testo con un nome e mettilo nella sua cartella. |
 | `5-tray-menu.png` | I testi salvati anche nel menu dell'icona vicino all'orologio. |
-| `6-options.png` | Opzioni per la digitazione, le scorciatoie, la cronologia, la lingua e l'avvio con Windows. |
+| `6-options.png` | Opzioni divise in pagine, come in Impostazioni di Windows: digitazione, scorciatoie, cronologia e programma. |
 | `7-guide.png` | Una guida divisa per argomenti, sempre a portata di F1. |
 | `8-dark.png` | Chiaro o scuro: si sceglie nelle opzioni, o segue Windows. |
 
@@ -317,7 +317,7 @@ Captura que se pausa con un clic
 Exportación e importación a un archivo de texto
 Inicio con Windows, oculto en el área de notificación
 Guía integrada, dividida por temas
-Tema claro u oscuro, o como Windows
+Aspecto de Windows 11 con los iconos de Windows, tema claro u oscuro
 En español, inglés, francés e italiano
 Sin cuenta, sin publicidad, sin conexión a Internet
 ```
@@ -339,7 +339,7 @@ clipboard
 ```
 Pegar por número: desde su menú del clic derecho, da a un texto guardado o a una entrada con estrella un número del 1 al 9; luego Ctrl+Mayús+1…9 la pega enseguida en la ventana en la que estás trabajando, desde cualquier programa, sin abrir SmartClip. Las teclas se cambian en las opciones, que avisan si otro programa ya las usa. El número se ve en la lista y en el menú del icono.
 
-También nuevo: tema claro u oscuro, elegido en las opciones o como Windows, seguido incluso cuando cambia con el programa abierto. Menús redondeados al estilo de Windows 11, interruptores animados y preguntas con los colores y el idioma del programa.
+Un aspecto nuevo al estilo de Windows 11: los iconos del propio Windows, opciones en páginas elegidas desde una columna como en Configuración, filas y botones que se iluminan poco a poco, páginas que se deslizan a su sitio, barras de desplazamiento finas, menús redondeados y tema claro u oscuro, elegido en las opciones o como Windows.
 ```
 
 ### Leyendas de las capturas
@@ -351,7 +351,7 @@ También nuevo: tema claro u oscuro, elegido en las opciones o como Windows, seg
 | `3-preview.png` | Deja el puntero sobre una entrada para verla entera. |
 | `4-save.png` | Guarda un texto con un nombre y ponlo en su carpeta. |
 | `5-tray-menu.png` | Los textos guardados también están en el menú del icono junto al reloj. |
-| `6-options.png` | Opciones de tecleo, atajos, historial, idioma e inicio con Windows. |
+| `6-options.png` | Opciones en páginas, como en Configuración de Windows: tecleo, atajos, historial y programa. |
 | `7-guide.png` | Una guía dividida por temas, siempre a un F1 de distancia. |
 | `8-dark.png` | Claro u oscuro: se elige en las opciones, o sigue a Windows. |
 
@@ -411,7 +411,7 @@ Capture suspendue en un clic
 Export et import dans un fichier texte
 Démarrage avec Windows, caché dans la zone de notification
 Guide intégré, organisé par sujet
-Thème clair ou sombre, ou comme Windows
+Aspect Windows 11 avec les icônes de Windows, thème clair ou sombre
 En français, anglais, espagnol et italien
 Pas de compte, pas de publicité, pas de connexion à Internet
 ```
@@ -433,7 +433,7 @@ clipboard
 ```
 Coller par numéro : depuis son menu du clic droit, donnez à un texte enregistré ou à un élément étoilé un numéro de 1 à 9 ; ensuite Ctrl+Maj+1…9 le colle aussitôt dans la fenêtre où vous travaillez, depuis n'importe quel programme, sans ouvrir SmartClip. Les touches se changent dans les options, qui signalent si un autre programme les utilise déjà. Le numéro apparaît dans la liste et dans le menu de l'icône.
 
-Nouveau aussi : thème clair ou sombre, choisi dans les options ou comme Windows, suivi même quand il change pendant que le programme est ouvert. Menus arrondis dans le style de Windows 11, interrupteurs animés et questions aux couleurs et dans la langue du programme.
+Un nouvel aspect dans le style de Windows 11 : les icônes de Windows lui-même, des options en pages choisies dans une colonne comme dans les Paramètres, des lignes et des boutons qui s'éclairent progressivement, des pages qui glissent à leur place, des barres de défilement fines, des menus arrondis et un thème clair ou sombre, choisi dans les options ou comme Windows.
 ```
 
 ### Légendes des captures
@@ -445,7 +445,7 @@ Nouveau aussi : thème clair ou sombre, choisi dans les options ou comme Windows
 | `3-preview.png` | Laissez le pointeur sur un élément pour le voir en entier. |
 | `4-save.png` | Enregistrez un texte sous un nom et rangez-le dans son dossier. |
 | `5-tray-menu.png` | Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge. |
-| `6-options.png` | Options de saisie, raccourcis, historique, langue et démarrage avec Windows. |
+| `6-options.png` | Des options en pages, comme dans les Paramètres de Windows : saisie, raccourcis, historique et programme. |
 | `7-guide.png` | Un guide organisé par sujet, toujours à portée de F1. |
 | `8-dark.png` | Clair ou sombre : à choisir dans les options, ou comme Windows. |
 

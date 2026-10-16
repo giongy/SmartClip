@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -12,11 +13,13 @@ class Toggle : CheckBox
     const int TextGap = 8;        // between the switch and its text, in pixels at 96 dpi
     const float Stretch = 1.8f;   // how many times its height the switch is wide
     const int KnobInset = 3;      // between the edge of the switch and its knob
-    const float SlideStep = 0.2f; // of the way the knob goes at each tick: five ticks from one end to the other
-    const int SlideMs = 15;
-    float knob;                   // where the knob is: 0 on the left, 1 on the right
-    bool hover;
-    Timer slide;
+    readonly Fade knob, lit;      // where the knob is, 0 on the left and 1 on the right; how much the pointer lights it
+
+    public Toggle()
+    {
+        knob = new Fade(this);
+        lit = new Fade(this);
+    }
 
     int Side { get { return Font.Height; } }
     int Track { get { return (int)(Side * Stretch); } }
@@ -30,39 +33,19 @@ class Toggle : CheckBox
     protected override void OnCheckedChanged(EventArgs e)
     {
         base.OnCheckedChanged(e);
-        // Out of sight there is nothing to watch: the knob is simply where it belongs.
-        if (!Visible || !IsHandleCreated)
-        {
-            knob = Checked ? 1 : 0;
-            return;
-        }
-        if (slide == null)
-        {
-            slide = new Timer();
-            slide.Interval = SlideMs;
-            slide.Tick += delegate
-            {
-                float goal = Checked ? 1 : 0;
-                knob = Math.Abs(goal - knob) <= SlideStep ? goal : knob + Math.Sign(goal - knob) * SlideStep;
-                if (knob == goal) slide.Stop();
-                Invalidate();
-            };
-        }
-        slide.Start();
+        knob.To(Checked ? 1 : 0);
     }
 
     protected override void OnMouseEnter(EventArgs e)
     {
         base.OnMouseEnter(e);
-        hover = true;
-        Invalidate();
+        lit.To(1);
     }
 
     protected override void OnMouseLeave(EventArgs e)
     {
         base.OnMouseLeave(e);
-        hover = false;
-        Invalidate();
+        lit.To(0);
     }
 
     protected override void OnPaint(PaintEventArgs e)
@@ -72,13 +55,13 @@ class Toggle : CheckBox
         g.SmoothingMode = SmoothingMode.AntiAlias;
         Rectangle box = new Rectangle(0, (Height - Side) / 2, Track - 1, Side - 1);
         // The knob travels between its two ends, its colours with it; the focus is shown only to the keyboard.
-        float size = box.Height - 2 * KnobInset, grown = size + (hover && Enabled ? 2 : 0);
-        float x = box.Left + KnobInset + size / 2 + knob * (box.Width - 2 * KnobInset - size), y = box.Top + box.Height / 2f;
+        float on = knob.Value, size = box.Height - 2 * KnobInset, grown = size + (Enabled ? 2 * lit.Value : 0);
+        float x = box.Left + KnobInset + size / 2 + on * (box.Width - 2 * KnobInset - size), y = box.Top + box.Height / 2f;
         bool ring = Focused && ShowFocusCues;
         using (GraphicsPath shape = new GraphicsPath())
-        using (Brush fill = new SolidBrush(Look.Blend(Look.Well, Look.Accent, knob)))
-        using (Pen edge = new Pen(ring ? Look.Ink : Look.Blend(Look.Border, Look.Accent, knob), ring ? 2 : 1))
-        using (Brush dot = new SolidBrush(Look.Blend(Look.Muted, Color.White, knob)))
+        using (Brush fill = new SolidBrush(Look.Blend(Look.Well, Look.Accent, on)))
+        using (Pen edge = new Pen(ring ? Look.Ink : Look.Blend(Look.Border, Look.Accent, on), ring ? 2 : 1))
+        using (Brush dot = new SolidBrush(Look.Blend(Look.Muted, Color.White, on)))
         {
             shape.AddArc(box.Left, box.Top, box.Height, box.Height, 90, 180);
             shape.AddArc(box.Right - box.Height, box.Top, box.Height, box.Height, 270, 180);
@@ -90,12 +73,6 @@ class Toggle : CheckBox
         Rectangle text = Rectangle.FromLTRB(box.Right + 1 + TextGap, 0, Width, Height);
         TextRenderer.DrawText(g, Text, Font, text, ForeColor,
             TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix);
-    }
-
-    protected override void Dispose(bool disposing)
-    {
-        if (disposing && slide != null) slide.Dispose();
-        base.Dispose(disposing);
     }
 }
 
@@ -146,7 +123,13 @@ class RoundButton : Button
     const int SignSize = 14, SignGap = 6;   // in pixels at 96 dpi, like the height the button is designed for
     const int DesignHeight = 26;
     bool hover;
+    readonly Fade lit;   // the pointer brightens it gradually, and the brightness fades when it leaves
     Sign? sign;
+
+    public RoundButton()
+    {
+        lit = new Fade(this);
+    }
 
     public Sign? Sign
     {
@@ -158,14 +141,14 @@ class RoundButton : Button
     {
         base.OnMouseEnter(e);
         hover = true;
-        Invalidate();
+        lit.To(1);
     }
 
     protected override void OnMouseLeave(EventArgs e)
     {
         base.OnMouseLeave(e);
         hover = false;
-        Invalidate();
+        lit.To(0);
     }
 
     protected override void OnPaint(PaintEventArgs e)
@@ -175,7 +158,7 @@ class RoundButton : Button
         g.SmoothingMode = SmoothingMode.AntiAlias;
         bool pressed = hover && Capture, coloured = BackColor == Look.Accent;
         Color fill = !Enabled ? Look.Blend(BackColor, Parent.BackColor, 0.6f)
-            : pressed ? Look.Blend(BackColor, Look.Ink, 0.16f) : hover ? Look.Blend(BackColor, Look.Ink, 0.07f) : BackColor;
+            : pressed ? Look.Blend(BackColor, Look.Ink, 0.16f) : Look.Blend(BackColor, Look.Ink, 0.07f * lit.Value);
         // A light edge at the top and a darker one at the bottom; on a dark window the light comes from above.
         Color top = !Enabled ? Look.Border : coloured ? FlatAppearance.BorderColor
             : Look.Dark ? Look.Blend(Look.Border, Look.Ink, 0.12f) : Look.Blend(Look.Border, fill, 0.4f);
@@ -209,8 +192,8 @@ class RoundButton : Button
     }
 }
 
-// The small signs drawn beside entries and on buttons: they are where the colour is.
-enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, List, Keys, Search, Help, Opened, Closed }
+// The small signs drawn beside entries, on buttons and beside the pages of the options: they are where the colour is.
+enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, List, Keys, Search, Help, Opened, Closed, Bolt, History }
 
 // The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
 enum Theme { System, Light, Dark }
@@ -222,7 +205,16 @@ static class Look
 {
     const int FramePadding = 6;   // between the edge of a framed text box and its text
     const int Radius = 6;         // of the rounded corners
+    const float MarkShare = 0.45f;   // how much of the height of a selected row its mark takes
     const string ModernFont = "Segoe UI Variable Text";   // what Windows 11 writes its own windows in
+    // Its heavier face, for what stands out in a list, and the one of the titles, larger: Windows writes the name
+    // of that one cut at 31 letters. Where they are missing (Windows 10), the semibold Segoe UI.
+    const string StrongName = "Segoe UI Variable Text Semibold", TitleName = "Segoe UI Variable Display Semib";
+    const string OldStrongName = "Segoe UI Semibold";
+    const float TitleGrowth = 1.45f;   // a title is this much larger than the text, as in Windows 11
+    // The signs are the icons of Windows itself, from its font of icons: that of Windows 11, or the older one of
+    // Windows 10. Without either they are drawn by hand.
+    const string IconName = "Segoe Fluent Icons", OldIconName = "Segoe MDL2 Assets";
     // Air above and below a menu, above and below each of its rows and before their text; beside the shape
     // under the pointer.
     const int MenuEdge = 4, MenuRow = 5, MenuText = 8, MenuInset = 4;
@@ -239,6 +231,21 @@ static class Look
     // The font of every window: the modern one where Windows has it, in the size the user set for message
     // boxes; elsewhere the font of the message boxes itself.
     public static readonly Font TextFont = FindFont();
+    public static readonly Font StrongFont = Installed(StrongName, TextFont.SizeInPoints)
+        ?? Installed(OldStrongName, TextFont.SizeInPoints) ?? new Font(TextFont, FontStyle.Bold);
+    public static readonly Font TitleFont = Installed(TitleName, TextFont.SizeInPoints * TitleGrowth)
+        ?? Installed(OldStrongName, TextFont.SizeInPoints * TitleGrowth) ?? new Font(TextFont.FontFamily, TextFont.SizeInPoints * TitleGrowth, FontStyle.Bold);
+    static readonly Font IconProbe = Installed(IconName, 10) ?? Installed(OldIconName, 10);   // null: no font of icons
+    static readonly Dictionary<int, Font> IconFonts = new Dictionary<int, Font>();   // by size in pixels
+
+    // A font by name, if Windows has it; otherwise null.
+    static Font Installed(string name, float size)
+    {
+        Font font = new Font(name, size);
+        if (font.Name == name) return font;   // a font that is not there is replaced without a word
+        font.Dispose();
+        return null;
+    }
 
     static float SystemZoom()
     {
@@ -408,6 +415,47 @@ static class Look
         return path;
     }
 
+    // The background of a row of a list, as Windows 11 draws it: the selected one a rounded shape with a short
+    // mark in the accent colour on its left, the one under the pointer a fainter shape, which comes and goes
+    // with 'glow' (see Glow).
+    public static void DrawRow(Graphics g, Rectangle bounds, Color back, bool selected, float glow)
+    {
+        using (Brush plain = new SolidBrush(back)) g.FillRectangle(plain, bounds);
+        if (!selected && glow <= 0) return;
+        Rectangle row = Rectangle.FromLTRB(bounds.Left + 1, bounds.Top + 1, bounds.Right - 2, bounds.Bottom - 1);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        using (GraphicsPath shape = Rounded(row))
+        using (Brush fill = new SolidBrush(selected ? Selected : Blend(back, Soft, glow)))
+            g.FillPath(fill, shape);
+        if (!selected) return;
+        float width = 3 * Zoom, height = row.Height * MarkShare, top = row.Top + (row.Height - height) / 2;
+        using (GraphicsPath mark = new GraphicsPath())
+        using (Brush accent = new SolidBrush(Accent))
+        {
+            mark.AddArc(row.Left + 3, top, width, width, 180, 180);
+            mark.AddArc(row.Left + 3, top + height - width, width, width, 0, 180);
+            mark.CloseFigure();
+            g.FillPath(accent, mark);
+        }
+    }
+
+    // A subject in a column of subjects (the guide, the pages of the options): its sign if it has one, then
+    // its name, on a row drawn as DrawRow does. 'inset' is where the sign or the name starts.
+    public static void DrawTopic(DrawItemEventArgs e, RowList list, string name, Sign? sign, int inset)
+    {
+        if (e.Index < 0) return;
+        DrawRow(e.Graphics, e.Bounds, list.BackColor, (e.State & DrawItemState.Selected) != 0, list.Glow.Of(e.Index));
+        int left = e.Bounds.Left + inset, side = e.Font.Height;
+        if (sign.HasValue)
+        {
+            Draw(e.Graphics, sign.Value, new Rectangle(left, e.Bounds.Top + (e.Bounds.Height - side) / 2, side, side), null);
+            left += side + inset;
+        }
+        TextRenderer.DrawText(e.Graphics, name, e.Font, Rectangle.FromLTRB(left, e.Bounds.Top, e.Bounds.Right - inset / 2,
+            e.Bounds.Bottom), Ink, TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix
+            | TextFormatFlags.EndEllipsis);
+    }
+
     // A colour part of the way from one to another.
     public static Color Blend(Color from, Color to, float amount)
     {
@@ -437,14 +485,48 @@ static class Look
         Native.SetWindowTheme(field.Handle, Dark ? "DarkMode_Explorer" : "Explorer", null);
     }
 
-    // Draws one of the small signs in its own colour, or in the given one, inside a square box. Each is laid
-    // out on a grid of 16.
+    // The icon of each sign in the fonts of icons of Windows, which share them.
+    static string Glyph(Sign sign)
+    {
+        switch (sign)
+        {
+            case Sign.Text: return "";      // Document
+            case Sign.Link: return "";      // Link
+            case Sign.Star: return "";      // FavoriteStarFill
+            case Sign.Plus: return "";      // Add
+            case Sign.Edit: return "";      // Edit
+            case Sign.Delete: return "";    // Delete
+            case Sign.Options: return "";   // Settings
+            case Sign.List: return "";      // BulletedList
+            case Sign.Keys: return "";      // KeyboardClassic
+            case Sign.Search: return "";    // Search
+            case Sign.Help: return "";      // Help
+            case Sign.Opened: return "";    // ChevronDown
+            case Sign.Closed: return "";    // ChevronRight
+            case Sign.Bolt: return "";      // LightningBolt
+            default: return "";             // History
+        }
+    }
+
+    // Draws one of the small signs in its own colour, or in the given one, inside a square box: the icon of
+    // Windows where there is one, otherwise drawn by hand on a grid of 16.
     public static void Draw(Graphics g, Sign sign, Rectangle box, Color? colour)
     {
         float u = box.Width / 16f, x = box.Left, y = box.Top;
         Color own = sign == Sign.Text || sign == Sign.Search || sign == Sign.Keys ? Accent
-            : sign == Sign.Link || sign == Sign.Opened || sign == Sign.Closed ? Teal
-            : sign == Sign.Star || sign == Sign.Edit ? Amber : sign == Sign.Plus ? Green : sign == Sign.Delete ? Red : Purple;
+            : sign == Sign.Link || sign == Sign.Opened || sign == Sign.Closed || sign == Sign.History ? Teal
+            : sign == Sign.Star || sign == Sign.Edit || sign == Sign.Bolt ? Amber : sign == Sign.Plus ? Green
+            : sign == Sign.Delete ? Red : Purple;
+        if (IconProbe != null)
+        {
+            Font icons;
+            if (!IconFonts.TryGetValue(box.Height, out icons))
+                IconFonts[box.Height] = icons = new Font(IconProbe.FontFamily, box.Height, GraphicsUnit.Pixel);
+            TextRenderer.DrawText(g, Glyph(sign), icons, box, colour ?? own, TextFormatFlags.HorizontalCenter
+                | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding
+                | TextFormatFlags.NoPrefix | TextFormatFlags.NoClipping);
+            return;
+        }
         SmoothingMode mode = g.SmoothingMode;
         g.SmoothingMode = SmoothingMode.AntiAlias;
         using (Pen pen = new Pen(colour ?? own, 1.7f * u))
@@ -517,6 +599,15 @@ static class Look
                     g.DrawArc(pen, x + 5 * u, y + 2 * u, 6 * u, 6 * u, 180, 270);
                     g.DrawLine(pen, x + 8 * u, y + 8 * u, x + 8 * u, y + 10 * u);
                     g.FillEllipse(fill, x + 6.9f * u, y + 12.2f * u, 2.2f * u, 2.2f * u);
+                    break;
+                case Sign.Bolt:
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 9.5f * u, y + 2 * u), new PointF(x + 5 * u, y + 9 * u),
+                        new PointF(x + 11 * u, y + 7.5f * u), new PointF(x + 6.5f * u, y + 14 * u) });
+                    break;
+                case Sign.History:   // a clock
+                    g.DrawEllipse(pen, x + 2 * u, y + 2 * u, 12 * u, 12 * u);
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 8 * u, y + 4.5f * u), new PointF(x + 8 * u, y + 8 * u),
+                        new PointF(x + 10.5f * u, y + 9.5f * u) });
                     break;
             }
         }

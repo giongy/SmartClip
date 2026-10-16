@@ -13,7 +13,6 @@ class HelpForm : Form
     const int ButtonWidth = 90, ButtonHeight = 26;
     const int TextPadding = 10;                // between the rounded edge and the text
     const int BulletIndent = 14, KeyColumn = 120;   // where the text of a point starts, and that of a key
-    const float HeadingGrowth = 1.15f;         // a heading is this much larger than the text
     const string Heading = "# ", Bullet = "- ";    // how a line of the guide says what it is
     const char KeyEnd = '\t';                       // in a line that explains a key, between the key and what it does
 
@@ -22,7 +21,7 @@ class HelpForm : Form
     readonly string[] Lines = Strings.Guide();
 
     readonly RichTextBox text = new RichTextBox();
-    readonly ListBox topics = new ListBox();       // the subjects: each item is the index of its heading in Lines
+    readonly RowList topics = new RowList();       // the subjects: each item is the index of its heading in Lines
     readonly Button closeButton = new RoundButton();
 
     public HelpForm()
@@ -49,31 +48,32 @@ class HelpForm : Form
         topics.SetBounds(Edge, Edge, TopicsWidth, TextHeight);
         Look.Field(topics);
         Panel topicsCard = Look.Wrap(topics, TextPadding / 2);
-        topics.DrawItem += DrawTopic;
+        topics.DrawItem += delegate(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index >= 0)
+                Look.DrawTopic(e, topics, Lines[(int)topics.Items[e.Index]].Substring(Heading.Length), null,
+                    (int)(TopicInset * CurrentAutoScaleDimensions.Width / 96f));
+        };
         topics.SelectedIndexChanged += delegate { Write(); };
+        // The row under the pointer lights up.
         topics.MouseMove += delegate(object sender, MouseEventArgs e)
         {
             int index = topics.IndexFromPoint(e.Location);
             int row = index >= 0 && topics.GetItemRectangle(index).Contains(e.Location) ? index : -1;
-            if (Equals(topics.Tag, row)) return;
-            topics.Tag = row;   // the row under the pointer, which lights up
             topics.Cursor = row >= 0 ? Cursors.Hand : Cursors.Default;
-            topics.Invalidate();
+            topics.Glow.Set(row);
         };
-        topics.MouseLeave += delegate
-        {
-            topics.Tag = null;
-            topics.Invalidate();
-        };
+        topics.MouseLeave += delegate { topics.Glow.Set(-1); };
 
         text.ReadOnly = true;
         text.BorderStyle = BorderStyle.None;
-        text.ScrollBars = RichTextBoxScrollBars.Vertical;
+        text.ScrollBars = RichTextBoxScrollBars.ForcedVertical;   // always, under the thin bar that stands over it
         text.DetectUrls = false;
         text.TabStop = false;
         text.SetBounds(topicsCard.Right + Gap, Edge, TextWidth, TextHeight);
         Look.Field(text);
         Panel card = Look.Wrap(text, TextPadding);
+        Rail.Over(text);
 
         int buttonTop = card.Bottom + Edge;
         closeButton.Text = Strings.Close;
@@ -95,35 +95,6 @@ class HelpForm : Form
         Disposed += delegate { Look.Changed -= rewrite; };   // also when it goes without being closed
         ResumeLayout(false);
         PerformLayout();
-    }
-
-    // A subject in the column: its name, on a rounded shape with a mark in the accent colour when it is the
-    // one shown, on a fainter shape under the pointer.
-    void DrawTopic(object sender, DrawItemEventArgs e)
-    {
-        if (e.Index < 0) return;
-        bool selected = (e.State & DrawItemState.Selected) != 0, hovered = Equals(topics.Tag, e.Index);
-        using (Brush back = new SolidBrush(topics.BackColor))
-        {
-            e.Graphics.FillRectangle(back, e.Bounds);
-        }
-        Rectangle row = Rectangle.FromLTRB(e.Bounds.Left + 1, e.Bounds.Top + 1, e.Bounds.Right - 2, e.Bounds.Bottom - 1);
-        if (selected || hovered)
-        {
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            using (GraphicsPath shape = Look.Rounded(row))
-            using (Brush fill = new SolidBrush(selected ? Look.Selected : Look.Soft))
-            using (Brush mark = new SolidBrush(Look.Accent))
-            {
-                e.Graphics.FillPath(fill, shape);
-                if (selected) e.Graphics.FillRectangle(mark, row.Left + 3, row.Top + 5, 3, row.Height - 10);
-            }
-        }
-        float scale = CurrentAutoScaleDimensions.Width / 96f;
-        string name = Lines[(int)topics.Items[e.Index]].Substring(Heading.Length);
-        TextRenderer.DrawText(e.Graphics, name, e.Font, Rectangle.FromLTRB(row.Left + (int)(TopicInset * scale), row.Top,
-            row.Right - (int)(TopicInset * scale) / 2, row.Bottom), Look.Ink, TextFormatFlags.VerticalCenter
-            | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis);
     }
 
     protected override void OnHandleCreated(EventArgs e)
@@ -157,11 +128,10 @@ class HelpForm : Form
         int bullet = (int)(BulletIndent * scale), key = (int)(KeyColumn * scale);
         int start = (int)topics.SelectedItem;
         text.Clear();
-        using (Font heading = new Font(Font.FontFamily, Font.Size * HeadingGrowth, FontStyle.Bold))
-        using (Font strong = new Font(Font, FontStyle.Bold))
         using (Font air = new Font(Font.FontFamily, Font.Size / 2))   // half a line, between paragraphs
         {
-            Add(Lines[start].Substring(Heading.Length), heading, 0, 0);
+            Font strong = Look.StrongFont;
+            Add(Lines[start].Substring(Heading.Length), Look.TitleFont, 0, 0);
             for (int i = start + 1; i < Lines.Length && !Lines[i].StartsWith(Heading); i++)
             {
                 string line = Lines[i];

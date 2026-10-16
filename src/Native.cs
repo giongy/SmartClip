@@ -7,6 +7,9 @@ static class Native
 {
     public const int WM_SETTINGCHANGE = 0x001A, WM_ACTIVATEAPP = 0x001C, WM_NCHITTEST = 0x0084, WM_HOTKEY = 0x0312,
         WM_CLIPBOARDUPDATE = 0x031D, EM_SETCUEBANNER = 0x1501;
+    public const int WM_PAINT = 0x000F, WM_VSCROLL = 0x0115, WM_MOUSEWHEEL = 0x020A;
+    public const int SB_VERT = 1, SB_PAGEUP = 2, SB_PAGEDOWN = 3, SB_THUMBPOSITION = 4, SB_ENDSCROLL = 8;
+    public const uint SIF_ALL = 0x17;
     public const int HTTRANSPARENT = -1;
     public const int WS_EX_TOPMOST = 0x00000008, WS_EX_TOOLWINDOW = 0x00000080, WS_EX_NOACTIVATE = 0x08000000;
     public const int CS_DROPSHADOW = 0x00020000;
@@ -58,6 +61,21 @@ static class Native
         public uint type;
         public InputUnion U;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    public struct SCROLLINFO
+    {
+        public uint cbSize, fMask;
+        public int nMin, nMax;
+        public uint nPage;
+        public int nPos, nTrackPos;
+    }
+
+    [DllImport("user32.dll")]
+    public static extern bool GetScrollInfo(IntPtr window, int bar, ref SCROLLINFO info);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
 
     [DllImport("user32.dll")]
     public static extern uint SendInput(uint count, INPUT[] inputs, int size);

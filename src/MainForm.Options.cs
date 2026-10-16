@@ -8,22 +8,68 @@ using Microsoft.Win32;
 // The options: how they are placed and explained, what their buttons do, and the settings in the registry.
 partial class MainForm
 {
-    // The options are stacked by category, in two columns: on the left what concerns typing, on the right
-    // the rest. Adding one takes a single line here, the window height adapts. Returns where they end.
-    int PlaceOptions()
+    // The options, a page per category, chosen from a column on the left as the subjects of the guide are; the
+    // page comes in as those of Windows 11 do. Adding an option takes a single line under its page.
+    void PlaceOptions(int bottom)
     {
-        int left = Edge, top = Edge;
-        PlaceTitle(Strings.TypingTitle, left, ref top);
+        pageList.SetBounds(Edge, Edge, NavWidth, bottom - Edge);
+        Look.Field(pageList);
+        pageList.BorderStyle = BorderStyle.None;
+        pageList.IntegralHeight = false;
+        pageList.DrawMode = DrawMode.OwnerDrawFixed;
+        pageList.ItemHeight = Font.Height + NavPadding;
+        pageList.DrawItem += delegate(object sender, DrawItemEventArgs e)
+        {
+            if (e.Index < 0) return;
+            Panel shown = (Panel)pageList.Items[e.Index];
+            Look.DrawTopic(e, pageList, shown.Text, (Sign)shown.Tag, (int)(NavInset * Zoom));
+        };
+        pageList.SelectedIndexChanged += delegate { ShowPage(); };
+        // The row under the pointer lights up.
+        pageList.MouseMove += delegate(object sender, MouseEventArgs e)
+        {
+            int row = RowAt(pageList, e.Location);
+            pageList.Cursor = row >= 0 ? Cursors.Hand : Cursors.Default;
+            pageList.Glow.Set(row);
+        };
+        pageList.MouseLeave += delegate { pageList.Glow.Set(-1); };
+        optionControls.Add(Look.Wrap(pageList, ListPadding));
+        pagePane.SetBounds(Edge + NavWidth + NavGap, Edge, PaneWidth, bottom - Edge);
+        optionControls.Add(pagePane);
+
+        int top = Page(Strings.TypingTitle, Sign.Keys);
         // Confirming a number brings what was written back within its limits.
-        Label delayLabel = PlaceNumber(delayBox, Strings.DelayOption, MaxDelay, delegate { Delay = Delay; }, left, ref top);
+        Label delayLabel = PlaceNumber(delayBox, Strings.DelayOption, MaxDelay, delegate { Delay = Delay; }, ref top);
         Delay = DefaultDelay;
-        PlaceOption(usBox, Strings.UsOption, left, ref top);
-        PlaceOption(enterBox, Strings.EnterOption, left, ref top);
-        PlaceOption(clearBox, Strings.ClearOption, left, ref top);
-        PlaceOption(slowBox, Strings.SlowOption, left, ref top);
-        PlaceOption(altCodeBox, Strings.AltCodeOption, left, ref top);
-        // On the left too, where there is room: under the history the window would have to grow.
-        PlaceTitle(Strings.ProgramTitle, left, ref top);
+        PlaceOption(usBox, Strings.UsOption, ref top);
+        PlaceOption(enterBox, Strings.EnterOption, ref top);
+        PlaceOption(clearBox, Strings.ClearOption, ref top);
+        PlaceOption(slowBox, Strings.SlowOption, ref top);
+        PlaceOption(altCodeBox, Strings.AltCodeOption, ref top);
+
+        top = Page(Strings.HotkeysTitle, Sign.Bolt);
+        PlaceHotkey(hotkeyBox, typeKeysButton, Strings.TypeButton, ref top);
+        hotkeyBox.Checked = true;
+        PlaceHotkey(pickBox, pickKeysButton, Strings.PickOption, ref top);
+        pickBox.Checked = true;
+        PlaceHotkey(quickBox, quickKeysButton, Strings.QuickOption, ref top);
+        quickBox.Checked = true;   // nothing is taken from other programs until an entry has a number
+
+        top = Page(Strings.HistoryTitle, Sign.History);
+        PlaceOption(historyBox, Strings.HistoryOption, ref top);
+        historyBox.Checked = true;
+        Label keepLabel = PlaceNumber(keepBox, Strings.KeepOption, Texts.MaxKeepDays,
+            delegate { Retention = Retention; ApplyHistory(); Reload(); }, ref top);
+        Retention = Texts.DefaultKeepDays;
+        LinkLabel folderLink = PlaceLink(Strings.FolderLink, OpenFolder, ref top);
+        // Not a setting: what to spare when the button below is pressed.
+        Label cleanLabel = PlaceNumber(cleanBox, Strings.SpareOption, Texts.MaxKeepDays, delegate { Spared = Spared; }, ref top);
+        Spared = 0;
+        PlaceButton(cleanButton, Strings.CleanButton, CleanHistory, 0, ref top);
+        cleanButton.Sign = Sign.Delete;
+
+        top = Page(Strings.ProgramTitle, Sign.Options);
+        programPage = page;
         // The language: its button shows the one in use and opens the list, each by the name it gives itself.
         ContextMenuStrip languageMenu = new ContextMenuStrip();
         for (int i = 0; i < Strings.Codes.Length; i++)
@@ -33,7 +79,7 @@ partial class MainForm
         }
         Look.Style(languageMenu);
         Label languageLabel = PlacePicker(languageButton, Strings.Names[Array.IndexOf(Strings.Codes, Strings.Code)],
-            Strings.LanguageOption, languageMenu, left, ref top);
+            Strings.LanguageOption, languageMenu, ref top);
         // The theme, under it in the same way; the one in use cannot be chosen again.
         ContextMenuStrip themeMenu = new ContextMenuStrip();
         foreach (Theme each in new Theme[] { Theme.System, Theme.Light, Theme.Dark })
@@ -46,43 +92,20 @@ partial class MainForm
             foreach (ToolStripItem item in themeMenu.Items) item.Enabled = (Theme)item.Tag != Look.Chosen;
         };
         Look.Style(themeMenu);
-        Label themeLabel = PlacePicker(themeButton, ThemeName(Look.Chosen), Strings.ThemeOption, themeMenu, left, ref top);
-        PlaceOption(trayBox, Strings.TrayOption, left, ref top);
+        Label themeLabel = PlacePicker(themeButton, ThemeName(Look.Chosen), Strings.ThemeOption, themeMenu, ref top);
+        PlaceOption(trayBox, Strings.TrayOption, ref top);
         trayBox.Checked = true;
-        PlaceOption(leaveBox, Strings.LeaveOption, left, ref top);
+        PlaceOption(leaveBox, Strings.LeaveOption, ref top);
         leaveBox.Checked = true;
-        PlaceOption(startBox, Strings.StartOption, left, ref top);
+        PlaceOption(startBox, Strings.StartOption, ref top);
         // Side by side, each with its two choices: the saved texts alone, or what was copied too.
         ContextMenuStrip exportMenu = Choice(Export), importMenu = Choice(Import);
         top += Gap;
-        PlaceButton(exportButton, Strings.ExportButton, delegate { exportMenu.Show(exportButton, 0, exportButton.Height); }, left, ref top);
+        PlaceButton(exportButton, Strings.ExportButton, delegate { exportMenu.Show(exportButton, 0, exportButton.Height); }, 0, ref top);
         top -= NumberRow;
         PlaceButton(importButton, Strings.ImportButton, delegate { importMenu.Show(importButton, 0, importButton.Height); },
-            left + OptionButtonWidth + Gap, ref top);
-        int leftBottom = top;
-
-        left += ColumnWidth + ColumnGap;
-        top = Edge;
-        PlaceTitle(Strings.HotkeysTitle, left, ref top);
-        PlaceHotkey(hotkeyBox, typeKeysButton, Strings.TypeButton, left, ref top);
-        hotkeyBox.Checked = true;
-        PlaceHotkey(pickBox, pickKeysButton, Strings.PickOption, left, ref top);
-        pickBox.Checked = true;
-        PlaceHotkey(quickBox, quickKeysButton, Strings.QuickOption, left, ref top);
-        quickBox.Checked = true;   // nothing is taken from other programs until an entry has a number
-        PlaceTitle(Strings.HistoryTitle, left, ref top);
-        PlaceOption(historyBox, Strings.HistoryOption, left, ref top);
-        historyBox.Checked = true;
-        Label keepLabel = PlaceNumber(keepBox, Strings.KeepOption, Texts.MaxKeepDays,
-            delegate { Retention = Retention; ApplyHistory(); Reload(); }, left, ref top);
-        Retention = Texts.DefaultKeepDays;
-        LinkLabel folderLink = PlaceLink(Strings.FolderLink, OpenFolder, left, ref top);
-        // Not a setting: what to spare when the button below is pressed.
-        Label cleanLabel = PlaceNumber(cleanBox, Strings.SpareOption, Texts.MaxKeepDays, delegate { Spared = Spared; }, left, ref top);
-        Spared = 0;
-        PlaceButton(cleanButton, Strings.CleanButton, CleanHistory, left, ref top);
-        cleanButton.Sign = Sign.Delete;
-        top = Math.Max(top, leftBottom);
+            OptionButtonWidth + Gap, ref top);
+        pageList.SelectedIndex = 0;
 
         Tip(Strings.DelayTip, delayLabel, delayBox);
         Tip(Strings.UsTip, usBox);
@@ -100,17 +123,42 @@ partial class MainForm
         Tip(string.Format(Strings.StartTip, Program.AppName), startBox);
         Tip(Strings.ExportTip, exportButton);
         Tip(Strings.ImportTip, importButton);
-        return top;
     }
 
-    // A row with something to choose from a menu: its description on the left, at the right edge of the column
+    // Opens a new page of options, with its name on top and its row in the column on the left; what is placed
+    // next goes on it. Returns where its options begin.
+    int Page(string title, Sign sign)
+    {
+        page = new Panel();
+        page.Bounds = new Rectangle(Point.Empty, pagePane.Size);
+        page.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        page.Text = title;   // what its row says
+        page.Tag = sign;
+        Label name = NewLabel(title, 0);
+        name.Left = 0;
+        name.Font = Look.TitleFont;
+        page.Controls.Add(name);
+        pagePane.Controls.Add(page);
+        pageList.Items.Add(page);
+        return PageTop;
+    }
+
+    // Shows the page chosen on the left, which rises into place.
+    void ShowPage()
+    {
+        EndCapture();   // keys awaited on a page that leaves are not for it
+        foreach (Control each in pagePane.Controls) each.Visible = each == pageList.SelectedItem;
+        if (pageList.SelectedItem != null) Entrance.Play((Control)pageList.SelectedItem, 0);
+    }
+
+    // A row with something to choose from a menu: its description on the left, at the right edge of the page
     // the button that shows the choice made and opens the menu. Returns the description, for its tooltip.
-    Label PlacePicker(RoundButton button, string choice, string text, ContextMenuStrip menu, int left, ref int top)
+    Label PlacePicker(RoundButton button, string choice, string text, ContextMenuStrip menu, ref int top)
     {
         Label label = NewLabel(text, top + 5);
-        label.Left = left;
-        optionControls.Add(label);
-        PlaceButton(button, choice, delegate { menu.Show(button, 0, button.Height); }, left + ColumnWidth - OptionButtonWidth, ref top);
+        label.Left = 0;
+        page.Controls.Add(label);
+        PlaceButton(button, choice, delegate { menu.Show(button, 0, button.Height); }, PaneWidth - OptionButtonWidth, ref top);
         return label;
     }
 
@@ -151,29 +199,13 @@ partial class MainForm
         });
     }
 
-    // The name of a category of options, with some air above it unless it opens its column.
-    void PlaceTitle(string text, int left, ref int top)
-    {
-        if (top > Edge) top += SectionGap;
-        Label title = NewLabel(text, top);
-        title.Left = left;
-        title.Font = new Font(Font, FontStyle.Bold);
-        // A thin line under the title, as wide as the column: the accent colour is left to what can be clicked.
-        Label rule = new Label();
-        rule.SetBounds(left, top + TitleRow - RuleGap, ColumnWidth, 1);
-        rule.BackColor = Look.Border;
-        optionControls.Add(title);
-        optionControls.Add(rule);
-        top += TitleRow;
-    }
-
-    // A row with a number to write: its description on the left, its box at the right edge of the column.
+    // A row with a number to write: its description on the left, its box at the right edge of the page.
     // Returns the description, for its tooltip.
-    Label PlaceNumber(TextBox box, string text, int max, Action confirm, int left, ref int top)
+    Label PlaceNumber(TextBox box, string text, int max, Action confirm, ref int top)
     {
         Label label = NewLabel(text, top + 5);
-        label.Left = left;
-        box.SetBounds(left + ColumnWidth - NumberWidth, top, NumberWidth, NumberHeight);
+        label.Left = 0;
+        box.SetBounds(PaneWidth - NumberWidth, top, NumberWidth, NumberHeight);
         box.TextAlign = HorizontalAlignment.Center;
         box.MaxLength = max.ToString().Length;
         box.KeyPress += delegate(object sender, KeyPressEventArgs e)
@@ -184,44 +216,45 @@ partial class MainForm
         };
         box.Leave += delegate { confirm(); };
         top += NumberRow;
-        optionControls.Add(label);
-        optionControls.Add(Look.Frame(box));   // the frame of the box is what goes into the window
+        page.Controls.Add(label);
+        page.Controls.Add(Look.Frame(box));   // the frame of the box is what goes on the page
         return label;
     }
 
-    // A row with a global hotkey: the switch that turns it on and, at the right edge of the column, the
+    // A row with a global hotkey: the switch that turns it on and, at the right edge of the page, the
     // button that shows its keys and takes new ones.
-    void PlaceHotkey(CheckBox box, RoundButton keys, string text, int left, ref int top)
+    void PlaceHotkey(CheckBox box, RoundButton keys, string text, ref int top)
     {
         int row = top + 4;   // the switch level with the text of the button
-        PlaceOption(box, text, left, ref row);
-        PlaceButton(keys, "", delegate { AwaitKeys(box); }, left + ColumnWidth - OptionButtonWidth, ref top);
+        PlaceOption(box, text, ref row);
+        PlaceButton(keys, "", delegate { AwaitKeys(box); }, PaneWidth - OptionButtonWidth, ref top);
     }
 
     // A row with a link, for something to open rather than to set.
-    LinkLabel PlaceLink(string text, Action open, int left, ref int top)
+    LinkLabel PlaceLink(string text, Action open, ref int top)
     {
         LinkLabel link = new LinkLabel();
         link.Text = text;
         link.AutoSize = true;
-        link.Location = new Point(left, top);
+        link.Location = new Point(0, top);
         link.LinkColor = Look.Accent;
         link.ActiveLinkColor = Look.Ink;
-        link.LinkBehavior = LinkBehavior.AlwaysUnderline;   // or it would pass for the title of a category
+        link.LinkBehavior = LinkBehavior.AlwaysUnderline;   // or it would pass for a label
         link.LinkClicked += delegate { open(); };
-        optionControls.Add(link);
+        page.Controls.Add(link);
         top += RowHeight;
         return link;
     }
 
-    // A row with a small button, for something to do at once rather than to set.
+    // A row with a small button, for something to do at once rather than to set. 'left' is where it starts on
+    // the page: buttons can stand side by side.
     void PlaceButton(RoundButton button, string text, Action act, int left, ref int top)
     {
         button.Text = text;
         button.SetBounds(left, top, OptionButtonWidth, ActionHeight);
         Look.Style(button, false);
         button.Click += delegate { act(); };
-        optionControls.Add(button);
+        page.Controls.Add(button);
         top += NumberRow;
     }
 
@@ -310,12 +343,12 @@ partial class MainForm
         else Say(Strings.NoHistoryFolder);
     }
 
-    void PlaceOption(CheckBox box, string text, int left, ref int top)
+    void PlaceOption(CheckBox box, string text, ref int top)
     {
         box.Text = text;
         box.AutoSize = true;
-        box.Location = new Point(left, top);
-        optionControls.Add(box);
+        box.Location = new Point(0, top);
+        page.Controls.Add(box);
         top += RowHeight;
     }
 
@@ -511,6 +544,7 @@ partial class MainForm
     // Started again after a change of language: back where the user was.
     public void ShowOptions()
     {
+        pageList.SelectedItem = programPage;
         ShowView(true);
     }
 }
