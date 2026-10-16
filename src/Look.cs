@@ -224,27 +224,41 @@ static class Look
     public const string ThemeChange = "ImmersiveColorSet";   // what WM_SETTINGCHANGE names when that changes
     const int AppModeBuild = 18362;   // Windows 10 1903, from which SetPreferredAppMode is what it is
 
-    // How much larger than designed this screen draws: the program is aware of the scale of the system.
-    public static readonly float Zoom = SystemZoom();
+    static readonly float ScreenZoom = SystemZoom();   // the program is aware of the scale of the system
+
+    // How much larger than designed the windows are drawn: the scale of the screen times that of the text of
+    // the interface.
+    public static float Zoom
+    {
+        get { return ScreenZoom * InterfaceSize / DesignedSize; }
+    }
     static readonly Font IconProbe = Installed(IconName, 10) ?? Installed(OldIconName, 10);   // null: no font of icons
     static readonly Dictionary<int, Font> IconFonts = new Dictionary<int, Font>();   // by size in pixels
 
-    // The font of every window: the modern one where Windows has it, in the size the user set for message
-    // boxes; elsewhere the font of the message boxes itself. Its heavier face, for what stands out, and the
-    // larger one of titles; where Segoe UI Variable is missing (Windows 10), the semibold Segoe UI.
-    public static readonly Font TextFont = Installed(ModernFont, SystemFonts.MessageBoxFont.SizeInPoints) ?? SystemFonts.MessageBoxFont;
-    public static readonly Font StrongFont = Heavy(TextFont.Name, TextFont.SizeInPoints, false);
-    public static readonly Font TitleFont = Heavy(TextFont.Name, TextFont.SizeInPoints * TitleGrowth, true);
+    // The font of the interface, the same in every window: buttons, labels, options, the guide, menus, questions.
+    // The user chooses it among those of Families that Windows has, with its size in pixels at 96 dpi; the first
+    // family Windows has is the default. Set before the first window by UseInterfaceFont: the windows are built
+    // for it, so another one takes a new start. Its heavier face, for what stands out, and the larger one of
+    // titles; where Segoe UI Variable is missing (Windows 10), the semibold face of the family.
+    public static readonly int[] InterfaceSizes = { 12, 13, 14, 15, 16 };
+    public const int DefaultInterfaceSize = 13;
+    const int DesignedSize = 12;   // the windows were designed for the text of Windows message boxes, 12 pixels
+    public static Font TextFont { get; private set; }
+    public static Font StrongFont { get; private set; }
+    public static Font TitleFont { get; private set; }
+    public static string InterfaceFamily { get; private set; }   // one of FontNames
+    public static int InterfaceSize { get; private set; }        // one of InterfaceSizes
 
-    // The entries of the lists, and the preview of one, are written in a font of their own, which the user
-    // chooses among those of Families that Windows has, with its size in pixels at 96 dpi; the rest of the
-    // windows stays as designed. The first family Windows has is the default.
+    // The entries of the lists, the preview of one and the content of a saved text have a font of their own,
+    // chosen in the same way; it changes at once.
     static readonly string[] Families = { ModernFont, "Segoe UI", "Aptos", "Calibri", "Arial", "Verdana", "Tahoma",
         "Cascadia Mono", "Consolas" };
     public static readonly int[] EntrySizes = { 11, 12, 13, 14, 15, 16, 18, 20 };
     public const int DefaultEntrySize = 14;   // the text of Windows 11: a little larger than that of the windows
+    const float CaptionShare = 0.8f;          // of the size of the entries, the small line under each
     public static Font EntryFont { get; private set; }
     public static Font StrongEntryFont { get; private set; }   // for a folder among the entries
+    public static Font CaptionFont { get; private set; }       // for when an entry was copied or saved, under it
     public static string EntryFamily { get; private set; }     // one of FontNames
     public static int EntrySize { get; private set; }          // one of EntrySizes
 
@@ -267,17 +281,39 @@ static class Look
         return font != null;
     }
 
+    // A family that can be chosen, or the default one: the first Windows has of Families, or else that of its
+    // message boxes.
+    static string Family(string name)
+    {
+        string[] names = FontNames;
+        return Array.IndexOf(names, name) >= 0 ? name : names.Length > 0 ? names[0] : SystemFonts.MessageBoxFont.Name;
+    }
+
+    // Takes the font and the size of the interface, before any window: what is not known or not installed falls
+    // back to the defaults.
+    public static void UseInterfaceFont(string name, int size)
+    {
+        name = Family(name);
+        if (Array.IndexOf(InterfaceSizes, size) < 0) size = DefaultInterfaceSize;
+        InterfaceFamily = name;
+        InterfaceSize = size;
+        float points = size * 72f / 96;
+        TextFont = new Font(name, points);
+        StrongFont = Heavy(name, points, false);
+        TitleFont = Heavy(name, points * TitleGrowth, true);
+    }
+
     // Takes the font and the size of the entries: what is not known or not installed falls back to the defaults.
     public static void UseEntryFont(string name, int size)
     {
-        string[] names = FontNames;
-        if (Array.IndexOf(names, name) < 0) name = names.Length > 0 ? names[0] : TextFont.Name;
+        name = Family(name);
         if (Array.IndexOf(EntrySizes, size) < 0) size = DefaultEntrySize;
         EntryFamily = name;
         EntrySize = size;
         float points = size * 72f / 96;   // pixels at 96 dpi: Windows makes them larger with the screen
         EntryFont = new Font(name, points);
         StrongEntryFont = Heavy(name, points, false);
+        CaptionFont = new Font(name, (float)Math.Round(size * CaptionShare) * 72f / 96);
     }
 
     // The heavier face of a family: those of Segoe UI Variable (the Display one for titles), the semibold face
@@ -315,7 +351,8 @@ static class Look
 
     static Look()
     {
-        UseEntryFont(null, DefaultEntrySize);   // until the settings are read
+        UseInterfaceFont(null, DefaultInterfaceSize);   // until the settings are read
+        UseEntryFont(null, DefaultEntrySize);
         Use(WindowsDark());
     }
 

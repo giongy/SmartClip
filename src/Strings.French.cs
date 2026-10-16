@@ -155,6 +155,7 @@ static partial class Strings
         AltCodeOption = "Codes Alt pour les symboles sans touche";
         LanguageOption = "Langue (Language) :";
         ThemeOption = "Thème :"; ThemeSystem = "Comme Windows"; ThemeLight = "Clair"; ThemeDark = "Sombre";
+        FaceOption = "Police de l'interface :"; FaceSizeOption = "Taille de l'interface :";
         FontOption = "Police des éléments :"; SizeOption = "Taille des éléments :"; Pixels = "{0} px";
         TrayOption = "Rester dans la zone de notification";
         LeaveOption = "Masquer en passant à un autre programme";
@@ -183,10 +184,14 @@ static partial class Strings
         LanguageTip = "La langue du programme. La changer redémarre {0}, qui se rouvre aussitôt.";
         ThemeTip = "Couleurs claires ou sombres. « {0} » suit le mode que Windows fixe pour les applications,\n"
             + "même quand il change pendant que le programme est ouvert.";
+        FaceTip = "La police du programme lui-même : boutons, libellés, options, le guide, les menus et les questions.\n"
+            + "Ce que vous avez copié et enregistré a la sienne, plus bas. La changer redémarre {0}.";
+        FaceSizeTip = "La taille du texte du programme lui-même, en pixels ; {0} par défaut. Les fenêtres grandissent\n"
+            + "avec le texte. Ce que vous avez copié et enregistré a sa taille, plus bas. La changer redémarre {1}.";
         FontTip = "La police de ce que vous avez copié et enregistré : les lignes des listes, l'élément vu en entier\n"
-            + "et le contenu d'un texte enregistré. Boutons et libellés restent tels quels. Elle change aussitôt.";
+            + "et le contenu d'un texte enregistré. Le reste du programme garde la police de l'interface. Elle change aussitôt.";
         SizeTip = "La taille de ce que vous avez copié et enregistré, en pixels ; {0} est le texte de Windows 11.\n"
-            + "Boutons et libellés restent tels quels. Elle change aussitôt.";
+            + "Le reste du programme garde la taille de l'interface. Elle change aussitôt.";
         HistoryTip = "La liste propose les textes et images copiés pendant que le programme est ouvert.\n"
             + "Ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé.\n"
             + "Désactivez-la si vous copiez des mots de passe depuis des programmes qui ne le font pas :\n"
@@ -294,7 +299,7 @@ static partial class Strings
                 + "qui en reçoit un prend aussi l'étoile, qui le garde. Chaque numéro appartient à un seul élément : "
                 + "donné à un autre, il passe à celui-ci.",
             "Le signe coloré à gauche dit ce qu'est l'élément : un texte, une adresse web, un texte enregistré. Les "
-                + "images montrent une miniature. À droite figure l'heure de la copie (le jour, si ce n'est pas "
+                + "images montrent une miniature. Sous l'élément, en petit à droite, figure l'heure de la copie (le jour, si ce n'est pas "
                 + "aujourd'hui) ou le jour de l'enregistrement.",
             "Pour ne pas mémoriser ce que vous allez copier, « " + Pause + " » est dans le menu du clic droit de la "
                 + "liste et dans celui de l'icône près de l'horloge : au-dessus de la colonne apparaît « en pause » "
@@ -409,7 +414,7 @@ static partial class Strings
                 + ", et leur donne d'autres touches.",
             "- " + HistoryTitle + " : s'il faut mémoriser ce que vous copiez, pendant combien de jours, le lien vers le "
                 + "dossier des fichiers et le bouton qui le nettoie aussitôt.",
-            "- " + ProgramTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la taille des éléments (en pixels ; elles changent aussitôt), s'il faut rester dans la zone de notification et se masquer en passant "
+            "- " + ProgramTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la taille de l'interface (boutons, options, ce guide : en pixels, elles redémarrent le programme) et celles des éléments (elles changent aussitôt), s'il faut rester dans la zone de notification et se masquer en passant "
                 + "à un autre programme, s'il faut démarrer avec Windows, et les boutons pour exporter et importer.",
 
             "# Exporter et importer",

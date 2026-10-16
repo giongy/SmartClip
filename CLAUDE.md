@@ -188,8 +188,8 @@ condiviso su GitHub).
   di altri; le altre due scorciatoie non possono essere modificatori + cifra (`NumberOf`). Impostazioni
   `QuickPaste` e `QuickKeys` (solo i modificatori). Si assegna e
   cambia da «Scorciatoia» nel menu del tasto destro (`ListNumbers`: «Nessuna» e i nove numeri, quello attuale
-  disattivato, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento a destra della riga, dopo
-  ora/data e prima della stellina (`NumberArea`), e nel menu del tray accanto al testo salvato
+  disattivato, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento a destra della prima linea della riga,
+  prima della stellina (`NumberArea`), e nel menu del tray accanto al testo salvato
   (`ShortcutKeyDisplayString`, che `MenuLook` scrive in grigio). Un numero è di una voce sola: `Texts.Number` lo
   toglie prima a chi lo aveva (`Free`). Dei salvati sta in `Saved\Numbers` (nome → numero, come `Dates`), dei
   copiati nei bit 3-6 del tipo del blocco (`NumberMask`), solo se fissati: dare un numero a una voce copiata le
@@ -244,9 +244,13 @@ condiviso su GitHub).
   esportano. L'importazione aggiunge: per i salvati con un nome già preso chiede una volta sola se sostituire;
   i copiati tornano con la loro ora e la stellina nel file del loro giorno (`Texts.Restore`), tranne quelli che
   l'elenco ha già; con la cronologia spenta non si importano.
-- Le voci stanno su una riga sola, con una spaziatura comoda (`RowPadding`) e l'ora a destra (`When`). Le righe
-  a due livelli, con sotto ora, caratteri e righe, sono state provate e scartate dall'utente: il numero di
-  caratteri non gli serve.
+- Ogni riga ha due linee (voluto dall'utente nella 3.9.3: con le voci a 14 px l'ora a destra si prendeva un pezzo
+  importante della riga): sopra segno, testo, numero e stellina (`Line`), sotto, piccola (`Look.CaptionFont`,
+  `CaptionShare` della dimensione delle voci) e grigia, l'ora o il giorno (`When`) che finisce all'estremità destra,
+  sotto stellina e numero (`Caption`). L'altezza è `EntryHeight`, con un margine stretto (`RowPadding`) perché la
+  seconda linea dà già aria. Le righe che non dicono quando (cartelle, salvati senza data) sono alte uguali con
+  tutto al centro; le immagini hanno il testo al centro della miniatura e l'ora in basso. Le righe a due livelli
+  di prima, con sotto anche caratteri e righe, erano state scartate dall'utente: il numero di caratteri non gli serve.
 - Anteprima (voluta dall'utente «con il mouse che resta sopra un po'»): il puntatore fermo `RestMs` su una voce
   copiata che la riga taglia (`Cut`) la mostra per intero in `Peek`, sotto la riga (`ShowPeek`, timer `rest`
   avviato da `Hover`). `Peek` non prende il primo piano e lascia passare il puntatore (`HTTRANSPARENT`), così
@@ -316,8 +320,19 @@ condiviso su GitHub).
   dentro un pannello (`Look.Frame`), le spunte sono interruttori disegnati (`Toggle`, restano `CheckBox`; voluti
   dall'utente al posto dei quadratini), l'attesa è una casella di testo
   numerica e la tastiera del server un interruttore (prima `NumericUpDown` e `ComboBox`, rimasti chiari).
-  Il carattere è `Look.TextFont`, usato da tutte le finestre: Segoe UI Variable Text dove c'è (Windows 11),
-  altrimenti quello dei messaggi di sistema, alla loro dimensione. Pulsanti ed etichette restano sempre così.
+  Il carattere è `Look.TextFont`, **uguale in tutte le finestre** (voluto dall'utente: pulsanti, opzioni, guida,
+  menu, domande; mai un carattere diverso per un singolo controllo, tranne le voci): vedi «Carattere
+  dell'interfaccia» sotto.
+- Carattere e dimensione dell'interfaccia (voluti dall'utente il 16/10/2026: la guida gli sembrava piccola accanto
+  alle voci, e voleva un carattere solo per tutto il programma, che «si distingua bene» da quello delle voci): in
+  «Programma», sotto il tema e separati da uno spazio, `faceButton` e `faceSizeButton` con menu come la lingua.
+  Caratteri: gli stessi delle voci (`FontNames`); dimensioni `Look.InterfaceSizes` in pixel a 96 dpi (12–16),
+  default 13 (`DefaultInterfaceSize`, scelto dall'utente; prima era 12, la dimensione dei messaggi di Windows).
+  Le finestre sono disegnate per 12 px (`DesignedSize`) e crescono con il testo: `Look.Zoom` è la scala dello
+  schermo per `InterfaceSize / DesignedSize`. Per questo si applicano **al riavvio**, come la lingua
+  (`ChangeInterface` → `Restart`): `Main` le legge con `UseSavedInterface` prima di creare la finestra
+  (`Look.UseInterfaceFont`), `TransferSettings` le scrive (`face`, `faceSize`). Impostazioni `InterfaceFont` e
+  `InterfaceSize` (i vecchi `Font` e `TextSize` del primo tentativo della 3.9.3 non si leggono più).
 - Carattere e dimensione delle voci (voluti dall'utente il 16/10/2026: il testo di ciò che si copia più grande,
   e «il classico font select con 11px, 12px…»; prima ho fatto ingrandire tutta l'interfaccia, ma l'utente la
   voleva com'era): in «Programma», sotto il tema, due pulsanti con menu come la lingua (`fontButton`,
@@ -330,15 +345,15 @@ condiviso su GitHub).
   valori sconosciuti tornano ai default. Tutto ciò che sta in una riga si misura da `Look.EntryFont`, non dal
   carattere della finestra.
 - Le finestre si costruiscono come disegnate e alla fine del costruttore `Scale(Look.Zoom)`, con
-  `AutoScaleMode.None` (vedi le trappole); `Look.Zoom` è la scala dello schermo. `Restart` (riavvio con
-  `/restart`) serve a `ChangeLanguage`.
+  `AutoScaleMode.None` (vedi le trappole); `Look.Zoom` è la scala dello schermo per quella del testo
+  dell'interfaccia. `Restart` (riavvio con `/restart`) serve a `ChangeLanguage` e `ChangeInterface`.
   Barra del titolo e barre di scorrimento scure non compaiono nelle immagini di `tests.exe shot`: per
   vederle c'è `tests.exe real <prefisso>`, che mostra le finestre un attimo e fotografa lo schermo.
   Forme arrotondate (l'utente trovava la finestra piatta e asettica, ma i colori vanno bene): ricerca, colonne
   e caselle stanno in un `Card` (bordo sottile, d'accento quando il contenuto ha il focus; `Look.Wrap`; attorno
   a una casella di testo invece, come in Windows 11, una riga d'accento sul fondo, `Card.Underline`), i
   pulsanti sono `RoundButton`, la riga selezionata è una forma arrotondata con una tacca d'accento e quella
-  sotto il puntatore si illumina (`Hover`, indice in `ListBox.Tag`, luce in `RowList.Glow`; `Look.DrawRow`). Le voci copiate mostrano a destra l'ora
+  sotto il puntatore si illumina (`Hover`, indice in `ListBox.Tag`, luce in `RowList.Glow`; `Look.DrawRow`). Le voci copiate mostrano sotto, a destra, l'ora
   (o il giorno, se non è oggi); sopra ogni colonna il numero di voci; una colonna vuota dice perché.
   La descrizione sotto il pulsante deve stare in due righe: è il motivo della larghezza (`ContentWidth`).
 

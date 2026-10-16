@@ -44,7 +44,7 @@ partial class MainForm : Form
     const int SavedWidth = 250, TitleHeight = 20;      // the column of the saved texts, and the title above each column
     const int MinColumn = 185;                         // the least a column can be dragged to
     const int GripHeight = 28;                         // of the mark between the columns, where they are dragged
-    const int RowPadding = 16;                         // added to the text height to get a row of the list: roomy
+    const int RowPadding = 8;                          // added to the two lines of an entry to get its row: half above, half below
     const int PictureLines = 5;                        // lines of text a picture is as tall as, to make room for its preview
     const int PreviewMargin = 4;                       // around the preview, inside its row
     const int RowHeight = 24;                          // distance between one option checkbox and the next
@@ -75,6 +75,7 @@ partial class MainForm : Form
     const string OldSettingsKey = @"Software\PasswordPaste";   // the name of the program up to version 1.2
     const string LanguageSetting = "Language";                 // read before the window exists: see SavedLanguage
     const string ThemeSetting = "Theme";                       // the same: see SavedTheme
+    const string FaceSetting = "InterfaceFont", FaceSizeSetting = "InterfaceSize";   // and see UseSavedInterface
     const int TrayTextLimit = 63;                              // the most a NotifyIcon accepts as its tooltip
 
     // Desktop, taskbar, Start menu and Alt+Tab switcher: never the intended target.
@@ -157,8 +158,11 @@ partial class MainForm : Form
     readonly List<ToolStripItem> traySaved = new List<ToolStripItem>();   // what the icon menu lists of the saved texts
     readonly RoundButton languageButton = new RoundButton();   // shows the language and opens the list of the others
     readonly RoundButton themeButton = new RoundButton();      // the same for the theme
+    readonly RoundButton faceButton = new RoundButton(), faceSizeButton = new RoundButton();   // for the font of the interface and its size
     readonly RoundButton fontButton = new RoundButton(), sizeButton = new RoundButton();   // and for the font of the entries and its size
     string language = Strings.Code;   // saved with the settings: another one only on the way to a restart
+    string face = Look.InterfaceFamily;   // the same for the font of the interface
+    int faceSize = Look.InterfaceSize;
 
     public MainForm() : this(false)
     {

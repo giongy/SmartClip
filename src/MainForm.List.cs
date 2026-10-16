@@ -77,7 +77,7 @@ partial class MainForm
             list.BorderStyle = BorderStyle.None;
             list.DrawMode = DrawMode.OwnerDrawVariable;
             list.Font = Look.EntryFont;   // the entries have a font of their own, chosen in the options
-            list.ItemHeight = list.Font.Height + RowPadding;
+            list.ItemHeight = EntryHeight;
             list.ContextMenuStrip = listMenu;
             list.MeasureItem += delegate(object sender, MeasureItemEventArgs e)
             {
@@ -344,29 +344,47 @@ partial class MainForm
             : entry.Time.Year == DateTime.Today.Year ? Strings.DayFormat : Strings.YearDayFormat, Strings.Culture);
     }
 
-    // What that takes of the row, with the air before it.
-    int WhenRoom(Entry entry)
+    // A row of the lists, but for a picture: the line of the entry, and the small one of when it was copied or
+    // saved under it. Every row has room for both, also those that do not say when.
+    static int EntryHeight
     {
-        string when = When(entry);
-        return when == null ? 0 : TimeGap + TextRenderer.MeasureText(when, Look.EntryFont, Size.Empty, TextFormatFlags.NoPadding).Width;
+        get { return Look.EntryFont.Height + Look.CaptionFont.Height + RowPadding; }
     }
 
-    // The part of a row left to its sign and its text: up to when it was copied or saved, which comes
-    // before the number and that before the star in a row of the copied entries.
+    // The first line of a row, where its sign, its text, its number and its star are. A row that does not say when,
+    // and a picture, which is taller, have them in the middle.
+    static Rectangle Line(Entry entry, Rectangle row)
+    {
+        if (entry.Picture || When(entry) == null) return row;
+        return new Rectangle(row.Left, row.Top + RowPadding / 2, row.Width, Look.EntryFont.Height);
+    }
+
+    // The small line at the bottom of a row, where when it was copied or saved ends at the right edge, under the
+    // star and the number.
+    static Rectangle Caption(Rectangle row)
+    {
+        int bottom = row.Bottom - RowPadding / 2;
+        return Rectangle.FromLTRB(row.Left, bottom - Look.CaptionFont.Height, row.Right - TimeGap, bottom);
+    }
+
+    // The part of the first line left to its sign and its text: up to the number, which comes before the star in a
+    // row of the copied entries.
     Rectangle Content(ListBox list, Entry entry, Rectangle row)
     {
+        Rectangle line = Line(entry, row);
         int left = row.Left + RowInset + GroupIndent * entry.Level;
-        int right = NumberArea(list, entry, row).Left - (entry.Number > 0 ? TimeGap : 0) - WhenRoom(entry);
-        return Rectangle.FromLTRB(left, row.Top, right, row.Bottom);
+        int right = NumberArea(list, entry, row).Left - (entry.Number > 0 ? TimeGap : 0);
+        return Rectangle.FromLTRB(left, line.Top, right, line.Bottom);
     }
 
-    // Where the number of an entry is drawn, near the right end of its row, so that the numbers make a column;
+    // Where the number of an entry is drawn, near the right end of its first line, so that the numbers make a column;
     // without one, an empty area where it would end.
     Rectangle NumberArea(ListBox list, Entry entry, Rectangle row)
     {
-        int right = row.Right - TimeGap - (list == recentList ? StarArea(row).Width + TimeGap : 0);
+        Rectangle line = Line(entry, row);
+        int right = row.Right - TimeGap - (list == recentList ? StarArea(line).Width + TimeGap : 0);
         int side = list.Font.Height, width = entry.Number > 0 ? side + NumberPadding : 0;
-        return new Rectangle(right - width, row.Top + (row.Height - side) / 2, width, side);
+        return new Rectangle(right - width, line.Top + (line.Height - side) / 2, width, side);
     }
 
     // What the sign of an entry takes at the left of its row, with the air after it.
@@ -430,12 +448,11 @@ partial class MainForm
         // How lit by the pointer it is; fully, the folder a dragged text would be dropped into.
         float glow = entry.IsGroup && dropGroup != null && Texts.SameName(entry.Name, dropGroup) ? 1 : ((RowList)list).Glow.Of(e.Index);
         Look.DrawRow(e.Graphics, e.Bounds, list.BackColor, selected, glow);
-        Rectangle label = Content(list, entry, e.Bounds);
+        Rectangle label = Content(list, entry, e.Bounds), line = Line(entry, e.Bounds);
         string when = When(entry);
         if (when != null)
-            TextRenderer.DrawText(e.Graphics, when, e.Font, Rectangle.FromLTRB(label.Right, label.Top, label.Right + WhenRoom(entry),
-                label.Bottom), Look.Muted, TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.SingleLine
-                | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, when, Look.CaptionFont, Caption(e.Bounds), Look.Muted, TextFormatFlags.VerticalCenter
+                | TextFormatFlags.Right | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
         if (entry.Number > 0)
         {
             // The digit that chooses it after the list hotkey, in a rounded frame in the accent colour.
@@ -453,7 +470,7 @@ partial class MainForm
         {
             // At the right end, the star that keeps the entry at the top: in colour if it does, faint on the
             // row where a click would light it.
-            Rectangle star = StarArea(e.Bounds);
+            Rectangle star = StarArea(line);
             if (entry.Pinned) Look.Draw(e.Graphics, Sign.Star, star, null);
             else if (selected || glow > 0)
                 Look.Draw(e.Graphics, Sign.Star, star, Look.Blend(list.BackColor, Look.Blend(Look.Muted, list.BackColor, 0.4f), selected ? 1 : glow));
@@ -480,7 +497,7 @@ partial class MainForm
         else
         {
             int side = e.Font.Height;
-            Look.Draw(e.Graphics, SignOf(entry), new Rectangle(label.Left, e.Bounds.Top + (e.Bounds.Height - side) / 2, side, side), null);
+            Look.Draw(e.Graphics, SignOf(entry), new Rectangle(label.Left, line.Top + (line.Height - side) / 2, side, side), null);
             label = Rectangle.FromLTRB(label.Left + SignRoom, label.Top, label.Right, label.Bottom);
         }
         // A folder stands out.
@@ -488,11 +505,11 @@ partial class MainForm
             TextFormatFlags.VerticalCenter | LineFlags);
     }
 
-    // Where the star of a copied entry is drawn, at the right end of its row.
-    Rectangle StarArea(Rectangle row)
+    // Where the star of a copied entry is drawn, at the right end of the first line of its row.
+    Rectangle StarArea(Rectangle line)
     {
         int side = Look.EntryFont.Height;
-        return new Rectangle(row.Right - TimeGap - side, row.Top + (row.Height - side) / 2, side, side);
+        return new Rectangle(line.Right - TimeGap - side, line.Top + (line.Height - side) / 2, side, side);
     }
 
     // Whether the pointer is on the star of a row, or in the little room around it.

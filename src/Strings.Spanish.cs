@@ -149,6 +149,7 @@ static partial class Strings
         AltCodeOption = "Códigos Alt para símbolos sin tecla";
         LanguageOption = "Idioma (Language):";
         ThemeOption = "Tema:"; ThemeSystem = "Como Windows"; ThemeLight = "Claro"; ThemeDark = "Oscuro";
+        FaceOption = "Fuente de la interfaz:"; FaceSizeOption = "Tamaño de la interfaz:";
         FontOption = "Fuente de las entradas:"; SizeOption = "Tamaño de las entradas:"; Pixels = "{0} px";
         TrayOption = "Seguir en el área de notificación";
         LeaveOption = "Ocultar al cambiar a otro programa";
@@ -177,10 +178,14 @@ static partial class Strings
         LanguageTip = "El idioma del programa. Al cambiarlo, {0} se reinicia y vuelve a abrirse enseguida.";
         ThemeTip = "Colores claros u oscuros. «{0}» sigue el modo que Windows fija para las aplicaciones,\n"
             + "incluso cuando cambia con el programa abierto.";
+        FaceTip = "La fuente del propio programa: botones, etiquetas, opciones, la guía, los menús y las preguntas.\n"
+            + "Lo que has copiado y guardado tiene la suya, más abajo. Cambiarla reinicia {0}.";
+        FaceSizeTip = "Lo grande que se escribe el propio programa, en píxeles; {0} por defecto. Las ventanas crecen\n"
+            + "con el texto. Lo que has copiado y guardado tiene su tamaño, más abajo. Cambiarlo reinicia {1}.";
         FontTip = "La fuente de lo que has copiado y guardado: las filas de las listas, la entrada vista entera\n"
-            + "y el contenido de un texto guardado. Botones y etiquetas siguen igual. Cambia enseguida.";
+            + "y el contenido de un texto guardado. El resto del programa mantiene la fuente de la interfaz. Cambia enseguida.";
         SizeTip = "Lo grande que se escribe lo que has copiado y guardado, en píxeles; {0} es el texto de Windows 11.\n"
-            + "Botones y etiquetas siguen igual. Cambia enseguida.";
+            + "El resto del programa mantiene el tamaño de la interfaz. Cambia enseguida.";
         HistoryTip = "La lista ofrece los textos e imágenes copiados mientras el programa está abierto.\n"
             + "Lo que los gestores de contraseñas marcan como privado no se recuerda.\n"
             + "Desactívala si copias contraseñas desde programas que no lo hacen: se leerían en\n"
@@ -287,7 +292,7 @@ static partial class Strings
                 + "y junto al texto guardado en el menú del icono; una entrada copiada que lo recibe también se lleva "
                 + "la estrella, que la conserva. Cada número es de una sola entrada: si se lo das a otra, pasa a ella.",
             "El signo de color de la izquierda dice qué es la entrada: un texto, una dirección web, un texto "
-                + "guardado. Las imágenes muestran una miniatura. A la derecha está la hora de la copia (el día, si "
+                + "guardado. Las imágenes muestran una miniatura. Debajo de la entrada, en pequeño a la derecha, está la hora de la copia (el día, si "
                 + "no es de hoy) o el día en que se guardó.",
             "Para no recordar lo que vas a copiar, «" + Pause + "» está en el menú del clic derecho de la lista y en "
                 + "el del icono junto al reloj: sobre la columna aparece «en pausa» hasta que eliges «" + Resume
@@ -401,7 +406,7 @@ static partial class Strings
                 + ", y les da otras teclas.",
             "- " + HistoryTitle + ": si recordar lo que copias, durante cuántos días, el enlace a la carpeta de los "
                 + "archivos y el botón que la limpia enseguida.",
-            "- " + ProgramTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño de las entradas (en píxeles; cambian enseguida), si seguir en el área de notificación y ocultarse al cambiar a otro "
+            "- " + ProgramTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño de la interfaz (botones, opciones, esta guía: en píxeles, reinician el programa) y los de las entradas (cambian enseguida), si seguir en el área de notificación y ocultarse al cambiar a otro "
                 + "programa, si iniciarse con Windows, y los botones para exportar e importar.",
 
             "# Exportar e importar",

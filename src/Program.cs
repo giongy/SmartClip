@@ -60,11 +60,12 @@ static class Program
             Strings.Use(MainForm.SavedLanguage());   // before any window: every text comes from here
             Native.SetProcessDPIAware();
             Look.Choose(MainForm.SavedTheme());   // the windows are built in its colours
+            MainForm.UseSavedInterface();         // and for the font of the interface
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Startup.Follow();
             MainForm form = new MainForm(hidden);
-            if (restarting) form.ShowOptions();   // the language was changed there
+            if (restarting) form.ShowOptions();   // the language or the font of the interface was changed there
             Application.Run(form);
         }
     }

@@ -190,6 +190,7 @@ static partial class Strings
     public static string AltCodeOption = "Alt codes for symbols with no key";
     public static string LanguageOption = "Language:";
     public static string ThemeOption = "Theme:", ThemeSystem = "Same as Windows", ThemeLight = "Light", ThemeDark = "Dark";
+    public static string FaceOption = "Font of the interface:", FaceSizeOption = "Size of the interface:";
     public static string FontOption = "Font of the entries:", SizeOption = "Size of the entries:", Pixels = "{0} px";
     public static string TrayOption = "Stay in the notification area (tray)";
     public static string LeaveOption = "Hide when switching to another program";
@@ -218,10 +219,14 @@ static partial class Strings
     public static string LanguageTip = "The language of the program. Changing it restarts {0}, which opens again at once.";
     public static string ThemeTip = "Light or dark colours. “{0}” follows the mode Windows sets for apps,\n"
         + "also when it changes while the program is open.";
+    public static string FaceTip = "The font of the program itself: buttons, labels, options, the guide, menus and questions.\n"
+        + "What you copied and saved has its own, below. Changing it restarts {0}.";
+    public static string FaceSizeTip = "How large the program itself is written, in pixels; {0} by default. The windows grow\n"
+        + "with the text. What you copied and saved has its own size, below. Changing it restarts {1}.";
     public static string FontTip = "The font of what you copied and saved: the rows of the lists, an entry shown whole\n"
-        + "and the content of a saved text. Buttons and labels stay as they are. It changes at once.";
+        + "and the content of a saved text. The rest of the program keeps the font of the interface. It changes at once.";
     public static string SizeTip = "How large what you copied and saved is written, in pixels; {0} is the text of Windows 11.\n"
-        + "Buttons and labels stay as they are. It changes at once.";
+        + "The rest of the program keeps the size of the interface. It changes at once.";
     public static string HistoryTip = "The list offers the texts and pictures copied while the program is open.\n"
         + "What password managers mark as private is not remembered.\n"
         + "Turn it off if you copy passwords from programs that do not: they would be\n"
@@ -328,7 +333,7 @@ static partial class Strings
                 + "text in the icon menu; a copied entry that gets one also gets the star, which keeps it. Each number "
                 + "belongs to one entry: given to another, it moves.",
             "The coloured sign on the left says what the entry is: a text, a web address, a saved text. Pictures "
-                + "show a thumbnail. On the right is the time of the copy (the day, if not today) or the day it was saved.",
+                + "show a thumbnail. Under the entry, small and on the right, is the time of the copy (the day, if not today) or the day it was saved.",
             "Not to remember what you are about to copy, “" + Pause + "” is in the right-click menu of the list and "
                 + "in that of the icon by the clock: the column says “paused” until you choose “" + Resume + "”. At "
                 + "the next start capturing is on again.",
@@ -435,7 +440,7 @@ static partial class Strings
                 + "gives them other keys.",
             "- " + HistoryTitle + ": whether to remember what you copy, for how many days, the link to the folder of "
                 + "the files and the button that cleans it at once.",
-            "- " + ProgramTitle + ": the language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of the entries (in pixels; they change at once), whether to stay in the notification area and hide when you switch "
+            "- " + ProgramTitle + ": the language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of the interface (buttons, options, this guide: in pixels, they restart the program) and those of the entries (they change at once), whether to stay in the notification area and hide when you switch "
                 + "to another program, whether to start with Windows, and the buttons to export and import.",
 
             "# Export and import",

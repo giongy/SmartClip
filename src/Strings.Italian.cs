@@ -149,6 +149,7 @@ static partial class Strings
         AltCodeOption = "Alt+codice per i simboli che la tastiera non ha";
         LanguageOption = "Lingua (Language):";
         ThemeOption = "Tema:"; ThemeSystem = "Come Windows"; ThemeLight = "Chiaro"; ThemeDark = "Scuro";
+        FaceOption = "Carattere dell'interfaccia:"; FaceSizeOption = "Dimensione dell'interfaccia:";
         FontOption = "Carattere delle voci:"; SizeOption = "Dimensione delle voci:"; Pixels = "{0} px";
         TrayOption = "Resta attivo nell'area di notifica (tray)";
         LeaveOption = "Nascondi passando a un altro programma";
@@ -177,10 +178,14 @@ static partial class Strings
         LanguageTip = "La lingua del programma. Cambiandola {0} si riavvia, e si riapre subito.";
         ThemeTip = "Colori chiari o scuri. «{0}» segue la modalità che Windows imposta per le app,\n"
             + "anche quando cambia a programma aperto.";
+        FaceTip = "Il carattere del programma stesso: pulsanti, etichette, opzioni, la guida, i menu e le domande.\n"
+            + "Ciò che hai copiato e salvato ha il suo, qui sotto. Cambiarlo riavvia {0}.";
+        FaceSizeTip = "Quanto è grande il testo del programma stesso, in pixel; {0} di default. Le finestre crescono\n"
+            + "con il testo. Ciò che hai copiato e salvato ha la sua dimensione, qui sotto. Cambiarla riavvia {1}.";
         FontTip = "Il carattere di ciò che hai copiato e salvato: le righe degli elenchi, la voce vista per intero\n"
-            + "e il contenuto di un testo salvato. Pulsanti ed etichette restano come sono. Cambia subito.";
+            + "e il contenuto di un testo salvato. Il resto del programma tiene il carattere dell'interfaccia. Cambia subito.";
         SizeTip = "Quanto è grande ciò che hai copiato e salvato, in pixel; {0} è il testo di Windows 11.\n"
-            + "Pulsanti ed etichette restano come sono. Cambia subito.";
+            + "Il resto del programma tiene la dimensione dell'interfaccia. Cambia subito.";
         HistoryTip = "L'elenco propone i testi e le immagini copiati mentre il programma è aperto.\n"
             + "Ciò che i gestori di password segnano come riservato non viene ricordato.\n"
             + "Disattivala se copi password da programmi che non lo fanno: nell'elenco si\n"
@@ -283,7 +288,7 @@ static partial class Strings
                 + "salvato nel menu dell'icona; una voce copiata che lo riceve prende anche la stellina, che la tiene. "
                 + "Ogni numero è di una voce sola: dato a un'altra, passa a lei.",
             "Il segno colorato a sinistra dice che cos'è la voce: un testo, un indirizzo web, un testo salvato. Le "
-                + "immagini mostrano una miniatura. A destra c'è l'ora della copia (il giorno, se non è di oggi) o il "
+                + "immagini mostrano una miniatura. Sotto la voce, in piccolo a destra, c'è l'ora della copia (il giorno, se non è di oggi) o il "
                 + "giorno del salvataggio.",
             "Per non ricordare quello che stai per copiare, «" + Pause + "» sta nel menu del tasto destro dell'elenco "
                 + "e in quello dell'icona vicino all'orologio: sopra la colonna compare «in pausa» finché non scegli «"
@@ -392,7 +397,7 @@ static partial class Strings
                 + ", e dà loro altri tasti.",
             "- " + HistoryTitle + ": se ricordare ciò che copi, per quanti giorni, il collegamento alla cartella dei "
                 + "file e il pulsante che la pulisce subito.",
-            "- " + ProgramTitle + ": la lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), il carattere e la dimensione delle voci (in pixel; cambiano subito), se restare attivo nell'area di notifica e nascondersi passando a un "
+            "- " + ProgramTitle + ": la lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), il carattere e la dimensione dell'interfaccia (pulsanti, opzioni, questa guida: in pixel, riavviano il programma) e quelli delle voci (cambiano subito), se restare attivo nell'area di notifica e nascondersi passando a un "
                 + "altro programma, se partire insieme a Windows, e i pulsanti per esportare e importare.",
 
             "# Esportare e importare",

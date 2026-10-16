@@ -93,8 +93,35 @@ partial class MainForm
         };
         Look.Style(themeMenu);
         Label themeLabel = PlacePicker(themeButton, ThemeName(Look.Chosen), Strings.ThemeOption, themeMenu, ref top);
+        // The font of the interface, each written in itself, and its size in pixels: the windows are built for
+        // them, so they apply from a new start. The one in use cannot be chosen again.
+        top += Gap;
+        ContextMenuStrip faceMenu = new ContextMenuStrip();
+        foreach (string each in Look.FontNames)
+        {
+            string name = each;   // a variable of its own for the delegate
+            faceMenu.Items.Add(Look.FontLabel(name), null, delegate { ChangeInterface(name, Look.InterfaceSize); }).Font =
+                new Font(name, Look.TextFont.SizeInPoints);
+        }
+        faceMenu.Opening += delegate
+        {
+            for (int i = 0; i < faceMenu.Items.Count; i++) faceMenu.Items[i].Enabled = Look.FontNames[i] != Look.InterfaceFamily;
+        };
+        Look.Style(faceMenu);
+        Label faceLabel = PlacePicker(faceButton, Look.FontLabel(Look.InterfaceFamily), Strings.FaceOption, faceMenu, ref top);
+        ContextMenuStrip faceSizeMenu = new ContextMenuStrip();
+        foreach (int each in Look.InterfaceSizes)
+        {
+            int size = each;
+            faceSizeMenu.Items.Add(string.Format(Strings.Pixels, size), null, delegate { ChangeInterface(Look.InterfaceFamily, size); })
+                .Enabled = size != Look.InterfaceSize;
+        }
+        Look.Style(faceSizeMenu);
+        Label faceSizeLabel = PlacePicker(faceSizeButton, string.Format(Strings.Pixels, Look.InterfaceSize), Strings.FaceSizeOption,
+            faceSizeMenu, ref top);
         // The font of the entries, each written in itself, and its size in pixels: they change at once. The one
         // in use cannot be chosen again.
+        top += Gap;
         ContextMenuStrip fontMenu = new ContextMenuStrip();
         foreach (string each in Look.FontNames)
         {
@@ -142,6 +169,9 @@ partial class MainForm
         Tip(Strings.AltCodeTip, altCodeBox);
         Tip(string.Format(Strings.LanguageTip, Program.AppName), languageLabel, languageButton);
         Tip(string.Format(Strings.ThemeTip, Strings.ThemeSystem), themeLabel, themeButton);
+        Tip(string.Format(Strings.FaceTip, Program.AppName), faceLabel, faceButton);
+        Tip(string.Format(Strings.FaceSizeTip, string.Format(Strings.Pixels, Look.DefaultInterfaceSize), Program.AppName),
+            faceSizeLabel, faceSizeButton);
         Tip(Strings.FontTip, fontLabel, fontButton);
         Tip(string.Format(Strings.SizeTip, string.Format(Strings.Pixels, Look.DefaultEntrySize)), sizeLabel, sizeButton);
         Tip(Strings.HistoryTip, historyBox);
@@ -465,6 +495,8 @@ partial class MainForm
         leaveBox.Checked = Transfer(key, save, "HideOnLeave", leaveBox.Checked);
         language = Transfer(key, save, LanguageSetting, language);   // read again by SavedLanguage, before the window
         Transfer(key, save, ThemeSetting, (int)Look.Chosen);         // read by SavedTheme, before the window
+        face = Transfer(key, save, FaceSetting, face);                // read by UseSavedInterface, before the window
+        faceSize = Transfer(key, save, FaceSizeSetting, faceSize);
         string entryFamily = Transfer(key, save, "EntryFont", Look.EntryFamily);
         int entrySize = Transfer(key, save, "EntrySize", Look.EntrySize);
         if (!save) UseEntryFont(entryFamily, entrySize);
@@ -548,6 +580,37 @@ partial class MainForm
         }
     }
 
+    // Takes the font of the interface saved among the settings, or the default one. Before the window exists,
+    // which is built for it.
+    public static void UseSavedInterface()
+    {
+        string name = null;
+        int size = 0;
+        try
+        {
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SettingsKey))
+            {
+                if (key != null)
+                {
+                    name = key.GetValue(FaceSetting) as string;
+                    object saved = key.GetValue(FaceSizeSetting);
+                    if (saved is int) size = (int)saved;
+                }
+            }
+        }
+        catch (Exception)
+        {
+            // unreadable: the default font
+        }
+        Look.UseInterfaceFont(name, size);
+    }
+
+    // Another font of the interface, or size: like the language, from a new start.
+    void ChangeInterface(string name, int size)
+    {
+        if (name != Look.InterfaceFamily || size != Look.InterfaceSize) Restart(delegate { face = name; faceSize = size; });
+    }
+
     static string ThemeName(Theme theme)
     {
         return theme == Theme.Light ? Strings.ThemeLight : theme == Theme.Dark ? Strings.ThemeDark : Strings.ThemeSystem;
@@ -568,10 +631,9 @@ partial class MainForm
         foreach (ListBox list in new ListBox[] { recentList, savedList })
         {
             list.Font = Look.EntryFont;
-            list.ItemHeight = list.Font.Height + RowPadding;
+            list.ItemHeight = EntryHeight;
         }
         fontButton.Text = Look.FontLabel(Look.EntryFamily);
-        fontButton.Font = new Font(Look.EntryFamily, Look.TextFont.SizeInPoints);
         sizeButton.Text = string.Format(Strings.Pixels, Look.EntrySize);
         Filter();
     }
@@ -603,7 +665,7 @@ partial class MainForm
         Close();
     }
 
-    // Started again after a change of language: back where the user was.
+    // Started again after a change of language or of the font of the interface: back where the user was.
     public void ShowOptions()
     {
         pageList.SelectedItem = programPage;
