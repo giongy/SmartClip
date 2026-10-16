@@ -1,21 +1,24 @@
 # Prepares the folder to import into Partner Center (Store listings > Import listings > Import folder), with the
 # texts of every language and their pictures:
 #
-#   powershell -ExecutionPolicy Bypass -File store\make-listing.ps1 <listing exported from Partner Center>.csv
+#   powershell -ExecutionPolicy Bypass -File store\make-listing.ps1 [<listing exported from Partner Center>.csv]
 #
 # The texts come from store\README.md, where each language has its section ("## English (en-US)" and so on) with,
 # in this order, code blocks for name, short description, description, features, search terms and what is new in
 # this version (that one optional), then the table of the screenshot captions; what all listings share is in
 # "## In tutte le schede". The rows of the file
 # come from the export, so that Partner Center gets back exactly the fields it knows. Writes
-# store\import\SmartClip-listing: the .csv and a copy of the pictures, at the paths the .csv names.
-# The .csv written before also serves as the export, once copied out of that folder, which is written anew.
+# store\upload\SmartClip-listing: the .csv and a copy of the pictures, at the paths the .csv names. Beside it
+# get-package.ps1 puts the package: store\upload holds all there is to give Partner Center.
+# Without an export, the .csv written the time before serves as one: it is read before the folder is written anew.
 
-param([Parameter(Mandatory = $true)][string]$Exported)
+param([string]$Exported)
 $ErrorActionPreference = 'Stop'
 $store = $PSScriptRoot
 $rootName = 'SmartClip-listing'   # the paths in the file start with the name of the folder that is imported
-$out = Join-Path $store "import\$rootName"
+$out = Join-Path $store "upload\$rootName"
+if (-not $Exported) { $Exported = Join-Path $out 'listing.csv' }
+if (-not (Test-Path $Exported)) { throw "$Exported not found: export the listing from Partner Center and pass it" }
 
 $readme = [IO.File]::ReadAllText((Join-Path $store 'README.md')) -replace "`r`n", "`n"
 $fence = '```'

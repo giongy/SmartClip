@@ -5,6 +5,11 @@ Il programma parla inglese (la lingua di default), spagnolo, francese e italiano
 con le sue schermate in [`images/<lingua>`](images). Si rifanno a programma chiuso con
 `tests\tests.exe store store\images <en|es|fr|it>`, una lingua alla volta.
 
+Ciò che si carica in Partner Center sta tutto in `store\upload` (fuori da git): il pacchetto `.msix`, scaricato
+da GitHub con `get-package.ps1`, e la cartella `SmartClip-listing` (CSV + immagini) scritta da `make-listing.ps1`.
+A ogni nuova versione i passi li fa la skill `partner-center` (`.claude\skills\partner-center`): basta chiedere a
+Claude di preparare Partner Center.
+
 ## Passi
 
 1. **Iscrizione** su [storedeveloper.microsoft.com](https://storedeveloper.microsoft.com) come sviluppatore
@@ -19,9 +24,10 @@ con le sue schermate in [`images/<lingua>`](images). Si rifanno a programma chiu
    - `Package/Identity/Name` ← il valore di **Package/Identity/Name**
    - `Package/Identity/Publisher` ← **Package/Identity/Publisher** (inizia con `CN=`)
    - `Package/Properties/PublisherDisplayName` ← **Package/Properties/PublisherDisplayName**
-4. **Pacchetto**: fai push (o avvia a mano il flusso *Release* da GitHub → Actions → *Run workflow*) e scarica
-   l'artifact **SmartClip-msix** dall'esecuzione: dentro c'è `SmartClip-<versione>.msix`. Ogni invio allo Store
-   vuole una versione più alta della precedente, con la quarta cifra a zero (`3.8.4` va bene).
+4. **Pacchetto**: fai push (o avvia a mano il flusso *Release* da GitHub → Actions → *Run workflow*), poi
+   `powershell -ExecutionPolicy Bypass -File store\get-package.ps1` scarica l'artifact **SmartClip-msix** in
+   `store\upload\SmartClip-<versione>.msix` (con `-Build` avvia prima il flusso e lo aspetta). Ogni invio allo
+   Store vuole una versione più alta della precedente, con la quarta cifra a zero (`3.8.4` va bene).
 5. **Prova prima di inviare** (facoltativo): con *Impostazioni → Sistema → Per sviluppatori → Modalità
    sviluppatore* attiva, dopo `build.cmd` e `powershell -ExecutionPolicy Bypass -File packaging\pack.ps1`:
    `Add-AppxPackage -Register packaging\out\layout\AppxManifest.xml`. Il programma compare nel menu Start come

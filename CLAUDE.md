@@ -62,10 +62,13 @@ condiviso su GitHub).
 - `store\` — la scheda dello Store pronta da copiare in Partner Center (`README.md`: passi, una scheda per lingua
   con descrizioni, caratteristiche, termini di ricerca e didascalie, note per i tester sull'interfaccia
   inglese) e le immagini (`images\<lingua>\`, da `tests.exe store store\images <lingua>` a programma chiuso;
-  `images\tile-300.png` è unica). `make-listing.ps1 <csv esportato da Partner Center>` scrive
-  `store\import\SmartClip-listing` (CSV compilato per tutte le lingue + immagini) da importare con *Store
-  listings → Import listings → Import folder*; come esportazione va bene anche il `listing.csv` scritto la volta
-  prima, copiato fuori da quella cartella (il CSV si legge con `TextFieldParser`: le descrizioni stanno su più righe): legge i testi da `README.md`, quindi i blocchi di codice di
+  `images\tile-300.png` è unica). Ciò che si carica in Partner Center sta tutto in `store\upload` (fuori da git,
+  voluto dall'utente: una cartella sola): `make-listing.ps1 [<csv esportato da Partner Center>]` scrive
+  `store\upload\SmartClip-listing` (CSV compilato per tutte le lingue + immagini) da importare con *Store
+  listings → Import listings → Import folder*; senza argomento riparte dal `listing.csv` scritto la volta prima
+  (il CSV si legge con `TextFieldParser`: le descrizioni stanno su più righe). `get-package.ps1` (`-Build` per
+  avviare il flusso) scarica lì accanto il `.msix` della versione di `Program.cs` dagli artifact di GitHub. I
+  passi di un invio li segue la skill `partner-center` (`.claude\skills\partner-center\SKILL.md`). `make-listing.ps1` legge i testi da `README.md`, quindi i blocchi di codice di
   ogni lingua vanno tenuti in quell'ordine (nome, descrizione breve, descrizione, caratteristiche, termini, novità della versione da riscrivere a ogni invio) e i
   titoli delle sezioni con il codice tra parentesi, «## English (en-US)». `PRIVACY.md` è l'informativa indicata allo Store: va tenuta vera (oggi il programma non
   usa la rete).

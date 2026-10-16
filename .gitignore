@@ -1,6 +1,6 @@
 # Built by build.cmd and tests\test.cmd. SmartClip.exe is published as a GitHub release, not kept here.
 SmartClip.exe
 tests/tests.exe
-# Written by packaging\pack.ps1 and store\make-listing.ps1.
+# Written by packaging/pack.ps1, store/make-listing.ps1 and store/get-package.ps1: store/upload is what goes to Partner Center.
 packaging/out/
-store/import/
+store/upload/
