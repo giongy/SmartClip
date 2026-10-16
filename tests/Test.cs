@@ -86,7 +86,7 @@ class Backdrop : Form
     protected override void OnPaintBackground(PaintEventArgs e)
     {
         using (System.Drawing.Drawing2D.LinearGradientBrush brush = new System.Drawing.Drawing2D.LinearGradientBrush(
-            ClientRectangle, Color.FromArgb(150, 178, 240), Color.FromArgb(196, 172, 236), 35f))
+            ClientRectangle, Color.FromArgb(150, 196, 200), Color.FromArgb(208, 224, 214), 35f))   // the teal of the icon, lighter
         {
             e.Graphics.FillRectangle(brush, ClientRectangle);
         }
