@@ -74,6 +74,7 @@ reaches the rest. On the right, **Saved**: the texts you saved under a name, whi
 | Resting the pointer on a copied entry | Shows it whole in a small box when its row cuts it: every line of a text, a larger picture. It goes away as the pointer moves on |
 | Dragging a saved text or a folder | Onto a folder, or onto a text inside one, moves it there; onto a text outside the folders, or below the last row, takes it out |
 | Dragging the gap between the columns | Gives the saved texts more room, or less; the width is remembered. A double click there restores it |
+| Resizing the window | The copied items take the room; size and position are remembered for the next start, never smaller than the starting size |
 | The star at the right end of a copied entry, or Ctrl+P | Keeps the entry at the top of its column, also beyond the days of the history, until you take the star off |
 | Ctrl+Shift+1 … Ctrl+Shift+9, in any program | Pastes the entry with that number into the active window, without opening SmartClip (see below) |
 | F1, or the **?** button | Opens the guide: everything the program does, by topic |

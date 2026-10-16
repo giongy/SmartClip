@@ -353,7 +353,10 @@ condiviso su GitHub).
   a finestra nascosta deve potersi leggere riaprendola).
 
 - La finestra è ridimensionabile (voluto dall'utente), mai più piccola di come nasce (`MinimumSize` in
-  `OnLoad`). La dimensione non si salva: a ogni avvio torna quella di default; si ricorda solo la posizione.
+  `OnLoad`). Dimensione e posizione si ricordano (la dimensione dal 16/10/2026, voluta dall'utente: prima tornava
+  ogni volta quella di default): impostazioni `Width` e `Height`, in pixel a 96 dpi come `SavedWidth`, applicate in
+  `OnLoad` (`savedSize`), mai sotto la minima né oltre lo schermo, sul quale la finestra viene riportata. Le
+  immagini dei test (`FillSample`) le ignorano, come la larghezza dei salvati.
   Allargandola cresce la colonna dei copiati (`Anchor`); le opzioni restano in alto a sinistra.
   Lo spazio tra le due colonne si trascina (`divider`, `PlaceColumns`; voluto dall'utente, a cui i salvati
   stavano stretti): la larghezza dei salvati si salva (`SavedWidth`, in pixel a 96 dpi) e si applica in

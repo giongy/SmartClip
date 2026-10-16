@@ -110,6 +110,7 @@ partial class MainForm : Form
     CheckBox capturing;                           // the hotkey whose new keys are awaited, or null
     readonly Panel divider = new Panel();         // the room between the columns: dragged, it moves their border
     int savedColumn = SavedWidth;                 // the width the user gave to the saved texts, in pixels at 96 dpi
+    Size savedSize;                               // the same for the window, empty until the user has had one
     int dragFrom, dragWidth;                      // where the pointer and the border were when a drag started
     bool shown;                                   // the window has its final scale: the columns can be placed
     readonly RoundButton newButton = new RoundButton(), saveButton = new RoundButton(), deleteButton = new RoundButton();
@@ -496,6 +497,15 @@ partial class MainForm : Form
     {
         base.OnLoad(e);
         MinimumSize = Size;   // as designed, at the scale of this screen
+        // The size the user left it at, never smaller than designed nor larger than the screen, which it stays on.
+        if (savedSize.Width > 0 && savedSize.Height > 0)
+        {
+            Rectangle screen = Screen.FromPoint(Location).WorkingArea;
+            Size = new Size(Math.Min(screen.Width, Math.Max(MinimumSize.Width, (int)(savedSize.Width * Zoom))),
+                Math.Min(screen.Height, Math.Max(MinimumSize.Height, (int)(savedSize.Height * Zoom))));
+            Location = new Point(Math.Max(screen.Left, Math.Min(Left, screen.Right - Width)),
+                Math.Max(screen.Top, Math.Min(Top, screen.Bottom - Height)));
+        }
         shown = true;
         PlaceColumns((int)(savedColumn * Zoom));
         FitStatus();

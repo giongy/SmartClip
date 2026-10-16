@@ -1112,6 +1112,10 @@ static class TestProgram
         entries.Add(new Entry(null, "https://github.com/giongy/SmartClip", morning.AddMinutes(-52)));
         typeof(MainForm).GetField("entries", hidden).SetValue(form, entries);
         typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
+        // The window and its columns as designed, not as the user left them: every picture the same.
+        typeof(MainForm).GetField("savedSize", hidden).SetValue(form, Size.Empty);
+        typeof(MainForm).GetField("savedColumn", hidden).SetValue(form,
+            typeof(MainForm).GetField("SavedWidth", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null));
     }
 
     // Something that looks like a screenshot: a window with a title bar on a coloured desktop.

@@ -470,6 +470,12 @@ partial class MainForm
         if (!save) UseEntryFont(entryFamily, entrySize);
         savedColumn = Transfer(key, save, "SavedWidth", savedColumn);   // applied when the window loads
 
+        // Window size, in pixels at 96 dpi like the column: applied when the window loads (see OnLoad). Zero if
+        // never saved.
+        Size size = !save ? Size.Empty : WindowState == FormWindowState.Normal ? Size : RestoreBounds.Size;
+        savedSize = new Size(Transfer(key, save, "Width", (int)Math.Round(size.Width / Zoom)),
+            Transfer(key, save, "Height", (int)Math.Round(size.Height / Zoom)));
+
         // Window position. Reading starts from a point outside every screen: it stays there, and is ignored,
         // if the registry holds nothing; the same happens if the screen of that time is no longer connected.
         Point corner = !save ? OffScreen : WindowState == FormWindowState.Normal ? Location : RestoreBounds.Location;
