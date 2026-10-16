@@ -65,7 +65,7 @@ static class Program
             Application.SetCompatibleTextRenderingDefault(false);
             Startup.Follow();
             MainForm form = new MainForm(hidden);
-            if (restarting) form.ShowOptions();   // the language or the font of the interface was changed there
+            if (restarting) form.ShowOptions();   // the language was changed there
             Application.Run(form);
         }
     }
