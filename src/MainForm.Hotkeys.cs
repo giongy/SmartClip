@@ -11,9 +11,15 @@ partial class MainForm
     public static string NameOf(Keys keys)
     {
         Keys code = keys & Keys.KeyCode;
-        string key = code >= Keys.D0 && code <= Keys.D9 ? (code - Keys.D0).ToString() : code.ToString();
+        string key = IsDigit(code) ? (code - Keys.D0).ToString() : code.ToString();
         return ((keys & Keys.Control) != 0 ? "Ctrl+" : "") + ((keys & Keys.Alt) != 0 ? "Alt+" : "")
             + ((keys & Keys.Shift) != 0 ? Strings.ShiftName + "+" : "") + key;
+    }
+
+    // A digit of the row above the letters.
+    static bool IsDigit(Keys code)
+    {
+        return code >= Keys.D0 && code <= Keys.D9;
     }
 
     // The keys that paste the entry with a number, and how the user reads them: "Ctrl+Shift+1".
@@ -45,7 +51,7 @@ partial class MainForm
     static bool Usable(Keys keys)
     {
         Keys code = keys & Keys.KeyCode;
-        bool key = code >= Keys.A && code <= Keys.Z || code >= Keys.D0 && code <= Keys.D9 || code >= Keys.F1 && code <= Keys.F12;
+        bool key = code >= Keys.A && code <= Keys.Z || IsDigit(code) || code >= Keys.F1 && code <= Keys.F12;
         return key && (keys & (Keys.Control | Keys.Alt)) != 0;
     }
 
@@ -75,9 +81,7 @@ partial class MainForm
         EndCapture();
         if (again || busy) return;
         capturing = box;
-        Native.UnregisterHotKey(Handle, HotkeyId);
-        Native.UnregisterHotKey(Handle, PickId);
-        HookNumbers();   // none, while capturing
+        Unhook();
         (box == hotkeyBox ? typeKeysButton : box == pickBox ? pickKeysButton : quickKeysButton).Text = Strings.PressKeys;
         status.Text = box == quickBox ? string.Format(Strings.PressQuickStatus, NameOf(DefaultQuickKeys | Keys.D1), Strings.DeleteKeyName)
             : string.Format(Strings.PressKeysStatus, Strings.DeleteKeyName);
@@ -130,7 +134,7 @@ partial class MainForm
     {
         Keys modifiers = keys == Keys.Delete ? DefaultQuickKeys : keys & Keys.Modifiers;
         Keys code = keys & Keys.KeyCode;
-        if (keys != Keys.Delete && !(code >= Keys.D0 && code <= Keys.D9 || code >= Keys.NumPad0 && code <= Keys.NumPad9)
+        if (keys != Keys.Delete && !(IsDigit(code) || code >= Keys.NumPad0 && code <= Keys.NumPad9)
             || !Usable(modifiers | Keys.D1))
         {
             status.Text = string.Format(Strings.QuickUnusable, NameOf(keys));
@@ -192,6 +196,14 @@ partial class MainForm
         return false;
     }
 
+    // Gives every hotkey of ours back to Windows.
+    void Unhook()
+    {
+        Native.UnregisterHotKey(Handle, HotkeyId);
+        Native.UnregisterHotKey(Handle, PickId);
+        for (int number = 1; number <= MaxNumber; number++) Native.UnregisterHotKey(Handle, NumberId + number);
+    }
+
     // Asks Windows for a hotkey; false if another program has it.
     bool Hook(int id, Keys keys)
     {
@@ -230,7 +242,7 @@ partial class MainForm
         pasting = true;
         try
         {
-            int delay = slowBox.Checked ? SlowKeyDelayMs : KeyDelayMs;
+            int delay = KeyDelay;
             TypeOutcome outcome = await Task.Run(delegate { return Typer.Paste(target, delay); });
             if (outcome == TypeOutcome.Done) Say(string.Format(Strings.Pasted, Shorten(entry.ToString()), WindowTitle(target)));
             else if (outcome == TypeOutcome.KeysHeld) status.Text = Strings.KeysHeld;

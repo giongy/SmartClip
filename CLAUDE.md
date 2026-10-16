@@ -39,9 +39,14 @@ condiviso su GitHub).
     giorni (`DayFormat`) e le virgolette (`Quote`) cambiano con la lingua; i nomi dei tasti Maiusc/Canc/Invio
     sono quelli delle tastiere di ogni lingua (`ShiftName`, usato anche da `MainForm.NameOf`).
   - `Look.cs` — colori chiari e scuri, caratteri (`Look.TextFont`, `StrongFont`, `TitleFont`, `EntryFont`), icone (`Draw`),
-    righe (`DrawRow`, `DrawTopic`), menu, suggerimenti e controlli disegnati: `Look`, `Card`, `RoundButton`, `Toggle`.
+    righe (`DrawRow`, `DrawTopic`), forme (`Rounded`, `Pill`), menu, suggerimenti e controlli disegnati: `Look`, `Card`,
+    `RoundButton`, `Toggle`. Anche `Window`, la base di tutte le finestre tranne `Peek`: carattere e colori
+    dell'interfaccia, barra del titolo (`Caption`), `Finish` alla fine del costruttore (la scala, vedi le trappole),
+    `NewLabel`, `PlaceOnScreen`, le misure dei pulsanti.
   - `Motion.cs` — ciò che si muove: `Fade` (un valore che va verso 0 o 1 a piccoli passi), `Glow` (la luce sotto
-    il puntatore nelle righe di un elenco), `RowList` (un `ListBox` con la sua `Glow`, che avvisa quando scorre),
+    il puntatore nelle righe di un elenco; `Glow.Row` è la riga sotto il puntatore), `RowList` (un `ListBox` con la
+    sua `Glow`, che avvisa quando scorre; `RowAt` dice la riga sotto un punto, `LightUnderPointer` basta agli
+    elenchi che non chiedono altro),
     `Entrance` (una pagina che sale al suo posto), `Rail` (la barra di scorrimento sottile).
   - `AskForm.cs` — le domande e gli avvisi, al posto di `MessageBox` (`AskForm.Ask`, `AskForm.Tell`).
   - `Peek.cs` — il riquadro che mostra una voce per intero (`Peek`), accanto alla sua riga.
@@ -344,7 +349,7 @@ condiviso su GitHub).
   rimisura le righe riempiendo di nuovo gli elenchi). Impostazioni `EntryFont` (nome) e `EntrySize` (pixel);
   valori sconosciuti tornano ai default. Tutto ciò che sta in una riga si misura da `Look.EntryFont`, non dal
   carattere della finestra.
-- Le finestre si costruiscono come disegnate e alla fine del costruttore `Scale(Look.Zoom)`, con
+- Le finestre si costruiscono come disegnate e alla fine del costruttore `Finish` (`Scale(Look.Zoom)`), con
   `AutoScaleMode.None` (vedi le trappole); `Look.Zoom` è la scala dello schermo per quella del testo
   dell'interfaccia. `Restart` (riavvio con `/restart`) serve a `ChangeLanguage` e `ChangeInterface`.
   Barra del titolo e barre di scorrimento scure non compaiono nelle immagini di `tests.exe shot`: per
@@ -353,7 +358,7 @@ condiviso su GitHub).
   e caselle stanno in un `Card` (bordo sottile, d'accento quando il contenuto ha il focus; `Look.Wrap`; attorno
   a una casella di testo invece, come in Windows 11, una riga d'accento sul fondo, `Card.Underline`), i
   pulsanti sono `RoundButton`, la riga selezionata è una forma arrotondata con una tacca d'accento e quella
-  sotto il puntatore si illumina (`Hover`, indice in `ListBox.Tag`, luce in `RowList.Glow`; `Look.DrawRow`). Le voci copiate mostrano sotto, a destra, l'ora
+  sotto il puntatore si illumina (`Hover`, indice e luce in `RowList.Glow`; `Look.DrawRow`). Le voci copiate mostrano sotto, a destra, l'ora
   (o il giorno, se non è oggi); sopra ogni colonna il numero di voci; una colonna vuota dice perché.
   La descrizione sotto il pulsante deve stare in due righe: è il motivo della larghezza (`ContentWidth`).
 
@@ -422,8 +427,8 @@ condiviso su GitHub).
 - WinForms con `AutoScaleMode.Dpi` scala **due volte** i controlli che ereditano il carattere, se il carattere
   della finestra è stato impostato prima della scala (provato con una finestra minima: un'etichetta di 120
   diventava 213 invece di 160 al 133%; anche un carattere identico a quello di default basta). A 100% non si
-  vedeva, perché il fattore era 1. Per questo le finestre usano `AutoScaleMode.None` e chiamano `Scale` da sole
-  alla fine del costruttore, che scala tutto una volta sola. `Form.Scale` non sposta una finestra di primo livello.
+  vedeva, perché il fattore era 1. Per questo le finestre (`Window`) usano `AutoScaleMode.None` e chiamano `Scale`
+  da sole alla fine del costruttore (`Finish`), che scala tutto una volta sola. `Form.Scale` non sposta una finestra di primo livello.
 - `Control.DrawToBitmap` (le immagini di `tests.exe shot`) disegna la barra di Windows degli elenchi sopra la
   `Rail`: le frecce che vi si vedono non ci sono a finestra vera (`real`).
 

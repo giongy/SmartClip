@@ -25,14 +25,7 @@ partial class MainForm
             Look.DrawTopic(e, pageList, shown.Text, (Sign)shown.Tag, (int)(NavInset * Zoom));
         };
         pageList.SelectedIndexChanged += delegate { ShowPage(); };
-        // The row under the pointer lights up.
-        pageList.MouseMove += delegate(object sender, MouseEventArgs e)
-        {
-            int row = RowAt(pageList, e.Location);
-            pageList.Cursor = row >= 0 ? Cursors.Hand : Cursors.Default;
-            pageList.Glow.Set(row);
-        };
-        pageList.MouseLeave += delegate { pageList.Glow.Set(-1); };
+        pageList.LightUnderPointer();
         optionControls.Add(Look.Wrap(pageList, ListPadding));
         pagePane.SetBounds(Edge + NavWidth + NavGap, Edge, PaneWidth, bottom - Edge);
         optionControls.Add(pagePane);
@@ -70,83 +63,27 @@ partial class MainForm
 
         top = Page(Strings.ProgramTitle, Sign.Options);
         programPage = page;
-        // The language: its button shows the one in use and opens the list, each by the name it gives itself.
-        ContextMenuStrip languageMenu = new ContextMenuStrip();
-        for (int i = 0; i < Strings.Codes.Length; i++)
-        {
-            string code = Strings.Codes[i];   // a variable of its own for the delegate
-            languageMenu.Items.Add(Strings.Names[i], null, delegate { ChangeLanguage(code); }).Enabled = code != Strings.Code;
-        }
-        Look.Style(languageMenu);
-        Label languageLabel = PlacePicker(languageButton, Strings.Names[Array.IndexOf(Strings.Codes, Strings.Code)],
-            Strings.LanguageOption, languageMenu, ref top);
-        // The theme, under it in the same way; the one in use cannot be chosen again.
-        ContextMenuStrip themeMenu = new ContextMenuStrip();
-        foreach (Theme each in new Theme[] { Theme.System, Theme.Light, Theme.Dark })
-        {
-            Theme theme = each;   // a variable of its own for the delegate
-            themeMenu.Items.Add(ThemeName(theme), null, delegate { ChangeTheme(theme); }).Tag = theme;
-        }
-        themeMenu.Opening += delegate
-        {
-            foreach (ToolStripItem item in themeMenu.Items) item.Enabled = (Theme)item.Tag != Look.Chosen;
-        };
-        Look.Style(themeMenu);
-        Label themeLabel = PlacePicker(themeButton, ThemeName(Look.Chosen), Strings.ThemeOption, themeMenu, ref top);
-        // The font of the interface, each written in itself, and its size in pixels: the windows are built for
-        // them, so they apply from a new start. The one in use cannot be chosen again.
+        // Each of these has a button that shows the choice in use and opens the others, where that one cannot be
+        // chosen again. The language by the name each gives itself; a font written in itself.
+        Func<string, Font> itself = delegate(string name) { return new Font(name, Look.TextFont.SizeInPoints); };
+        Label languageLabel = PlacePicker(languageButton, Strings.LanguageOption, Strings.Codes,
+            delegate(string code) { return Strings.Names[Array.IndexOf(Strings.Codes, code)]; },
+            delegate { return Strings.Code; }, ChangeLanguage, null, ref top);
+        // Unlike the language, the theme changes at once.
+        Label themeLabel = PlacePicker(themeButton, Strings.ThemeOption, new Theme[] { Theme.System, Theme.Light, Theme.Dark },
+            ThemeName, delegate { return Look.Chosen; }, ChangeTheme, null, ref top);
+        // The font of the interface and its size in pixels: the windows are built for them, so they apply from a new start.
         top += Gap;
-        ContextMenuStrip faceMenu = new ContextMenuStrip();
-        foreach (string each in Look.FontNames)
-        {
-            string name = each;   // a variable of its own for the delegate
-            faceMenu.Items.Add(Look.FontLabel(name), null, delegate { ChangeInterface(name, Look.InterfaceSize); }).Font =
-                new Font(name, Look.TextFont.SizeInPoints);
-        }
-        faceMenu.Opening += delegate
-        {
-            for (int i = 0; i < faceMenu.Items.Count; i++) faceMenu.Items[i].Enabled = Look.FontNames[i] != Look.InterfaceFamily;
-        };
-        Look.Style(faceMenu);
-        Label faceLabel = PlacePicker(faceButton, Look.FontLabel(Look.InterfaceFamily), Strings.FaceOption, faceMenu, ref top);
-        ContextMenuStrip faceSizeMenu = new ContextMenuStrip();
-        foreach (int each in Look.InterfaceSizes)
-        {
-            int size = each;
-            faceSizeMenu.Items.Add(string.Format(Strings.Pixels, size), null, delegate { ChangeInterface(Look.InterfaceFamily, size); })
-                .Enabled = size != Look.InterfaceSize;
-        }
-        Look.Style(faceSizeMenu);
-        Label faceSizeLabel = PlacePicker(faceSizeButton, string.Format(Strings.Pixels, Look.InterfaceSize), Strings.FaceSizeOption,
-            faceSizeMenu, ref top);
-        // The font of the entries, each written in itself, and its size in pixels: they change at once. The one
-        // in use cannot be chosen again.
+        Label faceLabel = PlacePicker(faceButton, Strings.FaceOption, Look.FontNames, Look.FontLabel,
+            delegate { return Look.InterfaceFamily; }, delegate(string name) { ChangeInterface(name, Look.InterfaceSize); }, itself, ref top);
+        Label faceSizeLabel = PlacePicker(faceSizeButton, Strings.FaceSizeOption, Look.InterfaceSizes, PixelsName,
+            delegate { return Look.InterfaceSize; }, delegate(int size) { ChangeInterface(Look.InterfaceFamily, size); }, null, ref top);
+        // The font of the entries and its size: they change at once.
         top += Gap;
-        ContextMenuStrip fontMenu = new ContextMenuStrip();
-        foreach (string each in Look.FontNames)
-        {
-            string name = each;   // a variable of its own for the delegate
-            fontMenu.Items.Add(Look.FontLabel(name), null, delegate { UseEntryFont(name, Look.EntrySize); }).Font =
-                new Font(name, Look.TextFont.SizeInPoints);
-        }
-        fontMenu.Opening += delegate
-        {
-            for (int i = 0; i < fontMenu.Items.Count; i++) fontMenu.Items[i].Enabled = Look.FontNames[i] != Look.EntryFamily;
-        };
-        Look.Style(fontMenu);
-        Label fontLabel = PlacePicker(fontButton, "", Strings.FontOption, fontMenu, ref top);
-        ContextMenuStrip sizeMenu = new ContextMenuStrip();
-        foreach (int each in Look.EntrySizes)
-        {
-            int size = each;
-            sizeMenu.Items.Add(string.Format(Strings.Pixels, size), null, delegate { UseEntryFont(Look.EntryFamily, size); }).Tag = size;
-        }
-        sizeMenu.Opening += delegate
-        {
-            foreach (ToolStripItem item in sizeMenu.Items) item.Enabled = (int)item.Tag != Look.EntrySize;
-        };
-        Look.Style(sizeMenu);
-        Label sizeLabel = PlacePicker(sizeButton, "", Strings.SizeOption, sizeMenu, ref top);
+        Label fontLabel = PlacePicker(fontButton, Strings.FontOption, Look.FontNames, Look.FontLabel,
+            delegate { return Look.EntryFamily; }, delegate(string name) { UseEntryFont(name, Look.EntrySize); }, itself, ref top);
+        Label sizeLabel = PlacePicker(sizeButton, Strings.SizeOption, Look.EntrySizes, PixelsName,
+            delegate { return Look.EntrySize; }, delegate(int size) { UseEntryFont(Look.EntryFamily, size); }, null, ref top);
         PlaceOption(trayBox, Strings.TrayOption, ref top);
         trayBox.Checked = true;
         PlaceOption(leaveBox, Strings.LeaveOption, ref top);
@@ -170,10 +107,9 @@ partial class MainForm
         Tip(string.Format(Strings.LanguageTip, Program.AppName), languageLabel, languageButton);
         Tip(string.Format(Strings.ThemeTip, Strings.ThemeSystem), themeLabel, themeButton);
         Tip(string.Format(Strings.FaceTip, Program.AppName), faceLabel, faceButton);
-        Tip(string.Format(Strings.FaceSizeTip, string.Format(Strings.Pixels, Look.DefaultInterfaceSize), Program.AppName),
-            faceSizeLabel, faceSizeButton);
+        Tip(string.Format(Strings.FaceSizeTip, PixelsName(Look.DefaultInterfaceSize), Program.AppName), faceSizeLabel, faceSizeButton);
         Tip(Strings.FontTip, fontLabel, fontButton);
-        Tip(string.Format(Strings.SizeTip, string.Format(Strings.Pixels, Look.DefaultEntrySize)), sizeLabel, sizeButton);
+        Tip(string.Format(Strings.SizeTip, PixelsName(Look.DefaultEntrySize)), sizeLabel, sizeButton);
         Tip(Strings.HistoryTip, historyBox);
         Tip(string.Format(Strings.KeepTip, Texts.Folder, Texts.MaxRecent, Texts.MaxPictures, MaxShown), keepLabel, keepBox);
         Tip(string.Format(Strings.FolderTip, Texts.Folder), folderLink);
@@ -193,8 +129,7 @@ partial class MainForm
         page.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
         page.Text = title;   // what its row says
         page.Tag = sign;
-        Label name = NewLabel(title, 0);
-        name.Left = 0;
+        Label name = NewLabel(title, 0, 0);
         name.Font = Look.TitleFont;
         page.Controls.Add(name);
         pagePane.Controls.Add(page);
@@ -211,41 +146,68 @@ partial class MainForm
     }
 
     // A row with something to choose from a menu: its description on the left, at the right edge of the page
-    // the button that shows the choice made and opens the menu. Returns the description, for its tooltip.
-    Label PlacePicker(RoundButton button, string choice, string text, ContextMenuStrip menu, ref int top)
+    // the button that shows the choice in use ('current') and opens the menu of all of them, each written by
+    // 'name', in a font of its own if 'font' gives one. The one in use cannot be chosen again. Returns the
+    // description, for its tooltip.
+    Label PlacePicker<T>(RoundButton button, string text, T[] choices, Func<T, string> name, Func<T> current, Action<T> choose,
+        Func<T, Font> font, ref int top)
     {
-        Label label = NewLabel(text, top + 5);
-        label.Left = 0;
+        ContextMenuStrip menu = new ContextMenuStrip();
+        foreach (T each in choices)
+        {
+            T choice = each;   // a variable of its own for the delegate
+            ToolStripItem item = menu.Items.Add(name(choice), null, delegate { choose(choice); });
+            item.Tag = choice;
+            if (font != null) item.Font = font(choice);
+        }
+        menu.Opening += delegate
+        {
+            foreach (ToolStripItem item in menu.Items) item.Enabled = !Equals(item.Tag, current());
+        };
+        Look.Style(menu);
+        Label label = NewLabel(text, 0, top + 5);
         page.Controls.Add(label);
-        PlaceButton(button, choice, delegate { menu.Show(button, 0, button.Height); }, PaneWidth - OptionButtonWidth, ref top);
+        PlaceButton(button, name(current()), delegate { menu.Show(button, 0, button.Height); }, PaneWidth - OptionButtonWidth, ref top);
         return label;
+    }
+
+    // A size as the options write it: "14 px".
+    static string PixelsName(int size)
+    {
+        return string.Format(Strings.Pixels, size);
     }
 
     // The wait before typing, in seconds: whatever is written in its box, kept within the limits.
     int Delay
     {
         get { return Number(delayBox, MinDelay, MaxDelay, DefaultDelay); }
-        set { delayBox.Text = Math.Max(MinDelay, Math.Min(MaxDelay, value)).ToString(); }
+        set { delayBox.Text = Clamp(value, MinDelay, MaxDelay).ToString(); }
     }
 
     // For how many days what is copied stays on disk; zero keeps it only in memory.
     int Retention
     {
         get { return Number(keepBox, 0, Texts.MaxKeepDays, Texts.DefaultKeepDays); }
-        set { keepBox.Text = Math.Max(0, Math.Min(Texts.MaxKeepDays, value)).ToString(); }
+        set { keepBox.Text = Clamp(value, 0, Texts.MaxKeepDays).ToString(); }
     }
 
     // How many of the last days the button that cleans the history leaves alone; zero is none.
     int Spared
     {
         get { return Number(cleanBox, 0, Texts.MaxKeepDays, 0); }
-        set { cleanBox.Text = Math.Max(0, Math.Min(Texts.MaxKeepDays, value)).ToString(); }
+        set { cleanBox.Text = Clamp(value, 0, Texts.MaxKeepDays).ToString(); }
     }
 
+    // What is written in a box of numbers, kept within the limits; 'fallback' if it is not a number.
     static int Number(TextBox box, int min, int max, int fallback)
     {
         int written;
-        return int.TryParse(box.Text, out written) ? Math.Max(min, Math.Min(max, written)) : fallback;
+        return int.TryParse(box.Text, out written) ? Clamp(written, min, max) : fallback;
+    }
+
+    static int Clamp(int value, int min, int max)
+    {
+        return Math.Max(min, Math.Min(max, value));
     }
 
     // Hands the two settings of the history to what keeps it, in memory and on disk.
@@ -262,8 +224,7 @@ partial class MainForm
     // Returns the description, for its tooltip.
     Label PlaceNumber(TextBox box, string text, int max, Action confirm, ref int top)
     {
-        Label label = NewLabel(text, top + 5);
-        label.Left = 0;
+        Label label = NewLabel(text, 0, top + 5);
         box.SetBounds(PaneWidth - NumberWidth, top, NumberWidth, NumberHeight);
         box.TextAlign = HorizontalAlignment.Center;
         box.MaxLength = max.ToString().Length;
@@ -546,63 +507,42 @@ partial class MainForm
         return value;
     }
 
-    // The language saved among the settings, or null. Read before the window exists: its texts come first.
-    public static string SavedLanguage()
+    // A setting read before the window exists, or null if there is none or it cannot be read: then the default.
+    static object EarlySetting(string name)
     {
         try
         {
             using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SettingsKey))
             {
-                return key == null ? null : key.GetValue(LanguageSetting) as string;
+                return key == null ? null : key.GetValue(name);
             }
         }
         catch (Exception)
         {
-            return null;   // unreadable: the default language
+            return null;
         }
+    }
+
+    // The language saved among the settings, or null. Read before the window exists: its texts come first.
+    public static string SavedLanguage()
+    {
+        return EarlySetting(LanguageSetting) as string;
     }
 
     // The theme saved among the settings; as Windows if there is none. Read before the window exists, which is
     // built in its colours.
     public static Theme SavedTheme()
     {
-        try
-        {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SettingsKey))
-            {
-                object theme = key == null ? null : key.GetValue(ThemeSetting);
-                return theme is int && Enum.IsDefined(typeof(Theme), (int)theme) ? (Theme)(int)theme : Theme.System;
-            }
-        }
-        catch (Exception)
-        {
-            return Theme.System;
-        }
+        object theme = EarlySetting(ThemeSetting);
+        return theme is int && Enum.IsDefined(typeof(Theme), (int)theme) ? (Theme)(int)theme : Theme.System;
     }
 
     // Takes the font of the interface saved among the settings, or the default one. Before the window exists,
     // which is built for it.
     public static void UseSavedInterface()
     {
-        string name = null;
-        int size = 0;
-        try
-        {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SettingsKey))
-            {
-                if (key != null)
-                {
-                    name = key.GetValue(FaceSetting) as string;
-                    object saved = key.GetValue(FaceSizeSetting);
-                    if (saved is int) size = (int)saved;
-                }
-            }
-        }
-        catch (Exception)
-        {
-            // unreadable: the default font
-        }
-        Look.UseInterfaceFont(name, size);
+        object size = EarlySetting(FaceSizeSetting);
+        Look.UseInterfaceFont(EarlySetting(FaceSetting) as string, size is int ? (int)size : 0);
     }
 
     // Another font of the interface, or size: like the language, from a new start.
@@ -634,7 +574,7 @@ partial class MainForm
             list.ItemHeight = EntryHeight;
         }
         fontButton.Text = Look.FontLabel(Look.EntryFamily);
-        sizeButton.Text = string.Format(Strings.Pixels, Look.EntrySize);
+        sizeButton.Text = PixelsName(Look.EntrySize);
         Filter();
     }
 
@@ -657,7 +597,7 @@ partial class MainForm
         }
         catch (Exception ex)
         {
-            status.Text = string.Format(Strings.Error, ex.Message);
+            ShowError(ex);
             return;
         }
         change();

@@ -69,9 +69,9 @@ partial class MainForm
         Look.Style((ToolStripDropDownMenu)numberItem.DropDown);
         Look.Style(listMenu);
 
-        foreach (ListBox each in new ListBox[] { recentList, savedList })
+        foreach (RowList each in new RowList[] { recentList, savedList })
         {
-            ListBox list = each;   // a variable of its own for the delegates below
+            RowList list = each;   // a variable of its own for the delegates below
             Look.Field(list);
             list.IntegralHeight = false;
             list.BorderStyle = BorderStyle.None;
@@ -99,7 +99,7 @@ partial class MainForm
             list.MouseDown += delegate(object sender, MouseEventArgs e)
             {
                 HidePeek();
-                int index = RowAt(list, e.Location);
+                int index = list.RowAt(e.Location);
                 if (e.Button == MouseButtons.Right && index >= 0) list.SelectedIndex = index;
                 // Windows announces the row taken by a click only when the button is released, after the
                 // click has been handled: without this the click would act on the entry selected before.
@@ -110,7 +110,7 @@ partial class MainForm
             // A click on the star of a copied entry does not choose it: it keeps it at the top, or lets it go.
             list.MouseClick += delegate(object sender, MouseEventArgs e)
             {
-                int index = RowAt(list, e.Location);
+                int index = list.RowAt(e.Location);
                 if (e.Button != MouseButtons.Left || index < 0) return;
                 if (OnStar(list, e.Location)) TogglePin((Entry)list.Items[index]);
                 else Accept(false);
@@ -119,12 +119,12 @@ partial class MainForm
             // Nor does it count on a folder, which the first click has already opened or closed.
             list.MouseDoubleClick += delegate(object sender, MouseEventArgs e)
             {
-                int index = RowAt(list, e.Location);
+                int index = list.RowAt(e.Location);
                 if (e.Button == MouseButtons.Left && index >= 0 && !OnStar(list, e.Location) && !((Entry)list.Items[index]).IsGroup)
                     Accept(true);
             };
             // The entry under the pointer lights up: a click would choose it.
-            list.MouseMove += delegate(object sender, MouseEventArgs e) { Hover(list, RowAt(list, e.Location)); };
+            list.MouseMove += delegate(object sender, MouseEventArgs e) { Hover(list, list.RowAt(e.Location)); };
             list.MouseLeave += delegate { Hover(list, -1); };
             list.MouseWheel += delegate { HidePeek(); };      // the rows move under it
             list.Resize += delegate { list.Invalidate(); };   // the rows are drawn up to the right edge
@@ -133,7 +133,7 @@ partial class MainForm
         rest.Tick += delegate
         {
             rest.Stop();
-            int row = recentList.Tag is int ? (int)recentList.Tag : -1;
+            int row = recentList.Glow.Row;
             if (peek.Visible) HidePeek();
             else if (row >= 0 && row < recentList.Items.Count && !listMenu.Visible && MouseButtons == MouseButtons.None
                 && recentList.RectangleToScreen(recentList.GetItemRectangle(row)).Contains(Cursor.Position))
@@ -145,8 +145,8 @@ partial class MainForm
         savedList.AllowDrop = true;
         savedList.MouseDown += delegate(object sender, MouseEventArgs e)
         {
-            int index = RowAt(savedList, e.Location);
-            grabbed = e.Button == MouseButtons.Left && index >= 0 ? (Entry)savedList.Items[index] : null;
+            int index = savedList.RowAt(e.Location);
+            grabbed =e.Button == MouseButtons.Left && index >= 0 ? (Entry)savedList.Items[index] : null;
             grabbedAt = e.Location;
         };
         savedList.MouseUp += delegate { grabbed = null; };
@@ -195,6 +195,27 @@ partial class MainForm
         // the selection must stay on the same entry, not jump back to the first.
         Entry selected = Selected;
         HidePeek();   // the row it belongs to may be about to move
+        // What the titles of the columns and the rows of the folders count: the saved texts, not the folders,
+        // those in a closed folder too. Counted once here rather than at every row drawn.
+        int copied = 0, saved = 0;
+        held.Clear();
+        foreach (Entry entry in entries)
+        {
+            if (entry.Name == null) copied++;
+            else if (!entry.IsGroup)
+            {
+                saved++;
+                for (string group = entry.Group; group != null; group = Texts.Parent(group))
+                {
+                    int count;
+                    held.TryGetValue(group, out count);
+                    held[group] = count + 1;
+                }
+            }
+        }
+        // Filled again for a change that keeps the selection (a copy, a folder opened), the columns stay where they
+        // were scrolled to; a new search starts from the top.
+        int recentTop = recentList.TopIndex, savedTop = savedList.TopIndex;
         recentList.BeginUpdate();
         savedList.BeginUpdate();
         recentList.Items.Clear();
@@ -225,19 +246,21 @@ partial class MainForm
             }
             ShowRow(entry.Name == null ? recentList : savedList, entry, selected);
         }
+        if (selected != null)
+        {
+            if (recentList.Items.Count > 0) recentList.TopIndex = Math.Min(recentTop, recentList.Items.Count - 1);
+            if (savedList.Items.Count > 0) savedList.TopIndex = Math.Min(savedTop, savedList.Items.Count - 1);
+        }
         recentList.EndUpdate();
         savedList.EndUpdate();
-        recentList.Tag = savedList.Tag = null;   // the rows changed under the pointer
-        ((RowList)recentList).Glow.Reset();
-        ((RowList)savedList).Glow.Reset();
+        recentList.Glow.Reset();   // the rows changed under the pointer
+        savedList.Glow.Reset();
         if (Selected == null) Pick(recentList.Items.Count > 0 ? recentList : savedList);
         ShowActions();
 
-        int copied = entries.FindAll(delegate(Entry entry) { return entry.Name == null; }).Count;
         recentCount.Text = recentList.Items.Count == copied ? copied.ToString()
             : string.Format(Strings.CountOf, recentList.Items.Count, copied);
-        // Of the saved ones the texts are counted, not the folders; those in a closed folder are there all the same.
-        int saved = entries.FindAll(delegate(Entry entry) { return entry.Name != null && !entry.IsGroup; }).Count, found = 0;
+        int found = 0;
         foreach (Entry entry in savedList.Items) if (!entry.IsGroup) found++;
         savedCount.Text = searching && found != saved ? string.Format(Strings.CountOf, found, saved) : saved.ToString();
         recentEmpty.Text = searching ? Strings.NoResults : !historyBox.Checked ? Strings.HistoryOffEmpty
@@ -268,25 +291,16 @@ partial class MainForm
     }
 
     // Remembers which row of a list the pointer is on, and has the two rows involved drawn again.
-    void Hover(ListBox list, int index)
+    void Hover(RowList list, int index)
     {
-        int old = list.Tag is int ? (int)list.Tag : -1;
-        if (old == index) return;
-        list.Tag = index;
+        if (list.Glow.Row == index) return;
         list.Cursor = index >= 0 ? Cursors.Hand : Cursors.Default;
-        ((RowList)list).Glow.Set(index);   // the row lights up gradually, the one left fades
+        list.Glow.Set(index);   // the row lights up gradually, the one left fades
         // What was in view belonged to the row the pointer left; a copied entry is shown whole if it rests there.
         if (!peekAsked || index < 0) HidePeek();
         if (index < 0 || list != recentList) return;
         rest.Interval = RestMs;
         rest.Start();
-    }
-
-    // The row of a list at a point, or -1: the list itself answers with the nearest one, also below the last.
-    static int RowAt(ListBox list, Point where)
-    {
-        int index = list.IndexFromPoint(where);
-        return index >= 0 && index < list.Items.Count && list.GetItemRectangle(index).Contains(where) ? index : -1;
     }
 
     // Shows whole the entry of a row, in a small window under it. A text its row already shows whole needs
@@ -322,8 +336,13 @@ partial class MainForm
     // is none for a text outside the folders and below the last row.
     string GroupAt(Point where)
     {
-        int row = RowAt(savedList, where);
-        Entry entry = row < 0 ? null : (Entry)savedList.Items[row];
+        int row = savedList.RowAt(where);
+        return row < 0 ? null : GroupOf((Entry)savedList.Items[row]);
+    }
+
+    // The folder an entry stands for or is in: a folder itself, the one of a saved text. Null for none.
+    static string GroupOf(Entry entry)
+    {
         return entry == null ? null : entry.IsGroup ? entry.Name : entry.Group;
     }
 
@@ -450,9 +469,7 @@ partial class MainForm
         Look.DrawRow(e.Graphics, e.Bounds, list.BackColor, selected, glow);
         Rectangle label = Content(list, entry, e.Bounds), line = Line(entry, e.Bounds);
         string when = When(entry);
-        if (when != null)
-            TextRenderer.DrawText(e.Graphics, when, Look.CaptionFont, Caption(e.Bounds), Look.Muted, TextFormatFlags.VerticalCenter
-                | TextFormatFlags.Right | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+        if (when != null) TextRenderer.DrawText(e.Graphics, when, Look.CaptionFont, Caption(e.Bounds), Look.Muted, RightFlags);
         if (entry.Number > 0)
         {
             // The digit that chooses it after the list hotkey, in a rounded frame in the accent colour.
@@ -478,10 +495,11 @@ partial class MainForm
         if (entry.IsGroup)
         {
             // On the right of a folder, how many texts it holds, those of the folders inside it too.
-            string count = entries.FindAll(delegate(Entry other) { return Texts.Within(other.Group, entry.Name); }).Count.ToString();
+            int texts;
+            held.TryGetValue(entry.Name, out texts);
+            string count = texts.ToString();
             int width = TextRenderer.MeasureText(e.Graphics, count, e.Font, Size.Empty, TextFormatFlags.NoPadding).Width;
-            TextRenderer.DrawText(e.Graphics, count, e.Font, label, Look.Muted, TextFormatFlags.VerticalCenter
-                | TextFormatFlags.Right | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+            TextRenderer.DrawText(e.Graphics, count, e.Font, label, Look.Muted, RightFlags);
             label.Width -= width + TimeGap;
         }
         if (entry.Preview != null)
@@ -490,7 +508,7 @@ partial class MainForm
             Size room = new Size(label.Width / 2, e.Bounds.Height - 2 * PreviewMargin);
             float scale = Math.Min((float)room.Width / entry.Preview.Width, (float)room.Height / entry.Preview.Height);
             Size size = new Size((int)(entry.Preview.Width * scale), (int)(entry.Preview.Height * scale));
-            e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
             e.Graphics.DrawImage(entry.Preview, label.Left, e.Bounds.Top + (e.Bounds.Height - size.Height) / 2, size.Width, size.Height);
             label = Rectangle.FromLTRB(label.Left + size.Width + 2 * PreviewMargin, label.Top, label.Right, label.Bottom);
         }
@@ -513,12 +531,10 @@ partial class MainForm
     }
 
     // Whether the pointer is on the star of a row, or in the little room around it.
-    bool OnStar(ListBox list, Point where)
+    bool OnStar(RowList list, Point where)
     {
-        int index = list.IndexFromPoint(where);
-        if (list != recentList || index < 0) return false;
-        Rectangle row = list.GetItemRectangle(index);
-        return row.Contains(where) && where.X >= StarArea(row).Left - TimeGap / 2;
+        int index = list.RowAt(where);
+        return list == recentList && index >= 0 && where.X >= StarArea(list.GetItemRectangle(index)).Left - TimeGap / 2;
     }
 
     // The numbers an entry can be given, in its menu: the one it has cannot be chosen, and beside each that
@@ -607,7 +623,7 @@ partial class MainForm
         }
         catch (Exception ex)   // the clipboard locked by another program, or a picture the history file no longer gives
         {
-            status.Text = string.Format(Strings.Error, ex.Message);
+            ShowError(ex);
             return false;
         }
         Say(string.Format(hotkeyBox.Checked && !entry.Picture ? Strings.OnClipboardOrType : Strings.OnClipboard,
@@ -654,8 +670,7 @@ partial class MainForm
             return;
         }
         // A new text is proposed for the folder the selection is in; any text can then be put elsewhere.
-        Entry near = Selected;
-        string group = source != null ? source.Group : near == null ? null : near.IsGroup ? near.Name : near.Group;
+        string group = source != null ? source.Group : GroupOf(Selected);
         using (EditForm edit = new EditForm(source, group, GroupNames()))
         {
             // Asked again, with what was written still there, if the name turns out to be taken.
@@ -717,8 +732,7 @@ partial class MainForm
     // folder is proposed inside the one the selection is in.
     void EditGroup(string old)
     {
-        Entry near = Selected;
-        string parent = old != null ? Texts.Parent(old) : near == null ? null : near.IsGroup ? near.Name : near.Group;
+        string parent = old != null ? Texts.Parent(old) : GroupOf(Selected);
         List<string> parents = GroupNames().FindAll(delegate(string group) { return !Texts.Within(group, old); });
         using (EditForm edit = new EditForm(old, parent, parents))
         {
@@ -756,10 +770,12 @@ partial class MainForm
     }
 
     // Shows or hides the texts of a folder.
+    // Nothing else changed: the lists are filled again from what they have, without reading the registry anew.
     void ToggleGroup(Entry group)
     {
-        Change(delegate { Texts.SetGroup(group.Name, !group.Open); });
-        Reload();
+        if (!Change(delegate { Texts.SetGroup(group.Name, !group.Open); })) return;
+        group.Open = !group.Open;
+        Filter();
     }
 
     void DeleteSelected()

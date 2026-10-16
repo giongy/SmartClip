@@ -31,6 +31,7 @@ class Entry
     public string FilePath;
     public long Offset, PngOffset;
     public int Length, PngLength;
+    string line;   // what the list shows of a copied text, worked out once: rows are drawn often, and texts can be long
 
     public Entry(string name, string text) : this(name, text, DateTime.Now)
     {
@@ -96,8 +97,10 @@ class Entry
         {
             if (Name != null) return IsGroup ? Texts.Leaf(Name) : Name;   // a folder by its own name, not its path
             if (Picture) return string.Format(Strings.PictureLabel, Width, Height);   // when it was copied is shown beside it
-            string line = Text.Trim().Replace('\r', ' ').Replace('\n', ' ').Replace('\t', ' ');
-            return line.Length > MaxPreview ? line.Substring(0, MaxPreview) + "…" : line;
+            if (line != null) return line;
+            string joined = Text.Trim().Replace('\r', ' ').Replace('\n', ' ').Replace('\t', ' ');
+            line = joined.Length > MaxPreview ? joined.Substring(0, MaxPreview) + "…" : joined;
+            return line;
         }
     }
 
@@ -161,6 +164,12 @@ static class Texts
     const CompareOptions Loose = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
 
     public static readonly List<Entry> Recent = new List<Entry>();   // newest first
+
+    // The path of one of the keys under the saved texts: dates, numbers, groups, places.
+    static string Below(string name)
+    {
+        return SavedKey + @"\" + name;
+    }
 
     // Called at every clipboard change.
     public static void Remember()
@@ -268,13 +277,22 @@ static class Texts
     static void Mark(Entry entry)
     {
         if (entry.FilePath == null) return;
-        try
+        OnDisk(delegate
         {
             using (FileStream stream = new FileStream(entry.FilePath, FileMode.Open, FileAccess.Write))
             {
                 stream.Position = entry.Offset;
                 stream.WriteByte(KindOf(entry));
             }
+        });
+    }
+
+    // Writes to the history files. If the disk refuses, what is in memory stays as it is: the list works on.
+    static void OnDisk(Action write)
+    {
+        try
+        {
+            write();
         }
         catch (IOException)
         {
@@ -308,7 +326,7 @@ static class Texts
     public static void Number(string name, int number)
     {
         Free(number);
-        using (RegistryKey numbers = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + NumbersKey))
+        using (RegistryKey numbers = Registry.CurrentUser.CreateSubKey(Below(NumbersKey)))
         {
             numbers.DeleteValue(name, false);
             if (number > 0) numbers.SetValue(name, number, RegistryValueKind.DWord);
@@ -325,7 +343,7 @@ static class Texts
             entry.Number = 0;
             Mark(entry);
         }
-        using (RegistryKey numbers = Registry.CurrentUser.OpenSubKey(SavedKey + @"\" + NumbersKey, true))
+        using (RegistryKey numbers = Registry.CurrentUser.OpenSubKey(Below(NumbersKey), true))
         {
             if (numbers == null) return;
             foreach (string name in numbers.GetValueNames())
@@ -466,7 +484,7 @@ static class Texts
     // Adds an entry to the file of its day. If the disk refuses, it simply stays in memory.
     static void Store(Entry entry)
     {
-        try
+        OnDisk(delegate
         {
             Directory.CreateDirectory(Folder);
             string file = Path.Combine(Folder, entry.Time.ToString(DayFormat, CultureInfo.InvariantCulture) + Extension);
@@ -495,13 +513,7 @@ static class Texts
                 entry.FilePath = file;
             }
             entry.Png = null;   // from now on read from the file when needed
-        }
-        catch (IOException)
-        {
-        }
-        catch (UnauthorizedAccessException)
-        {
-        }
+        });
     }
 
     // Wipes an entry from its history file: zeros over its content, and its record marked as deleted. The
@@ -509,7 +521,7 @@ static class Texts
     static void Erase(Entry entry)
     {
         if (entry.FilePath == null) return;
-        try
+        OnDisk(delegate
         {
             using (FileStream stream = new FileStream(entry.FilePath, FileMode.Open, FileAccess.Write))
             {
@@ -518,13 +530,7 @@ static class Texts
                 stream.Position = entry.Offset + HeaderSize;
                 stream.Write(new byte[entry.Length], 0, entry.Length);
             }
-        }
-        catch (IOException)
-        {
-        }
-        catch (UnauthorizedAccessException)
-        {
-        }
+        });
         entry.FilePath = null;
     }
 
@@ -555,27 +561,24 @@ static class Texts
     static void DeleteFiles(DateTime before)
     {
         if (!Directory.Exists(Folder)) return;
+        // The entries of the list by the name of their file, gathered once for all the files.
+        Dictionary<string, List<Entry>> held = new Dictionary<string, List<Entry>>(StringComparer.OrdinalIgnoreCase);
+        foreach (Entry entry in Recent)
+        {
+            if (entry.FilePath == null) continue;
+            List<Entry> same;
+            string name = Path.GetFileName(entry.FilePath);
+            if (!held.TryGetValue(name, out same)) held[name] = same = new List<Entry>();
+            same.Add(entry);
+        }
         foreach (string file in Directory.GetFiles(Folder, "*" + Extension))
         {
             DateTime day;
             if (!DateTime.TryParseExact(Path.GetFileNameWithoutExtension(file), DayFormat, CultureInfo.InvariantCulture,
                 DateTimeStyles.None, out day) || day >= before) continue;
-            string name = Path.GetFileName(file);
-            List<Entry> kept = Recent.FindAll(delegate(Entry entry)
-            {
-                return entry.FilePath != null && string.Equals(Path.GetFileName(entry.FilePath), name, StringComparison.OrdinalIgnoreCase);
-            });
-            try
-            {
-                if (kept.Count == 0) File.Delete(file);
-                else Shrink(file, kept);
-            }
-            catch (IOException)
-            {
-            }
-            catch (UnauthorizedAccessException)
-            {
-            }
+            List<Entry> kept;
+            if (!held.TryGetValue(Path.GetFileName(file), out kept)) OnDisk(delegate { File.Delete(file); });
+            else OnDisk(delegate { Shrink(file, kept); });
         }
     }
 
@@ -631,8 +634,11 @@ static class Texts
     // the pinned ones before the others.
     public static List<Entry> Load()
     {
-        List<Entry> entries = new List<Entry>(), grouped = new List<Entry>();
+        List<Entry> entries = new List<Entry>();
         List<string> known = Groups();
+        // The texts in each group, in the order of their names.
+        Dictionary<string, List<Entry>> grouped = new Dictionary<string, List<Entry>>(StringComparer.OrdinalIgnoreCase);
+        foreach (string group in known) grouped[group] = new List<Entry>();
         using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SavedKey))
         using (RegistryKey dates = key == null ? null : key.OpenSubKey(DatesKey))
         using (RegistryKey numbers = key == null ? null : key.OpenSubKey(NumbersKey))
@@ -656,8 +662,10 @@ static class Texts
                     if (number is int && (int)number > 0 && (int)number <= MainForm.MaxNumber) entry.Number = (int)number;
                     // A text whose group is gone is simply in none.
                     string group = places == null ? null : places.GetValue(name) as string;
-                    if (group != null && known.Exists(delegate(string other) { return SameName(other, group); })) entry.Group = group;
-                    (entry.Group == null ? entries : grouped).Add(entry);
+                    List<Entry> inside;
+                    if (group != null && grouped.TryGetValue(group, out inside)) entry.Group = group;
+                    else inside = entries;
+                    inside.Add(entry);
                 }
                 catch (CryptographicException)
                 {
@@ -670,7 +678,7 @@ static class Texts
                 header.IsGroup = true;
                 header.Open = groups == null || !Equals(groups.GetValue(group), 0);
                 entries.Add(header);
-                entries.AddRange(grouped.FindAll(delegate(Entry entry) { return SameName(entry.Group, group); }));
+                entries.AddRange(grouped[group]);
             }
         }
         entries.AddRange(Recent.FindAll(delegate(Entry entry) { return entry.Pinned; }));
@@ -721,7 +729,7 @@ static class Texts
     // Puts a saved text into a group, or into none.
     public static void Move(string name, string group)
     {
-        using (RegistryKey places = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + PlacesKey))
+        using (RegistryKey places = Registry.CurrentUser.CreateSubKey(Below(PlacesKey)))
         {
             places.DeleteValue(name, false);
             if (group != null) places.SetValue(name, group);
@@ -732,7 +740,7 @@ static class Texts
     // side by name. A group whose outer one is missing from the registry (written by hand) has it all the same.
     public static List<string> Groups()
     {
-        using (RegistryKey groups = Registry.CurrentUser.OpenSubKey(SavedKey + @"\" + GroupsKey))
+        using (RegistryKey groups = Registry.CurrentUser.OpenSubKey(Below(GroupsKey)))
         {
             List<string> paths = new List<string>();
             HashSet<string> seen = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
@@ -807,7 +815,7 @@ static class Texts
     // Creates a group, or opens and closes one that is there.
     public static void SetGroup(string name, bool open)
     {
-        using (RegistryKey groups = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + GroupsKey))
+        using (RegistryKey groups = Registry.CurrentUser.CreateSubKey(Below(GroupsKey)))
         {
             groups.SetValue(name, open ? 1 : 0, RegistryValueKind.DWord);
         }
@@ -824,8 +832,8 @@ static class Texts
     // that held it: its texts are too easily passwords to go along.
     public static void RenameGroup(string old, string name)
     {
-        using (RegistryKey groups = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + GroupsKey))
-        using (RegistryKey places = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + PlacesKey))
+        using (RegistryKey groups = Registry.CurrentUser.CreateSubKey(Below(GroupsKey)))
+        using (RegistryKey places = Registry.CurrentUser.CreateSubKey(Below(PlacesKey)))
         {
             foreach (string group in groups.GetValueNames())
             {
@@ -855,11 +863,16 @@ static class Texts
     }
 
     // Every word of the query must appear somewhere, in any order; case and accents do not count.
+    // The name of its folder finds a text too.
     public static bool Matches(Entry entry, string query)
     {
-        string where = entry.Group + "\n" + entry.Name + "\n" + entry.Text;   // the name of its folder finds a text too
         foreach (string word in query.Split((char[])null, StringSplitOptions.RemoveEmptyEntries))
-            if (Comparer.IndexOf(where, word, Loose) < 0) return false;
+            if (!Holds(entry.Group, word) && !Holds(entry.Name, word) && !Holds(entry.Text, word)) return false;
         return true;
+    }
+
+    static bool Holds(string where, string word)
+    {
+        return where != null && Comparer.IndexOf(where, word, Loose) >= 0;
     }
 }

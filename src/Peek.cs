@@ -10,7 +10,7 @@ class Peek : Form
     const int MaxWidth = 460, MaxHeight = 320;   // of what it shows, in pixels at 96 dpi
     const int Inset = 10, RowGap = 2;            // around what it shows, and between the row and the window
     const int MaxLines = 20, MaxLength = 2000;   // of a text: beyond these it is cut, and says so
-    const int FadeSteps = 6, FadeMs = 15;        // it comes into view gradually, in this many steps
+    const int FadeSteps = 6;                     // it comes into view gradually, in this many steps
     const TextFormatFlags Flags = TextFormatFlags.WordBreak | TextFormatFlags.TextBoxControl | TextFormatFlags.NoPrefix
         | TextFormatFlags.ExpandTabs;
 
@@ -27,7 +27,7 @@ class Peek : Form
         StartPosition = FormStartPosition.Manual;
         Font = Look.TextFont;
         DoubleBuffered = true;
-        appear.Interval = FadeMs;
+        appear.Interval = Fade.StepMs;
         appear.Tick += delegate
         {
             Opacity = Math.Min(1, Opacity + 1.0 / FadeSteps);

@@ -12,7 +12,7 @@ using System.Windows.Forms;
 // A value that goes towards its goal, between 0 and 1, a step at a time, redrawing its control at each.
 class Fade
 {
-    const int StepMs = 15;
+    public const int StepMs = 15;
     const float Step = 0.2f;   // five steps from one end to the other
     readonly Control owner;
     readonly Timer timer = new Timer();
@@ -24,7 +24,7 @@ class Fade
         timer.Interval = StepMs;
         timer.Tick += delegate
         {
-            Value = Math.Abs(goal - Value) <= Step ? goal : Value + Math.Sign(goal - Value) * Step;
+            Value = Toward(Value, goal);
             if (Value == goal) timer.Stop();
             owner.Invalidate();
         };
@@ -46,30 +46,36 @@ class Fade
         Value = goal;
         owner.Invalidate();
     }
+
+    // One step from a value towards its goal.
+    public static float Toward(float value, float goal)
+    {
+        return Math.Abs(goal - value) <= Step ? goal : value + Math.Sign(goal - value) * Step;
+    }
 }
 
 // The light under the pointer in the rows of a list: the row it comes to brightens, the one it left fades.
 class Glow
 {
-    const int StepMs = 15;
-    const float Step = 0.2f;
     readonly ListBox list;
     readonly Dictionary<int, float> levels = new Dictionary<int, float>();   // the rows that are lit, even a little
     readonly Timer timer = new Timer();
-    int row = -1;   // the one the pointer is on
 
     public Glow(ListBox list)
     {
         this.list = list;
-        timer.Interval = StepMs;
+        Row = -1;
+        timer.Interval = Fade.StepMs;
         timer.Tick += delegate { Advance(); };
         list.Disposed += delegate { timer.Dispose(); };
     }
 
+    public int Row { get; private set; }   // the one the pointer is on, or -1
+
     public void Set(int index)
     {
-        if (index == row) return;
-        row = index;
+        if (index == Row) return;
+        Row = index;
         if (index >= 0 && !levels.ContainsKey(index)) levels[index] = 0;
         timer.Start();
     }
@@ -79,7 +85,7 @@ class Glow
     {
         timer.Stop();
         levels.Clear();
-        row = -1;
+        Row = -1;
     }
 
     // How lit a row is: 0 not at all, 1 fully.
@@ -94,8 +100,7 @@ class Glow
         bool moving = false;
         foreach (int index in new List<int>(levels.Keys))
         {
-            float goal = index == row ? 1 : 0, level = levels[index];
-            level = Math.Abs(goal - level) <= Step ? goal : level + Math.Sign(goal - level) * Step;
+            float goal = index == Row ? 1 : 0, level = Fade.Toward(levels[index], goal);
             if (level == 0 && goal == 0) levels.Remove(index);
             else levels[index] = level;
             moving |= level != goal;
@@ -117,8 +122,45 @@ class RowList : ListBox
         Glow = new Glow(this);
     }
 
+    // Only the room below the last row is erased: each row paints its own background, and erasing under the rows
+    // first would flash for an instant every time the list is filled again.
+    void EraseBelowRows(IntPtr dc)
+    {
+        int top = Items.Count == 0 ? 0 : Math.Max(0, GetItemRectangle(Items.Count - 1).Bottom);
+        if (top >= ClientSize.Height) return;
+        using (Graphics g = Graphics.FromHdc(dc))
+        using (Brush back = new SolidBrush(BackColor))
+            g.FillRectangle(back, 0, top, ClientSize.Width, ClientSize.Height - top);
+    }
+
+    // The row at a point, or -1: IndexFromPoint answers with the nearest one, also below the last.
+    public int RowAt(Point where)
+    {
+        int index = IndexFromPoint(where);
+        return index >= 0 && index < Items.Count && GetItemRectangle(index).Contains(where) ? index : -1;
+    }
+
+    // For a list that needs nothing more: the row under the pointer lights up, and the pointer says a click
+    // would choose it.
+    public void LightUnderPointer()
+    {
+        MouseMove += delegate(object sender, MouseEventArgs e)
+        {
+            int row = RowAt(e.Location);
+            Cursor = row >= 0 ? Cursors.Hand : Cursors.Default;
+            Glow.Set(row);
+        };
+        MouseLeave += delegate { Glow.Set(-1); };
+    }
+
     protected override void WndProc(ref Message m)
     {
+        if (m.Msg == Native.WM_ERASEBKGND)
+        {
+            EraseBelowRows(m.WParam);
+            m.Result = (IntPtr)1;
+            return;
+        }
         base.WndProc(ref m);
         if ((m.Msg == Native.WM_PAINT || m.Msg == Native.WM_VSCROLL || m.Msg == Native.WM_MOUSEWHEEL) && Scrolled != null)
             Scrolled(this, EventArgs.Empty);
@@ -129,7 +171,7 @@ class RowList : ListBox
 static class Entrance
 {
     const int Rise = 24;   // where it starts from, below its place, in pixels at 96 dpi
-    const int Steps = 10, StepMs = 15;
+    const int Steps = 10;
     static readonly Dictionary<Control, Timer> playing = new Dictionary<Control, Timer>();
 
     public static void Play(Control control, int home)
@@ -144,7 +186,7 @@ static class Entrance
         if (!control.Visible || !control.IsHandleCreated) return;   // out of sight it is simply in its place
         int rise = (int)(Rise * Look.Zoom), step = 0;
         Timer timer = new Timer();
-        timer.Interval = StepMs;
+        timer.Interval = Fade.StepMs;
         timer.Tick += delegate
         {
             step++;
@@ -257,14 +299,9 @@ class Rail : Control
         float width = Px(Thin) + (Px(Wide) - Px(Thin)) * wide.Value;
         RectangleF bar = new RectangleF(thumb.Right - width, thumb.Top, width, thumb.Height);
         e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-        using (GraphicsPath shape = new GraphicsPath())
+        using (GraphicsPath shape = Look.Pill(bar))
         using (Brush fill = new SolidBrush(Look.Blend(back, Look.Muted, 0.55f + 0.35f * wide.Value)))
-        {
-            shape.AddArc(bar.Left, bar.Top, width, width, 180, 180);
-            shape.AddArc(bar.Left, bar.Bottom - width, width, width, 0, 180);
-            shape.CloseFigure();
             e.Graphics.FillPath(fill, shape);
-        }
     }
 
     protected override void OnMouseEnter(EventArgs e)

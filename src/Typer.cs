@@ -51,6 +51,7 @@ static class Typer
     static readonly Encoding Ansi =
         Encoding.GetEncoding(1252, EncoderFallback.ExceptionFallback, DecoderFallback.ExceptionFallback);
     static readonly int[] TypingKeys = BuildTypingKeys();
+    static readonly int[] Modifiers = { Native.VK_SHIFT, Native.VK_CONTROL, Native.VK_MENU, Native.VK_LWIN, Native.VK_RWIN };
     public static readonly Dictionary<char, Stroke> UsKeys = BuildUsKeys();
 
     // Types the text into the 'target' window and stops if it loses the foreground:
@@ -60,11 +61,7 @@ static class Typer
         TypeResult result = new TypeResult();
         int delay = options.KeyDelayMs;
         if (!WaitKeysReleased()) return result.Stop(TypeOutcome.KeysHeld);
-
-        uint processId;
-        IntPtr layout = Native.GetKeyboardLayout(Native.GetWindowThreadProcessId(target, out processId));
-        if (layout == IntPtr.Zero) layout = Native.GetKeyboardLayout(0);
-        Dictionary<char, Stroke> keys = options.UsKeyboard ? UsKeys : MapLayout(layout);
+        Dictionary<char, Stroke> keys = options.UsKeyboard ? UsKeys : MapLayout(LayoutOf(target));
 
         foreach (char c in text)
         {
@@ -112,12 +109,17 @@ static class Typer
     {
         if (!WaitKeysReleased()) return TypeOutcome.KeysHeld;
         if (Native.GetForegroundWindow() != target) return TypeOutcome.FocusLost;
-        uint processId;
-        IntPtr layout = Native.GetKeyboardLayout(Native.GetWindowThreadProcessId(target, out processId));
-        if (layout == IntPtr.Zero) layout = Native.GetKeyboardLayout(0);
         Stroke v;
-        int scan = MapLayout(layout).TryGetValue('v', out v) ? v.Scan : ScV;
+        int scan = MapLayout(LayoutOf(target)).TryGetValue('v', out v) ? v.Scan : ScV;
         return Chord(delay, ScControl, scan) ? TypeOutcome.Done : TypeOutcome.Blocked;
+    }
+
+    // The keyboard of the window, or that of this program if Windows does not say.
+    static IntPtr LayoutOf(IntPtr window)
+    {
+        uint processId;
+        IntPtr layout = Native.GetKeyboardLayout(Native.GetWindowThreadProcessId(window, out processId));
+        return layout != IntPtr.Zero ? layout : Native.GetKeyboardLayout(0);
     }
 
     // A key the user is still holding (typically those of a hotkey) would alter what gets typed:
@@ -135,8 +137,7 @@ static class Typer
 
     static bool AnyKeyHeld()
     {
-        int[] modifiers = { Native.VK_SHIFT, Native.VK_CONTROL, Native.VK_MENU, Native.VK_LWIN, Native.VK_RWIN };
-        foreach (int key in modifiers)
+        foreach (int key in Modifiers)
             if (Native.GetAsyncKeyState(key) < 0) return true;
         for (int key = '0'; key <= 'Z'; key++)   // the key codes of digits and letters match the characters
             if (Native.GetAsyncKeyState(key) < 0) return true;

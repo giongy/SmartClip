@@ -5,6 +5,55 @@ using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
+// What every window of the program has in common: the font and the colours of the interface, the title bar in
+// the colour of the window. Built as designed, then made larger at the end (Finish) by Look.Zoom, the scale of
+// the screen and of the text: left to Windows Forms, the controls that inherit the font would be scaled twice.
+class Window : Form
+{
+    public const int ButtonHeight = 26;    // of a button, in pixels at 96 dpi
+    protected const int ButtonWidth = 90;
+
+    protected Window()
+    {
+        SuspendLayout();
+        AutoScaleMode = AutoScaleMode.None;
+        Font = Look.TextFont;
+        BackColor = Look.Back;
+        ForeColor = Look.Ink;
+    }
+
+    // Called at the end of the constructor, once everything is placed as designed.
+    protected void Finish()
+    {
+        Scale(new SizeF(Look.Zoom, Look.Zoom));
+        ResumeLayout(false);
+        PerformLayout();
+    }
+
+    protected override void OnHandleCreated(EventArgs e)
+    {
+        base.OnHandleCreated(e);
+        Look.Caption(this);
+    }
+
+    protected static Label NewLabel(string text, int left, int top)
+    {
+        Label label = new Label();
+        label.Text = text;
+        label.AutoSize = true;
+        label.Location = new Point(left, top);
+        return label;
+    }
+
+    // Moves the window as near as it can to 'wanted' without leaving the working area of 'screen'.
+    protected void PlaceOnScreen(Point wanted, Screen screen)
+    {
+        Rectangle area = screen.WorkingArea;
+        Location = new Point(Math.Max(area.Left, Math.Min(wanted.X, area.Right - Width)),
+            Math.Max(area.Top, Math.Min(wanted.Y, area.Bottom - Height)));
+    }
+}
+
 // A checkbox drawn as a switch in the colours of the window: the system one cannot be coloured. The knob is
 // on the right, on the accent colour, while it is on; it slides there when it changes, and grows a little
 // under the pointer, as the switches of Windows 11 do.
@@ -58,14 +107,11 @@ class Toggle : CheckBox
         float on = knob.Value, size = box.Height - 2 * KnobInset, grown = size + (Enabled ? 2 * lit.Value : 0);
         float x = box.Left + KnobInset + size / 2 + on * (box.Width - 2 * KnobInset - size), y = box.Top + box.Height / 2f;
         bool ring = Focused && ShowFocusCues;
-        using (GraphicsPath shape = new GraphicsPath())
+        using (GraphicsPath shape = Look.Pill(box))
         using (Brush fill = new SolidBrush(Look.Blend(Look.Well, Look.Accent, on)))
         using (Pen edge = new Pen(ring ? Look.Ink : Look.Blend(Look.Border, Look.Accent, on), ring ? 2 : 1))
         using (Brush dot = new SolidBrush(Look.Blend(Look.Muted, Color.White, on)))
         {
-            shape.AddArc(box.Left, box.Top, box.Height, box.Height, 90, 180);
-            shape.AddArc(box.Right - box.Height, box.Top, box.Height, box.Height, 270, 180);
-            shape.CloseFigure();
             g.FillPath(fill, shape);
             g.DrawPath(edge, shape);
             g.FillEllipse(dot, x - grown / 2, y - grown / 2, grown, grown);
@@ -121,7 +167,6 @@ class Card : Panel
 class RoundButton : Button
 {
     const int SignSize = 14, SignGap = 6;   // in pixels at 96 dpi, like the height the button is designed for
-    const int DesignHeight = 26;
     bool hover;
     readonly Fade lit;   // the pointer brightens it gradually, and the brightness fades when it leaves
     Sign? sign;
@@ -181,7 +226,7 @@ class RoundButton : Button
         const TextFormatFlags flags = TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix
             | TextFormatFlags.NoPadding;
         Color ink = Enabled ? ForeColor : Look.Blend(Look.Muted, Parent.BackColor, 0.5f);
-        float scale = (float)Height / DesignHeight;
+        float scale = (float)Height / Window.ButtonHeight;
         int side = sign.HasValue ? (int)(SignSize * scale) : 0;
         int gap = sign.HasValue && Text.Length > 0 ? (int)(SignGap * scale) : 0;   // a sign alone stays in the middle
         int text = TextRenderer.MeasureText(g, Text, Font, Size.Empty, flags).Width, left = (Width - side - gap - text) / 2;
@@ -262,11 +307,8 @@ static class Look
     public static string EntryFamily { get; private set; }     // one of FontNames
     public static int EntrySize { get; private set; }          // one of EntrySizes
 
-    // The fonts that can be chosen: those of Families that Windows has.
-    public static string[] FontNames
-    {
-        get { return Array.FindAll(Families, delegate(string name) { return Has(name); }); }
-    }
+    // The fonts that can be chosen: those of Families that Windows has. Looked for once: each try makes a font.
+    public static readonly string[] FontNames = Array.FindAll(Families, Has);
 
     // A font as the options name it: Segoe UI Variable without the name of its face for text.
     public static string FontLabel(string name)
@@ -297,7 +339,7 @@ static class Look
         if (Array.IndexOf(InterfaceSizes, size) < 0) size = DefaultInterfaceSize;
         InterfaceFamily = name;
         InterfaceSize = size;
-        float points = size * 72f / 96;
+        float points = Points(size);
         TextFont = new Font(name, points);
         StrongFont = Heavy(name, points, false);
         TitleFont = Heavy(name, points * TitleGrowth, true);
@@ -310,10 +352,16 @@ static class Look
         if (Array.IndexOf(EntrySizes, size) < 0) size = DefaultEntrySize;
         EntryFamily = name;
         EntrySize = size;
-        float points = size * 72f / 96;   // pixels at 96 dpi: Windows makes them larger with the screen
+        float points = Points(size);
         EntryFont = new Font(name, points);
         StrongEntryFont = Heavy(name, points, false);
-        CaptionFont = new Font(name, (float)Math.Round(size * CaptionShare) * 72f / 96);
+        CaptionFont = new Font(name, Points((int)Math.Round(size * CaptionShare)));
+    }
+
+    // The size of a font in points, from pixels at 96 dpi: Windows makes it larger with the screen.
+    static float Points(int pixels)
+    {
+        return pixels * 72f / 96;
     }
 
     // The heavier face of a family: those of Segoe UI Variable (the Display one for titles), the semibold face
@@ -324,7 +372,6 @@ static class Look
             : Installed(family + " Semibold", points);
         return found ?? new Font(family, points, FontStyle.Bold);
     }
-
 
     // A font by name, if Windows has it; otherwise null.
     static Font Installed(string name, float size)
@@ -355,7 +402,6 @@ static class Look
         UseEntryFont(null, DefaultEntrySize);
         Use(WindowsDark());
     }
-
 
     // Takes the light or the dark colours. Called by itself at the start; the checks call it to take pictures.
     public static void Use(bool dark)
@@ -500,6 +546,26 @@ static class Look
         return path;
     }
 
+    // A shape with round ends: lying if it is wider than tall, standing otherwise.
+    public static GraphicsPath Pill(RectangleF area)
+    {
+        GraphicsPath path = new GraphicsPath();
+        if (area.Width >= area.Height)
+        {
+            float side = area.Height;
+            path.AddArc(area.Left, area.Top, side, side, 90, 180);
+            path.AddArc(area.Right - side, area.Top, side, side, 270, 180);
+        }
+        else
+        {
+            float side = area.Width;
+            path.AddArc(area.Left, area.Top, side, side, 180, 180);
+            path.AddArc(area.Left, area.Bottom - side, side, side, 0, 180);
+        }
+        path.CloseFigure();
+        return path;
+    }
+
     // The background of a row of a list, as Windows 11 draws it: the selected one a rounded shape with a short
     // mark in the accent colour on its left, the one under the pointer a fainter shape, which comes and goes
     // with 'glow' (see Glow).
@@ -513,15 +579,10 @@ static class Look
         using (Brush fill = new SolidBrush(selected ? Selected : Blend(back, Soft, glow)))
             g.FillPath(fill, shape);
         if (!selected) return;
-        float width = 3 * Zoom, height = row.Height * MarkShare, top = row.Top + (row.Height - height) / 2;
-        using (GraphicsPath mark = new GraphicsPath())
+        float height = row.Height * MarkShare;
+        using (GraphicsPath mark = Pill(new RectangleF(row.Left + 3, row.Top + (row.Height - height) / 2, 3 * Zoom, height)))
         using (Brush accent = new SolidBrush(Accent))
-        {
-            mark.AddArc(row.Left + 3, top, width, width, 180, 180);
-            mark.AddArc(row.Left + 3, top + height - width, width, width, 0, 180);
-            mark.CloseFigure();
             g.FillPath(accent, mark);
-        }
     }
 
     // A subject in a column of subjects (the guide, the pages of the options): its sign if it has one, then
@@ -758,9 +819,7 @@ static class Look
 
     static void Corners(ToolStripDropDownMenu menu)
     {
-        int round = Native.DWMWCP_ROUNDSMALL, edge = ColorTranslator.ToWin32(Border);
-        roundedMenus = Native.DwmSetWindowAttribute(menu.Handle, Native.DWMWA_WINDOW_CORNER_PREFERENCE, ref round, sizeof(int)) == 0
-            && Native.DwmSetWindowAttribute(menu.Handle, Native.DWMWA_BORDER_COLOR, ref edge, sizeof(int)) == 0;
+        roundedMenus = Round(menu.Handle, Native.DWMWCP_ROUNDSMALL);
     }
 
     class MenuLook : ToolStripProfessionalRenderer
@@ -847,8 +906,14 @@ static class Look
     // refuses: the window then draws an edge of its own.
     public static bool Round(Form form)
     {
-        int round = Native.DWMWCP_ROUND, edge = ColorTranslator.ToWin32(Border);
-        return Native.DwmSetWindowAttribute(form.Handle, Native.DWMWA_WINDOW_CORNER_PREFERENCE, ref round, sizeof(int)) == 0
-            && Native.DwmSetWindowAttribute(form.Handle, Native.DWMWA_BORDER_COLOR, ref edge, sizeof(int)) == 0;
+        return Round(form.Handle, Native.DWMWCP_ROUND);
+    }
+
+    // The same for a window by its handle, with corners as round as 'corners' asks.
+    static bool Round(IntPtr window, int corners)
+    {
+        int edge = ColorTranslator.ToWin32(Border);
+        return Native.DwmSetWindowAttribute(window, Native.DWMWA_WINDOW_CORNER_PREFERENCE, ref corners, sizeof(int)) == 0
+            && Native.DwmSetWindowAttribute(window, Native.DWMWA_BORDER_COLOR, ref edge, sizeof(int)) == 0;
     }
 }

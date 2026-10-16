@@ -1,17 +1,15 @@
 using System;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 // The window with the guide: what the program does, one subject at a time, chosen from the column on the
 // left. It stays open beside the main window, so that it can be read while trying things out.
-class HelpForm : Form
+class HelpForm : Window
 {
     const int Edge = 12, TextWidth = 520, TextHeight = 470;   // in pixels at 96 dpi
     const int TopicsWidth = 190, Gap = 10;     // the column of the subjects, and the room between it and the text
     const int TopicPadding = 14, TopicInset = 12;   // added to the text height to get a subject's row; text from its left
-    const int ButtonWidth = 90, ButtonHeight = 26;
-    const int TextPadding = 10;                // between the rounded edge and the text
+    const int TextPadding = 10;              // between the rounded edge and the text
     const int BulletIndent = 14, KeyColumn = 120;   // where the text of a point starts, and that of a key
     const string Heading = "# ", Bullet = "- ";    // how a line of the guide says what it is
     const char KeyEnd = '\t';                       // in a line that explains a key, between the key and what it does
@@ -26,19 +24,12 @@ class HelpForm : Form
 
     public HelpForm()
     {
-        SuspendLayout();
-        // Built as designed, then made larger at the end by Look.Zoom, the scale of the screen and of the text: left to
-        // Windows Forms, the controls that inherit the font would be scaled twice.
-        AutoScaleMode = AutoScaleMode.None;
-        Font = Look.TextFont;
         Text = string.Format(Strings.HelpTitle, Program.AppName);
         MaximizeBox = false;
         MinimizeBox = false;
         ShowInTaskbar = false;
         ShowIcon = false;
         StartPosition = FormStartPosition.Manual;   // placed over its owner when it loads; it stays above it
-        BackColor = Look.Back;
-        ForeColor = Look.Ink;
 
         // On the left the subjects, drawn like the rows of the main list; the arrows move among them.
         topics.BorderStyle = BorderStyle.None;
@@ -56,15 +47,7 @@ class HelpForm : Form
                     (int)(TopicInset * Look.Zoom));
         };
         topics.SelectedIndexChanged += delegate { Write(); };
-        // The row under the pointer lights up.
-        topics.MouseMove += delegate(object sender, MouseEventArgs e)
-        {
-            int index = topics.IndexFromPoint(e.Location);
-            int row = index >= 0 && topics.GetItemRectangle(index).Contains(e.Location) ? index : -1;
-            topics.Cursor = row >= 0 ? Cursors.Hand : Cursors.Default;
-            topics.Glow.Set(row);
-        };
-        topics.MouseLeave += delegate { topics.Glow.Set(-1); };
+        topics.LightUnderPointer();
 
         text.ReadOnly = true;
         text.BorderStyle = BorderStyle.None;
@@ -94,15 +77,7 @@ class HelpForm : Form
         EventHandler rewrite = delegate { Write(); };
         Look.Changed += rewrite;
         Disposed += delegate { Look.Changed -= rewrite; };   // also when it goes without being closed
-        Scale(new SizeF(Look.Zoom, Look.Zoom));
-        ResumeLayout(false);
-        PerformLayout();
-    }
-
-    protected override void OnHandleCreated(EventArgs e)
-    {
-        base.OnHandleCreated(e);
-        Look.Caption(this);
+        Finish();
     }
 
     // It can be made larger, never smaller than it starts, and opens over the window it belongs to without
@@ -114,11 +89,9 @@ class HelpForm : Form
         // Rows as tall as the window's scale wants them; choosing the first subject writes it.
         topics.ItemHeight = topics.Font.Height + (int)(TopicPadding * Look.Zoom);
         topics.SelectedIndex = 0;
-        if (Owner == null) return;
-        Rectangle screen = Screen.FromControl(Owner).WorkingArea;
-        int x = Owner.Left + (Owner.Width - Width) / 2, y = Owner.Top + (Owner.Height - Height) / 2;
-        Location = new Point(Math.Max(screen.Left, Math.Min(x, screen.Right - Width)),
-            Math.Max(screen.Top, Math.Min(y, screen.Bottom - Height)));
+        if (Owner != null)
+            PlaceOnScreen(new Point(Owner.Left + (Owner.Width - Width) / 2, Owner.Top + (Owner.Height - Height) / 2),
+                Screen.FromControl(Owner));
     }
 
     // Fills the box with the subject chosen on the left, from its heading in 'Lines' to the next one, each line

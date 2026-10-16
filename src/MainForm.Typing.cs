@@ -42,7 +42,7 @@ partial class MainForm
             options.UsKeyboard = usBox.Checked;
             options.AltCodes = altCodeBox.Checked;
             options.PressEnter = enterBox.Checked;
-            options.KeyDelayMs = slowBox.Checked ? SlowKeyDelayMs : KeyDelayMs;
+            options.KeyDelayMs = KeyDelay;
 
             status.Text = string.Format(Strings.TypingInto, WindowTitle(target));
             TypeResult result = await Task.Run(delegate
@@ -61,7 +61,7 @@ partial class MainForm
         }
         catch (Exception ex)   // for example the clipboard locked by another program
         {
-            status.Text = string.Format(Strings.Error, ex.Message);
+            ShowError(ex);
         }
         finally
         {
@@ -70,6 +70,12 @@ partial class MainForm
             TopMost = false;
             if (closePending) Close();
         }
+    }
+
+    // The pause after each key pressed or released, as the options want it.
+    int KeyDelay
+    {
+        get { return slowBox.Checked ? SlowKeyDelayMs : KeyDelayMs; }
     }
 
     bool ConfirmUnusual(string text)
@@ -141,9 +147,16 @@ partial class MainForm
         return title.Length == 0 ? Strings.Untitled : string.Format(Strings.Quote, Shorten(title));
     }
 
+    // A text as long as a window title or an entry may be in the status line.
     static string Shorten(string text)
     {
-        return text.Length > MaxTitleLength ? text.Substring(0, MaxTitleLength - 1) + "…" : text;
+        return Shorten(text, MaxTitleLength);
+    }
+
+    // At most 'limit' characters, the last of them the ellipsis if it is cut.
+    static string Shorten(string text, int limit)
+    {
+        return text.Length > limit ? text.Substring(0, limit - 1) + "…" : text;
     }
 
     static string Describe(TypeResult result, TypeOptions options)

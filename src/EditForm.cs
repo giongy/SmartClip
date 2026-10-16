@@ -5,10 +5,9 @@ using System.Windows.Forms;
 
 // The window where a saved text gets its name, its content and its folder. The same window, without the
 // content, asks what a folder is called and which folder it is in.
-class EditForm : Form
+class EditForm : Window
 {
-    const int Edge = 12, FieldWidth = 420, ContentHeight = 190;   // in pixels at 96 dpi
-    const int ButtonWidth = 90, ButtonHeight = 26, Gap = 6;
+    const int Edge = 12, FieldWidth = 420, ContentHeight = 190, Gap = 6;   // in pixels at 96 dpi
     const int LabelRow = 20, NameHeight = 26;      // a description above its box, and the box of a name
     const int MaxNameLength = 60;
     const int MaxGroupLength = 24;                 // the name of a folder has to fit on the button that shows it
@@ -46,21 +45,14 @@ class EditForm : Form
 
     void Build(string title, string description, int maxLength, string name, List<string> groups)
     {
-        SuspendLayout();
-        // Built as designed, then made larger at the end by Look.Zoom, the scale of the screen and of the text: left to
-        // Windows Forms, the controls that inherit the font would be scaled twice.
-        AutoScaleMode = AutoScaleMode.None;
-        Font = Look.TextFont;
         Text = title;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
         MinimizeBox = false;
         ShowInTaskbar = false;
         StartPosition = FormStartPosition.CenterParent;   // and above it, as its owner
-        BackColor = Look.Back;
-        ForeColor = Look.Ink;
 
-        Label nameLabel = NewLabel(description, Edge);
+        Label nameLabel = NewLabel(description, Edge, Edge);
         nameBox.MaxLength = maxLength;
         nameBox.Text = name;
         nameBox.SetBounds(Edge, Edge + LabelRow, FieldWidth, NameHeight);
@@ -69,7 +61,7 @@ class EditForm : Form
         int buttonTop = nameFrame.Bottom + Edge;
         if (!nameOnly)
         {
-            Label contentLabel = NewLabel(Strings.ContentLabel, nameFrame.Bottom + Edge);
+            Label contentLabel = NewLabel(Strings.ContentLabel, Edge, nameFrame.Bottom + Edge);
             contentBox.Multiline = true;
             contentBox.AcceptsReturn = true;
             contentBox.ScrollBars = ScrollBars.Vertical;
@@ -116,9 +108,7 @@ class EditForm : Form
         nameBox.TextChanged += check;
         contentBox.TextChanged += check;
         check(this, EventArgs.Empty);
-        Scale(new SizeF(Look.Zoom, Look.Zoom));
-        ResumeLayout(false);
-        PerformLayout();
+        Finish();
     }
 
     // The button says the path of the folder chosen; if it is too long for it, the outer folders give way.
@@ -142,22 +132,7 @@ class EditForm : Form
         }
     }
 
-    protected override void OnHandleCreated(EventArgs e)
-    {
-        base.OnHandleCreated(e);
-        Look.Caption(this);
-    }
-
     public string EntryName { get { return nameBox.Text.Trim(); } }
     public string Content { get { return contentBox.Text; } }
     public string Group { get; private set; }   // the folder chosen for the text, or for the folder; or null
-
-    static Label NewLabel(string text, int y)
-    {
-        Label label = new Label();
-        label.Text = text;
-        label.AutoSize = true;
-        label.Location = new Point(Edge, y);
-        return label;
-    }
 }

@@ -2,15 +2,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
-using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using Microsoft.Win32;
 
-partial class MainForm : Form
+partial class MainForm : Window
 {
     // The global hotkeys: registration and texts all start from here. The first types the clipboard at once,
     // the second brings up this window with the list. These are the keys they start with: the user can give
@@ -59,7 +55,7 @@ partial class MainForm : Form
     const int RowInset = 12, TimeGap = 8;             // of the text in a row, and around the time on its right
     const int NumberPadding = 2;                       // added to the text height for the width of the frame of a number
     const int Gap = 6;                                 // between neighbouring controls
-    const int ActionHeight = 26, ActionWidth = 92;     // the buttons in the bottom row
+    const int ActionHeight = ButtonHeight, ActionWidth = 92;   // the buttons in the bottom row
     const int TypeWidth = 160;                        // the button that types the clipboard, in the same row
     const int StatusHeight = 34;                       // two lines of text: the most the status line takes
     const int FadeMs = 6000;                           // how long a passing message stays in the status line
@@ -71,6 +67,9 @@ partial class MainForm : Form
     // What the list itself answers to: a global hotkey on the same keys would take them away from it.
     static readonly Keys[] ListKeys = { NewKeys, GroupKeys, SaveKeys, DeleteKeys, PinKeys };
     const TextFormatFlags LineFlags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;   // one line of a row
+    // What a row says at its right end: when it was copied, how many texts a folder holds.
+    const TextFormatFlags RightFlags = TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.SingleLine
+        | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
     public const string SettingsKey = @"Software\" + Program.AppName;
     const string OldSettingsKey = @"Software\PasswordPaste";   // the name of the program up to version 1.2
     const string LanguageSetting = "Language";                 // read before the window exists: see SavedLanguage
@@ -94,7 +93,7 @@ partial class MainForm : Form
     readonly Label recentEmpty = new Label(), savedEmpty = new Label();   // what a column says while it has none
     readonly Label status = new Label();
     readonly TextBox search = new TextBox();
-    readonly ListBox recentList = new RowList(), savedList = new RowList();   // what was copied, and what was saved
+    readonly RowList recentList = new RowList(), savedList = new RowList();   // what was copied, and what was saved
     ListBox active;     // the one of the two that holds the selected entry
     Panel recentCard, savedCard;                  // the rounded shapes the two lists are in
     Label recentTitle, savedTitle;
@@ -148,7 +147,10 @@ partial class MainForm : Form
     volatile bool cancel;
     bool optionsShown;
     List<Entry> entries = new List<Entry>();
-    bool enterDown;     // Enter was pressed in the list, so its release belongs to it
+    // How many texts each folder holds, those of the folders inside it too: counted when the lists are filled,
+    // drawn on its row.
+    readonly Dictionary<string, int> held = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
+    bool enterDown;    // Enter was pressed in the list, so its release belongs to it
     bool pasting;       // the entry of a number is being pasted
     string numbersTaken = "";   // the keys of numbers another program has: said once, not at every copy
     IntPtr previous;    // the window the list hotkey was pressed in: the foreground goes back there
@@ -171,20 +173,13 @@ partial class MainForm : Form
     // 'hidden': started by Windows at sign-in, so the window does not show until asked.
     public MainForm(bool hidden)
     {
-        SuspendLayout();
-        // Built as designed, then made larger at the end by Look.Zoom, the scale of the screen and of the text: left to
-        // Windows Forms, the controls that inherit the font would be scaled twice.
-        AutoScaleMode = AutoScaleMode.None;
         Text = Program.AppName + " " + Program.Version;
-        Font = Look.TextFont;
-        // The window can be made larger, never smaller than it starts (see OnLoad); its size is not remembered,
-        // so that it always opens as it was designed.
+        // The window can be made larger, never smaller than it starts, and keeps the size the user gave it (see
+        // OnLoad).
         StartPosition = FormStartPosition.CenterScreen;
         // An ordinary window, which others can cover: it stays on top only while it waits and types (see Run),
         // so that the countdown and the cancel button are in view over the remote window.
         KeyPreview = true;
-        BackColor = Look.Back;
-        ForeColor = Look.Ink;
         using (Stream icon = typeof(MainForm).Assembly.GetManifestResourceStream(Program.AppName + ".ico"))
         {
             if (icon != null) Icon = new Icon(icon);
@@ -244,9 +239,8 @@ partial class MainForm : Form
         // each its title and, on the right, how many entries it lists.
         int titleTop = searchFrame.Bottom + Gap + 2, listTop = titleTop + TitleHeight, listHeight = areaBottom - listTop;
         int savedLeft = Edge + ContentWidth - SavedWidth;
-        recentTitle = NewLabel(Strings.RecentTitle, titleTop);
-        savedTitle = NewLabel(Strings.SavedTitle, titleTop);
-        savedTitle.Left = savedLeft;
+        recentTitle = NewLabel(Strings.RecentTitle, Edge, titleTop);
+        savedTitle = NewLabel(Strings.SavedTitle, savedLeft, titleTop);
         recentTitle.Font = savedTitle.Font = Look.StrongFont;
         recentList.SetBounds(Edge, listTop, savedLeft - Edge - Edge, listHeight);
         savedList.SetBounds(savedLeft, listTop, SavedWidth, listHeight);
@@ -373,9 +367,7 @@ partial class MainForm : Form
         // Started at sign-in: hidden in the notification area, or minimised if that option is off.
         if (hidden && trayBox.Checked) startHidden = true;
         else if (hidden) WindowState = FormWindowState.Minimized;
-        Scale(new SizeF(Look.Zoom, Look.Zoom));
-        ResumeLayout(false);
-        PerformLayout();
+        Finish();
     }
 
     // Opens the guide, or brings it forward if it is already open. It is not a dialog: it can stay beside
@@ -414,9 +406,15 @@ partial class MainForm : Form
         }
         catch (Exception ex)
         {
-            status.Text = string.Format(Strings.Error, ex.Message);
+            ShowError(ex);
             return false;
         }
+    }
+
+    // What went wrong stays in the status line until the next message.
+    void ShowError(Exception ex)
+    {
+        status.Text = string.Format(Strings.Error, ex.Message);
     }
 
     bool Ask(string question)
@@ -463,15 +461,6 @@ partial class MainForm : Form
         divider.Invalidate();   // its mark stays in the middle
     }
 
-    static Label NewLabel(string text, int y)
-    {
-        Label label = new Label();
-        label.Text = text;
-        label.AutoSize = true;
-        label.Location = new Point(Edge, y);
-        return label;
-    }
-
     void Tip(string text, params Control[] controls)
     {
         foreach (Control control in controls) tips.SetToolTip(control, text);
@@ -504,11 +493,10 @@ partial class MainForm : Form
         // The size the user left it at, never smaller than designed nor larger than the screen, which it stays on.
         if (savedSize.Width > 0 && savedSize.Height > 0)
         {
-            Rectangle screen = Screen.FromPoint(Location).WorkingArea;
-            Size = new Size(Math.Min(screen.Width, Math.Max(MinimumSize.Width, (int)(savedSize.Width * Zoom))),
-                Math.Min(screen.Height, Math.Max(MinimumSize.Height, (int)(savedSize.Height * Zoom))));
-            Location = new Point(Math.Max(screen.Left, Math.Min(Left, screen.Right - Width)),
-                Math.Max(screen.Top, Math.Min(Top, screen.Bottom - Height)));
+            Screen screen = Screen.FromPoint(Location);
+            Size = new Size(Math.Min(screen.WorkingArea.Width, Math.Max(MinimumSize.Width, (int)(savedSize.Width * Zoom))),
+                Math.Min(screen.WorkingArea.Height, Math.Max(MinimumSize.Height, (int)(savedSize.Height * Zoom))));
+            PlaceOnScreen(Location, screen);
         }
         shown = true;
         PlaceColumns((int)(savedColumn * Zoom));
@@ -524,7 +512,6 @@ partial class MainForm : Form
     protected override void OnHandleCreated(EventArgs e)
     {
         base.OnHandleCreated(e);
-        Look.Caption(this);
         Native.SendMessage(search.Handle, Native.EM_SETCUEBANNER, (IntPtr)1, Strings.SearchCue);   // 1: shown also while the box has the focus
         UpdateHotkeys();
         Native.AddClipboardFormatListener(Handle);
@@ -538,8 +525,8 @@ partial class MainForm : Form
         bool ready = Native.IsClipboardFormatAvailable(Native.CF_UNICODETEXT);
         Icon = ready ? readyIcon : emptyIcon;
         tray.Icon = ready ? readyTrayIcon : emptyTrayIcon;
-        string tip = Program.AppName + (ready ? Strings.TrayReady : Strings.TrayEmpty) + (paused ? Strings.TrayPaused : "");
-        tray.Text = tip.Length > TrayTextLimit ? tip.Substring(0, TrayTextLimit - 1) + "…" : tip;
+        tray.Text = Shorten(Program.AppName + (ready ? Strings.TrayReady : Strings.TrayEmpty) + (paused ? Strings.TrayPaused : ""),
+            TrayTextLimit);
     }
 
     // Greyscale copy of the icon, in the requested size.
@@ -580,25 +567,18 @@ partial class MainForm : Form
     protected override void OnHandleDestroyed(EventArgs e)
     {
         Native.RemoveClipboardFormatListener(Handle);
-        Native.UnregisterHotKey(Handle, HotkeyId);
-        Native.UnregisterHotKey(Handle, PickId);
-        for (int number = 1; number <= MaxNumber; number++) Native.UnregisterHotKey(Handle, NumberId + number);
+        Unhook();
         base.OnHandleDestroyed(e);
     }
 
     protected override void WndProc(ref Message m)
     {
-        if (m.Msg == Native.WM_HOTKEY && m.WParam.ToInt32() == HotkeyId)
+        if (m.Msg == Native.WM_HOTKEY)
         {
-            Run(0);
-        }
-        else if (m.Msg == Native.WM_HOTKEY && m.WParam.ToInt32() == PickId)
-        {
-            OpenList();
-        }
-        else if (m.Msg == Native.WM_HOTKEY && m.WParam.ToInt32() > NumberId && m.WParam.ToInt32() <= NumberId + MaxNumber)
-        {
-            PasteNumber(m.WParam.ToInt32() - NumberId);
+            int id = m.WParam.ToInt32();
+            if (id == HotkeyId) Run(0);
+            else if (id == PickId) OpenList();
+            else if (id > NumberId && id <= NumberId + MaxNumber) PasteNumber(id - NumberId);
         }
         else if (Program.ShowMessage != 0 && (uint)m.Msg == Program.ShowMessage)
         {

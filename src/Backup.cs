@@ -106,7 +106,10 @@ static class Backup
     static string Field(string line, Func<BackupWords, string> name)
     {
         foreach (BackupWords words in Words.Values)
-            if (line.StartsWith(name(words))) return line.Substring(name(words).Length).Trim();
+        {
+            string field = name(words);
+            if (line.StartsWith(field)) return line.Substring(field.Length).Trim();
+        }
         return null;
     }
 
@@ -188,15 +191,14 @@ static class Backup
     public static BackupResult Import(string path, bool all, Func<int, bool> replace)
     {
         List<Entry> found = Parse(File.ReadAllLines(path, Encoding.UTF8)), copied = new List<Entry>();
-        List<Entry> present = Texts.Load();
-        Predicate<Entry> taken = delegate(Entry entry)
-        {
-            return entry.Name != null && !entry.IsGroup
-                && present.Exists(delegate(Entry other) { return !other.IsGroup && Texts.SameName(other.Name, entry.Name); });
-        };
+        // The names of the saved texts there are, as the registry compares them.
+        HashSet<string> present = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (Entry entry in Texts.Load())
+            if (entry.Name != null && !entry.IsGroup) present.Add(entry.Name);
+        Predicate<Entry> taken = delegate(Entry entry) { return entry.Name != null && !entry.IsGroup && present.Contains(entry.Name); };
         int clashes = found.FindAll(taken).Count;
         bool overwrite = clashes > 0 && replace(clashes);
-        List<string> groups = Texts.Groups();
+        HashSet<string> groups = new HashSet<string>(Texts.Groups(), StringComparer.OrdinalIgnoreCase);
         BackupResult result = new BackupResult();
         foreach (Entry entry in found)
         {
@@ -207,11 +209,7 @@ static class Backup
             }
             // A folder of the file, or one a text names without the file having it.
             string group = entry.IsGroup ? entry.Name : entry.Group;
-            if (group != null && !groups.Exists(delegate(string other) { return Texts.SameName(other, group); }))
-            {
-                Texts.SetGroup(group, true);
-                groups.Add(group);
-            }
+            if (group != null && groups.Add(group)) Texts.SetGroup(group, true);
             if (entry.IsGroup) continue;
             if (taken(entry) && !overwrite)
             {

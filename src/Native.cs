@@ -7,7 +7,7 @@ static class Native
 {
     public const int WM_SETTINGCHANGE = 0x001A, WM_ACTIVATEAPP = 0x001C, WM_NCHITTEST = 0x0084, WM_HOTKEY = 0x0312,
         WM_CLIPBOARDUPDATE = 0x031D, EM_SETCUEBANNER = 0x1501;
-    public const int WM_PAINT = 0x000F, WM_VSCROLL = 0x0115, WM_MOUSEWHEEL = 0x020A;
+    public const int WM_PAINT = 0x000F, WM_ERASEBKGND = 0x0014, WM_VSCROLL = 0x0115, WM_MOUSEWHEEL = 0x020A;
     public const int SB_VERT = 1, SB_PAGEUP = 2, SB_PAGEDOWN = 3, SB_THUMBPOSITION = 4, SB_ENDSCROLL = 8;
     public const uint SIF_ALL = 0x17;
     public const int HTTRANSPARENT = -1;

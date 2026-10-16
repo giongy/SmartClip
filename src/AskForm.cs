@@ -7,19 +7,14 @@ using System.Windows.Forms;
 // white in the dark and answer in the language of Windows rather than that of the program. As in the message
 // boxes of Windows 11, the text stands on a lighter area and the buttons below it; the coloured button is the
 // one Enter presses, and in a question it is "No": a slip of the finger changes nothing.
-class AskForm : Form
+class AskForm : Window
 {
     const int Edge = 20, MaxTextWidth = 380, MinTextWidth = 240;   // in pixels at 96 dpi
-    const int ButtonWidth = 90, ButtonHeight = 26, Gap = 6, ButtonEdge = 14;
+    const int Gap = 6, ButtonEdge = 14;
     const TextFormatFlags Flags = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix;
 
     AskForm(string text, bool question)
     {
-        SuspendLayout();
-        // Built as designed, then made larger at the end by Look.Zoom, the scale of the screen and of the text: left to
-        // Windows Forms, the controls that inherit the font would be scaled twice.
-        AutoScaleMode = AutoScaleMode.None;
-        Font = Look.TextFont;
         Text = Program.AppName;
         FormBorderStyle = FormBorderStyle.FixedDialog;
         MaximizeBox = false;
@@ -27,8 +22,6 @@ class AskForm : Form
         ShowInTaskbar = false;
         ShowIcon = false;
         StartPosition = FormStartPosition.CenterParent;   // and above it, as its owner
-        BackColor = Look.Back;
-        ForeColor = Look.Ink;
 
         // Measured as it will be drawn, then brought back to 96 dpi: the window scales everything itself.
         Size measured = TextRenderer.MeasureText(text, Font, new Size((int)(MaxTextWidth * Look.Zoom), 0), Flags);
@@ -51,9 +44,7 @@ class AskForm : Form
         if (question) NewButton(Strings.Yes, DialogResult.Yes, false, answer.Left - Gap, buttonTop);
         CancelButton = answer;   // Esc too
         ActiveControl = answer;
-        Scale(new SizeF(Look.Zoom, Look.Zoom));
-        ResumeLayout(false);
-        PerformLayout();
+        Finish();
     }
 
     // A button whose right edge is at 'right'.
@@ -66,12 +57,6 @@ class AskForm : Form
         Look.Style(button, primary);
         Controls.Add(button);
         return button;
-    }
-
-    protected override void OnHandleCreated(EventArgs e)
-    {
-        base.OnHandleCreated(e);
-        Look.Caption(this);
     }
 
     // Asks a question and says whether the answer is yes. A 'warning' rings, as the message boxes of Windows do
