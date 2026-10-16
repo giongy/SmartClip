@@ -4,3 +4,6 @@ tests/tests.exe
 # Written by packaging/pack.ps1, store/make-listing.ps1 and store/get-package.ps1: store/upload is what goes to Partner Center.
 packaging/out/
 store/upload/
+# Of the editor: its settings, and the line counts of the VS Code Counter extension.
+.vscode/
+.VSCodeCounter/
