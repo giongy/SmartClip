@@ -44,6 +44,7 @@ static class Typer
 {
     const int ExtendedBit = 0x100;   // added to the scancode of "extended" keys
     const int ScTab = 0x0F, ScEnter = 0x1C, ScShift = 0x2A, ScAlt = 0x38, ScSpace = 0x39, ScAltGr = ScAlt | ExtendedBit;
+    const int ScControl = 0x1D, ScV = 0x2F;
     const int KeyReleaseTimeoutMs = 3000;   // how long to wait for the user to release the keys being held
     const byte Pressed = 0x80;              // value of a pressed key in the ToUnicodeEx state table
     static readonly int[] ScNumpad = { 0x52, 0x4F, 0x50, 0x51, 0x4B, 0x4C, 0x4D, 0x47, 0x48, 0x49 };
@@ -103,6 +104,20 @@ static class Typer
             if (!Chord(delay, ScEnter)) return result.Stop(TypeOutcome.Blocked);
         }
         return result;
+    }
+
+    // Pastes the clipboard into the 'target' window with Ctrl+V, once the keys of the hotkey are released:
+    // still held, they would turn it into another combination. V is where the keyboard of that window has it.
+    public static TypeOutcome Paste(IntPtr target, int delay)
+    {
+        if (!WaitKeysReleased()) return TypeOutcome.KeysHeld;
+        if (Native.GetForegroundWindow() != target) return TypeOutcome.FocusLost;
+        uint processId;
+        IntPtr layout = Native.GetKeyboardLayout(Native.GetWindowThreadProcessId(target, out processId));
+        if (layout == IntPtr.Zero) layout = Native.GetKeyboardLayout(0);
+        Stroke v;
+        int scan = MapLayout(layout).TryGetValue('v', out v) ? v.Scan : ScV;
+        return Chord(delay, ScControl, scan) ? TypeOutcome.Done : TypeOutcome.Blocked;
     }
 
     // A key the user is still holding (typically those of a hotkey) would alter what gets typed:

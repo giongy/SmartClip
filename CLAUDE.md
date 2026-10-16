@@ -21,7 +21,7 @@ condiviso su GitHub).
       delle righe, anteprima, scelta, modifica, cartelle, tasti dell'elenco, larghezza delle colonne.
     - `MainForm.Options.cs` — `PlaceOptions` (le opzioni e i loro suggerimenti), i `Place…`, esportazione,
       importazione, pulizia, `TransferSettings` e `AdoptOldSettings`.
-    - `MainForm.Hotkeys.cs` — le scorciatoie globali: nomi, cambio dei tasti, registrazione.
+    - `MainForm.Hotkeys.cs` — le scorciatoie globali: nomi, cambio dei tasti, registrazione, e l'incolla delle voci numerate (`PasteNumber`).
     - `MainForm.Typing.cs` — la digitazione: `Run`, `WaitForTarget`, esito.
   - `EditForm.cs` — la finestra «Nuovo/Modifica».
   - `HelpForm.cs` — la guida (pulsante «?» o F1), divisa in argomenti scelti da una colonna a sinistra (voluta
@@ -146,7 +146,8 @@ condiviso su GitHub).
   `optionControls`). Le idee vengono dal progetto vicino `..\pastepad` (WinUI 3, .NET 10), riscritte qui in
   piccolo: niente modelli, formato, temi.
 - Scegliere una voce (Invio o clic, `Use`) la rimette soltanto negli appunti: poi l'utente incolla con Ctrl+V o
-  digita con Ctrl+Alt+V. Non si digita né si incolla da soli (provato e scartato dall'utente). Un testo salvato
+  digita con Ctrl+Alt+V. Non si digita né si incolla da soli (provato e scartato dall'utente; l'eccezione voluta
+  sono i numeri delle voci, sotto). Un testo salvato
   torna negli appunti con il formato che lo segna riservato; ciò che il programma stesso mette negli appunti
   non rientra nell'elenco (`ownCopy`, numero di sequenza degli appunti).
 - Ctrl+D (`OpenList`) porta la finestra in primo piano da qualsiasi programma; dopo la scelta con Invio o
@@ -168,10 +169,19 @@ condiviso su GitHub).
   cancellerebbe senza sapere delle stelline. Ricopiare lo stesso testo non la sposta e `Forget` non la toglie;
   i limiti di memoria non la contano. L'ordine (fissate prima) lo dà `Texts.Load`.
 - Numeri delle voci (voluti dall'utente nella 3.9.2): un testo salvato o una voce copiata può avere un numero da 1
-  a `MaxNumber` (9); nell'elenco i modificatori della scorciatoia dell'elenco più la cifra (`NumberOf`, anche
-  tastierino) scelgono quella voce come Invio: negli appunti e ritorno alla finestra di partenza (`ChooseNumber`,
-  al rilascio come Invio, `numberDown`). Così Ctrl+D tenendo Ctrl e poi 1 funziona da qualsiasi programma, ed è il
-  nome che il programma scrive (`NumberName`, «Ctrl+D+1»); non è una scorciatoia globale in più. Si assegna e
+  a `MaxNumber` (9); i modificatori dell'opzione «Incolla per numero» (`quickKeys`, Ctrl+Maiusc di default:
+  con Ctrl+Alt le cifre di molte tastiere scrivono simboli con AltGr) più la cifra sono una scorciatoia globale che
+  mette la voce negli appunti e la **incolla** nella finestra in primo piano con Ctrl+V, senza mostrare la
+  finestra (`PasteNumber`, `Typer.Paste`, che aspetta il rilascio dei tasti e manda Ctrl più il V della tastiera
+  di quella finestra come scancode). Voluto dall'utente: la prima versione, Ctrl+D tenendo Ctrl e poi la cifra
+  nell'elenco, apriva la finestra e non incollava, ed è stata scartata. È l'unico caso in cui il programma
+  incolla da solo. Si registrano solo i numeri che qualche voce ha (`HookNumbers`, rifatto a ogni `Reload` e da
+  `UpdateHotkeys`; id `NumberId` + numero), così gli altri restano agli altri programmi; quelli che un altro
+  programma ha già si dicono nella riga di stato una volta (`numbersTaken`, azzerato quando l'utente assegna un
+  numero). I tasti si cambiano come le altre scorciatoie (`AwaitKeys` con `quickBox`, `TakeQuickKeys`): si
+  premono i modificatori con una cifra qualsiasi, e lì si provano tutti e nove i numeri dicendo quali sono già
+  di altri; le altre due scorciatoie non possono essere modificatori + cifra (`NumberOf`). Impostazioni
+  `QuickPaste` e `QuickKeys` (solo i modificatori). Si assegna e
   cambia da «Scorciatoia» nel menu del tasto destro (`ListNumbers`: «Nessuna» e i nove numeri, quello attuale
   disattivato, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento a destra della riga, dopo
   ora/data e prima della stellina (`NumberArea`), e nel menu del tray accanto al testo salvato
@@ -179,7 +189,7 @@ condiviso su GitHub).
   toglie prima a chi lo aveva (`Free`). Dei salvati sta in `Saved\Numbers` (nome → numero, come `Dates`), dei
   copiati nei bit 3-6 del tipo del blocco (`NumberMask`), solo se fissati: dare un numero a una voce copiata le
   mette la stellina, toglierle la stellina toglie il numero. Rinominare un testo, o salvare una voce copiata, porta
-  il numero con sé (`Edit`). Le scorciatoie globali non possono prendere quei tasti (`TakeKeys`). Non si esporta.
+  il numero con sé (`Edit`). Non si esporta.
   I test (`texts`) salvano e rimettono i numeri dell'utente, perché `Free` li toglierebbe.
 - «Pulisci ora…» nelle opzioni (voluto dall'utente): elimina subito ciò che è stato copiato prima degli ultimi
   N giorni scritti nella casella accanto (`Spared`, non è un'impostazione: riparte da 0, cioè tutto), dopo una
@@ -370,7 +380,7 @@ condiviso su GitHub).
   AltGr (E per €, è ò à +) scatterebbe scrivendo quel simbolo. V non ne ha.
 - La scorciatoia dell'elenco nasce Ctrl+D, scelta dall'utente al posto di Ditto: da globale toglie Ctrl+D agli
   altri programmi, ed è scritto nel suggerimento. Per questo nell'elenco «elimina» è Ctrl+E.
-- Le due scorciatoie globali si cambiano dalle opzioni (voluto dall'utente): il pulsante accanto
+- Le due scorciatoie globali (e i modificatori dei numeri, vedi sopra) si cambiano dalle opzioni (voluto dall'utente): il pulsante accanto
   all'interruttore mostra i tasti e ne aspetta di nuovi (`AwaitKeys`, `TakeKeys` da `ProcessCmdKey`). Durante
   l'attesa le due scorciatoie si tolgono, altrimenti Windows le prenderebbe prima della finestra. Valgono Ctrl
   o Alt (anche con Maiusc) più lettera, cifra o tasto funzione (`Usable`); si rifiutano i tasti dell'altra e
@@ -463,8 +473,9 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   finestra di una cartella con la scelta del posto.
 - L'avvio vero all'accesso a Windows: provati la voce nel registro e l'avvio nascosto con un programmino usa e
   getta, mai una disconnessione e un nuovo accesso.
-- I numeri delle voci dal vivo: Ctrl+D e poi Ctrl+1 premuti davvero, dalla finestra nascosta e da un altro
-  programma, e il clic su «Scorciatoia». Provati la logica (`texts`) e il menu aperto da `tests.exe real`.
+- I numeri delle voci dal vivo: Ctrl+Maiusc+cifra premuti davvero in un altro programma (anche in un desktop
+  remoto), l'avviso dei tasti già usati, il clic su «Scorciatoia». Provati la logica (`texts`), la cattura dei
+  tasti (`shot`), il menu aperto da `tests.exe real` e `Typer.Paste` in una finestrella (`type`).
 - Il tema dal vivo: il cambio da Impostazioni di Windows a programma aperto (provati solo `Look.Switch` da
   `shot` e le immagini di `real` in chiaro e in scuro), il menu delle caselle di testo scurito da
   `SetPreferredAppMode`, l'interruttore che scorre, l'anello del focus, `AskForm` aperta dal programma vero.

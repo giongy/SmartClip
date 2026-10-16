@@ -78,9 +78,10 @@ static partial class Strings
     public static string PausedSay = "Paused: what you copy is not remembered until you resume capturing.";
     public static string ResumedSay = "Capturing has resumed: what you copy comes back to the list.";
     public static string Pinned = "Kept at the top: {0}.", Unpinned = "No longer at the top: {0}.";
-    public static string NumberGiven = "{0} now puts “{1}” on the clipboard, from any program.";
+    public static string NumberGiven = "{0} now pastes “{1}” wherever you are.";
     public static string NumberTaken = "“{0}” no longer has a shortcut.";
-    public static string NumberFree = "No entry has {0} yet: give it to one with “{1}”, in its right-click menu.";
+    public static string Pasted = "Pasted into {1}: {0}.";
+    public static string PasteFocusLost = "Not pasted: the window changed. The entry is on the clipboard.";
     public static string OnClipboard = "On the clipboard: {0}. Paste it with Ctrl+V.";
     public static string OnClipboardOrType = "On the clipboard: {0}. Paste it with Ctrl+V or type it with {1}.";
     public static string AskReplace = "“{0}” already exists. Replace it?";
@@ -152,8 +153,8 @@ static partial class Strings
         + "their name is shown. They can be gathered in folders: “New folder” is in the\n"
         + "right-click menu ({3}); a text goes in by dragging it, or with “Move to”.\n"
         + "A click on a folder opens and closes it.\n"
-        + "“{6}”, in the right-click menu, gives an entry a number: {4}…{5}, from any\n"
-        + "program, put it on the clipboard and take you back.";
+        + "“{5}”, in the right-click menu, gives an entry a number: then {4}\n"
+        + "paste it wherever you are, without opening this window.";
     public static string PressKeys = "Press the keys…";
     public static string PressKeysStatus = "Press the new keys: Ctrl or Alt with a letter, a digit or a function key. "
         + "Esc keeps the current ones, {0} goes back to the defaults.";
@@ -164,6 +165,20 @@ static partial class Strings
         + "or use the button.";
     public static string HotkeyBusyPick = "{0} is already used by another program: give it other keys in the options, "
         + "or open the window from the icon.";
+    public static string QuickTip = "{0} paste the entry with that number into the window you are working in,\n"
+        + "without opening this one: it goes on the clipboard and Ctrl+V follows by itself.\n"
+        + "The numbers are given with “{1}”, in the right-click menu of an entry.\n"
+        + "Only the keys of the numbers in use are taken: those no longer reach other programs.";
+    public static string QuickKeysTip = "Press here and then the keys to hold, together with any digit: Ctrl or Alt,\n"
+        + "also with {0}. The digit does not count: from 1 to 9, it picks the entry.\n"
+        + "Esc keeps the current ones, {1} goes back to the defaults ({2}).\n"
+        + "Ctrl+Alt is AltGr: on some keyboards it types symbols with the digits.";
+    public static string PressQuickStatus = "Press the keys to hold with any digit, as {0}. "
+        + "Esc keeps the current ones, {1} goes back to the defaults.";
+    public static string QuickUnusable = "{0} won't do: hold Ctrl or Alt, also with Shift, and press a digit.";
+    public static string QuickNowWith = "The numbered entries now paste with {0}.";
+    public static string QuickBusy = "Already used by another program: {0}. Those numbers will not paste: choose other "
+        + "keys in the options, or other numbers.";
 
     // --- Options ---
     public static string TypingTitle = "Typing", ProgramTitle = "Program", HotkeysTitle = "Hotkeys", HistoryTitle = "History";
@@ -180,6 +195,7 @@ static partial class Strings
     public static string StartOption = "Start with Windows";
     public static string ExportButton = "Export…", ImportButton = "Import…";
     public static string PickOption = "Open the list";
+    public static string QuickOption = "Paste by number";
     public static string HistoryOption = "Remember copied texts and pictures";
     public static string KeepOption = "Days on disk (0: memory only):";
     public static string FolderLink = "Open the history folder";
@@ -301,10 +317,11 @@ static partial class Strings
                 + "off. A starred entry does not expire with the days of the history and stays until you remove the "
                 + "star; copying the same text again does not move it.",
             "- “" + NumberMenu + "”, in the right-click menu, gives a saved text or a copied entry a number from 1 to "
-                + MainForm.MaxNumber + ": from any program, " + MainForm.NumberName(1) + " and the others put it "
-                + "straight on the clipboard and take you back. Keep the keys of " + pick + " held down and add the "
-                + "digit. The number shows in a small frame at the right of the row; a copied entry that gets one "
-                + "also gets the star, which keeps it. Each number belongs to one entry: given to another, it moves.",
+                + MainForm.MaxNumber + ": then, from any program, " + MainForm.NumbersName + " paste it at once into "
+                + "the window you are working in, without opening this one (the entry goes on the clipboard and Ctrl+V "
+                + "follows by itself). The number shows in a small frame at the right of the row, and beside the saved "
+                + "text in the icon menu; a copied entry that gets one also gets the star, which keeps it. Each number "
+                + "belongs to one entry: given to another, it moves.",
             "The coloured sign on the left says what the entry is: a text, a web address, a saved text. Pictures "
                 + "show a thumbnail. On the right is the time of the copy (the day, if not today) or the day it was saved.",
             "Not to remember what you are about to copy, “" + Pause + "” is in the right-click menu of the list and "
@@ -368,6 +385,7 @@ static partial class Strings
             "# Keys",
             pick + "\tOpens the list, from any program.",
             type + "\tTypes the clipboard into the active window at once.",
+            MainForm.NumbersName + "\tPastes the entry with that number into the active window.",
             "F1\tOpens this guide.",
             ArrowsName + "\tMoves through the column.",
             "Tab\tSwitches to the other column.",
@@ -378,12 +396,11 @@ static partial class Strings
             Key(Keys.Control | MainForm.SaveKey) + "\tSaves the copied entry, or edits the saved one.",
             Key(Keys.Control | MainForm.DeleteKey) + "\tDeletes the selected entry.",
             Key(Keys.Control | MainForm.PinKey) + "\tKeeps the copied entry at the top, or lets it go.",
-            MainForm.NumberName(1) + "…" + MainForm.MaxNumber + "\tPuts on the clipboard the entry with that number "
-                + "and goes back to the window you came from.",
-            "The first two work everywhere; the others in the list. While it is on, " + pick + " no longer reaches "
-                + "other programs.",
-            "In the options, under “" + HotkeysTitle + "”, the first two can be turned off and changed: the button "
-                + "beside each shows its keys, and pressing it waits for new ones.",
+            "The first three work everywhere; the others in the list. While it is on, " + pick + " no longer reaches "
+                + "other programs, nor do the keys of the numbers that some entry has.",
+            "In the options, under “" + HotkeysTitle + "”, the first three can be turned off and changed: the button "
+                + "beside each shows its keys, and pressing it waits for new ones. For the numbers you press the keys "
+                + "to hold together with any digit; if another program already has some of them, it says which.",
             "- They take Ctrl or Alt, also with " + ShiftName + ", together with a letter, a digit or a function key.",
             "- Esc keeps the current keys, " + DeleteKeyName + " goes back to the defaults.",
             "- With Ctrl+Alt avoid letters that type a symbol with AltGr, such as the E of the euro: the hotkey "
@@ -408,7 +425,8 @@ static partial class Strings
             "- " + TypingTitle + ": how many seconds to wait before typing (" + MainForm.MinDelay + " to "
                 + MainForm.MaxDelay + "), whether the server uses a US keyboard, whether to press Enter at the end, "
                 + "whether to clear the clipboard afterwards, slow typing and symbols composed with Alt codes.",
-            "- " + HotkeysTitle + ": turns " + type + " and " + pick + " on and off, and gives them other keys.",
+            "- " + HotkeysTitle + ": turns " + type + ", " + pick + " and " + MainForm.NumbersName + " on and off, and "
+                + "gives them other keys.",
             "- " + HistoryTitle + ": whether to remember what you copy, for how many days, the link to the folder of "
                 + "the files and the button that cleans it at once.",
             "- " + ProgramTitle + ": the language, the theme (light, dark or “" + ThemeSystem + "”), whether to stay in the notification area and hide when you switch "

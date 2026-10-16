@@ -44,9 +44,10 @@ static partial class Strings
         PausedSay = "En pause : ce que vous copiez n'est pas mémorisé tant que vous ne reprenez pas la capture.";
         ResumedSay = "La capture a repris : ce que vous copiez revient dans la liste.";
         Pinned = "Reste en haut : {0}."; Unpinned = "N'est plus en haut : {0}.";
-        NumberGiven = "{0} met maintenant « {1} » dans le presse-papiers, depuis n'importe quel programme.";
+        NumberGiven = "{0} colle maintenant « {1} » où que vous soyez.";
         NumberTaken = "« {0} » n'a plus de raccourci.";
-        NumberFree = "Aucun élément n'a encore {0} : donnez-le à l'un d'eux avec « {1} », dans son menu du clic droit.";
+        Pasted = "Collé dans {1} : {0}.";
+        PasteFocusLost = "Rien n'a été collé : la fenêtre a changé. L'élément est dans le presse-papiers.";
         OnClipboard = "Dans le presse-papiers : {0}. Collez-le avec Ctrl+V.";
         OnClipboardOrType = "Dans le presse-papiers : {0}. Collez-le avec Ctrl+V ou saisissez-le avec {1}.";
         AskReplace = "« {0} » existe déjà. Voulez-vous le remplacer ?";
@@ -117,8 +118,8 @@ static partial class Strings
             + "et seul leur nom est visible. On peut les regrouper en dossiers : « Nouveau dossier » est\n"
             + "dans le menu du clic droit ({3}) ; un texte y entre en le faisant glisser, ou avec\n"
             + "« Déplacer vers ». Un clic sur le dossier l'ouvre et le ferme.\n"
-            + "« {6} », dans le menu du clic droit, donne un numéro à l'élément : {4}…{5},\n"
-            + "depuis n'importe quel programme, le remettent dans le presse-papiers et vous ramènent.";
+            + "« {5} », dans le menu du clic droit, donne un numéro à l'élément : ensuite {4}\n"
+            + "le collent où que vous soyez, sans ouvrir cette fenêtre.";
         PressKeys = "Appuyez sur les touches…";
         PressKeysStatus = "Appuyez sur les nouvelles touches : Ctrl ou Alt avec une lettre, un chiffre ou une touche de "
             + "fonction. Échap garde les actuelles, {0} revient à celles de départ.";
@@ -130,6 +131,20 @@ static partial class Strings
             + "ou utilisez le bouton.";
         HotkeyBusyPick = "{0} est déjà utilisé par un autre programme : donnez-lui d'autres touches dans les options, "
             + "ou ouvrez la fenêtre depuis l'icône.";
+        QuickTip = "{0} collent l'élément qui a ce numéro dans la fenêtre où vous travaillez,\n"
+            + "sans ouvrir celle-ci : il va dans le presse-papiers et Ctrl+V suit tout seul.\n"
+            + "Les numéros se donnent avec « {1} », dans le menu du clic droit d'un élément.\n"
+            + "Seules les touches des numéros utilisés sont prises : elles n'arrivent plus aux autres programmes.";
+        QuickKeysTip = "Appuyez ici puis sur les touches à maintenir, avec un chiffre quelconque : Ctrl ou Alt,\n"
+            + "aussi avec {0}. Le chiffre ne compte pas : de 1 à 9, il choisit l'élément.\n"
+            + "Échap garde les touches actuelles, {1} revient à celles de départ ({2}).\n"
+            + "Ctrl+Alt équivaut à AltGr : sur certains claviers, il écrit des symboles avec les chiffres.";
+        PressQuickStatus = "Appuyez sur les touches à maintenir avec un chiffre quelconque, comme {0}. "
+            + "Échap garde les touches actuelles, {1} revient à celles de départ.";
+        QuickUnusable = "{0} ne convient pas : maintenez Ctrl ou Alt, aussi avec Maj, et appuyez sur un chiffre.";
+        QuickNowWith = "Les éléments numérotés se collent maintenant avec {0}.";
+        QuickBusy = "Déjà utilisés par un autre programme : {0}. Ces numéros ne colleront pas : choisissez d'autres "
+            + "touches dans les options, ou d'autres numéros.";
 
         TypingTitle = "Saisie"; ProgramTitle = "Programme"; HotkeysTitle = "Raccourcis"; HistoryTitle = "Historique";
         DelayOption = "Attente avant la saisie (secondes) :";
@@ -145,6 +160,7 @@ static partial class Strings
         StartOption = "Démarrer avec Windows";
         ExportButton = "Exporter…"; ImportButton = "Importer…";
         PickOption = "Ouvrir la liste";
+        QuickOption = "Coller par numéro";
         HistoryOption = "Mémoriser les textes et images copiés";
         KeepOption = "Jours sur disque (0 : en mémoire) :";
         FolderLink = "Ouvrir le dossier de l'historique";
@@ -266,11 +282,12 @@ static partial class Strings
                 + "élément étoilé n'expire pas avec les jours de l'historique et reste jusqu'à ce que vous retiriez "
                 + "l'étoile ; copier à nouveau le même texte ne le déplace pas.",
             "- « " + NumberMenu + " », dans le menu du clic droit, donne à un texte enregistré ou à un élément copié "
-                + "un numéro de 1 à " + MainForm.MaxNumber + " : depuis n'importe quel programme, " + MainForm.NumberName(1)
-                + " et les suivants le remettent aussitôt dans le presse-papiers et vous ramènent où vous étiez. Gardez "
-                + "enfoncées les touches de " + pick + " et ajoutez le chiffre. Le numéro apparaît dans un petit cadre "
-                + "à droite de la ligne ; un élément copié qui en reçoit un prend aussi l'étoile, qui le garde. Chaque "
-                + "numéro appartient à un seul élément : donné à un autre, il passe à celui-ci.",
+                + "un numéro de 1 à " + MainForm.MaxNumber + " : ensuite, depuis n'importe quel programme, "
+                + MainForm.NumbersName + " le collent aussitôt dans la fenêtre où vous travaillez, sans ouvrir celle-ci "
+                + "(l'élément va dans le presse-papiers et Ctrl+V suit tout seul). Le numéro apparaît dans un petit "
+                + "cadre à droite de la ligne, et à côté du texte enregistré dans le menu de l'icône ; un élément copié "
+                + "qui en reçoit un prend aussi l'étoile, qui le garde. Chaque numéro appartient à un seul élément : "
+                + "donné à un autre, il passe à celui-ci.",
             "Le signe coloré à gauche dit ce qu'est l'élément : un texte, une adresse web, un texte enregistré. Les "
                 + "images montrent une miniature. À droite figure l'heure de la copie (le jour, si ce n'est pas "
                 + "aujourd'hui) ou le jour de l'enregistrement.",
@@ -341,6 +358,7 @@ static partial class Strings
             "# Les touches",
             pick + "\tOuvre la liste, depuis n'importe quel programme.",
             type + "\tSaisit aussitôt le presse-papiers dans la fenêtre active.",
+            MainForm.NumbersName + "\tColle dans la fenêtre active l'élément qui a ce numéro.",
             "F1\tOuvre ce guide.",
             ArrowsName + "\tParcourt la colonne.",
             "Tab\tPasse à l'autre colonne.",
@@ -351,12 +369,12 @@ static partial class Strings
             Key(Keys.Control | MainForm.SaveKey) + "\tEnregistre l'élément copié, ou modifie l'élément enregistré.",
             Key(Keys.Control | MainForm.DeleteKey) + "\tSupprime l'élément sélectionné.",
             Key(Keys.Control | MainForm.PinKey) + "\tGarde l'élément copié en haut, ou le laisse partir.",
-            MainForm.NumberName(1) + "…" + MainForm.MaxNumber + "\tMet dans le presse-papiers l'élément qui a ce "
-                + "numéro et revient à la fenêtre de départ.",
-            "Les deux premiers marchent partout ; les autres dans la liste. Tant qu'il est actif, " + pick
-                + " n'arrive plus aux autres programmes.",
-            "Dans les options, sous « " + HotkeysTitle + " », les deux premiers se désactivent et se changent : le "
-                + "bouton à côté de chacun montre ses touches, et en appuyant dessus il attend les nouvelles.",
+            "Les trois premiers marchent partout ; les autres dans la liste. Tant qu'il est actif, " + pick
+                + " n'arrive plus aux autres programmes, pas plus que les touches des numéros qu'un élément possède.",
+            "Dans les options, sous « " + HotkeysTitle + " », les trois premiers se désactivent et se changent : le "
+                + "bouton à côté de chacun montre ses touches, et en appuyant dessus il attend les nouvelles. Pour les "
+                + "numéros, on appuie sur les touches à maintenir avec un chiffre quelconque ; si un autre programme en "
+                + "a déjà certaines, il dit lesquelles.",
             "- Il faut Ctrl ou Alt, aussi avec " + ShiftName + ", avec une lettre, un chiffre ou une touche de fonction.",
             "- Échap garde les touches actuelles, " + DeleteKeyName + " revient à celles de départ.",
             "- Avec Ctrl+Alt, évitez les lettres qui écrivent un symbole avec AltGr, comme le E de l'euro : le "
@@ -381,7 +399,8 @@ static partial class Strings
             "- " + TypingTitle + " : combien de secondes attendre avant la saisie (de " + MainForm.MinDelay + " à "
                 + MainForm.MaxDelay + "), si le serveur a un clavier américain, s'il faut appuyer sur Entrée à la fin, "
                 + "s'il faut vider le presse-papiers ensuite, la saisie lente et les symboles composés avec des codes Alt.",
-            "- " + HotkeysTitle + " : active et désactive " + type + " et " + pick + ", et leur donne d'autres touches.",
+            "- " + HotkeysTitle + " : active et désactive " + type + ", " + pick + " et " + MainForm.NumbersName
+                + ", et leur donne d'autres touches.",
             "- " + HistoryTitle + " : s'il faut mémoriser ce que vous copiez, pendant combien de jours, le lien vers le "
                 + "dossier des fichiers et le bouton qui le nettoie aussitôt.",
             "- " + ProgramTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), s'il faut rester dans la zone de notification et se masquer en passant "

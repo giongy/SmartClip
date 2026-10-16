@@ -185,6 +185,7 @@ partial class MainForm
     {
         Change(delegate { entries = Texts.Load(); });
         Filter();
+        HookNumbers();   // a number may have come or gone, with its entry
     }
 
     void Filter()
@@ -544,21 +545,14 @@ partial class MainForm
     }
 
     // Gives an entry a number, taking it from the one that had it, or with zero takes its own away. A copied
-    // entry is pinned along.
+    // entry is pinned along. If another program has the keys of that number, Reload says so.
     void Number(Entry entry, int number)
     {
         if (!Change(delegate { Texts.Number(entry, number); })) return;
         Say(number > 0 ? string.Format(Strings.NumberGiven, NumberName(number), Shorten(entry.Label))
             : string.Format(Strings.NumberTaken, Shorten(entry.Label)));
+        numbersTaken = "";   // said again, even if it was said before: the user is choosing now
         Reload();
-    }
-
-    // The keys of a number: as Enter would, the entry goes on the clipboard and the user back where they were.
-    void ChooseNumber(int number)
-    {
-        Entry entry = Numbered(number);
-        if (entry == null) status.Text = string.Format(Strings.NumberFree, NumberName(number), Strings.NumberMenu);
-        else if (!busy && Use(entry)) GoBack();
     }
 
     // Keeps a copied entry at the top of its column, or lets it go back among the others.
@@ -797,12 +791,6 @@ partial class MainForm
             return true;
         }
         if (optionsShown || !(search.Focused || recentList.Focused || savedList.Focused)) return base.ProcessCmdKey(ref msg, keyData);
-        int number = NumberOf(keyData, pickKeys);
-        if (number > 0)   // acts when released, as Enter does
-        {
-            numberDown = number;
-            return true;
-        }
         switch (keyData)
         {
             case Keys.Escape:
@@ -840,17 +828,10 @@ partial class MainForm
     }
 
     // Enter acts when released: held down, it would go on repeating into the window the foreground goes
-    // back to, and could confirm a login there. So do the keys of a number, which held down could do there
-    // what they mean to that program.
+    // back to, and could confirm a login there.
     protected override void OnKeyUp(KeyEventArgs e)
     {
         base.OnKeyUp(e);
-        int number = numberDown;
-        if (number > 0 && (e.KeyCode == Keys.D0 + number || e.KeyCode == Keys.NumPad0 + number))
-        {
-            numberDown = 0;
-            ChooseNumber(number);
-        }
         if (e.KeyCode != Keys.Enter || !enterDown) return;
         enterDown = false;
         Accept(true);
@@ -860,7 +841,6 @@ partial class MainForm
     {
         base.OnDeactivate(e);
         enterDown = false;
-        numberDown = 0;
         HidePeek();
         EndCapture();   // keys pressed elsewhere are not for us
     }

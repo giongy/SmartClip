@@ -21,9 +21,12 @@ partial class MainForm : Form
     public static string HotkeyName { get { return NameOf(typeKeys); } }
     public static string PickName { get { return NameOf(pickKeys); } }
     const int HotkeyId = 1, PickId = 2;
-    // A saved text or a pinned entry can have a number: in the list, the keys held for the list hotkey with
-    // that digit choose it, so that the list hotkey and then the digit work from any program (see NumberOf).
+    // A saved text or a pinned entry can have a number: these keys held with that digit paste it into the
+    // active window, from any program, without showing this one. They too can be changed and are remembered.
     public const int MaxNumber = 9;
+    const Keys DefaultQuickKeys = Keys.Control | Keys.Shift;   // with Ctrl+Alt the digits would clash with AltGr
+    static Keys quickKeys = DefaultQuickKeys;
+    const int NumberId = 10;   // the hotkey of each number is this plus the number
 
     public const int MinDelay = 1, MaxDelay = 30;             // limits, in seconds, of the wait before typing
     const int DefaultDelay = 1;                        // wait proposed until the user picks another one
@@ -115,6 +118,7 @@ partial class MainForm : Form
     readonly TextBox delayBox = new TextBox(), keepBox = new TextBox(), cleanBox = new TextBox();
     readonly RoundButton cleanButton = new RoundButton(), exportButton = new RoundButton(), importButton = new RoundButton();
     readonly RoundButton typeKeysButton = new RoundButton(), pickKeysButton = new RoundButton();   // show the keys of a hotkey, and take new ones
+    readonly RoundButton quickKeysButton = new RoundButton();   // the same for the keys of the numbers
     readonly CheckBox usBox = new Toggle();
     readonly CheckBox enterBox = new Toggle();
     readonly CheckBox clearBox = new Toggle();
@@ -122,6 +126,7 @@ partial class MainForm : Form
     readonly CheckBox altCodeBox = new Toggle();
     readonly CheckBox hotkeyBox = new Toggle();
     readonly CheckBox pickBox = new Toggle();
+    readonly CheckBox quickBox = new Toggle();   // the numbered entries are pasted by their keys
     readonly CheckBox historyBox = new Toggle();
     readonly CheckBox trayBox = new Toggle();
     readonly CheckBox leaveBox = new Toggle();   // hides the window when another program comes to the foreground
@@ -137,7 +142,8 @@ partial class MainForm : Form
     bool optionsShown;
     List<Entry> entries = new List<Entry>();
     bool enterDown;     // Enter was pressed in the list, so its release belongs to it
-    int numberDown;     // the same for the keys of a number: the one pressed
+    bool pasting;       // the entry of a number is being pasted
+    string numbersTaken = "";   // the keys of numbers another program has: said once, not at every copy
     IntPtr previous;    // the window the list hotkey was pressed in: the foreground goes back there
     bool wasHidden;     // the list hotkey found the window hidden: after the choice it hides again
     uint ownCopy;       // clipboard sequence number of what was put there from the list: not to be remembered again
@@ -335,6 +341,7 @@ partial class MainForm : Form
         // Click rather than CheckedChanged: it must fire only when the user changes the checkbox.
         hotkeyBox.Click += delegate { UpdateHotkeys(); };
         pickBox.Click += delegate { UpdateHotkeys(); };
+        quickBox.Click += delegate { UpdateHotkeys(); };
         ShowIdle();
         // Starting with Windows is not a setting of ours: the checkbox shows and changes what Windows has.
         Change(delegate { startBox.Checked = Startup.Enabled; });
@@ -549,6 +556,7 @@ partial class MainForm : Form
         Native.RemoveClipboardFormatListener(Handle);
         Native.UnregisterHotKey(Handle, HotkeyId);
         Native.UnregisterHotKey(Handle, PickId);
+        for (int number = 1; number <= MaxNumber; number++) Native.UnregisterHotKey(Handle, NumberId + number);
         base.OnHandleDestroyed(e);
     }
 
@@ -561,6 +569,10 @@ partial class MainForm : Form
         else if (m.Msg == Native.WM_HOTKEY && m.WParam.ToInt32() == PickId)
         {
             OpenList();
+        }
+        else if (m.Msg == Native.WM_HOTKEY && m.WParam.ToInt32() > NumberId && m.WParam.ToInt32() <= NumberId + MaxNumber)
+        {
+            PasteNumber(m.WParam.ToInt32() - NumberId);
         }
         else if (Program.ShowMessage != 0 && (uint)m.Msg == Program.ShowMessage)
         {

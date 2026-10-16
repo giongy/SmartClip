@@ -43,9 +43,10 @@ static partial class Strings
         PausedSay = "En pausa: lo que copias no se recuerda hasta que reanudes la captura.";
         ResumedSay = "La captura se ha reanudado: lo que copias vuelve a la lista.";
         Pinned = "Se queda arriba: {0}."; Unpinned = "Ya no está arriba: {0}.";
-        NumberGiven = "{0} ahora pone «{1}» en el portapapeles, desde cualquier programa.";
+        NumberGiven = "{0} ahora pega «{1}» dondequiera que estés.";
         NumberTaken = "«{0}» ya no tiene atajo.";
-        NumberFree = "Ninguna entrada tiene {0} todavía: dáselo a una con «{1}», en su menú del clic derecho.";
+        Pasted = "Pegado en {1}: {0}.";
+        PasteFocusLost = "No se ha pegado: la ventana ha cambiado. La entrada está en el portapapeles.";
         OnClipboard = "En el portapapeles: {0}. Pégalo con Ctrl+V.";
         OnClipboardOrType = "En el portapapeles: {0}. Pégalo con Ctrl+V o tecléalo con {1}.";
         AskReplace = "«{0}» ya existe. ¿Quieres reemplazarlo?";
@@ -114,8 +115,8 @@ static partial class Strings
             + "solo se ve su nombre. Se pueden reunir en carpetas: «Nueva carpeta» está en el\n"
             + "menú del clic derecho ({3}); un texto entra arrastrándolo, o con «Mover a».\n"
             + "Un clic en la carpeta la abre y la cierra.\n"
-            + "«{6}», en el menú del clic derecho, da un número a la entrada: {4}…{5}, desde\n"
-            + "cualquier programa, la ponen en el portapapeles y te devuelven adonde estabas.";
+            + "«{5}», en el menú del clic derecho, da un número a la entrada: luego {4}\n"
+            + "la pegan dondequiera que estés, sin abrir esta ventana.";
         PressKeys = "Pulsa las teclas…";
         PressKeysStatus = "Pulsa las teclas nuevas: Ctrl o Alt con una letra, un número o una tecla de función. "
             + "Esc deja las actuales, {0} vuelve a las iniciales.";
@@ -124,6 +125,20 @@ static partial class Strings
         TypeNowWith = "Para teclear el portapapeles ahora pulsa {0}."; OpenNowWith = "Para abrir la lista ahora pulsa {0}.";
         HotkeyBusyType = "{0} ya la usa otro programa: dale otras teclas en las opciones, o usa el botón.";
         HotkeyBusyPick = "{0} ya la usa otro programa: dale otras teclas en las opciones, o abre la ventana desde el icono.";
+        QuickTip = "{0} pegan la entrada con ese número en la ventana en la que estás trabajando,\n"
+            + "sin abrir esta: va al portapapeles y Ctrl+V sigue solo.\n"
+            + "Los números se dan con «{1}», en el menú del clic derecho de una entrada.\n"
+            + "Solo se toman las teclas de los números en uso: esas ya no llegan a los demás programas.";
+        QuickKeysTip = "Pulsa aquí y luego las teclas que hay que mantener, junto con una cifra cualquiera: Ctrl o\n"
+            + "Alt, también con {0}. La cifra no cuenta: del 1 al 9, elige la entrada.\n"
+            + "Esc deja las actuales, {1} vuelve a las iniciales ({2}).\n"
+            + "Ctrl+Alt es AltGr: en algunos teclados escribe símbolos con las cifras.";
+        PressQuickStatus = "Pulsa las teclas que hay que mantener con una cifra cualquiera, como {0}. "
+            + "Esc deja las actuales, {1} vuelve a las iniciales.";
+        QuickUnusable = "{0} no sirve: mantén Ctrl o Alt, también con Mayús, y pulsa una cifra.";
+        QuickNowWith = "Las entradas numeradas ahora se pegan con {0}.";
+        QuickBusy = "Ya los usa otro programa: {0}. Esos números no pegarán: elige otras teclas en las opciones, "
+            + "u otros números.";
 
         TypingTitle = "Escritura"; ProgramTitle = "Programa"; HotkeysTitle = "Atajos"; HistoryTitle = "Historial";
         DelayOption = "Espera antes de teclear (segundos):";
@@ -139,6 +154,7 @@ static partial class Strings
         StartOption = "Iniciar con Windows";
         ExportButton = "Exportar…"; ImportButton = "Importar…";
         PickOption = "Abrir la lista";
+        QuickOption = "Pegar por número";
         HistoryOption = "Recordar textos e imágenes copiados";
         KeepOption = "Días en disco (0: solo en memoria):";
         FolderLink = "Abrir la carpeta del historial";
@@ -260,11 +276,11 @@ static partial class Strings
                 + "apaga. Una entrada con estrella no caduca con los días del historial y se queda hasta que la "
                 + "quitas; copiar de nuevo el mismo texto no la mueve.",
             "- «" + NumberMenu + "», en el menú del clic derecho, da a un texto guardado o a una entrada copiada un "
-                + "número del 1 al " + MainForm.MaxNumber + ": desde cualquier programa, " + MainForm.NumberName(1)
-                + " y los demás la ponen enseguida en el portapapeles y te devuelven adonde estabas. Mantén pulsadas "
-                + "las teclas de " + pick + " y añade la cifra. El número aparece en un pequeño recuadro a la derecha "
-                + "de la fila; una entrada copiada que lo recibe también se lleva la estrella, que la conserva. Cada "
-                + "número es de una sola entrada: si se lo das a otra, pasa a ella.",
+                + "número del 1 al " + MainForm.MaxNumber + ": luego, desde cualquier programa, " + MainForm.NumbersName
+                + " la pegan enseguida en la ventana en la que estás trabajando, sin abrir esta (la entrada va al "
+                + "portapapeles y Ctrl+V sigue solo). El número aparece en un pequeño recuadro a la derecha de la fila, "
+                + "y junto al texto guardado en el menú del icono; una entrada copiada que lo recibe también se lleva "
+                + "la estrella, que la conserva. Cada número es de una sola entrada: si se lo das a otra, pasa a ella.",
             "El signo de color de la izquierda dice qué es la entrada: un texto, una dirección web, un texto "
                 + "guardado. Las imágenes muestran una miniatura. A la derecha está la hora de la copia (el día, si "
                 + "no es de hoy) o el día en que se guardó.",
@@ -335,6 +351,7 @@ static partial class Strings
             "# Teclas",
             pick + "\tAbre la lista, desde cualquier programa.",
             type + "\tTeclea enseguida el portapapeles en la ventana activa.",
+            MainForm.NumbersName + "\tPega en la ventana activa la entrada con ese número.",
             "F1\tAbre esta guía.",
             ArrowsName + "\tRecorre la columna.",
             "Tab\tPasa a la otra columna.",
@@ -345,12 +362,11 @@ static partial class Strings
             Key(Keys.Control | MainForm.SaveKey) + "\tGuarda la entrada copiada, o edita la guardada.",
             Key(Keys.Control | MainForm.DeleteKey) + "\tElimina la entrada seleccionada.",
             Key(Keys.Control | MainForm.PinKey) + "\tMantiene arriba la entrada copiada, o la suelta.",
-            MainForm.NumberName(1) + "…" + MainForm.MaxNumber + "\tPone en el portapapeles la entrada con ese número "
-                + "y vuelve a la ventana de la que venías.",
-            "Los dos primeros funcionan en todas partes; los demás, en la lista. Mientras está activo, " + pick
-                + " ya no llega a los demás programas.",
-            "En las opciones, bajo «" + HotkeysTitle + "», los dos primeros se desactivan y se cambian: el botón junto "
-                + "a cada uno muestra sus teclas, y al pulsarlo espera las nuevas.",
+            "Los tres primeros funcionan en todas partes; los demás, en la lista. Mientras está activo, " + pick
+                + " ya no llega a los demás programas, ni tampoco las teclas de los números que tiene alguna entrada.",
+            "En las opciones, bajo «" + HotkeysTitle + "», los tres primeros se desactivan y se cambian: el botón junto "
+                + "a cada uno muestra sus teclas, y al pulsarlo espera las nuevas. Para los números se pulsan las "
+                + "teclas que hay que mantener junto con una cifra cualquiera; si otro programa ya tiene alguna, dice cuáles.",
             "- Hace falta Ctrl o Alt, también con " + ShiftName + ", junto con una letra, un número o una tecla de función.",
             "- Esc deja las teclas actuales, " + DeleteKeyName + " vuelve a las iniciales.",
             "- Con Ctrl+Alt evita las letras que con AltGr escriben un símbolo, como la E del euro: el atajo saltaría "
@@ -375,7 +391,8 @@ static partial class Strings
             "- " + TypingTitle + ": cuántos segundos esperar antes de teclear (de " + MainForm.MinDelay + " a "
                 + MainForm.MaxDelay + "), si el servidor usa el teclado estadounidense, si pulsar Intro al final, si "
                 + "vaciar el portapapeles después, el tecleo lento y los símbolos compuestos con códigos Alt.",
-            "- " + HotkeysTitle + ": activa y desactiva " + type + " y " + pick + ", y les da otras teclas.",
+            "- " + HotkeysTitle + ": activa y desactiva " + type + ", " + pick + " y " + MainForm.NumbersName
+                + ", y les da otras teclas.",
             "- " + HistoryTitle + ": si recordar lo que copias, durante cuántos días, el enlace a la carpeta de los "
                 + "archivos y el botón que la limpia enseguida.",
             "- " + ProgramTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), si seguir en el área de notificación y ocultarse al cambiar a otro "

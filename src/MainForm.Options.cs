@@ -68,6 +68,8 @@ partial class MainForm
         hotkeyBox.Checked = true;
         PlaceHotkey(pickBox, pickKeysButton, Strings.PickOption, left, ref top);
         pickBox.Checked = true;
+        PlaceHotkey(quickBox, quickKeysButton, Strings.QuickOption, left, ref top);
+        quickBox.Checked = true;   // nothing is taken from other programs until an entry has a number
         PlaceTitle(Strings.HistoryTitle, left, ref top);
         PlaceOption(historyBox, Strings.HistoryOption, left, ref top);
         historyBox.Checked = true;
@@ -392,6 +394,9 @@ partial class MainForm
         pickBox.Checked = Transfer(key, save, "PickHotkey", pickBox.Checked || refused.Contains(pickBox));
         typeKeys = Sound(Transfer(key, save, "HotkeyKeys", (int)typeKeys), DefaultTypeKeys);
         pickKeys = Sound(Transfer(key, save, "PickKeys", (int)pickKeys), DefaultPickKeys);
+        quickBox.Checked = Transfer(key, save, "QuickPaste", quickBox.Checked);
+        // Only what is held: with a digit, it must make a hotkey.
+        quickKeys = Sound(Transfer(key, save, "QuickKeys", (int)quickKeys) | (int)Keys.D1, DefaultQuickKeys | Keys.D1) & Keys.Modifiers;
         historyBox.Checked = Transfer(key, save, "History", historyBox.Checked);
         Retention = Transfer(key, save, "KeepDays", Retention);
         trayBox.Checked = Transfer(key, save, "Tray", trayBox.Checked);

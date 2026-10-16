@@ -335,7 +335,7 @@ static class TestProgram
             Texts.Delete(name);
             Texts.Save(name, text, null);
             Check(Texts.Load().Find(mine).Number == 0, "a deleted text takes its number along");
-            Check(MainForm.NumberName(1) == MainForm.PickName + "+1", "the keys of a number are those of the list hotkey and the digit");
+            Check(MainForm.NumberName(1) == "Ctrl+" + Strings.ShiftName + "+1", "the keys of a number: those held, and the digit");
         }
         finally
         {
@@ -738,6 +738,29 @@ static class TestProgram
             press(Keys.Delete);   // back to the keys it starts with
             Console.WriteLine("[{0}] new keys for a hotkey: refused if the list uses them {1}, taken {2}, back to {3}",
                 refusedTaken && taken && MainForm.HotkeyName == "Ctrl+Alt+V" ? "PASS" : "FAIL", refusedTaken, taken, MainForm.HotkeyName);
+            press(Keys.Control | Keys.Shift | Keys.D3);   // the keys of a number
+            bool refusedNumber = MainForm.HotkeyName == "Ctrl+Alt+V";
+            press(Keys.Escape);
+            // The keys of the numbers: what is held with any digit; never a combination of the other hotkeys.
+            object quickBox = typeof(MainForm).GetField("quickBox", hidden).GetValue(form);
+            Action<Keys> pressQuick = delegate(Keys keys)
+            {
+                if (typeof(MainForm).GetField("capturing", hidden).GetValue(form) == null)
+                    typeof(MainForm).GetMethod("AwaitKeys", hidden).Invoke(form, new object[] { quickBox });
+                typeof(MainForm).GetMethod("TakeKeys", hidden).Invoke(form, new object[] { keys });
+            };
+            string quickBefore = MainForm.NumbersName;
+            pressQuick(Keys.Control | Keys.Alt | Keys.F11);   // not a digit
+            bool noDigit = MainForm.NumbersName == quickBefore;
+            pressQuick(Keys.Shift | Keys.D4);                  // nothing that is never typed
+            bool shiftOnly = MainForm.NumbersName == quickBefore;
+            pressQuick(Keys.Control | Keys.Alt | Keys.NumPad7);
+            bool quickTaken = MainForm.NumbersName == "Ctrl+Alt+1…" + MainForm.MaxNumber;
+            pressQuick(Keys.Delete);
+            Console.WriteLine("[{0}] keys of the numbers: {1}; refused without a digit {2}, with Shift alone {3}, taken {4}, "
+                + "and kept from the other hotkeys {5}; back to {6}", noDigit && shiftOnly && quickTaken && refusedNumber
+                && MainForm.NumbersName == quickBefore && quickBefore == "Ctrl+" + Strings.ShiftName + "+1…" + MainForm.MaxNumber
+                ? "PASS" : "FAIL", quickBefore, noDigit, shiftOnly, quickTaken, refusedNumber, MainForm.NumbersName);
 
             Console.WriteLine("form {0}x{1}, client {2}x{3}, icon {4}", form.Width, form.Height,
                 form.ClientSize.Width, form.ClientSize.Height, form.Icon == null ? "none" : form.Icon.Size.ToString());
@@ -1129,8 +1152,32 @@ static class TestProgram
         bool clean = box.Text == "ab\r\ncd\r\n";
         Console.WriteLine("[{0}] nothing was typed by the two refused runs", clean ? "PASS" : "FAIL");
 
+        // Pasting, as the keys of a number do: Ctrl+V into the window. The user's clipboard text comes back after.
+        string kept = Clipboard.ContainsText() ? Clipboard.GetText() : null;
+        string pasted = "pasted € è\r\nsecond line";
+        Clipboard.SetText(pasted);
+        box.Clear();
+        IntPtr window = form.Handle;
+        Task<TypeOutcome> paste = Task.Run(delegate { return Typer.Paste(window, 15); });
+        while (!paste.IsCompleted)
+        {
+            Application.DoEvents();
+            Thread.Sleep(2);
+        }
+        for (int i = 0; i < 20 && box.Text != pasted; i++)
+        {
+            Application.DoEvents();
+            Thread.Sleep(20);
+        }
+        bool pastedOk = paste.Result == TypeOutcome.Done && box.Text == pasted;
+        Console.WriteLine("[{0}] Ctrl+V pastes the clipboard: outcome={1}, text={2}", pastedOk ? "PASS" : "FAIL", paste.Result, Show(box.Text));
+        bool pasteGuard = Typer.Paste(new IntPtr(1), 15) == TypeOutcome.FocusLost;
+        Console.WriteLine("[{0}] but not into a window that is not in front", pasteGuard ? "PASS" : "FAIL");
+        if (kept != null) Clipboard.SetText(kept);
+        else Clipboard.Clear();
+
         form.Dispose();
-        return failures == 0 && guard && stop && clean ? 0 : 1;
+        return failures == 0 && guard && stop && clean && pastedOk && pasteGuard ? 0 : 1;
     }
 
     static int Case(Form form, TextBox box, string name, string text, bool altCodes, bool pressEnter, string expected)

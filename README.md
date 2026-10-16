@@ -74,7 +74,7 @@ reaches the rest. On the right, **Saved**: the texts you saved under a name, whi
 | Dragging a saved text or a folder | Onto a folder, or onto a text inside one, moves it there; onto a text outside the folders, or below the last row, takes it out |
 | Dragging the gap between the columns | Gives the saved texts more room, or less; the width is remembered. A double click there restores it |
 | The star at the right end of a copied entry, or Ctrl+P | Keeps the entry at the top of its column, also beyond the days of the history, until you take the star off |
-| Ctrl+D+1 … Ctrl+D+9 | Puts on the clipboard the entry with that number and returns to the window you came from (see below) |
+| Ctrl+Shift+1 … Ctrl+Shift+9, in any program | Pastes the entry with that number into the active window, without opening SmartClip (see below) |
 | F1, or the **?** button | Opens the guide: everything the program does, by topic |
 
 Of a saved text the list shows the name only: **Show the content** in its right-click
@@ -110,15 +110,20 @@ Press **Ctrl+D** in any program to bring the window up with the cursor in the se
 entry the focus returns to the program you were in, and the window hides again if it was hidden. Esc goes back
 without choosing.
 
-### Shortcuts to single entries
+### Paste by number
 
-**Shortcut**, in the right-click menu, gives a saved text or a copied entry a number from 1 to 9. Then, from any
-program, **Ctrl+D+1** … **Ctrl+D+9** puts that entry straight on the clipboard and takes you back: keep Ctrl held
-down after Ctrl+D and add the digit (the keys of the list hotkey, whatever they are, with the digit; the keypad
-digits work too). The number shows in a small frame at the right of the entry's row, and in the tray menu beside
-a saved text. The same menu changes the number or takes it away (**None**); next to each number it says which
-entry has it now. A number belongs to one entry at a time: given to another, it moves. A copied entry that gets a
-number also gets the star, so that it does not expire; taking the star off takes the number too.
+**Shortcut**, in the right-click menu, gives a saved text or a copied entry a number from 1 to 9. Then, in any
+program, **Ctrl+Shift+1** … **Ctrl+Shift+9** pastes that entry straight into the window you are working in,
+without opening SmartClip: the entry goes on the clipboard and Ctrl+V follows by itself, once you release the
+keys. The number shows in a small frame at the right of the entry's row, and in the tray menu beside a saved
+text. The same menu changes the number or takes it away (**None**); next to each number it says which entry has
+it now. A number belongs to one entry at a time: given to another, it moves. A copied entry that gets a number
+also gets the star, so that it does not expire; taking the star off takes the number too.
+
+Only the keys of the numbers some entry has are registered, so the others stay with the other programs. If
+another program already has one of them, the status line says which, and that number does not paste: give the
+entries other numbers, or the numbers other keys under **Hotkeys** in the options (press the keys to hold
+together with any digit; the button says right away which of them another program uses).
 
 ## Options
 
@@ -138,6 +143,7 @@ on an option shows its full explanation.
 | Alt codes for symbols with no key | Type symbols that your keyboard has no key for with Alt+numpad codes instead of Unicode input. Works only when the remote machine runs Windows. |
 | Type clipboard, with a button showing **Ctrl+Alt+V** | Enable the global hotkey that types the clipboard. The button shows its keys: click it and press the new ones to change them. |
 | Open the list, with a button showing **Ctrl+D** | Enable the global hotkey that brings up the window with the list. While it is on, those keys no longer reach other programs: change them with the button, or turn the hotkey off. |
+| Paste by number, with a button showing **Ctrl+Shift+1…9** | Enable the keys that paste the numbered entries. Only the keys of the numbers in use are taken from other programs. The button takes the keys to hold: press them with any digit; it says which of the nine another program already uses. Del goes back to Ctrl+Shift. |
 | Remember copied texts and pictures | Keep the copied texts and pictures in the list. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. Turning it off also deletes the history on disk. |
 | Days on disk (0: memory only) | For how many days, 0 to 365, what you copy stays in the history, also after the program closes. With 0 nothing is written to disk: the last 30 copied items, of which at most 5 pictures, stay in memory and are gone when the program closes. |
 | Keep the last days when cleaning (0: none), with the button **Clean now…** | Deletes at once, from memory and disk, what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Starred entries and saved texts are not touched. |

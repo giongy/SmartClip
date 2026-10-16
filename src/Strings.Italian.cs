@@ -42,9 +42,10 @@ static partial class Strings
         PausedSay = "In pausa: quello che copi non viene ricordato, finché non riprendi la cattura.";
         ResumedSay = "La cattura è ripresa: quello che copi torna nell'elenco.";
         Pinned = "Resta in alto: {0}."; Unpinned = "Non è più in alto: {0}.";
-        NumberGiven = "{0} ora mette negli appunti «{1}», da qualsiasi programma.";
+        NumberGiven = "{0} ora incolla «{1}» ovunque tu sia.";
         NumberTaken = "«{0}» non ha più una scorciatoia.";
-        NumberFree = "Nessuna voce ha ancora {0}: dalla a una con «{1}», nel suo menu del tasto destro.";
+        Pasted = "Incollato in {1}: {0}.";
+        PasteFocusLost = "Non incollato: la finestra è cambiata. La voce è negli appunti.";
         OnClipboard = "Negli appunti: {0}. Incollalo con Ctrl+V.";
         OnClipboardOrType = "Negli appunti: {0}. Incollalo con Ctrl+V o digitalo con {1}.";
         AskReplace = "«{0}» esiste già. Vuoi sostituirlo?";
@@ -113,8 +114,8 @@ static partial class Strings
             + "se ne vede solo il nome. Si possono raccogliere in cartelle: «Nuova cartella» è nel\n"
             + "menu del tasto destro ({3}); un testo ci entra trascinandolo, o con\n"
             + "«Sposta in». Un clic sulla cartella la apre e la chiude.\n"
-            + "«{6}», nel menu del tasto destro, dà un numero alla voce: {4}…{5}, da qualsiasi\n"
-            + "programma, la rimettono negli appunti e ti riportano dov'eri.";
+            + "«{5}», nel menu del tasto destro, dà un numero alla voce: poi {4}\n"
+            + "la incollano ovunque tu sia, senza aprire questa finestra.";
         PressKeys = "Premi i tasti…";
         PressKeysStatus = "Premi i tasti nuovi: Ctrl o Alt con una lettera, una cifra o un tasto funzione. "
             + "Esc lascia quelli di adesso, {0} torna a quelli di partenza.";
@@ -124,6 +125,20 @@ static partial class Strings
         HotkeyBusyType = "{0} è già usata da un altro programma: dalle altri tasti nelle opzioni, oppure usa il pulsante.";
         HotkeyBusyPick = "{0} è già usata da un altro programma: dalle altri tasti nelle opzioni, oppure apri la "
             + "finestra dall'icona.";
+        QuickTip = "{0} incollano la voce con quel numero nella finestra in cui stai lavorando,\n"
+            + "senza aprire questa: va negli appunti e Ctrl+V segue da solo.\n"
+            + "I numeri si danno con «{1}», nel menu del tasto destro di una voce.\n"
+            + "Si prendono solo i tasti dei numeri in uso: quelli non arrivano più agli altri programmi.";
+        QuickKeysTip = "Premi qui e poi i tasti da tenere premuti, insieme a una cifra qualsiasi: Ctrl o Alt,\n"
+            + "anche con {0}. La cifra non conta: da 1 a 9, sceglie la voce.\n"
+            + "Esc lascia quelli di adesso, {1} torna a quelli di partenza ({2}).\n"
+            + "Ctrl+Alt è AltGr: su alcune tastiere con le cifre scrive dei simboli.";
+        PressQuickStatus = "Premi i tasti da tenere premuti con una cifra qualsiasi, come {0}. "
+            + "Esc lascia quelli di adesso, {1} torna a quelli di partenza.";
+        QuickUnusable = "{0} non va: tieni premuto Ctrl o Alt, anche con Maiusc, e premi una cifra.";
+        QuickNowWith = "Le voci numerate ora si incollano con {0}.";
+        QuickBusy = "Già usati da un altro programma: {0}. Quei numeri non incolleranno: scegli altri tasti nelle "
+            + "opzioni, o altri numeri.";
 
         TypingTitle = "Digitazione"; ProgramTitle = "Programma"; HotkeysTitle = "Scorciatoie"; HistoryTitle = "Cronologia";
         DelayOption = "Attesa prima di digitare (secondi):";
@@ -139,6 +154,7 @@ static partial class Strings
         StartOption = "Avvia insieme a Windows";
         ExportButton = "Esporta…"; ImportButton = "Importa…";
         PickOption = "Apri l'elenco";
+        QuickOption = "Incolla per numero";
         HistoryOption = "Ricorda i testi e le immagini copiati";
         KeepOption = "Giorni su disco (0: solo in memoria):";
         FolderLink = "Apri la cartella della cronologia";
@@ -256,10 +272,11 @@ static partial class Strings
                 + "Una voce con la stellina non scade con i giorni della cronologia e resta lì finché non la togli; "
                 + "copiare di nuovo lo stesso testo non la sposta.",
             "- «" + NumberMenu + "», nel menu del tasto destro, dà a un testo salvato o a una voce copiata un numero "
-                + "da 1 a " + MainForm.MaxNumber + ": da qualsiasi programma, " + MainForm.NumberName(1) + " e gli altri "
-                + "la rimettono subito negli appunti e ti riportano dov'eri. Tieni premuti i tasti di " + pick + " e "
-                + "aggiungi la cifra. Il numero compare in un riquadro a destra della riga; una voce copiata che lo "
-                + "riceve prende anche la stellina, che la tiene. Ogni numero è di una voce sola: dato a un'altra, passa a lei.",
+                + "da 1 a " + MainForm.MaxNumber + ": poi, da qualsiasi programma, " + MainForm.NumbersName + " la "
+                + "incollano subito nella finestra in cui stai lavorando, senza aprire questa (la voce va negli appunti "
+                + "e Ctrl+V segue da solo). Il numero compare in un riquadro a destra della riga, e accanto al testo "
+                + "salvato nel menu dell'icona; una voce copiata che lo riceve prende anche la stellina, che la tiene. "
+                + "Ogni numero è di una voce sola: dato a un'altra, passa a lei.",
             "Il segno colorato a sinistra dice che cos'è la voce: un testo, un indirizzo web, un testo salvato. Le "
                 + "immagini mostrano una miniatura. A destra c'è l'ora della copia (il giorno, se non è di oggi) o il "
                 + "giorno del salvataggio.",
@@ -325,6 +342,7 @@ static partial class Strings
             "# I tasti",
             pick + "\tApre l'elenco, da qualsiasi programma.",
             type + "\tDigita subito gli appunti nella finestra attiva.",
+            MainForm.NumbersName + "\tIncolla nella finestra attiva la voce con quel numero.",
             "F1\tApre questa guida.",
             ArrowsName + "\tScorre la colonna.",
             "Tab\tPassa all'altra colonna.",
@@ -335,12 +353,11 @@ static partial class Strings
             Key(Keys.Control | MainForm.SaveKey) + "\tSalva la voce copiata, o modifica quella salvata.",
             Key(Keys.Control | MainForm.DeleteKey) + "\tElimina la voce selezionata.",
             Key(Keys.Control | MainForm.PinKey) + "\tTiene in alto la voce copiata, o la lascia andare.",
-            MainForm.NumberName(1) + "…" + MainForm.MaxNumber + "\tMette negli appunti la voce con quel numero e "
-                + "torna alla finestra di partenza.",
-            "Le prime due funzionano ovunque; le altre valgono nell'elenco. Finché è attiva, " + pick + " non arriva "
-                + "più agli altri programmi.",
-            "Nelle opzioni, sotto «" + HotkeysTitle + "», le prime due si spengono e si cambiano: il pulsante accanto a "
-                + "ciascuna mostra i suoi tasti, e premendolo aspetta quelli nuovi.",
+            "Le prime tre funzionano ovunque; le altre valgono nell'elenco. Finché è attiva, " + pick + " non arriva "
+                + "più agli altri programmi, e nemmeno i tasti dei numeri che qualche voce ha.",
+            "Nelle opzioni, sotto «" + HotkeysTitle + "», le prime tre si spengono e si cambiano: il pulsante accanto a "
+                + "ciascuna mostra i suoi tasti, e premendolo aspetta quelli nuovi. Per i numeri si premono i tasti da "
+                + "tenere premuti insieme a una cifra qualsiasi; se un altro programma ne ha già qualcuno, dice quali.",
             "- Servono Ctrl o Alt, anche con " + ShiftName + ", insieme a una lettera, una cifra o un tasto funzione.",
             "- Esc lascia i tasti di adesso, " + DeleteKeyName + " torna a quelli di partenza.",
             "- Con Ctrl+Alt evita le lettere che con AltGr scrivono un simbolo, come la E dell'euro: la scorciatoia "
@@ -365,7 +382,8 @@ static partial class Strings
             "- " + TypingTitle + ": quanti secondi aspettare prima di digitare (da " + MainForm.MinDelay + " a "
                 + MainForm.MaxDelay + "), se il server usa la tastiera americana, se premere Invio alla fine, se "
                 + "svuotare gli appunti dopo, la digitazione lenta e i simboli composti con Alt+codice.",
-            "- " + HotkeysTitle + ": accende e spegne " + type + " e " + pick + ", e dà loro altri tasti.",
+            "- " + HotkeysTitle + ": accende e spegne " + type + ", " + pick + " e " + MainForm.NumbersName
+                + ", e dà loro altri tasti.",
             "- " + HistoryTitle + ": se ricordare ciò che copi, per quanti giorni, il collegamento alla cartella dei "
                 + "file e il pulsante che la pulisce subito.",
             "- " + ProgramTitle + ": la lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), se restare attivo nell'area di notifica e nascondersi passando a un "
