@@ -152,6 +152,9 @@ condiviso su GitHub).
   salvati non devono stare in cima ai copiati): a sinistra `recentList` con le cose copiate (le 200 più recenti che corrispondono alla ricerca, `MaxShown`), a
   destra `savedList` con i testi salvati. La voce selezionata è una sola in tutta la finestra (`active`,
   `Selected`); Tab passa da una colonna all'altra. Tutte e due si filtrano mentre si scrive (`Texts.Matches`: parole in qualsiasi ordine, senza maiuscole né accenti). Il
+  testo di ogni voce si prepara una volta sola senza accenti e in minuscolo (`Texts.Fold`, `Entry.Folded`) e poi si
+  confronta ordinalmente: dieci volte più veloce del confronto culturale con `IgnoreNonSpace` (misurato: 45 → 4,6 ms
+  su 5000 voci), che però trovava anche «ae» in «æ». Il
   pulsante «Opzioni»/«Elenco» alterna nella stessa area le due viste (`ShowView`, `listControls` e
   `optionControls`). Le idee vengono dal progetto vicino `..\pastepad` (WinUI 3, .NET 10), riscritte qui in
   piccolo: niente modelli, formato, temi.

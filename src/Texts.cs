@@ -32,6 +32,7 @@ class Entry
     public long Offset, PngOffset;
     public int Length, PngLength;
     string line;   // what the list shows of a copied text, worked out once: rows are drawn often, and texts can be long
+    string folded; // the text as the search compares it, worked out at the first search
 
     public Entry(string name, string text) : this(name, text, DateTime.Now)
     {
@@ -104,6 +105,11 @@ class Entry
         }
     }
 
+    public string Folded
+    {
+        get { return folded ?? (folded = Texts.Fold(Text)); }
+    }
+
     // How many folders it is inside of: zero for a folder or a text outside them all.
     public int Level
     {
@@ -160,8 +166,6 @@ static class Texts
     public const string PrivateMarker = "ExcludeClipboardContentFromMonitorProcessing";
     static readonly string[] PrivateIfPresent = { "Clipboard Viewer Ignore", PrivateMarker };
     static readonly string[] PrivateIfZero = { "CanIncludeInClipboardHistory", "CanUploadToCloudClipboard" };
-    static readonly CompareInfo Comparer = CultureInfo.InvariantCulture.CompareInfo;
-    const CompareOptions Loose = CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace;
 
     public static readonly List<Entry> Recent = new List<Entry>();   // newest first
 
@@ -863,16 +867,52 @@ static class Texts
     }
 
     // Every word of the query must appear somewhere, in any order; case and accents do not count.
-    // The name of its folder finds a text too.
     public static bool Matches(Entry entry, string query)
     {
-        foreach (string word in query.Split((char[])null, StringSplitOptions.RemoveEmptyEntries))
-            if (!Holds(entry.Group, word) && !Holds(entry.Name, word) && !Holds(entry.Text, word)) return false;
+        return Matches(entry, Words(query));
+    }
+
+    // The same with the words already taken from the query, once for all the entries. The name of its folder finds
+    // a text too.
+    public static bool Matches(Entry entry, string[] words)
+    {
+        if (words.Length == 0) return true;
+        string group = Fold(entry.Group), name = Fold(entry.Name);   // short, unlike the text
+        foreach (string word in words)
+            if (!Holds(group, word) && !Holds(name, word) && !Holds(entry.Folded, word)) return false;
         return true;
+    }
+
+    // The words of a query, as Fold writes them.
+    public static string[] Words(string query)
+    {
+        string[] words = query.Split((char[])null, StringSplitOptions.RemoveEmptyEntries);
+        for (int i = 0; i < words.Length; i++) words[i] = Fold(words[i]);
+        return words;
     }
 
     static bool Holds(string where, string word)
     {
-        return where != null && Comparer.IndexOf(where, word, Loose) >= 0;
+        return where != null && where.IndexOf(word, StringComparison.Ordinal) >= 0;
+    }
+
+    // A text as the search compares it: without accents and in small letters, "Città" as "citta". Done once per
+    // text, it makes the search many times faster than comparing while ignoring them.
+    public static string Fold(string text)
+    {
+        if (text == null) return null;
+        string decomposed;
+        try
+        {
+            decomposed = text.Normalize(NormalizationForm.FormD);   // a letter and its accent apart
+        }
+        catch (ArgumentException)
+        {
+            decomposed = text;   // half of a surrogate pair, which cannot be normalised: as it is
+        }
+        StringBuilder plain = new StringBuilder(decomposed.Length);
+        foreach (char c in decomposed)
+            if (CharUnicodeInfo.GetUnicodeCategory(c) != UnicodeCategory.NonSpacingMark) plain.Append(c);
+        return plain.ToString().ToLowerInvariant();
     }
 }

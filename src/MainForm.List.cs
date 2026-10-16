@@ -220,7 +220,8 @@ partial class MainForm
         savedList.BeginUpdate();
         recentList.Items.Clear();
         savedList.Items.Clear();
-        bool searching = search.Text.Trim().Length > 0;
+        string[] words = Texts.Words(search.Text);   // taken from the box once, not for each entry
+        bool searching = words.Length > 0;
         // A folder is there unless one it is inside of is closed, and in a search only with what was found in
         // it: its row, and those of the folders around it, wait here until something of theirs is listed.
         Dictionary<string, bool> open = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
@@ -235,7 +236,7 @@ partial class MainForm
                 else if (InView(Texts.Parent(entry.Name), open)) ShowRow(savedList, entry, selected);
                 continue;
             }
-            if (!Texts.Matches(entry, search.Text)) continue;
+            if (!Texts.Matches(entry, words)) continue;
             // The history can hold thousands: the search reaches the others. The copied ones come last.
             if (entry.Name == null && recentList.Items.Count == MaxShown) break;
             if (entry.Group != null)
@@ -248,8 +249,8 @@ partial class MainForm
         }
         if (selected != null)
         {
-            if (recentList.Items.Count > 0) recentList.TopIndex = Math.Min(recentTop, recentList.Items.Count - 1);
-            if (savedList.Items.Count > 0) savedList.TopIndex = Math.Min(savedTop, savedList.Items.Count - 1);
+            Rescroll(recentList, recentTop);
+            Rescroll(savedList, savedTop);
         }
         recentList.EndUpdate();
         savedList.EndUpdate();
@@ -280,6 +281,18 @@ partial class MainForm
             if (open.TryGetValue(group, out opened) && !opened) return false;
         }
         return true;
+    }
+
+    // Scrolls a list filled again back to where it was, as far as its selected row stays in view: an entry just
+    // pinned, for example, has gone up to the top.
+    static void Rescroll(ListBox list, int top)
+    {
+        if (list.Items.Count == 0) return;
+        list.TopIndex = Math.Min(top, list.Items.Count - 1);
+        int index = list.SelectedIndex;
+        if (index < 0) return;
+        Rectangle row = list.GetItemRectangle(index);
+        if (row.Top < 0 || row.Bottom > list.ClientSize.Height) list.TopIndex = index;
     }
 
     // Adds a row to a list; if it is the entry that was selected, it is selected again.
@@ -358,9 +371,15 @@ partial class MainForm
     // saved text always the day it was saved. The year only when it is not this one. Null if nobody knows.
     static string When(Entry entry)
     {
-        if (entry.IsGroup || entry.Time == DateTime.MinValue) return null;
+        if (!Dated(entry)) return null;
         return entry.Time.ToString(entry.Name == null && entry.Time.Date == DateTime.Today ? "HH:mm"
             : entry.Time.Year == DateTime.Today.Year ? Strings.DayFormat : Strings.YearDayFormat, Strings.Culture);
+    }
+
+    // Whether a row says when: not a folder, nor a text saved before the days were kept.
+    static bool Dated(Entry entry)
+    {
+        return !entry.IsGroup && entry.Time != DateTime.MinValue;
     }
 
     // A row of the lists, but for a picture: the line of the entry, and the small one of when it was copied or
@@ -374,7 +393,7 @@ partial class MainForm
     // and a picture, which is taller, have them in the middle.
     static Rectangle Line(Entry entry, Rectangle row)
     {
-        if (entry.Picture || When(entry) == null) return row;
+        if (entry.Picture || !Dated(entry)) return row;
         return new Rectangle(row.Left, row.Top + RowPadding / 2, row.Width, Look.EntryFont.Height);
     }
 
@@ -461,11 +480,11 @@ partial class MainForm
     void DrawEntry(object sender, DrawItemEventArgs e)
     {
         if (e.Index < 0) return;
-        ListBox list = (ListBox)sender;
+        RowList list = (RowList)sender;
         Entry entry = (Entry)list.Items[e.Index];
         bool selected = (e.State & DrawItemState.Selected) != 0;
         // How lit by the pointer it is; fully, the folder a dragged text would be dropped into.
-        float glow = entry.IsGroup && dropGroup != null && Texts.SameName(entry.Name, dropGroup) ? 1 : ((RowList)list).Glow.Of(e.Index);
+        float glow = entry.IsGroup && dropGroup != null && Texts.SameName(entry.Name, dropGroup) ? 1 : list.Glow.Of(e.Index);
         Look.DrawRow(e.Graphics, e.Bounds, list.BackColor, selected, glow);
         Rectangle label = Content(list, entry, e.Bounds), line = Line(entry, e.Bounds);
         string when = When(entry);
