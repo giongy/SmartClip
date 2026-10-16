@@ -129,7 +129,7 @@ Pause capturing with one click
 Export and import to a text file
 Starts with Windows, hidden in the notification area
 Built-in guide, organized by topic
-Windows 11 look with the icons of Windows, light or dark theme, font and size of the entries of your choice
+Windows 11 look with the icons of Windows, light or dark theme, fonts and sizes of the interface and of the entries of your choice
 In English, Spanish, French and Italian
 No account, no ads, no Internet connection
 ```
@@ -149,9 +149,9 @@ paste blocked
 ### What's new in this version
 
 ```
-Larger text for what you copy and save: the entries are now written at 14 px by default, the size of the text of Windows 11.
+Larger text for what you copy and save: the entries are now written at 14 px by default, the size of the text of Windows 11. The time or the day of each entry has moved to a small line under it, so the text gets the whole row.
 
-Font and size of your choice: under Options > Program, two new menus set the font of the entries (Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, or the monospaced Cascadia Mono and Consolas, among those Windows has) and their size, from 11 to 20 px. They apply at once to the rows of both lists, to an entry shown whole and to the content of a saved text; buttons and labels stay as they are.
+Fonts of your choice, under Options > Program: one for the interface (buttons, options, the guide, menus), from 12 to 16 px, 13 by default, and one for the entries, from 11 to 20 px, which applies at once. Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, or the monospaced Cascadia Mono and Consolas, among those Windows has.
 
 The window now remembers the size you give it, as well as its position, and comes back onto the screen if it no longer fits.
 ```
@@ -225,7 +225,7 @@ Cattura sospendibile con un clic
 Esportazione e importazione in un file di testo
 Avvio con Windows, nascosto nell'area di notifica
 Guida integrata, divisa per argomenti
-Aspetto da Windows 11 con le icone di Windows, tema chiaro o scuro, carattere e dimensione delle voci a scelta
+Aspetto da Windows 11 con le icone di Windows, tema chiaro o scuro, caratteri e dimensioni di interfaccia e voci a scelta
 In italiano, inglese, spagnolo e francese
 Nessun account, nessuna pubblicità, nessuna connessione a Internet
 ```
@@ -245,9 +245,9 @@ digitare password
 ### Novità di questa versione
 
 ```
-Testo più grande per ciò che copi e salvi: le voci ora sono scritte a 14 px, la dimensione del testo di Windows 11.
+Testo più grande per ciò che copi e salvi: le voci ora sono scritte a 14 px, la dimensione del testo di Windows 11. L'ora o il giorno di ogni voce sono scesi su una piccola riga sotto, così il testo ha tutta la riga.
 
-Carattere e dimensione a scelta: in Opzioni > Programma, due nuovi menu scelgono il carattere delle voci (Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, o i monospaziati Cascadia Mono e Consolas, tra quelli che Windows ha) e la loro dimensione, da 11 a 20 px. Valgono subito per le righe dei due elenchi, per una voce mostrata per intero e per il contenuto di un testo salvato; pulsanti ed etichette restano come sono.
+Caratteri a scelta, in Opzioni > Programma: uno per l'interfaccia (pulsanti, opzioni, la guida, i menu), da 12 a 16 px, 13 di default, e uno per le voci, da 11 a 20 px, che vale subito. Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, o i monospaziati Cascadia Mono e Consolas, tra quelli che Windows ha.
 
 La finestra ora ricorda la dimensione che le dai, oltre alla posizione, e torna sullo schermo se non ci sta più.
 ```
@@ -321,7 +321,7 @@ Captura que se pausa con un clic
 Exportación e importación a un archivo de texto
 Inicio con Windows, oculto en el área de notificación
 Guía integrada, dividida por temas
-Aspecto de Windows 11 con los iconos de Windows, tema claro u oscuro, fuente y tamaño de las entradas a elegir
+Aspecto de Windows 11 con los iconos de Windows, tema claro u oscuro, fuentes y tamaños de la interfaz y de las entradas a elegir
 En español, inglés, francés e italiano
 Sin cuenta, sin publicidad, sin conexión a Internet
 ```
@@ -341,9 +341,9 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Texto más grande para lo que copias y guardas: las entradas ahora se escriben a 14 px, el tamaño del texto de Windows 11.
+Texto más grande para lo que copias y guardas: las entradas ahora se escriben a 14 px, el tamaño del texto de Windows 11. La hora o el día de cada entrada han bajado a una pequeña línea debajo, así el texto tiene toda la fila.
 
-Fuente y tamaño a elegir: en Opciones > Programa, dos menús nuevos eligen la fuente de las entradas (Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, o las monoespaciadas Cascadia Mono y Consolas, entre las que tiene Windows) y su tamaño, de 11 a 20 px. Se aplican enseguida a las filas de las dos listas, a una entrada mostrada entera y al contenido de un texto guardado; botones y etiquetas se quedan como están.
+Fuentes a elegir, en Opciones > Programa: una para la interfaz (botones, opciones, la guía, los menús), de 12 a 16 px, 13 por defecto, y otra para las entradas, de 11 a 20 px, que se aplica enseguida. Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, o las monoespaciadas Cascadia Mono y Consolas, entre las que tiene Windows.
 
 La ventana ahora recuerda el tamaño que le das, además de su posición, y vuelve a la pantalla si ya no cabe.
 ```
@@ -417,7 +417,7 @@ Capture suspendue en un clic
 Export et import dans un fichier texte
 Démarrage avec Windows, caché dans la zone de notification
 Guide intégré, organisé par sujet
-Aspect Windows 11 avec les icônes de Windows, thème clair ou sombre, police et taille des éléments au choix
+Aspect Windows 11 avec les icônes de Windows, thème clair ou sombre, polices et tailles de l'interface et des éléments au choix
 En français, anglais, espagnol et italien
 Pas de compte, pas de publicité, pas de connexion à Internet
 ```
@@ -437,9 +437,9 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Un texte plus grand pour ce que vous copiez et enregistrez : les éléments sont maintenant écrits en 14 px, la taille du texte de Windows 11.
+Un texte plus grand pour ce que vous copiez et enregistrez : les éléments sont maintenant écrits en 14 px, la taille du texte de Windows 11. L'heure ou le jour de chaque élément sont descendus sur une petite ligne en dessous : le texte a toute la ligne.
 
-Police et taille au choix : dans Options > Programme, deux nouveaux menus choisissent la police des éléments (Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, ou les polices à chasse fixe Cascadia Mono et Consolas, parmi celles que Windows possède) et leur taille, de 11 à 20 px. Elles s'appliquent aussitôt aux lignes des deux listes, à un élément affiché en entier et au contenu d'un texte enregistré ; les boutons et les libellés restent tels quels.
+Des polices au choix, dans Options > Programme : une pour l'interface (boutons, options, le guide, les menus), de 12 à 16 px, 13 par défaut, et une pour les éléments, de 11 à 20 px, qui s'applique aussitôt. Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, ou les polices à chasse fixe Cascadia Mono et Consolas, parmi celles que Windows possède.
 
 La fenêtre retient maintenant la taille que vous lui donnez, en plus de sa position, et revient sur l'écran si elle n'y tient plus.
 ```
