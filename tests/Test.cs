@@ -828,7 +828,7 @@ static class TestProgram
             form.StartPosition = FormStartPosition.Manual;
             form.Location = new Point(80, 80);
             BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
-            FillSample(form);
+            FillSample(form, Wider);
             form.Show();
             form.BringToFront();
             Snap(form, path + "-real-list.png");
@@ -846,7 +846,7 @@ static class TestProgram
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
             recent.TopIndex = 10;
             Snap(form, path + "-real-scroll.png");
-            FillSample(form);
+            FillSample(form, Wider);
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
             Snap(form, path + "-real-options.png");
             using (ShotEdit edit = new ShotEdit(new Entry(Sample.Current.Signature, Sample.Current.SignatureText), Sample.Current.Work, new List<string>(new string[] { Sample.Current.Work, Sample.Current.Home })))
@@ -935,7 +935,7 @@ static class TestProgram
             form.ShowInTaskbar = false;
             form.StartPosition = FormStartPosition.Manual;
             form.Location = new Point(-30000, -30000);
-            FillSample(form);
+            FillSample(form, Wider);
             form.Show();   // now it has the size of this screen's scale
             Rectangle screen = Screen.PrimaryScreen.Bounds;
             Size size = form.Width + 2 * Top <= 1366 && form.Height + 2 * Top <= 768 ? new Size(1366, 768) : new Size(1920, 1080);
@@ -1078,8 +1078,18 @@ static class TestProgram
         }
     }
 
+    // The pictures of the Store and of the README show the window this much wider than designed (pixels at 96 dpi),
+    // half to each column, as a user would leave it: at the default size of the entries the names of the saved
+    // texts are cut short.
+    const int Wider = 160;
+
     // Fills the list with made-up entries instead of the user's own, which must not end up in a picture.
     static void FillSample(MainForm form)
+    {
+        FillSample(form, 0);
+    }
+
+    static void FillSample(MainForm form, int wider)
     {
         BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
         Sample s = Sample.Current;
@@ -1112,10 +1122,12 @@ static class TestProgram
         entries.Add(new Entry(null, "https://github.com/giongy/SmartClip", morning.AddMinutes(-52)));
         typeof(MainForm).GetField("entries", hidden).SetValue(form, entries);
         typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
-        // The window and its columns as designed, not as the user left them: every picture the same.
-        typeof(MainForm).GetField("savedSize", hidden).SetValue(form, Size.Empty);
+        // The window and its columns as designed (or wider by the same amount), not as the user left them: every
+        // picture the same.
+        typeof(MainForm).GetField("savedSize", hidden).SetValue(form, wider == 0 ? Size.Empty
+            : new Size((int)Math.Round(form.Width / Look.Zoom) + wider, (int)Math.Round(form.Height / Look.Zoom)));
         typeof(MainForm).GetField("savedColumn", hidden).SetValue(form,
-            typeof(MainForm).GetField("SavedWidth", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null));
+            (int)typeof(MainForm).GetField("SavedWidth", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null) + wider / 2);
     }
 
     // Something that looks like a screenshot: a window with a title bar on a coloured desktop.

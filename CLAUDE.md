@@ -356,7 +356,9 @@ condiviso su GitHub).
   `OnLoad`). Dimensione e posizione si ricordano (la dimensione dal 16/10/2026, voluta dall'utente: prima tornava
   ogni volta quella di default): impostazioni `Width` e `Height`, in pixel a 96 dpi come `SavedWidth`, applicate in
   `OnLoad` (`savedSize`), mai sotto la minima né oltre lo schermo, sul quale la finestra viene riportata. Le
-  immagini dei test (`FillSample`) le ignorano, come la larghezza dei salvati.
+  immagini dei test (`FillSample`) le ignorano, come la larghezza dei salvati: `shot` mostra la finestra come
+  disegnata, `store` e `real` più larga di `Wider` (metà a ciascuna colonna; voluto dall'utente nella 3.9.3,
+  perché con le voci a 14 px i nomi dei salvati si tagliavano).
   Allargandola cresce la colonna dei copiati (`Anchor`); le opzioni restano in alto a sinistra.
   Lo spazio tra le due colonne si trascina (`divider`, `PlaceColumns`; voluto dall'utente, a cui i salvati
   stavano stretti): la larghezza dei salvati si salva (`SavedWidth`, in pixel a 96 dpi) e si applica in

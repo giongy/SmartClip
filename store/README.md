@@ -149,9 +149,11 @@ paste blocked
 ### What's new in this version
 
 ```
-Paste by number: from its right-click menu, give a saved text or a starred entry a number from 1 to 9; then Ctrl+Shift+1…9 pastes it straight into the window you are working in, from any program, without opening SmartClip. The keys can be changed in the options, which say if another program already uses them. The number shows in the list and in the menu of the tray icon.
+Larger text for what you copy and save: the entries are now written at 14 px by default, the size of the text of Windows 11.
 
-A new look in the style of Windows 11: the icons of Windows itself, options in pages chosen from a column as in Settings, rows and buttons that light up gradually, pages that slide into place, thin scroll bars, rounded menus, and a light or dark theme chosen in the options or the same as Windows.
+Font and size of your choice: under Options > Program, two new menus set the font of the entries (Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, or the monospaced Cascadia Mono and Consolas, among those Windows has) and their size, from 11 to 20 px. They apply at once to the rows of both lists, to an entry shown whole and to the content of a saved text; buttons and labels stay as they are.
+
+The window now remembers the size you give it, as well as its position, and comes back onto the screen if it no longer fits.
 ```
 
 ### Screenshot captions
@@ -243,9 +245,11 @@ digitare password
 ### Novità di questa versione
 
 ```
-Incolla per numero: dal menu del tasto destro dai a un testo salvato o a una voce con la stellina un numero da 1 a 9; poi Ctrl+Maiusc+1…9 lo incolla subito nella finestra in cui stai lavorando, da qualsiasi programma, senza aprire SmartClip. I tasti si cambiano nelle opzioni, che dicono se un altro programma li usa già. Il numero si vede nell'elenco e nel menu dell'icona.
+Testo più grande per ciò che copi e salvi: le voci ora sono scritte a 14 px, la dimensione del testo di Windows 11.
 
-Un aspetto nuovo nello stile di Windows 11: le icone di Windows stesso, opzioni in pagine scelte da una colonna come in Impostazioni, righe e pulsanti che si illuminano gradualmente, pagine che scivolano al loro posto, barre di scorrimento sottili, menu arrotondati e tema chiaro o scuro, scelto nelle opzioni o come Windows.
+Carattere e dimensione a scelta: in Opzioni > Programma, due nuovi menu scelgono il carattere delle voci (Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, o i monospaziati Cascadia Mono e Consolas, tra quelli che Windows ha) e la loro dimensione, da 11 a 20 px. Valgono subito per le righe dei due elenchi, per una voce mostrata per intero e per il contenuto di un testo salvato; pulsanti ed etichette restano come sono.
+
+La finestra ora ricorda la dimensione che le dai, oltre alla posizione, e torna sullo schermo se non ci sta più.
 ```
 
 ### Didascalie delle schermate
@@ -337,9 +341,11 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Pegar por número: desde su menú del clic derecho, da a un texto guardado o a una entrada con estrella un número del 1 al 9; luego Ctrl+Mayús+1…9 la pega enseguida en la ventana en la que estás trabajando, desde cualquier programa, sin abrir SmartClip. Las teclas se cambian en las opciones, que avisan si otro programa ya las usa. El número se ve en la lista y en el menú del icono.
+Texto más grande para lo que copias y guardas: las entradas ahora se escriben a 14 px, el tamaño del texto de Windows 11.
 
-Un aspecto nuevo al estilo de Windows 11: los iconos del propio Windows, opciones en páginas elegidas desde una columna como en Configuración, filas y botones que se iluminan poco a poco, páginas que se deslizan a su sitio, barras de desplazamiento finas, menús redondeados y tema claro u oscuro, elegido en las opciones o como Windows.
+Fuente y tamaño a elegir: en Opciones > Programa, dos menús nuevos eligen la fuente de las entradas (Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, o las monoespaciadas Cascadia Mono y Consolas, entre las que tiene Windows) y su tamaño, de 11 a 20 px. Se aplican enseguida a las filas de las dos listas, a una entrada mostrada entera y al contenido de un texto guardado; botones y etiquetas se quedan como están.
+
+La ventana ahora recuerda el tamaño que le das, además de su posición, y vuelve a la pantalla si ya no cabe.
 ```
 
 ### Leyendas de las capturas
@@ -431,9 +437,11 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Coller par numéro : depuis son menu du clic droit, donnez à un texte enregistré ou à un élément étoilé un numéro de 1 à 9 ; ensuite Ctrl+Maj+1…9 le colle aussitôt dans la fenêtre où vous travaillez, depuis n'importe quel programme, sans ouvrir SmartClip. Les touches se changent dans les options, qui signalent si un autre programme les utilise déjà. Le numéro apparaît dans la liste et dans le menu de l'icône.
+Un texte plus grand pour ce que vous copiez et enregistrez : les éléments sont maintenant écrits en 14 px, la taille du texte de Windows 11.
 
-Un nouvel aspect dans le style de Windows 11 : les icônes de Windows lui-même, des options en pages choisies dans une colonne comme dans les Paramètres, des lignes et des boutons qui s'éclairent progressivement, des pages qui glissent à leur place, des barres de défilement fines, des menus arrondis et un thème clair ou sombre, choisi dans les options ou comme Windows.
+Police et taille au choix : dans Options > Programme, deux nouveaux menus choisissent la police des éléments (Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, ou les polices à chasse fixe Cascadia Mono et Consolas, parmi celles que Windows possède) et leur taille, de 11 à 20 px. Elles s'appliquent aussitôt aux lignes des deux listes, à un élément affiché en entier et au contenu d'un texte enregistré ; les boutons et les libellés restent tels quels.
+
+La fenêtre retient maintenant la taille que vous lui donnez, en plus de sa position, et revient sur l'écran si elle n'y tient plus.
 ```
 
 ### Légendes des captures
