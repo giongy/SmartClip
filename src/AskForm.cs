@@ -16,8 +16,9 @@ class AskForm : Form
     AskForm(string text, bool question)
     {
         SuspendLayout();
-        AutoScaleDimensions = new SizeF(96F, 96F);
-        AutoScaleMode = AutoScaleMode.Dpi;
+        // Built as designed, then made larger at the end by Look.Zoom, the scale of the screen and of the text: left to
+        // Windows Forms, the controls that inherit the font would be scaled twice.
+        AutoScaleMode = AutoScaleMode.None;
         Font = Look.TextFont;
         Text = Program.AppName;
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -50,6 +51,7 @@ class AskForm : Form
         if (question) NewButton(Strings.Yes, DialogResult.Yes, false, answer.Left - Gap, buttonTop);
         CancelButton = answer;   // Esc too
         ActiveControl = answer;
+        Scale(new SizeF(Look.Zoom, Look.Zoom));
         ResumeLayout(false);
         PerformLayout();
     }

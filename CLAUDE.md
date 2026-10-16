@@ -316,8 +316,22 @@ condiviso su GitHub).
   dentro un pannello (`Look.Frame`), le spunte sono interruttori disegnati (`Toggle`, restano `CheckBox`; voluti
   dall'utente al posto dei quadratini), l'attesa è una casella di testo
   numerica e la tastiera del server un interruttore (prima `NumericUpDown` e `ComboBox`, rimasti chiari).
-  Il carattere è Segoe UI Variable Text dove c'è (Windows 11), altrimenti quello dei messaggi di sistema:
-  `Look.TextFont`, usato da tutte le finestre.
+  Il carattere è `Look.TextFont`, usato da tutte le finestre: Segoe UI Variable Text dove c'è (Windows 11),
+  altrimenti il primo che Windows ha di `Look.Families`.
+- Carattere e dimensione del testo (voluti dall'utente il 16/10/2026: «il font di default più grande» e
+  un'opzione per cambiarli): in «Programma», sotto il tema, due pulsanti con menu come la lingua (`fontButton`,
+  `sizeButton`; nel menu ogni carattere è scritto in se stesso, `Look.FontLabel` toglie «Text» a Segoe UI
+  Variable). Caratteri: quelli di `Look.Families` che Windows ha (`FontNames`). Dimensioni: `Look.Sizes`, in
+  percento del carattere dei messaggi di Windows (che segue la dimensione del testo delle sue impostazioni di
+  accessibilità), con nomi Piccola/Normale/Grande/Molto grande; default 117 (`DefaultSize`, i 14 px del testo di
+  Windows 11: prima era 100). Impostazioni `Font` (nome) e `TextSize` (percento), lette da `Main` con
+  `SavedFont`/`SavedSize` e passate a `Look.UseFont` prima della prima finestra (valori sconosciuti: i
+  default). Come la lingua, cambiarli riavvia (`Restart`, che serve anche a `ChangeLanguage`): le finestre sono
+  costruite per quel testo. **Le finestre crescono con il testo**: sono disegnate per 100 e, alla fine del
+  costruttore, `Scale(Look.Zoom)`, dove `Look.Zoom` = scala dello schermo × dimensione del testo; per questo
+  `AutoScaleMode.None` (vedi le trappole). Tutte le misure a mano usano `Look.Zoom` (o `MainForm.Zoom`, che è lo
+  stesso). Con «Molto grande» e Verdana la finestra a 100% di scala è 982 × 839: su uno schermo da 768 non ci
+  sta (non gestito).
   Barra del titolo e barre di scorrimento scure non compaiono nelle immagini di `tests.exe shot`: per
   vederle c'è `tests.exe real <prefisso>`, che mostra le finestre un attimo e fotografa lo schermo.
   Forme arrotondate (l'utente trovava la finestra piatta e asettica, ma i colori vanno bene): ricerca, colonne
@@ -384,6 +398,14 @@ condiviso su GitHub).
   `Strings.Yes`, `No`, `Ok`. Restano nella lingua di Windows le finestre di scelta dei file.
 
 ## Trappole già incontrate
+
+- WinForms con `AutoScaleMode.Dpi` scala **due volte** i controlli che ereditano il carattere, se il carattere
+  della finestra è stato impostato prima della scala (provato con una finestra minima: un'etichetta di 120
+  diventava 213 invece di 160 al 133%; anche un carattere identico a quello di default basta). A 100% non si
+  vedeva, perché il fattore era 1. Per questo le finestre usano `AutoScaleMode.None` e chiamano `Scale` da sole
+  alla fine del costruttore, che scala tutto una volta sola. `Form.Scale` non sposta una finestra di primo livello.
+- `Control.DrawToBitmap` (le immagini di `tests.exe shot`) disegna la barra di Windows degli elenchi sopra la
+  `Rail`: le frecce che vi si vedono non ci sono a finestra vera (`real`).
 
 - `NotifyIcon.Text` rifiuta più di 63 caratteri (eccezione): il suggerimento dell'icona si taglia
   (`TrayTextLimit`), perché in spagnolo e francese supera il limite.

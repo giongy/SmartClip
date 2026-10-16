@@ -129,7 +129,7 @@ Pause capturing with one click
 Export and import to a text file
 Starts with Windows, hidden in the notification area
 Built-in guide, organized by topic
-Windows 11 look with the icons of Windows, light or dark theme
+Windows 11 look with the icons of Windows, light or dark theme, font and text size of your choice
 In English, Spanish, French and Italian
 No account, no ads, no Internet connection
 ```
@@ -223,7 +223,7 @@ Cattura sospendibile con un clic
 Esportazione e importazione in un file di testo
 Avvio con Windows, nascosto nell'area di notifica
 Guida integrata, divisa per argomenti
-Aspetto da Windows 11 con le icone di Windows, tema chiaro o scuro
+Aspetto da Windows 11 con le icone di Windows, tema chiaro o scuro, carattere e dimensione del testo a scelta
 In italiano, inglese, spagnolo e francese
 Nessun account, nessuna pubblicità, nessuna connessione a Internet
 ```
@@ -317,7 +317,7 @@ Captura que se pausa con un clic
 Exportación e importación a un archivo de texto
 Inicio con Windows, oculto en el área de notificación
 Guía integrada, dividida por temas
-Aspecto de Windows 11 con los iconos de Windows, tema claro u oscuro
+Aspecto de Windows 11 con los iconos de Windows, tema claro u oscuro, fuente y tamaño del texto a elegir
 En español, inglés, francés e italiano
 Sin cuenta, sin publicidad, sin conexión a Internet
 ```
@@ -411,7 +411,7 @@ Capture suspendue en un clic
 Export et import dans un fichier texte
 Démarrage avec Windows, caché dans la zone de notification
 Guide intégré, organisé par sujet
-Aspect Windows 11 avec les icônes de Windows, thème clair ou sombre
+Aspect Windows 11 avec les icônes de Windows, thème clair ou sombre, police et taille du texte au choix
 En français, anglais, espagnol et italien
 Pas de compte, pas de publicité, pas de connexion à Internet
 ```

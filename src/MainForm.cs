@@ -75,6 +75,7 @@ partial class MainForm : Form
     const string OldSettingsKey = @"Software\PasswordPaste";   // the name of the program up to version 1.2
     const string LanguageSetting = "Language";                 // read before the window exists: see SavedLanguage
     const string ThemeSetting = "Theme";                       // the same: see SavedTheme
+    const string FontSetting = "Font", SizeSetting = "TextSize";   // the same: see SavedFont and SavedSize
     const int TrayTextLimit = 63;                              // the most a NotifyIcon accepts as its tooltip
 
     // Desktop, taskbar, Start menu and Alt+Tab switcher: never the intended target.
@@ -156,7 +157,10 @@ partial class MainForm : Form
     readonly List<ToolStripItem> traySaved = new List<ToolStripItem>();   // what the icon menu lists of the saved texts
     readonly RoundButton languageButton = new RoundButton();   // shows the language and opens the list of the others
     readonly RoundButton themeButton = new RoundButton();      // the same for the theme
+    readonly RoundButton fontButton = new RoundButton(), sizeButton = new RoundButton();   // and for the font and its size
     string language = Strings.Code;   // saved with the settings: another one only on the way to a restart
+    string fontName = Look.FontName;  // the same for the font
+    int textSize = Look.TextSize;     // and its size
 
     public MainForm() : this(false)
     {
@@ -166,8 +170,9 @@ partial class MainForm : Form
     public MainForm(bool hidden)
     {
         SuspendLayout();
-        AutoScaleDimensions = new SizeF(96F, 96F);
-        AutoScaleMode = AutoScaleMode.Dpi;
+        // Built as designed, then made larger at the end by Look.Zoom, the scale of the screen and of the text: left to
+        // Windows Forms, the controls that inherit the font would be scaled twice.
+        AutoScaleMode = AutoScaleMode.None;
         Text = Program.AppName + " " + Program.Version;
         Font = Look.TextFont;
         // The window can be made larger, never smaller than it starts (see OnLoad); its size is not remembered,
@@ -365,6 +370,7 @@ partial class MainForm : Form
         // Started at sign-in: hidden in the notification area, or minimised if that option is off.
         if (hidden && trayBox.Checked) startHidden = true;
         else if (hidden) WindowState = FormWindowState.Minimized;
+        Scale(new SizeF(Look.Zoom, Look.Zoom));
         ResumeLayout(false);
         PerformLayout();
     }
@@ -500,7 +506,7 @@ partial class MainForm : Form
     // How much larger than designed this screen draws the window.
     float Zoom
     {
-        get { return CurrentAutoScaleDimensions.Width / 96f; }
+        get { return Look.Zoom; }
     }
 
     protected override void OnHandleCreated(EventArgs e)

@@ -155,6 +155,8 @@ static partial class Strings
         AltCodeOption = "Codes Alt pour les symboles sans touche";
         LanguageOption = "Langue (Language) :";
         ThemeOption = "Thème :"; ThemeSystem = "Comme Windows"; ThemeLight = "Clair"; ThemeDark = "Sombre";
+        FontOption = "Police :"; SizeOption = "Taille du texte :";
+        SizeSmall = "Petite"; SizeNormal = "Normale"; SizeLarge = "Grande"; SizeLarger = "Très grande";
         TrayOption = "Rester dans la zone de notification";
         LeaveOption = "Masquer en passant à un autre programme";
         StartOption = "Démarrer avec Windows";
@@ -182,6 +184,9 @@ static partial class Strings
         LanguageTip = "La langue du programme. La changer redémarre {0}, qui se rouvre aussitôt.";
         ThemeTip = "Couleurs claires ou sombres. « {0} » suit le mode que Windows fixe pour les applications,\n"
             + "même quand il change pendant que le programme est ouvert.";
+        FontTip = "La police des fenêtres. La changer redémarre {0}, qui se rouvre aussitôt.";
+        SizeTip = "La taille du texte : les fenêtres grandissent avec lui. « {1} » est la taille du texte de Windows 11.\n"
+            + "La changer redémarre {0}, qui se rouvre aussitôt.";
         HistoryTip = "La liste propose les textes et images copiés pendant que le programme est ouvert.\n"
             + "Ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé.\n"
             + "Désactivez-la si vous copiez des mots de passe depuis des programmes qui ne le font pas :\n"
@@ -404,7 +409,7 @@ static partial class Strings
                 + ", et leur donne d'autres touches.",
             "- " + HistoryTitle + " : s'il faut mémoriser ce que vous copiez, pendant combien de jours, le lien vers le "
                 + "dossier des fichiers et le bouton qui le nettoie aussitôt.",
-            "- " + ProgramTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), s'il faut rester dans la zone de notification et se masquer en passant "
+            "- " + ProgramTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la taille du texte, s'il faut rester dans la zone de notification et se masquer en passant "
                 + "à un autre programme, s'il faut démarrer avec Windows, et les boutons pour exporter et importer.",
 
             "# Exporter et importer",

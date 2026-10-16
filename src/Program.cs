@@ -8,7 +8,7 @@ using Microsoft.Win32;
 [assembly: AssemblyDescription("Clipboard manager that can also type the clipboard where paste does not work")]
 [assembly: AssemblyProduct(Program.AppName)]
 // Changing this number and pushing publishes a new release (.github/workflows/release.yml).
-[assembly: AssemblyVersion("3.9.2")]
+[assembly: AssemblyVersion("3.9.3")]
 
 // A small clipboard manager that can also type the clipboard content as real key presses (scancodes),
 // so it works even where paste is disabled (lock screens of remote desktops).
@@ -59,6 +59,7 @@ static class Program
 
             Strings.Use(MainForm.SavedLanguage());   // before any window: every text comes from here
             Native.SetProcessDPIAware();
+            Look.UseFont(MainForm.SavedFont(), MainForm.SavedSize());   // the windows are built for that text
             Look.Choose(MainForm.SavedTheme());   // the windows are built in its colours
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

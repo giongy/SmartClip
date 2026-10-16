@@ -47,8 +47,9 @@ class EditForm : Form
     void Build(string title, string description, int maxLength, string name, List<string> groups)
     {
         SuspendLayout();
-        AutoScaleDimensions = new SizeF(96F, 96F);
-        AutoScaleMode = AutoScaleMode.Dpi;
+        // Built as designed, then made larger at the end by Look.Zoom, the scale of the screen and of the text: left to
+        // Windows Forms, the controls that inherit the font would be scaled twice.
+        AutoScaleMode = AutoScaleMode.None;
         Font = Look.TextFont;
         Text = title;
         FormBorderStyle = FormBorderStyle.FixedDialog;
@@ -114,6 +115,7 @@ class EditForm : Form
         nameBox.TextChanged += check;
         contentBox.TextChanged += check;
         check(this, EventArgs.Empty);
+        Scale(new SizeF(Look.Zoom, Look.Zoom));
         ResumeLayout(false);
         PerformLayout();
     }

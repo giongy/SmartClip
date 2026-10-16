@@ -149,6 +149,8 @@ static partial class Strings
         AltCodeOption = "Códigos Alt para símbolos sin tecla";
         LanguageOption = "Idioma (Language):";
         ThemeOption = "Tema:"; ThemeSystem = "Como Windows"; ThemeLight = "Claro"; ThemeDark = "Oscuro";
+        FontOption = "Fuente:"; SizeOption = "Tamaño del texto:";
+        SizeSmall = "Pequeño"; SizeNormal = "Normal"; SizeLarge = "Grande"; SizeLarger = "Muy grande";
         TrayOption = "Seguir en el área de notificación";
         LeaveOption = "Ocultar al cambiar a otro programa";
         StartOption = "Iniciar con Windows";
@@ -176,6 +178,9 @@ static partial class Strings
         LanguageTip = "El idioma del programa. Al cambiarlo, {0} se reinicia y vuelve a abrirse enseguida.";
         ThemeTip = "Colores claros u oscuros. «{0}» sigue el modo que Windows fija para las aplicaciones,\n"
             + "incluso cuando cambia con el programa abierto.";
+        FontTip = "La fuente de las ventanas. Cambiarla reinicia {0}, que se vuelve a abrir enseguida.";
+        SizeTip = "Lo grande que es el texto: las ventanas crecen con él. «{1}» es el tamaño del texto de Windows 11.\n"
+            + "Cambiarlo reinicia {0}, que se vuelve a abrir enseguida.";
         HistoryTip = "La lista ofrece los textos e imágenes copiados mientras el programa está abierto.\n"
             + "Lo que los gestores de contraseñas marcan como privado no se recuerda.\n"
             + "Desactívala si copias contraseñas desde programas que no lo hacen: se leerían en\n"
@@ -396,7 +401,7 @@ static partial class Strings
                 + ", y les da otras teclas.",
             "- " + HistoryTitle + ": si recordar lo que copias, durante cuántos días, el enlace a la carpeta de los "
                 + "archivos y el botón que la limpia enseguida.",
-            "- " + ProgramTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), si seguir en el área de notificación y ocultarse al cambiar a otro "
+            "- " + ProgramTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño del texto, si seguir en el área de notificación y ocultarse al cambiar a otro "
                 + "programa, si iniciarse con Windows, y los botones para exportar e importar.",
 
             "# Exportar e importar",

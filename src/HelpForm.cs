@@ -27,8 +27,9 @@ class HelpForm : Form
     public HelpForm()
     {
         SuspendLayout();
-        AutoScaleDimensions = new SizeF(96F, 96F);
-        AutoScaleMode = AutoScaleMode.Dpi;
+        // Built as designed, then made larger at the end by Look.Zoom, the scale of the screen and of the text: left to
+        // Windows Forms, the controls that inherit the font would be scaled twice.
+        AutoScaleMode = AutoScaleMode.None;
         Font = Look.TextFont;
         Text = string.Format(Strings.HelpTitle, Program.AppName);
         MaximizeBox = false;
@@ -52,7 +53,7 @@ class HelpForm : Form
         {
             if (e.Index >= 0)
                 Look.DrawTopic(e, topics, Lines[(int)topics.Items[e.Index]].Substring(Heading.Length), null,
-                    (int)(TopicInset * CurrentAutoScaleDimensions.Width / 96f));
+                    (int)(TopicInset * Look.Zoom));
         };
         topics.SelectedIndexChanged += delegate { Write(); };
         // The row under the pointer lights up.
@@ -93,6 +94,7 @@ class HelpForm : Form
         EventHandler rewrite = delegate { Write(); };
         Look.Changed += rewrite;
         Disposed += delegate { Look.Changed -= rewrite; };   // also when it goes without being closed
+        Scale(new SizeF(Look.Zoom, Look.Zoom));
         ResumeLayout(false);
         PerformLayout();
     }
@@ -110,7 +112,7 @@ class HelpForm : Form
         base.OnLoad(e);
         MinimumSize = Size;
         // Rows as tall as the window's scale wants them; choosing the first subject writes it.
-        topics.ItemHeight = topics.Font.Height + (int)(TopicPadding * CurrentAutoScaleDimensions.Width / 96f);
+        topics.ItemHeight = topics.Font.Height + (int)(TopicPadding * Look.Zoom);
         topics.SelectedIndex = 0;
         if (Owner == null) return;
         Rectangle screen = Screen.FromControl(Owner).WorkingArea;
@@ -124,7 +126,7 @@ class HelpForm : Form
     void Write()
     {
         if (topics.SelectedIndex < 0) return;
-        float scale = CurrentAutoScaleDimensions.Width / 96f;   // the sizes above are for 96 dpi
+        float scale = Look.Zoom;   // the sizes above are as designed
         int bullet = (int)(BulletIndent * scale), key = (int)(KeyColumn * scale);
         int start = (int)topics.SelectedItem;
         text.Clear();

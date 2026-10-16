@@ -353,6 +353,19 @@ static class TestProgram
         int firstCopied = all.FindIndex(delegate(Entry e) { return e.Name == null; });
         Check(firstCopied >= 0 && !all.GetRange(firstCopied, all.Count - firstCopied).Exists(delegate(Entry e) { return e.Name != null; }),
             "saved texts come before the copied ones");
+        // A font that is not there, or a size that is not offered, as a settings value written by hand: the defaults.
+        string firstFont = Look.FontNames[0];
+        Look.UseFont("No Such Font", 999);
+        Check(Look.FontName == firstFont && Look.TextSize == Look.DefaultSize && Look.TextFont.Name == firstFont,
+            "an unknown font or size falls back to the defaults");
+        float usual = Look.Zoom;
+        string lastFont = Look.FontNames[Look.FontNames.Length - 1];
+        Look.UseFont(lastFont, Look.Sizes[Look.Sizes.Length - 1]);
+        Check(Look.TextFont.Name == lastFont && Math.Abs(Look.StrongFont.SizeInPoints - Look.TextFont.SizeInPoints) < 0.01f
+            && Look.TitleFont.SizeInPoints > Look.TextFont.SizeInPoints
+            && Math.Abs(Look.Zoom / usual - (float)Look.TextSize / Look.DefaultSize) < 0.001f,
+            "the heavier faces follow the font, and the windows grow with the text");
+        Look.UseFont(null, Look.DefaultSize);
         LanguagesTest();
         return failed == 0 ? 0 : 1;
     }
