@@ -34,6 +34,19 @@ partial class MainForm
         Look.Style(languageMenu);
         Label languageLabel = PlacePicker(languageButton, Strings.Names[Array.IndexOf(Strings.Codes, Strings.Code)],
             Strings.LanguageOption, languageMenu, left, ref top);
+        // The theme, under it in the same way; the one in use cannot be chosen again.
+        ContextMenuStrip themeMenu = new ContextMenuStrip();
+        foreach (Theme each in new Theme[] { Theme.System, Theme.Light, Theme.Dark })
+        {
+            Theme theme = each;   // a variable of its own for the delegate
+            themeMenu.Items.Add(ThemeName(theme), null, delegate { ChangeTheme(theme); }).Tag = theme;
+        }
+        themeMenu.Opening += delegate
+        {
+            foreach (ToolStripItem item in themeMenu.Items) item.Enabled = (Theme)item.Tag != Look.Chosen;
+        };
+        Look.Style(themeMenu);
+        Label themeLabel = PlacePicker(themeButton, ThemeName(Look.Chosen), Strings.ThemeOption, themeMenu, left, ref top);
         PlaceOption(trayBox, Strings.TrayOption, left, ref top);
         trayBox.Checked = true;
         PlaceOption(leaveBox, Strings.LeaveOption, left, ref top);
@@ -76,6 +89,7 @@ partial class MainForm
         Tip(Strings.SlowTip, slowBox);
         Tip(Strings.AltCodeTip, altCodeBox);
         Tip(string.Format(Strings.LanguageTip, Program.AppName), languageLabel, languageButton);
+        Tip(string.Format(Strings.ThemeTip, Strings.ThemeSystem), themeLabel, themeButton);
         Tip(Strings.HistoryTip, historyBox);
         Tip(string.Format(Strings.KeepTip, Texts.Folder, Texts.MaxRecent, Texts.MaxPictures, MaxShown), keepLabel, keepBox);
         Tip(string.Format(Strings.FolderTip, Texts.Folder), folderLink);
@@ -383,6 +397,7 @@ partial class MainForm
         trayBox.Checked = Transfer(key, save, "Tray", trayBox.Checked);
         leaveBox.Checked = Transfer(key, save, "HideOnLeave", leaveBox.Checked);
         language = Transfer(key, save, LanguageSetting, language);   // read again by SavedLanguage, before the window
+        Transfer(key, save, ThemeSetting, (int)Look.Chosen);         // read by SavedTheme, before the window
         savedColumn = Transfer(key, save, "SavedWidth", savedColumn);   // applied when the window loads
 
         // Window position. Reading starts from a point outside every screen: it stays there, and is ignored,
@@ -437,6 +452,36 @@ partial class MainForm
         {
             return null;   // unreadable: the default language
         }
+    }
+
+    // The theme saved among the settings; as Windows if there is none. Read before the window exists, which is
+    // built in its colours.
+    public static Theme SavedTheme()
+    {
+        try
+        {
+            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SettingsKey))
+            {
+                object theme = key == null ? null : key.GetValue(ThemeSetting);
+                return theme is int && Enum.IsDefined(typeof(Theme), (int)theme) ? (Theme)(int)theme : Theme.System;
+            }
+        }
+        catch (Exception)
+        {
+            return Theme.System;
+        }
+    }
+
+    static string ThemeName(Theme theme)
+    {
+        return theme == Theme.Light ? Strings.ThemeLight : theme == Theme.Dark ? Strings.ThemeDark : Strings.ThemeSystem;
+    }
+
+    // Another theme: unlike the language, at once, without starting again.
+    void ChangeTheme(Theme theme)
+    {
+        Look.Choose(theme);
+        themeButton.Text = ThemeName(theme);
     }
 
     // Another language: the settings are saved with it and the program starts again, which shows every text

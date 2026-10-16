@@ -21,8 +21,8 @@ Formerly called PasswordPaste: the first start under the new name takes over its
 - Stops typing the moment the target window loses focus, so a password never lands in the wrong place.
 - The history of copied items is kept for the number of days you choose, or in memory only; saved texts are
   encrypted for your Windows account.
-- Light or dark as Windows is set for apps, switching on the fly: warm grey in the light, neutral grey in the
-  dark, small coloured signs, rounded menus and the font of Windows 11 where it is installed.
+- Light or dark theme, or the same as Windows sets for apps, switching on the fly: warm grey in the light,
+  neutral grey in the dark, small coloured signs, rounded menus and the font of Windows 11 where it is installed.
 - In English, Spanish, French and Italian, chosen in the options (English by default).
 
 ![The SmartClip window in the dark](docs/screenshot-dark.png)
@@ -131,6 +131,7 @@ on an option shows its full explanation.
 | Days on disk (0: memory only) | For how many days, 0 to 365, what you copy stays in the history, also after the program closes. With 0 nothing is written to disk: the last 30 copied items, of which at most 5 pictures, stay in memory and are gone when the program closes. |
 | Keep the last days when cleaning (0: none), with the button **Clean now…** | Deletes at once, from memory and disk, what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Starred entries and saved texts are not touched. |
 | Language | English, Español, Français or Italiano. Changing it restarts SmartClip, which opens again at once on the options. |
+| Theme | Same as Windows (the mode it sets for apps, followed also when it changes), Light or Dark. Changes at once. |
 | Stay in the notification area (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Exit** to quit; the same menu lists the saved texts. |
 | Hide when switching to another program | With the option above on, the window also goes back to the notification area when you click another program; off, it simply stays open behind the others. Never while it waits and types, nor while a window of its own (a text being written, a question) is open. |
 | Start with Windows | Start SmartClip when you sign in, already hidden in the notification area (minimised, if the option above is off). It is the entry Windows shows in Task Manager > Startup apps: the switch reflects it, and follows the program if you move the `.exe`. |

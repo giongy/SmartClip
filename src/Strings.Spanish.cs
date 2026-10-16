@@ -127,6 +127,7 @@ static partial class Strings
         SlowOption = "Tecleo lento";
         AltCodeOption = "Códigos Alt para símbolos sin tecla";
         LanguageOption = "Idioma (Language):";
+        ThemeOption = "Tema:"; ThemeSystem = "Como Windows"; ThemeLight = "Claro"; ThemeDark = "Oscuro";
         TrayOption = "Seguir en el área de notificación";
         LeaveOption = "Ocultar al cambiar a otro programa";
         StartOption = "Iniciar con Windows";
@@ -151,6 +152,8 @@ static partial class Strings
             + "aceptan. Con esta opción se componen con códigos Alt en el teclado numérico:\n"
             + "solo funciona si el servidor es Windows.";
         LanguageTip = "El idioma del programa. Al cambiarlo, {0} se reinicia y vuelve a abrirse enseguida.";
+        ThemeTip = "Colores claros u oscuros. «{0}» sigue el modo que Windows fija para las aplicaciones,\n"
+            + "incluso cuando cambia con el programa abierto.";
         HistoryTip = "La lista ofrece los textos e imágenes copiados mientras el programa está abierto.\n"
             + "Lo que los gestores de contraseñas marcan como privado no se recuerda.\n"
             + "Desactívala si copias contraseñas desde programas que no lo hacen: se leerían en\n"
@@ -361,7 +364,7 @@ static partial class Strings
             "- " + HotkeysTitle + ": activa y desactiva " + type + " y " + pick + ", y les da otras teclas.",
             "- " + HistoryTitle + ": si recordar lo que copias, durante cuántos días, el enlace a la carpeta de los "
                 + "archivos y el botón que la limpia enseguida.",
-            "- " + ProgramTitle + ": el idioma, si seguir en el área de notificación y ocultarse al cambiar a otro "
+            "- " + ProgramTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), si seguir en el área de notificación y ocultarse al cambiar a otro "
                 + "programa, si iniciarse con Windows, y los botones para exportar e importar.",
 
             "# Exportar e importar",

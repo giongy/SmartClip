@@ -30,7 +30,7 @@ partial class MainForm : Form
     public const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
     const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
-    const int ListExtra = 54;                   // height given to the lists beyond what the options need
+    const int ListExtra = 17;                   // height given to the lists beyond what the options need
     const int ColumnGap = 20, ColumnWidth = (ContentWidth - ColumnGap) / 2;   // the two columns of the options
     const int TitleRow = 30, SectionGap = 10;          // the title of a category of options, and the air above it
     const int RuleGap = 8;                             // between the line under such a title and the first option
@@ -66,6 +66,7 @@ partial class MainForm : Form
     public const string SettingsKey = @"Software\" + Program.AppName;
     const string OldSettingsKey = @"Software\PasswordPaste";   // the name of the program up to version 1.2
     const string LanguageSetting = "Language";                 // read before the window exists: see SavedLanguage
+    const string ThemeSetting = "Theme";                       // the same: see SavedTheme
     const int TrayTextLimit = 63;                              // the most a NotifyIcon accepts as its tooltip
 
     // Desktop, taskbar, Start menu and Alt+Tab switcher: never the intended target.
@@ -138,6 +139,7 @@ partial class MainForm : Form
     readonly List<CheckBox> refused = new List<CheckBox>();   // hotkey checkboxes unticked by Windows, not by the user
     readonly List<ToolStripItem> traySaved = new List<ToolStripItem>();   // what the icon menu lists of the saved texts
     readonly RoundButton languageButton = new RoundButton();   // shows the language and opens the list of the others
+    readonly RoundButton themeButton = new RoundButton();      // the same for the theme
     string language = Strings.Code;   // saved with the settings: another one only on the way to a restart
 
     public MainForm() : this(false)

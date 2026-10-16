@@ -127,6 +127,7 @@ static partial class Strings
         SlowOption = "Digitazione lenta";
         AltCodeOption = "Alt+codice per i simboli che la tastiera non ha";
         LanguageOption = "Lingua (Language):";
+        ThemeOption = "Tema:"; ThemeSystem = "Come Windows"; ThemeLight = "Chiaro"; ThemeDark = "Scuro";
         TrayOption = "Resta attivo nell'area di notifica (tray)";
         LeaveOption = "Nascondi passando a un altro programma";
         StartOption = "Avvia insieme a Windows";
@@ -151,6 +152,8 @@ static partial class Strings
             + "di desktop remoto accettano. Con questa opzione vengono invece composti con\n"
             + "Alt+codice sul tastierino numerico: funziona solo se il server è Windows.";
         LanguageTip = "La lingua del programma. Cambiandola {0} si riavvia, e si riapre subito.";
+        ThemeTip = "Colori chiari o scuri. «{0}» segue la modalità che Windows imposta per le app,\n"
+            + "anche quando cambia a programma aperto.";
         HistoryTip = "L'elenco propone i testi e le immagini copiati mentre il programma è aperto.\n"
             + "Ciò che i gestori di password segnano come riservato non viene ricordato.\n"
             + "Disattivala se copi password da programmi che non lo fanno: nell'elenco si\n"
@@ -352,7 +355,7 @@ static partial class Strings
             "- " + HotkeysTitle + ": accende e spegne " + type + " e " + pick + ", e dà loro altri tasti.",
             "- " + HistoryTitle + ": se ricordare ciò che copi, per quanti giorni, il collegamento alla cartella dei "
                 + "file e il pulsante che la pulisce subito.",
-            "- " + ProgramTitle + ": la lingua, se restare attivo nell'area di notifica e nascondersi passando a un "
+            "- " + ProgramTitle + ": la lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), se restare attivo nell'area di notifica e nascondersi passando a un "
                 + "altro programma, se partire insieme a Windows, e i pulsanti per esportare e importare.",
 
             "# Esportare e importare",

@@ -254,6 +254,12 @@ condiviso su GitHub).
   caselle di testo) si scuriscono con `SetPreferredAppMode` di uxtheme, non documentata e chiamata per numero,
   solo da Windows 10 1903. I test fotografano l'uno o l'altro con `dark`/`light` in fondo agli argomenti, e
   `shot` prova il cambio a finestra aperta (`Look.Switch`).
+- Opzione «Tema» in «Programma», sotto la lingua (voluta dall'utente il 16/10/2026, dopo aver cercato invano
+  come cambiarlo): «Come Windows» (default), «Chiaro», «Scuro», con un pulsante e un menu come la lingua
+  (`ChangeTheme`, `Look.Choose`, `Look.Chosen`, enum `Theme`). A differenza della lingua cambia subito, senza
+  riavvio. Impostazione `Theme` (numero), letta da `Main` con `SavedTheme` prima di creare la finestra, che
+  nasce già nei suoi colori; `TransferSettings` la scrive soltanto. Con un tema scelto, `Follow` ignora i
+  cambi di Windows. Per far stare la riga `ListExtra` è sceso a 17.
 - Modernità alla Windows 11 (stessa richiesta): menu arrotondati da Windows (`DWMWCP_ROUNDSMALL`), con righe
   alte, testo spostato a destra e una forma arrotondata sotto il puntatore (`MenuLook`, `Look.Style` del
   menu); suggerimenti disegnati nei colori della finestra (`Look.Style` del `ToolTip`); le domande in una

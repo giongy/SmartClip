@@ -122,7 +122,7 @@ Pause capturing with one click
 Export and import to a text file
 Starts with Windows, hidden in the notification area
 Built-in guide, organized by topic
-Light and dark theme, following Windows
+Light or dark theme, or the same as Windows
 In English, Spanish, French and Italian
 No account, no ads, no Internet connection
 ```
@@ -142,7 +142,7 @@ paste blocked
 ### What's new in this version
 
 ```
-New look: the window follows the light or dark mode of Windows, even when it changes while the program is open. Rounded menus in the style of Windows 11, animated switches, and questions in the colours and the language of the program.
+New look: light or dark theme, chosen in the options or the same as Windows, following it even when it changes while the program is open. Rounded menus in the style of Windows 11, animated switches, and questions in the colours and the language of the program.
 ```
 
 ### Screenshot captions
@@ -156,7 +156,7 @@ New look: the window follows the light or dark mode of Windows, even when it cha
 | `5-tray-menu.png` | Saved texts are also in the menu of the icon by the clock. |
 | `6-options.png` | Options for typing, hotkeys, history, language and starting with Windows. |
 | `7-guide.png` | A guide organized by topic, always one F1 away. |
-| `8-dark.png` | Light or dark, as Windows is set: it switches by itself. |
+| `8-dark.png` | Light or dark: choose it in the options, or let it follow Windows. |
 
 ## Italiano (it-IT)
 
@@ -213,7 +213,7 @@ Cattura sospendibile con un clic
 Esportazione e importazione in un file di testo
 Avvio con Windows, nascosto nell'area di notifica
 Guida integrata, divisa per argomenti
-Tema chiaro e scuro, come Windows
+Tema chiaro o scuro, oppure come Windows
 In italiano, inglese, spagnolo e francese
 Nessun account, nessuna pubblicità, nessuna connessione a Internet
 ```
@@ -233,7 +233,7 @@ digitare password
 ### Novità di questa versione
 
 ```
-Nuovo aspetto: la finestra segue il tema chiaro o scuro di Windows, anche quando cambia a programma aperto. Menu arrotondati nello stile di Windows 11, interruttori animati e domande nei colori e nella lingua del programma.
+Nuovo aspetto: tema chiaro o scuro, scelto nelle opzioni o come Windows, seguito anche quando cambia a programma aperto. Menu arrotondati nello stile di Windows 11, interruttori animati e domande nei colori e nella lingua del programma.
 ```
 
 ### Didascalie delle schermate
@@ -247,7 +247,7 @@ Nuovo aspetto: la finestra segue il tema chiaro o scuro di Windows, anche quando
 | `5-tray-menu.png` | I testi salvati anche nel menu dell'icona vicino all'orologio. |
 | `6-options.png` | Opzioni per la digitazione, le scorciatoie, la cronologia, la lingua e l'avvio con Windows. |
 | `7-guide.png` | Una guida divisa per argomenti, sempre a portata di F1. |
-| `8-dark.png` | Chiaro o scuro, come Windows: cambia da solo. |
+| `8-dark.png` | Chiaro o scuro: si sceglie nelle opzioni, o segue Windows. |
 
 ## Español (es-ES)
 
@@ -304,7 +304,7 @@ Captura que se pausa con un clic
 Exportación e importación a un archivo de texto
 Inicio con Windows, oculto en el área de notificación
 Guía integrada, dividida por temas
-Tema claro y oscuro, como Windows
+Tema claro u oscuro, o como Windows
 En español, inglés, francés e italiano
 Sin cuenta, sin publicidad, sin conexión a Internet
 ```
@@ -324,7 +324,7 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Nuevo aspecto: la ventana sigue el modo claro u oscuro de Windows, incluso cuando cambia con el programa abierto. Menús redondeados al estilo de Windows 11, interruptores animados y preguntas con los colores y el idioma del programa.
+Nuevo aspecto: tema claro u oscuro, elegido en las opciones o como Windows, seguido incluso cuando cambia con el programa abierto. Menús redondeados al estilo de Windows 11, interruptores animados y preguntas con los colores y el idioma del programa.
 ```
 
 ### Leyendas de las capturas
@@ -338,7 +338,7 @@ Nuevo aspecto: la ventana sigue el modo claro u oscuro de Windows, incluso cuand
 | `5-tray-menu.png` | Los textos guardados también están en el menú del icono junto al reloj. |
 | `6-options.png` | Opciones de tecleo, atajos, historial, idioma e inicio con Windows. |
 | `7-guide.png` | Una guía dividida por temas, siempre a un F1 de distancia. |
-| `8-dark.png` | Claro u oscuro, como Windows: cambia solo. |
+| `8-dark.png` | Claro u oscuro: se elige en las opciones, o sigue a Windows. |
 
 ## Français (fr-FR)
 
@@ -395,7 +395,7 @@ Capture suspendue en un clic
 Export et import dans un fichier texte
 Démarrage avec Windows, caché dans la zone de notification
 Guide intégré, organisé par sujet
-Thème clair et sombre, comme Windows
+Thème clair ou sombre, ou comme Windows
 En français, anglais, espagnol et italien
 Pas de compte, pas de publicité, pas de connexion à Internet
 ```
@@ -415,7 +415,7 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Nouvel aspect : la fenêtre suit le mode clair ou sombre de Windows, même quand il change pendant que le programme est ouvert. Menus arrondis dans le style de Windows 11, interrupteurs animés et questions aux couleurs et dans la langue du programme.
+Nouvel aspect : thème clair ou sombre, choisi dans les options ou comme Windows, suivi même quand il change pendant que le programme est ouvert. Menus arrondis dans le style de Windows 11, interrupteurs animés et questions aux couleurs et dans la langue du programme.
 ```
 
 ### Légendes des captures
@@ -429,7 +429,7 @@ Nouvel aspect : la fenêtre suit le mode clair ou sombre de Windows, même quand
 | `5-tray-menu.png` | Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge. |
 | `6-options.png` | Options de saisie, raccourcis, historique, langue et démarrage avec Windows. |
 | `7-guide.png` | Un guide organisé par sujet, toujours à portée de F1. |
-| `8-dark.png` | Clair ou sombre, comme Windows : il change tout seul. |
+| `8-dark.png` | Clair ou sombre : à choisir dans les options, ou comme Windows. |
 
 ## Note per la verifica
 

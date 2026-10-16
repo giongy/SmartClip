@@ -641,6 +641,17 @@ static class TestProgram
                 && typing.FlatAppearance.BorderColor == Look.Accent ? "PASS" : "FAIL");
             Look.Switch(!Look.Dark);
             Console.WriteLine("[{0}] and back", form.BackColor == Look.Back && recent.BackColor == Look.Well ? "PASS" : "FAIL");
+            // A theme chosen in the options stays, whatever Windows says; "as Windows" follows it again.
+            bool wasDark = Look.Dark;
+            Look.Choose(Theme.Dark);
+            Look.Follow();
+            bool keptDark = Look.Dark && form.BackColor == Look.Back;
+            Look.Choose(Theme.Light);
+            Look.Follow();
+            Console.WriteLine("[{0}] a chosen theme stays when Windows changes", keptDark && !Look.Dark && form.BackColor == Look.Back
+                ? "PASS" : "FAIL");
+            Look.Choose(Theme.System);
+            Look.Switch(wasDark);   // as the pictures were asked for
 
             Label status = (Label)typeof(MainForm).GetField("status", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(form);
             status.Text = string.Format(Strings.DoneMany, 24) + string.Format(Strings.UnicodeMany, 2) + Strings.UnicodeHint;

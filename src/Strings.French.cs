@@ -133,6 +133,7 @@ static partial class Strings
         SlowOption = "Saisie lente";
         AltCodeOption = "Codes Alt pour les symboles sans touche";
         LanguageOption = "Langue (Language) :";
+        ThemeOption = "Thème :"; ThemeSystem = "Comme Windows"; ThemeLight = "Clair"; ThemeDark = "Sombre";
         TrayOption = "Rester dans la zone de notification";
         LeaveOption = "Masquer en passant à un autre programme";
         StartOption = "Démarrer avec Windows";
@@ -157,6 +158,8 @@ static partial class Strings
             + "distance n'acceptent pas. Avec cette option, ils sont composés avec des codes Alt sur\n"
             + "le pavé numérique : cela ne marche que si le serveur est sous Windows.";
         LanguageTip = "La langue du programme. La changer redémarre {0}, qui se rouvre aussitôt.";
+        ThemeTip = "Couleurs claires ou sombres. « {0} » suit le mode que Windows fixe pour les applications,\n"
+            + "même quand il change pendant que le programme est ouvert.";
         HistoryTip = "La liste propose les textes et images copiés pendant que le programme est ouvert.\n"
             + "Ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé.\n"
             + "Désactivez-la si vous copiez des mots de passe depuis des programmes qui ne le font pas :\n"
@@ -367,7 +370,7 @@ static partial class Strings
             "- " + HotkeysTitle + " : active et désactive " + type + " et " + pick + ", et leur donne d'autres touches.",
             "- " + HistoryTitle + " : s'il faut mémoriser ce que vous copiez, pendant combien de jours, le lien vers le "
                 + "dossier des fichiers et le bouton qui le nettoie aussitôt.",
-            "- " + ProgramTitle + " : la langue, s'il faut rester dans la zone de notification et se masquer en passant "
+            "- " + ProgramTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), s'il faut rester dans la zone de notification et se masquer en passant "
                 + "à un autre programme, s'il faut démarrer avec Windows, et les boutons pour exporter et importer.",
 
             "# Exporter et importer",

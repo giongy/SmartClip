@@ -212,8 +212,12 @@ class RoundButton : Button
 // The small signs drawn beside entries and on buttons: they are where the colour is.
 enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, List, Keys, Search, Help, Opened, Closed }
 
+// The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
+enum Theme { System, Light, Dark }
+
 // Colours and touches shared by the windows: neutral, with rounded shapes and small coloured signs. Light or
-// dark as Windows is set for its apps, also when that changes while the program is open (Follow).
+// dark as the user chose (Choose), or as Windows is set for its apps, also when that changes while the program
+// is open (Follow).
 static class Look
 {
     const int FramePadding = 6;   // between the edge of a framed text box and its text
@@ -253,6 +257,7 @@ static class Look
     // The coloured part: the accent, the same blue in both, and the colours of the signs, brighter in the dark.
     public static Color Accent, Green, Amber, Red, Teal, Purple;
     public static bool Dark { get; private set; }   // what Windows draws (title bar, scroll bars, menus) follows
+    public static Theme Chosen { get; private set; }   // in the options; until then, as Windows
     public static event EventHandler Changed;       // after the colours changed with those of Windows
 
     static Look()
@@ -331,15 +336,22 @@ static class Look
         get { return new Color[] { Back, Well, Soft, Border, Selected, Ink, Muted, Accent, Green, Amber, Red, Teal, Purple }; }
     }
 
-    // Windows went from light to dark or back: the open windows take the new colours at once. A colour given
-    // to a control is one of the palette, so the old one says which new one it becomes; what is drawn by hand
-    // reads the palette as it paints. Those with their own needs listen to Changed.
-    public static void Follow()
+    // The theme chosen in the options: before the first window, from the settings, and then at once.
+    public static void Choose(Theme theme)
     {
-        Switch(WindowsDark());
+        Chosen = theme;
+        Switch(theme == Theme.Dark || theme == Theme.System && WindowsDark());
     }
 
-    // The same, whatever Windows says: the checks go back and forth with it.
+    // Windows went from light to dark or back: if the user leaves the choice to it, so does the program.
+    public static void Follow()
+    {
+        if (Chosen == Theme.System) Switch(WindowsDark());
+    }
+
+    // The open windows take the light or the dark colours at once. A colour given to a control is one of the
+    // palette, so the old one says which new one it becomes; what is drawn by hand reads the palette as it
+    // paints. Those with their own needs listen to Changed. The checks call it directly, whatever Windows says.
     public static void Switch(bool dark)
     {
         if (dark == Dark) return;
@@ -373,7 +385,7 @@ static class Look
             link.LinkColor = Swap(link.LinkColor, before, after);
             link.ActiveLinkColor = Swap(link.ActiveLinkColor, before, after);
         }
-        if ((control is TextBoxBase || control is ListBox) && control.IsHandleCreated) Theme(control);
+        if ((control is TextBoxBase || control is ListBox) && control.IsHandleCreated) Tint(control);
         foreach (Control child in control.Controls) Recolor(child, before, after);
     }
 
@@ -417,10 +429,10 @@ static class Look
     {
         field.BackColor = Well;
         field.ForeColor = Ink;
-        field.HandleCreated += delegate { Theme(field); };
+        field.HandleCreated += delegate { Tint(field); };
     }
 
-    static void Theme(Control field)
+    static void Tint(Control field)
     {
         Native.SetWindowTheme(field.Handle, Dark ? "DarkMode_Explorer" : "Explorer", null);
     }
