@@ -113,6 +113,7 @@ US keyboard on the server, and symbols composed with Alt codes
 History of copied texts and pictures, with instant search
 List available from any program with a hotkey
 Important entries pinned to the top with a star
+Shortcuts from 1 to 9 for saved texts and starred entries
 Encrypted saved texts, arranged in folders and subfolders
 Saved texts also in the tray icon menu, without opening the window
 Full preview of long texts and pictures
@@ -142,7 +143,9 @@ paste blocked
 ### What's new in this version
 
 ```
-New look: light or dark theme, chosen in the options or the same as Windows, following it even when it changes while the program is open. Rounded menus in the style of Windows 11, animated switches, and questions in the colours and the language of the program.
+Shortcuts for the entries you use most: from its right-click menu, give a saved text or a starred entry a number from 1 to 9, then Ctrl+D+1…9 puts it straight on the clipboard from any program and takes you back where you were. The number shows in the list and in the menu of the tray icon.
+
+Also new: light or dark theme, chosen in the options or the same as Windows, following it even when it changes while the program is open. Rounded menus in the style of Windows 11, animated switches, and questions in the colours and the language of the program.
 ```
 
 ### Screenshot captions
@@ -204,6 +207,7 @@ Tastiera americana sul server e simboli composti con Alt+codice
 Cronologia di testi e immagini copiati, con ricerca istantanea
 Elenco richiamabile da qualsiasi programma con una scorciatoia
 Voci importanti fissate in cima con una stellina
+Scorciatoie da 1 a 9 per testi salvati e voci con la stellina
 Testi salvati cifrati, organizzati in cartelle e sottocartelle
 Testi salvati anche nel menu dell'icona, senza aprire la finestra
 Anteprima completa di testi lunghi e immagini
@@ -233,7 +237,9 @@ digitare password
 ### Novità di questa versione
 
 ```
-Nuovo aspetto: tema chiaro o scuro, scelto nelle opzioni o come Windows, seguito anche quando cambia a programma aperto. Menu arrotondati nello stile di Windows 11, interruttori animati e domande nei colori e nella lingua del programma.
+Scorciatoie per le voci che usi di più: dal menu del tasto destro dai a un testo salvato o a una voce con la stellina un numero da 1 a 9, poi Ctrl+D+1…9 lo rimette subito negli appunti da qualsiasi programma e ti riporta dov'eri. Il numero si vede nell'elenco e nel menu dell'icona.
+
+Novità anche nell'aspetto: tema chiaro o scuro, scelto nelle opzioni o come Windows, seguito anche quando cambia a programma aperto. Menu arrotondati nello stile di Windows 11, interruttori animati e domande nei colori e nella lingua del programma.
 ```
 
 ### Didascalie delle schermate
@@ -295,6 +301,7 @@ Teclado estadounidense en el servidor y símbolos compuestos con códigos Alt
 Historial de textos e imágenes copiados, con búsqueda instantánea
 Lista disponible desde cualquier programa con un atajo
 Entradas importantes fijadas arriba con una estrella
+Atajos del 1 al 9 para textos guardados y entradas con estrella
 Textos guardados cifrados, organizados en carpetas y subcarpetas
 Textos guardados también en el menú del icono, sin abrir la ventana
 Vista previa completa de textos largos e imágenes
@@ -324,7 +331,9 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Nuevo aspecto: tema claro u oscuro, elegido en las opciones o como Windows, seguido incluso cuando cambia con el programa abierto. Menús redondeados al estilo de Windows 11, interruptores animados y preguntas con los colores y el idioma del programa.
+Atajos para las entradas que más usas: desde su menú del clic derecho, da a un texto guardado o a una entrada con estrella un número del 1 al 9; luego Ctrl+D+1…9 la pone enseguida en el portapapeles desde cualquier programa y te devuelve adonde estabas. El número se ve en la lista y en el menú del icono.
+
+También nuevo: tema claro u oscuro, elegido en las opciones o como Windows, seguido incluso cuando cambia con el programa abierto. Menús redondeados al estilo de Windows 11, interruptores animados y preguntas con los colores y el idioma del programa.
 ```
 
 ### Leyendas de las capturas
@@ -386,6 +395,7 @@ Clavier américain sur le serveur et symboles composés avec des codes Alt
 Historique des textes et images copiés, avec recherche instantanée
 Liste accessible depuis n'importe quel programme avec un raccourci
 Éléments importants épinglés en haut avec une étoile
+Raccourcis de 1 à 9 pour les textes enregistrés et les éléments étoilés
 Textes enregistrés chiffrés, rangés en dossiers et sous-dossiers
 Textes enregistrés aussi dans le menu de l'icône, sans ouvrir la fenêtre
 Aperçu complet des textes longs et des images
@@ -415,7 +425,9 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Nouvel aspect : thème clair ou sombre, choisi dans les options ou comme Windows, suivi même quand il change pendant que le programme est ouvert. Menus arrondis dans le style de Windows 11, interrupteurs animés et questions aux couleurs et dans la langue du programme.
+Des raccourcis pour les éléments que vous utilisez le plus : depuis son menu du clic droit, donnez à un texte enregistré ou à un élément étoilé un numéro de 1 à 9, puis Ctrl+D+1…9 le remet aussitôt dans le presse-papiers depuis n'importe quel programme et vous ramène où vous étiez. Le numéro apparaît dans la liste et dans le menu de l'icône.
+
+Nouveau aussi : thème clair ou sombre, choisi dans les options ou comme Windows, suivi même quand il change pendant que le programme est ouvert. Menus arrondis dans le style de Windows 11, interrupteurs animés et questions aux couleurs et dans la langue du programme.
 ```
 
 ### Légendes des captures

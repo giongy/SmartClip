@@ -26,6 +26,9 @@ partial class MainForm
         });
         // Only for a copied entry: the same as a click on its star.
         ToolStripItem pinItem = listMenu.Items.Add("", null, delegate { TogglePin(Selected); });
+        // The number that chooses the entry after the list hotkey: the numbers are listed when the menu opens.
+        ToolStripMenuItem numberItem = new ToolStripMenuItem(Strings.NumberMenu);
+        listMenu.Items.Add(numberItem);
         // Only for a saved text, once there are folders: they are listed when the menu opens.
         ToolStripMenuItem moveItem = new ToolStripMenuItem(Strings.MoveTo);
         listMenu.Items.Add(moveItem);
@@ -45,6 +48,7 @@ partial class MainForm
             showItem.Visible = entry != null && entry.Name != null && !entry.IsGroup;
             pinItem.Visible = entry != null && entry.Name == null;
             pinItem.Text = entry != null && entry.Pinned ? Strings.Unpin : Strings.Pin;
+            ListNumbers(numberItem, entry);
             // A saved text or a folder, wherever else it can go: a folder never into itself or one it holds.
             List<string> groups = entry == null ? new List<string>()
                 : GroupNames().FindAll(delegate(string group) { return !entry.IsGroup || !Texts.Within(group, entry.Name); });
@@ -62,6 +66,7 @@ partial class MainForm
             }
         };
         Look.Style((ToolStripDropDownMenu)moveItem.DropDown);
+        Look.Style((ToolStripDropDownMenu)numberItem.DropDown);
         Look.Style(listMenu);
 
         foreach (ListBox each in new ListBox[] { recentList, savedList })
@@ -344,12 +349,21 @@ partial class MainForm
     }
 
     // The part of a row left to its sign and its text: up to when it was copied or saved, which comes
-    // before the star in a row of the copied entries.
+    // before the number and that before the star in a row of the copied entries.
     Rectangle Content(ListBox list, Entry entry, Rectangle row)
     {
         int left = row.Left + RowInset + GroupIndent * entry.Level;
-        int right = row.Right - TimeGap - (list == recentList ? StarArea(row).Width + TimeGap : 0) - WhenRoom(entry);
+        int right = NumberArea(list, entry, row).Left - (entry.Number > 0 ? TimeGap : 0) - WhenRoom(entry);
         return Rectangle.FromLTRB(left, row.Top, right, row.Bottom);
+    }
+
+    // Where the number of an entry is drawn, near the right end of its row, so that the numbers make a column;
+    // without one, an empty area where it would end.
+    Rectangle NumberArea(ListBox list, Entry entry, Rectangle row)
+    {
+        int right = row.Right - TimeGap - (list == recentList ? StarArea(row).Width + TimeGap : 0);
+        int side = Font.Height, width = entry.Number > 0 ? side + NumberPadding : 0;
+        return new Rectangle(right - width, row.Top + (row.Height - side) / 2, width, side);
     }
 
     // What the sign of an entry takes at the left of its row, with the air after it.
@@ -435,6 +449,19 @@ partial class MainForm
             TextRenderer.DrawText(e.Graphics, when, e.Font, Rectangle.FromLTRB(label.Right, label.Top, label.Right + WhenRoom(entry),
                 label.Bottom), Look.Muted, TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.SingleLine
                 | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+        if (entry.Number > 0)
+        {
+            // The digit that chooses it after the list hotkey, in a rounded frame in the accent colour.
+            Rectangle area = NumberArea(list, entry, e.Bounds);
+            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+            using (GraphicsPath shape = Look.Rounded(Rectangle.FromLTRB(area.Left, area.Top, area.Right - 1, area.Bottom - 1)))
+            using (Pen edge = new Pen(Look.Accent))
+            {
+                e.Graphics.DrawPath(edge, shape);
+            }
+            TextRenderer.DrawText(e.Graphics, entry.Number.ToString(), e.Font, area, Look.Accent, TextFormatFlags.HorizontalCenter
+                | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
+        }
         if (list == recentList)
         {
             // At the right end, the star that keeps the entry at the top: in colour if it does, faint on the
@@ -488,6 +515,50 @@ partial class MainForm
         if (list != recentList || index < 0) return false;
         Rectangle row = list.GetItemRectangle(index);
         return row.Contains(where) && where.X >= StarArea(row).Left - TimeGap / 2;
+    }
+
+    // The numbers an entry can be given, in its menu: the one it has cannot be chosen, and beside each that
+    // another entry has, that entry, which would lose it. Nothing for a folder.
+    void ListNumbers(ToolStripMenuItem menu, Entry entry)
+    {
+        menu.DropDownItems.Clear();
+        // Asked back, 'Visible' would answer false: the menu is not on screen yet.
+        menu.Visible = entry != null && !entry.IsGroup;
+        if (entry == null || entry.IsGroup) return;
+        menu.DropDownItems.Add(Strings.NoNumber, null, delegate { Number(entry, 0); }).Enabled = entry.Number > 0;
+        for (int each = 1; each <= MaxNumber; each++)
+        {
+            int number = each;   // a variable of its own for the delegate
+            ToolStripMenuItem item = new ToolStripMenuItem(NumberName(number), null, delegate { Number(entry, number); });
+            item.Enabled = entry.Number != number;
+            Entry holder = Numbered(number);
+            if (holder != null && holder != entry) item.ShortcutKeyDisplayString = Shorten(holder.Label);
+            menu.DropDownItems.Add(item);
+        }
+    }
+
+    // The entry a number chooses, or null.
+    Entry Numbered(int number)
+    {
+        return entries.Find(delegate(Entry entry) { return !entry.IsGroup && entry.Number == number; });
+    }
+
+    // Gives an entry a number, taking it from the one that had it, or with zero takes its own away. A copied
+    // entry is pinned along.
+    void Number(Entry entry, int number)
+    {
+        if (!Change(delegate { Texts.Number(entry, number); })) return;
+        Say(number > 0 ? string.Format(Strings.NumberGiven, NumberName(number), Shorten(entry.Label))
+            : string.Format(Strings.NumberTaken, Shorten(entry.Label)));
+        Reload();
+    }
+
+    // The keys of a number: as Enter would, the entry goes on the clipboard and the user back where they were.
+    void ChooseNumber(int number)
+    {
+        Entry entry = Numbered(number);
+        if (entry == null) status.Text = string.Format(Strings.NumberFree, NumberName(number), Strings.NumberMenu);
+        else if (!busy && Use(entry)) GoBack();
     }
 
     // Keeps a copied entry at the top of its column, or lets it go back among the others.
@@ -595,12 +666,15 @@ partial class MainForm
             {
                 string name = edit.EntryName, oldName = source == null ? null : source.Name;
                 bool renamed = !Texts.SameName(name, oldName);
+                int number = source == null ? 0 : source.Number;
                 bool taken = renamed && entries.Exists(delegate(Entry entry) { return !entry.IsGroup && Texts.SameName(entry.Name, name); });
                 if (taken && !Ask(string.Format(Strings.AskReplace, name))) continue;
                 if (!Change(delegate
                 {
                     Texts.Save(name, edit.Content, edit.Group);   // first, so that a failure leaves the old one in place
                     if (renamed && oldName != null) Texts.Delete(oldName);
+                    // The number goes along to the new name, and from a copied entry to the text it becomes.
+                    if (renamed && number > 0) Texts.Number(name, number);
                     Texts.Reveal(edit.Group);   // or the text would not be seen
                 })) continue;
                 if (source != null && source.Name == null) Texts.Remove(source);   // it now has a line among the saved ones
@@ -723,6 +797,12 @@ partial class MainForm
             return true;
         }
         if (optionsShown || !(search.Focused || recentList.Focused || savedList.Focused)) return base.ProcessCmdKey(ref msg, keyData);
+        int number = NumberOf(keyData, pickKeys);
+        if (number > 0)   // acts when released, as Enter does
+        {
+            numberDown = number;
+            return true;
+        }
         switch (keyData)
         {
             case Keys.Escape:
@@ -760,10 +840,17 @@ partial class MainForm
     }
 
     // Enter acts when released: held down, it would go on repeating into the window the foreground goes
-    // back to, and could confirm a login there.
+    // back to, and could confirm a login there. So do the keys of a number, which held down could do there
+    // what they mean to that program.
     protected override void OnKeyUp(KeyEventArgs e)
     {
         base.OnKeyUp(e);
+        int number = numberDown;
+        if (number > 0 && (e.KeyCode == Keys.D0 + number || e.KeyCode == Keys.NumPad0 + number))
+        {
+            numberDown = 0;
+            ChooseNumber(number);
+        }
         if (e.KeyCode != Keys.Enter || !enterDown) return;
         enterDown = false;
         Accept(true);
@@ -773,6 +860,7 @@ partial class MainForm
     {
         base.OnDeactivate(e);
         enterDown = false;
+        numberDown = 0;
         HidePeek();
         EndCapture();   // keys pressed elsewhere are not for us
     }

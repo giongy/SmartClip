@@ -74,6 +74,7 @@ reaches the rest. On the right, **Saved**: the texts you saved under a name, whi
 | Dragging a saved text or a folder | Onto a folder, or onto a text inside one, moves it there; onto a text outside the folders, or below the last row, takes it out |
 | Dragging the gap between the columns | Gives the saved texts more room, or less; the width is remembered. A double click there restores it |
 | The star at the right end of a copied entry, or Ctrl+P | Keeps the entry at the top of its column, also beyond the days of the history, until you take the star off |
+| Ctrl+D+1 … Ctrl+D+9 | Puts on the clipboard the entry with that number and returns to the window you came from (see below) |
 | F1, or the **?** button | Opens the guide: everything the program does, by topic |
 
 Of a saved text the list shows the name only: **Show the content** in its right-click
@@ -108,6 +109,16 @@ does not work. Pictures can only be pasted, and cannot be saved.
 Press **Ctrl+D** in any program to bring the window up with the cursor in the search box. After you choose an
 entry the focus returns to the program you were in, and the window hides again if it was hidden. Esc goes back
 without choosing.
+
+### Shortcuts to single entries
+
+**Shortcut**, in the right-click menu, gives a saved text or a copied entry a number from 1 to 9. Then, from any
+program, **Ctrl+D+1** … **Ctrl+D+9** puts that entry straight on the clipboard and takes you back: keep Ctrl held
+down after Ctrl+D and add the digit (the keys of the list hotkey, whatever they are, with the digit; the keypad
+digits work too). The number shows in a small frame at the right of the entry's row, and in the tray menu beside
+a saved text. The same menu changes the number or takes it away (**None**); next to each number it says which
+entry has it now. A number belongs to one entry at a time: given to another, it moves. A copied entry that gets a
+number also gets the star, so that it does not expire; taking the star off takes the number too.
 
 ## Options
 
@@ -146,7 +157,7 @@ plain text file that Notepad opens, and read such a file back, on this PC or ano
 only the saved texts or everything, that is also what was copied (pictures are left out). The file holds the
 texts **in clear**, passwords included. Importing adds to what is there: when a saved text has the name of an
 existing one it asks which to keep, and copied texts already in the list are not repeated. A file exported in one
-language is read in any other.
+language is read in any other. The shortcut numbers of the entries are not part of the file.
 
 Under the history options, the link **Open the history folder** opens the folder of the history files.
 

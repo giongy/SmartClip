@@ -20,6 +20,7 @@ class Entry
     const int PreviewHeight = 120;   // of the small copy shown in the list: enough for a sharp row at any scale
     public readonly bool Picture;
     public bool Pinned;              // a copied entry the user keeps at the top of its column
+    public int Number;               // after the list hotkey, the digit that chooses it: 0 for none
     public string Group;             // the folder a saved text is in, or null
     public bool IsGroup, Open;       // not a text but a folder of saved texts, named by Name; and whether it shows them
     public readonly int Width, Height;   // of a picture
@@ -130,6 +131,9 @@ static class Texts
     // text itself; of a picture its width, height and the length of the preview, then preview and picture as PNG.
     const byte DeletedKind = 0, TextKind = 1, PictureKind = 2;
     const byte PinnedKind = 0x80;   // added to the kind of an entry kept at the top
+    // Of a pinned entry, its number in the bits between: those below are the kind.
+    const byte KindMask = 0x07, NumberMask = 0x78;
+    const int NumberShift = 3;
     const int HeaderSize = sizeof(byte) + sizeof(long) + sizeof(int), PictureHeader = 3 * sizeof(int);
     public const string DayFormat = "yyyy-MM-dd";
     const string Extension = ".clips";
@@ -141,6 +145,7 @@ static class Texts
     static bool loaded;        // the history files were read: before that, nobody knows which hold a pinned entry
     const string SavedKey = MainForm.SettingsKey + @"\Saved";
     const string DatesKey = "Dates";   // under the saved texts: when each was saved, under the same name
+    const string NumbersKey = "Numbers";   // the same: the number of each that has one
     // The folders of the saved texts ("groups" here: Folder is where the history is). Under the saved texts,
     // the groups by name, each with 1 if it is open, and the group of each text that has one, under its name.
     const string GroupsKey = "Folders", PlacesKey = "Places";
@@ -250,33 +255,82 @@ static class Texts
     }
 
     // Keeps a copied entry at the top of its column, or lets it go back among the others: then it leaves at
-    // once, if its days are over.
+    // once, if its days are over. Its number goes with the star: it could not stay without it.
     public static void Pin(Entry entry, bool pinned)
     {
         entry.Pinned = pinned;
-        if (entry.FilePath != null)
+        if (!pinned) entry.Number = 0;
+        Mark(entry);
+        if (!pinned && keepDays > 0) Prune();
+    }
+
+    // Writes again the kind of a copied entry in its history file, where star and number are.
+    static void Mark(Entry entry)
+    {
+        if (entry.FilePath == null) return;
+        try
         {
-            try
+            using (FileStream stream = new FileStream(entry.FilePath, FileMode.Open, FileAccess.Write))
             {
-                using (FileStream stream = new FileStream(entry.FilePath, FileMode.Open, FileAccess.Write))
-                {
-                    stream.Position = entry.Offset;
-                    stream.WriteByte(KindOf(entry));
-                }
-            }
-            catch (IOException)
-            {
-            }
-            catch (UnauthorizedAccessException)
-            {
+                stream.Position = entry.Offset;
+                stream.WriteByte(KindOf(entry));
             }
         }
-        if (!pinned && keepDays > 0) Prune();
+        catch (IOException)
+        {
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
     }
 
     static byte KindOf(Entry entry)
     {
-        return (byte)((entry.Picture ? PictureKind : TextKind) | (entry.Pinned ? PinnedKind : 0));
+        return (byte)((entry.Picture ? PictureKind : TextKind) | (entry.Pinned ? PinnedKind | entry.Number << NumberShift : 0));
+    }
+
+    // Gives an entry the number that chooses it after the list hotkey, taking it from whatever had it; zero
+    // takes its own away. A copied entry gets the star along: without it, it would go with its day.
+    public static void Number(Entry entry, int number)
+    {
+        if (entry.Name != null)
+        {
+            Number(entry.Name, number);
+            return;
+        }
+        Free(number);
+        entry.Number = number;
+        entry.Pinned |= number > 0;
+        Mark(entry);
+    }
+
+    // The same for a saved text, by its name.
+    public static void Number(string name, int number)
+    {
+        Free(number);
+        using (RegistryKey numbers = Registry.CurrentUser.CreateSubKey(SavedKey + @"\" + NumbersKey))
+        {
+            numbers.DeleteValue(name, false);
+            if (number > 0) numbers.SetValue(name, number, RegistryValueKind.DWord);
+        }
+    }
+
+    // Takes a number away from whatever has it: it chooses one entry only.
+    static void Free(int number)
+    {
+        if (number == 0) return;
+        foreach (Entry entry in Recent)
+        {
+            if (entry.Number != number) continue;
+            entry.Number = 0;
+            Mark(entry);
+        }
+        using (RegistryKey numbers = Registry.CurrentUser.OpenSubKey(SavedKey + @"\" + NumbersKey, true))
+        {
+            if (numbers == null) return;
+            foreach (string name in numbers.GetValueNames())
+                if (Equals(numbers.GetValue(name), number)) numbers.DeleteValue(name, false);
+        }
     }
 
     // Forgets everything that was copied, on disk too, and keeps nothing on disk from now on.
@@ -363,7 +417,8 @@ static class Texts
                 {
                     byte kind = reader.ReadByte();
                     bool pinned = (kind & PinnedKind) != 0;
-                    if (pinned) kind -= PinnedKind;
+                    int number = pinned ? (kind & NumberMask) >> NumberShift : 0;
+                    kind &= KindMask;
                     DateTime time = new DateTime(reader.ReadInt64());
                     int size = reader.ReadInt32();
                     if (size < 0 || end + HeaderSize + size > length) break;
@@ -384,6 +439,7 @@ static class Texts
                     if (entry != null)
                     {
                         entry.Pinned = pinned;
+                        entry.Number = number <= MainForm.MaxNumber ? number : 0;
                         entry.FilePath = file;
                         entry.Offset = end;
                         entry.Length = size;
@@ -579,6 +635,7 @@ static class Texts
         List<string> known = Groups();
         using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SavedKey))
         using (RegistryKey dates = key == null ? null : key.OpenSubKey(DatesKey))
+        using (RegistryKey numbers = key == null ? null : key.OpenSubKey(NumbersKey))
         using (RegistryKey groups = key == null ? null : key.OpenSubKey(GroupsKey))
         using (RegistryKey places = key == null ? null : key.OpenSubKey(PlacesKey))
         {
@@ -595,6 +652,8 @@ static class Texts
                 {
                     byte[] plain = ProtectedData.Unprotect(data, null, DataProtectionScope.CurrentUser);
                     Entry entry = new Entry(name, Encoding.UTF8.GetString(plain), dated ? new DateTime((long)ticks) : DateTime.MinValue);
+                    object number = numbers == null ? null : numbers.GetValue(name);
+                    if (number is int && (int)number > 0 && (int)number <= MainForm.MaxNumber) entry.Number = (int)number;
                     // A text whose group is gone is simply in none.
                     string group = places == null ? null : places.GetValue(name) as string;
                     if (group != null && known.Exists(delegate(string other) { return SameName(other, group); })) entry.Group = group;
@@ -650,9 +709,11 @@ static class Texts
     {
         using (RegistryKey key = Registry.CurrentUser.CreateSubKey(SavedKey))
         using (RegistryKey dates = key.CreateSubKey(DatesKey))
+        using (RegistryKey numbers = key.CreateSubKey(NumbersKey))
         {
             key.DeleteValue(name, false);
             dates.DeleteValue(name, false);
+            numbers.DeleteValue(name, false);
         }
         Move(name, null);
     }

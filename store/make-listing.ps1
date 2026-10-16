@@ -9,6 +9,7 @@
 # "## In tutte le schede". The rows of the file
 # come from the export, so that Partner Center gets back exactly the fields it knows. Writes
 # store\import\SmartClip-listing: the .csv and a copy of the pictures, at the paths the .csv names.
+# The .csv written before also serves as the export, once copied out of that folder, which is written anew.
 
 param([Parameter(Mandatory = $true)][string]$Exported)
 $ErrorActionPreference = 'Stop'
@@ -80,21 +81,28 @@ function Cell([string]$value) {
     if ($value -match '[",\r\n]') { return '"' + $value.Replace('"', '""') + '"' }
     return $value
 }
-$lines = [IO.File]::ReadAllLines($Exported, [Text.Encoding]::UTF8)
-$header = $lines[0].Split(',')
+# Read as CSV, not line by line: a filled-in listing has descriptions on several lines, between quotes.
+Add-Type -AssemblyName Microsoft.VisualBasic
+$parser = New-Object Microsoft.VisualBasic.FileIO.TextFieldParser($Exported, [Text.Encoding]::UTF8)
+$parser.SetDelimiters(',')
+$parser.HasFieldsEnclosedInQuotes = $true
+$parser.TrimWhiteSpace = $false
+$records = New-Object System.Collections.Generic.List[object]
+while (-not $parser.EndOfData) { $records.Add($parser.ReadFields()) }
+$parser.Close()
+$header = $records[0]
 $columns = @($header[4..($header.Count - 1)] | Where-Object { $_ })
 foreach ($column in $languages.Keys) { if ($columns -notcontains $column) { throw "the export has no column '$column'" } }
 $rows = New-Object System.Collections.Generic.List[string]
 $rows.Add(($header[0..3] + $columns) -join ',')
-foreach ($line in $lines[1..($lines.Count - 1)]) {
-    $parts = $line.Split(',')
+foreach ($parts in $records.GetRange(1, $records.Count - 1)) {
     if (-not $parts[0]) { continue }
     $cells = @($parts[0], $parts[1], $parts[2], '')   # Field, ID, Type, and nothing in "default"
     foreach ($column in $columns) {
         $value = $null
         if ($languages.Contains($column)) { $value = $languages[$column].Values[$parts[0]] }
         if ($null -eq $value) { $value = $parts[4 + [array]::IndexOf($columns, $column)] }   # as exported
-        $cells += Cell ($value -replace "`n", "`r`n")
+        $cells += Cell ($value -replace "`r?`n", "`r`n")
     }
     $rows.Add($cells -join ',')
 }

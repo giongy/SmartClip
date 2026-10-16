@@ -141,8 +141,29 @@ static class TestProgram
         return data;
     }
 
-    // The logic behind the list, without opening it and without touching the clipboard.
+    // The logic behind the list, without opening it and without touching the clipboard. A number given here is
+    // taken from whatever had it, the user's saved texts too: theirs are put back afterwards.
     static int TextsTest()
+    {
+        const string numbersKey = MainForm.SettingsKey + @"\Saved\Numbers";
+        Dictionary<string, object> numbers = new Dictionary<string, object>();
+        using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(numbersKey))
+            if (key != null) foreach (string name in key.GetValueNames()) numbers[name] = key.GetValue(name);
+        try
+        {
+            return ListTest();
+        }
+        finally
+        {
+            Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(numbersKey, false);
+            if (numbers.Count > 0)
+                using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(numbersKey))
+                    foreach (KeyValuePair<string, object> number in numbers)
+                        key.SetValue(number.Key, number.Value, Microsoft.Win32.RegistryValueKind.DWord);
+        }
+    }
+
+    static int ListTest()
     {
         Check(!Texts.IsPrivate(Copied(null, 0)), "plain text is not private");
         Check(Texts.IsPrivate(Copied("ExcludeClipboardContentFromMonitorProcessing", 1)), "a marker format makes it private");
@@ -295,6 +316,26 @@ static class TestProgram
             Texts.Save(name.ToUpper(), "other", null);
             Check(Texts.Load().FindAll(delegate(Entry e) { return string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase); })
                 .TrueForAll(delegate(Entry e) { return e.Name == name.ToUpper(); }), "saving with another letter case renames");
+
+            // Numbers: each chooses one entry, saved or copied, and moves when given to another.
+            Predicate<Entry> mine = delegate(Entry e) { return Texts.SameName(e.Name, name); };
+            Texts.Number(name, MainForm.MaxNumber);
+            Check(Texts.Load().Find(mine).Number == MainForm.MaxNumber, "a saved text keeps its number");
+            Entry copy = new Entry(null, "numbered copy");
+            Texts.Recent.Add(copy);
+            Texts.Number(copy, MainForm.MaxNumber);
+            Check(copy.Number == MainForm.MaxNumber && copy.Pinned && Texts.Load().Find(mine).Number == 0,
+                "given to a copied entry, the number moves there and the entry gets the star");
+            Texts.Number(Texts.Load().Find(mine), MainForm.MaxNumber);
+            Check(copy.Number == 0 && copy.Pinned && Texts.Load().Find(mine).Number == MainForm.MaxNumber, "and back, the star stays");
+            Texts.Recent.Remove(copy);
+            Texts.Number(name, 0);
+            Check(Texts.Load().Find(mine).Number == 0, "zero takes the number away");
+            Texts.Number(name, 1);
+            Texts.Delete(name);
+            Texts.Save(name, text, null);
+            Check(Texts.Load().Find(mine).Number == 0, "a deleted text takes its number along");
+            Check(MainForm.NumberName(1) == MainForm.PickName + "+1", "the keys of a number are those of the list hotkey and the digit");
         }
         finally
         {
@@ -447,8 +488,13 @@ static class TestProgram
             Texts.Read();
             star =Texts.Recent.Find(delegate(Entry e) { return e.Text == "star text"; });
             Check(Texts.Recent.Count == 2 && star != null && star.Pinned, "and comes back pinned from disk");
+            Texts.Number(star, MainForm.MaxNumber);
+            Texts.Recent.Clear();
+            Texts.Read();
+            star = Texts.Recent.Find(delegate(Entry e) { return e.Text == "star text"; });
+            Check(star != null && star.Pinned && star.Number == MainForm.MaxNumber && !star.Picture, "with its number too");
             Texts.Pin(star, false);
-            Check(Texts.Recent.Count == 1 && !System.IO.File.Exists(pastFile), "unpinned, it leaves with its day");
+            Check(Texts.Recent.Count == 1 && !System.IO.File.Exists(pastFile) && star.Number == 0, "unpinned, it leaves with its day and its number");
 
             // Cleaning on request: the last days are spared, and so is what is pinned.
             Entry earlier = new Entry(null, "earlier", DateTime.Now.AddDays(-2));
@@ -785,6 +831,20 @@ static class TestProgram
                 SnapArea(new Rectangle(form.Left + 40, form.Top + 100, 520, 300), path + "-real-menu.png");
                 menu.Close();
             }
+            // The menu of a saved text with the numbers it can take, each beside the entry that has it.
+            ListBox saved = (ListBox)typeof(MainForm).GetField("savedList", hidden).GetValue(form);
+            ContextMenuStrip listMenu = (ContextMenuStrip)typeof(MainForm).GetField("listMenu", hidden).GetValue(form);
+            saved.SelectedIndex = 2;
+            listMenu.Show(saved, new Point(40, 60));
+            foreach (ToolStripItem item in listMenu.Items)
+            {
+                ToolStripMenuItem numbers = item as ToolStripMenuItem;
+                if (numbers == null || numbers.Text != Strings.NumberMenu) continue;
+                numbers.ShowDropDown();
+                numbers.DropDownItems[1].Select();
+            }
+            SnapArea(new Rectangle(saved.PointToScreen(Point.Empty).X, form.Top + 100, 640, 420), path + "-real-number.png");
+            listMenu.Close();
             ToolTip tips = (ToolTip)typeof(MainForm).GetField("tips", hidden).GetValue(form);
             Button helpButton = (Button)typeof(MainForm).GetField("helpButton", hidden).GetValue(form);
             tips.Show(tips.GetToolTip(helpButton), helpButton, -200, -40);
@@ -968,7 +1028,9 @@ static class TestProgram
         BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
         Sample s = Sample.Current;
         List<Entry> entries = new List<Entry>();
-        entries.Add(new Entry(s.Signature, s.SignatureText));
+        Entry signature = new Entry(s.Signature, s.SignatureText);
+        signature.Number = 1;   // the keys that choose it, shown in its row
+        entries.Add(signature);
         // Folders, one open with another inside it and one closed, each right before its texts.
         string server = Texts.Join(s.Work, s.Servers);
         foreach (string name in new string[] { s.Work, s.Address, server, s.ServerPassword, s.Home, s.Wifi })
@@ -978,12 +1040,14 @@ static class TestProgram
             entry.IsGroup = folder;
             entry.Open = name != s.Home;
             if (!entry.IsGroup) entry.Group = entries[entries.Count - 1].IsGroup ? entries[entries.Count - 1].Name : entries[entries.Count - 1].Group;
+            if (name == s.ServerPassword) entry.Number = 2;
             entries.Add(entry);
         }
         // Copied this morning, whatever the time the pictures are taken.
         DateTime morning = DateTime.Today.AddHours(10).AddMinutes(24);
         Entry pinned = new Entry(null, "ssh admin@srv-database-01", morning);
         pinned.Pinned = true;
+        pinned.Number = 3;
         entries.Add(pinned);
         using (Bitmap picture = SamplePicture())
             entries.Add(new Entry(new Bitmap(picture, 213, 120), picture.Width, picture.Height, morning.AddMinutes(-7)));

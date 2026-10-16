@@ -21,6 +21,9 @@ partial class MainForm : Form
     public static string HotkeyName { get { return NameOf(typeKeys); } }
     public static string PickName { get { return NameOf(pickKeys); } }
     const int HotkeyId = 1, PickId = 2;
+    // A saved text or a pinned entry can have a number: in the list, the keys held for the list hotkey with
+    // that digit choose it, so that the list hotkey and then the digit work from any program (see NumberOf).
+    public const int MaxNumber = 9;
 
     public const int MinDelay = 1, MaxDelay = 30;             // limits, in seconds, of the wait before typing
     const int DefaultDelay = 1;                        // wait proposed until the user picks another one
@@ -50,6 +53,7 @@ partial class MainForm : Form
     const int CountWidth = 120;                        // room for the number of entries, right of a column title
     const int GroupIndent = 14;                        // of a saved text under its folder
     const int RowInset = 12, TimeGap = 8;             // of the text in a row, and around the time on its right
+    const int NumberPadding = 2;                       // added to the text height for the width of the frame of a number
     const int Gap = 6;                                 // between neighbouring controls
     const int ActionHeight = 26, ActionWidth = 92;     // the buttons in the bottom row
     const int TypeWidth = 160;                        // the button that types the clipboard, in the same row
@@ -133,6 +137,7 @@ partial class MainForm : Form
     bool optionsShown;
     List<Entry> entries = new List<Entry>();
     bool enterDown;     // Enter was pressed in the list, so its release belongs to it
+    int numberDown;     // the same for the keys of a number: the one pressed
     IntPtr previous;    // the window the list hotkey was pressed in: the foreground goes back there
     bool wasHidden;     // the list hotkey found the window hidden: after the choice it hides again
     uint ownCopy;       // clipboard sequence number of what was put there from the list: not to be remembered again
@@ -634,7 +639,12 @@ partial class MainForm : Form
                 folders[entry.Name] = folder;
                 holder.DropDownItems.Add(folder);
             }
-            else holder.DropDownItems.Add(entry.Label, null, delegate { Use(entry); });
+            else
+            {
+                ToolStripMenuItem text = new ToolStripMenuItem(entry.Label, null, delegate { Use(entry); });
+                if (entry.Number > 0) text.ShortcutKeyDisplayString = NumberName(entry.Number);   // the keys that choose it from anywhere
+                holder.DropDownItems.Add(text);
+            }
         }
         // An empty folder says so: with no submenu it would look like a text to click.
         foreach (ToolStripMenuItem folder in folders.Values)

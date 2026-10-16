@@ -64,6 +64,7 @@ static partial class Strings
     public static string Open = "Open", Exit = "Exit", Pause = "Pause capture", Resume = "Resume capture";
     public static string ShowContent = "Show the content", MoveTo = "Move to", NewFolder = "New folder…",
         Pin = "Keep at the top", Unpin = "Release from the top", OutOfFolders = "Out of the folders", EmptyFolder = "Empty";
+    public static string NumberMenu = "Shortcut", NoNumber = "None";
 
     // --- Tray ---
     public static string TrayReady = ": text ready on the clipboard", TrayEmpty = ": no text on the clipboard",
@@ -77,6 +78,9 @@ static partial class Strings
     public static string PausedSay = "Paused: what you copy is not remembered until you resume capturing.";
     public static string ResumedSay = "Capturing has resumed: what you copy comes back to the list.";
     public static string Pinned = "Kept at the top: {0}.", Unpinned = "No longer at the top: {0}.";
+    public static string NumberGiven = "{0} now puts “{1}” on the clipboard, from any program.";
+    public static string NumberTaken = "“{0}” no longer has a shortcut.";
+    public static string NumberFree = "No entry has {0} yet: give it to one with “{1}”, in its right-click menu.";
     public static string OnClipboard = "On the clipboard: {0}. Paste it with Ctrl+V.";
     public static string OnClipboardOrType = "On the clipboard: {0}. Paste it with Ctrl+V or type it with {1}.";
     public static string AskReplace = "“{0}” already exists. Replace it?";
@@ -147,7 +151,9 @@ static partial class Strings
         + "Saved texts stay in the Windows registry, encrypted for your user, and only\n"
         + "their name is shown. They can be gathered in folders: “New folder” is in the\n"
         + "right-click menu ({3}); a text goes in by dragging it, or with “Move to”.\n"
-        + "A click on a folder opens and closes it.";
+        + "A click on a folder opens and closes it.\n"
+        + "“{6}”, in the right-click menu, gives an entry a number: {4}…{5}, from any\n"
+        + "program, put it on the clipboard and take you back.";
     public static string PressKeys = "Press the keys…";
     public static string PressKeysStatus = "Press the new keys: Ctrl or Alt with a letter, a digit or a function key. "
         + "Esc keeps the current ones, {0} goes back to the defaults.";
@@ -294,6 +300,11 @@ static partial class Strings
                 + "the top of the column: it shows faintly when the pointer is over it, and a click turns it on or "
                 + "off. A starred entry does not expire with the days of the history and stays until you remove the "
                 + "star; copying the same text again does not move it.",
+            "- “" + NumberMenu + "”, in the right-click menu, gives a saved text or a copied entry a number from 1 to "
+                + MainForm.MaxNumber + ": from any program, " + MainForm.NumberName(1) + " and the others put it "
+                + "straight on the clipboard and take you back. Keep the keys of " + pick + " held down and add the "
+                + "digit. The number shows in a small frame at the right of the row; a copied entry that gets one "
+                + "also gets the star, which keeps it. Each number belongs to one entry: given to another, it moves.",
             "The coloured sign on the left says what the entry is: a text, a web address, a saved text. Pictures "
                 + "show a thumbnail. On the right is the time of the copy (the day, if not today) or the day it was saved.",
             "Not to remember what you are about to copy, “" + Pause + "” is in the right-click menu of the list and "
@@ -367,6 +378,8 @@ static partial class Strings
             Key(Keys.Control | MainForm.SaveKey) + "\tSaves the copied entry, or edits the saved one.",
             Key(Keys.Control | MainForm.DeleteKey) + "\tDeletes the selected entry.",
             Key(Keys.Control | MainForm.PinKey) + "\tKeeps the copied entry at the top, or lets it go.",
+            MainForm.NumberName(1) + "…" + MainForm.MaxNumber + "\tPuts on the clipboard the entry with that number "
+                + "and goes back to the window you came from.",
             "The first two work everywhere; the others in the list. While it is on, " + pick + " no longer reaches "
                 + "other programs.",
             "In the options, under “" + HotkeysTitle + "”, the first two can be turned off and changed: the button "
@@ -423,6 +436,7 @@ static partial class Strings
                 + "countdown and “" + Cancel + "” remain in view.",
             "- The right-click menu also lists the saved texts, each folder a submenu: choosing one puts it back on "
                 + "the clipboard, ready for Ctrl+V or " + type + ", without opening the window.",
+            "- Beside a saved text with a number are its keys.",
             "- The icon is in colour when the clipboard holds text, grey when it does not.",
             "- Starting the program a second time brings back the window of the one already open.",
 

@@ -31,6 +31,7 @@ static partial class Strings
         Open = "Abrir"; Exit = "Salir"; Pause = "Pausar la captura"; Resume = "Reanudar la captura";
         ShowContent = "Mostrar el contenido"; MoveTo = "Mover a"; NewFolder = "Nueva carpeta…";
         Pin = "Mantener arriba"; Unpin = "Quitar de arriba"; OutOfFolders = "Fuera de las carpetas"; EmptyFolder = "Vacía";
+        NumberMenu = "Atajo"; NoNumber = "Ninguno";
 
         TrayReady = ": texto listo en el portapapeles"; TrayEmpty = ": sin texto en el portapapeles";
         TrayPaused = ", captura en pausa";
@@ -42,6 +43,9 @@ static partial class Strings
         PausedSay = "En pausa: lo que copias no se recuerda hasta que reanudes la captura.";
         ResumedSay = "La captura se ha reanudado: lo que copias vuelve a la lista.";
         Pinned = "Se queda arriba: {0}."; Unpinned = "Ya no está arriba: {0}.";
+        NumberGiven = "{0} ahora pone «{1}» en el portapapeles, desde cualquier programa.";
+        NumberTaken = "«{0}» ya no tiene atajo.";
+        NumberFree = "Ninguna entrada tiene {0} todavía: dáselo a una con «{1}», en su menú del clic derecho.";
         OnClipboard = "En el portapapeles: {0}. Pégalo con Ctrl+V.";
         OnClipboardOrType = "En el portapapeles: {0}. Pégalo con Ctrl+V o tecléalo con {1}.";
         AskReplace = "«{0}» ya existe. ¿Quieres reemplazarlo?";
@@ -109,7 +113,9 @@ static partial class Strings
             + "Los textos guardados se quedan en el registro de Windows, cifrados para tu usuario, y\n"
             + "solo se ve su nombre. Se pueden reunir en carpetas: «Nueva carpeta» está en el\n"
             + "menú del clic derecho ({3}); un texto entra arrastrándolo, o con «Mover a».\n"
-            + "Un clic en la carpeta la abre y la cierra.";
+            + "Un clic en la carpeta la abre y la cierra.\n"
+            + "«{6}», en el menú del clic derecho, da un número a la entrada: {4}…{5}, desde\n"
+            + "cualquier programa, la ponen en el portapapeles y te devuelven adonde estabas.";
         PressKeys = "Pulsa las teclas…";
         PressKeysStatus = "Pulsa las teclas nuevas: Ctrl o Alt con una letra, un número o una tecla de función. "
             + "Esc deja las actuales, {0} vuelve a las iniciales.";
@@ -253,6 +259,12 @@ static partial class Strings
                 + "mantiene arriba de la columna: aparece atenuada al pasar por encima, y un clic la enciende o la "
                 + "apaga. Una entrada con estrella no caduca con los días del historial y se queda hasta que la "
                 + "quitas; copiar de nuevo el mismo texto no la mueve.",
+            "- «" + NumberMenu + "», en el menú del clic derecho, da a un texto guardado o a una entrada copiada un "
+                + "número del 1 al " + MainForm.MaxNumber + ": desde cualquier programa, " + MainForm.NumberName(1)
+                + " y los demás la ponen enseguida en el portapapeles y te devuelven adonde estabas. Mantén pulsadas "
+                + "las teclas de " + pick + " y añade la cifra. El número aparece en un pequeño recuadro a la derecha "
+                + "de la fila; una entrada copiada que lo recibe también se lleva la estrella, que la conserva. Cada "
+                + "número es de una sola entrada: si se lo das a otra, pasa a ella.",
             "El signo de color de la izquierda dice qué es la entrada: un texto, una dirección web, un texto "
                 + "guardado. Las imágenes muestran una miniatura. A la derecha está la hora de la copia (el día, si "
                 + "no es de hoy) o el día en que se guardó.",
@@ -333,6 +345,8 @@ static partial class Strings
             Key(Keys.Control | MainForm.SaveKey) + "\tGuarda la entrada copiada, o edita la guardada.",
             Key(Keys.Control | MainForm.DeleteKey) + "\tElimina la entrada seleccionada.",
             Key(Keys.Control | MainForm.PinKey) + "\tMantiene arriba la entrada copiada, o la suelta.",
+            MainForm.NumberName(1) + "…" + MainForm.MaxNumber + "\tPone en el portapapeles la entrada con ese número "
+                + "y vuelve a la ventana de la que venías.",
             "Los dos primeros funcionan en todas partes; los demás, en la lista. Mientras está activo, " + pick
                 + " ya no llega a los demás programas.",
             "En las opciones, bajo «" + HotkeysTitle + "», los dos primeros se desactivan y se cambian: el botón junto "
@@ -390,6 +404,7 @@ static partial class Strings
                 + "la cuenta atrás y «" + Cancel + "» quedan a la vista.",
             "- En el menú del clic derecho también están los textos guardados, cada carpeta un submenú: elegir uno lo "
                 + "devuelve al portapapeles, listo para Ctrl+V o para " + type + ", sin abrir la ventana.",
+            "- Junto a un texto guardado con número aparecen sus teclas.",
             "- El icono está en color si en el portapapeles hay texto, gris si no lo hay.",
             "- Iniciar el programa una segunda vez hace reaparecer la ventana del que ya está abierto.",
 

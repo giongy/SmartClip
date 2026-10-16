@@ -64,7 +64,8 @@ condiviso su GitHub).
   inglese) e le immagini (`images\<lingua>\`, da `tests.exe store store\images <lingua>` a programma chiuso;
   `images\tile-300.png` è unica). `make-listing.ps1 <csv esportato da Partner Center>` scrive
   `store\import\SmartClip-listing` (CSV compilato per tutte le lingue + immagini) da importare con *Store
-  listings → Import listings → Import folder*: legge i testi da `README.md`, quindi i blocchi di codice di
+  listings → Import listings → Import folder*; come esportazione va bene anche il `listing.csv` scritto la volta
+  prima, copiato fuori da quella cartella (il CSV si legge con `TextFieldParser`: le descrizioni stanno su più righe): legge i testi da `README.md`, quindi i blocchi di codice di
   ogni lingua vanno tenuti in quell'ordine (nome, descrizione breve, descrizione, caratteristiche, termini, novità della versione da riscrivere a ogni invio) e i
   titoli delle sezioni con il codice tra parentesi, «## English (en-US)». `PRIVACY.md` è l'informativa indicata allo Store: va tenuta vera (oggi il programma non
   usa la rete).
@@ -166,6 +167,20 @@ condiviso su GitHub).
   voci fissate (`Shrink`; l'utente non voleva file pieni di zeri, i file senza stelline si cancellano); per questo non fa nulla finché `Read` non ha letto i file (`loaded`), altrimenti all'avvio li
   cancellerebbe senza sapere delle stelline. Ricopiare lo stesso testo non la sposta e `Forget` non la toglie;
   i limiti di memoria non la contano. L'ordine (fissate prima) lo dà `Texts.Load`.
+- Numeri delle voci (voluti dall'utente nella 3.9.2): un testo salvato o una voce copiata può avere un numero da 1
+  a `MaxNumber` (9); nell'elenco i modificatori della scorciatoia dell'elenco più la cifra (`NumberOf`, anche
+  tastierino) scelgono quella voce come Invio: negli appunti e ritorno alla finestra di partenza (`ChooseNumber`,
+  al rilascio come Invio, `numberDown`). Così Ctrl+D tenendo Ctrl e poi 1 funziona da qualsiasi programma, ed è il
+  nome che il programma scrive (`NumberName`, «Ctrl+D+1»); non è una scorciatoia globale in più. Si assegna e
+  cambia da «Scorciatoia» nel menu del tasto destro (`ListNumbers`: «Nessuna» e i nove numeri, quello attuale
+  disattivato, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento a destra della riga, dopo
+  ora/data e prima della stellina (`NumberArea`), e nel menu del tray accanto al testo salvato
+  (`ShortcutKeyDisplayString`, che `MenuLook` scrive in grigio). Un numero è di una voce sola: `Texts.Number` lo
+  toglie prima a chi lo aveva (`Free`). Dei salvati sta in `Saved\Numbers` (nome → numero, come `Dates`), dei
+  copiati nei bit 3-6 del tipo del blocco (`NumberMask`), solo se fissati: dare un numero a una voce copiata le
+  mette la stellina, toglierle la stellina toglie il numero. Rinominare un testo, o salvare una voce copiata, porta
+  il numero con sé (`Edit`). Le scorciatoie globali non possono prendere quei tasti (`TakeKeys`). Non si esporta.
+  I test (`texts`) salvano e rimettono i numeri dell'utente, perché `Free` li toglierebbe.
 - «Pulisci ora…» nelle opzioni (voluto dall'utente): elimina subito ciò che è stato copiato prima degli ultimi
   N giorni scritti nella casella accanto (`Spared`, non è un'impostazione: riparte da 0, cioè tutto), dopo una
   conferma. `Texts.Clean` e la retention passano dallo stesso `Drop`; le voci fissate restano. Il pulsante si
@@ -406,7 +421,8 @@ condiviso su GitHub).
   `/resource:SmartClip.ico,SmartClip.ico`, altrimenti la barra del titolo ha l'icona generica; `real` mette dietro
   le finestre lo stesso sfondo di `store`, perché ai bordi non compaia lo schermo. Dopo la lingua accettano
   `dark` o `light` (senza, il tema di Windows). `real` fotografa anche una domanda (`-real-ask`), il menu del
-  tray con una cartella aperta (`-real-menu`) e un suggerimento (`-real-tip`).
+  tray con una cartella aperta (`-real-menu`), la scelta del numero di una voce
+  (`-real-number`) e un suggerimento (`-real-tip`).
 
 Il tray è stato verificato con un programmino usa e getta (non nel progetto) che crea `MainForm`, legge i campi
 `tray` e `trayBox` per riflessione e aziona le voci del menu con `PerformClick`: X nasconde, Apri riapre anche
@@ -447,6 +463,8 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   finestra di una cartella con la scelta del posto.
 - L'avvio vero all'accesso a Windows: provati la voce nel registro e l'avvio nascosto con un programmino usa e
   getta, mai una disconnessione e un nuovo accesso.
+- I numeri delle voci dal vivo: Ctrl+D e poi Ctrl+1 premuti davvero, dalla finestra nascosta e da un altro
+  programma, e il clic su «Scorciatoia». Provati la logica (`texts`) e il menu aperto da `tests.exe real`.
 - Il tema dal vivo: il cambio da Impostazioni di Windows a programma aperto (provati solo `Look.Switch` da
   `shot` e le immagini di `real` in chiaro e in scuro), il menu delle caselle di testo scurito da
   `SetPreferredAppMode`, l'interruttore che scorre, l'anello del focus, `AskForm` aperta dal programma vero.

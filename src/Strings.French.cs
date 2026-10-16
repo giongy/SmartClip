@@ -32,6 +32,7 @@ static partial class Strings
         Open = "Ouvrir"; Exit = "Quitter"; Pause = "Suspendre la capture"; Resume = "Reprendre la capture";
         ShowContent = "Afficher le contenu"; MoveTo = "Déplacer vers"; NewFolder = "Nouveau dossier…";
         Pin = "Garder en haut"; Unpin = "Retirer du haut"; OutOfFolders = "Hors des dossiers"; EmptyFolder = "Vide";
+        NumberMenu = "Raccourci"; NoNumber = "Aucun";
 
         TrayReady = " : texte prêt dans le presse-papiers"; TrayEmpty = " : pas de texte dans le presse-papiers";
         TrayPaused = ", capture en pause";
@@ -43,6 +44,9 @@ static partial class Strings
         PausedSay = "En pause : ce que vous copiez n'est pas mémorisé tant que vous ne reprenez pas la capture.";
         ResumedSay = "La capture a repris : ce que vous copiez revient dans la liste.";
         Pinned = "Reste en haut : {0}."; Unpinned = "N'est plus en haut : {0}.";
+        NumberGiven = "{0} met maintenant « {1} » dans le presse-papiers, depuis n'importe quel programme.";
+        NumberTaken = "« {0} » n'a plus de raccourci.";
+        NumberFree = "Aucun élément n'a encore {0} : donnez-le à l'un d'eux avec « {1} », dans son menu du clic droit.";
         OnClipboard = "Dans le presse-papiers : {0}. Collez-le avec Ctrl+V.";
         OnClipboardOrType = "Dans le presse-papiers : {0}. Collez-le avec Ctrl+V ou saisissez-le avec {1}.";
         AskReplace = "« {0} » existe déjà. Voulez-vous le remplacer ?";
@@ -112,7 +116,9 @@ static partial class Strings
             + "Les textes enregistrés restent dans le registre de Windows, chiffrés pour votre utilisateur,\n"
             + "et seul leur nom est visible. On peut les regrouper en dossiers : « Nouveau dossier » est\n"
             + "dans le menu du clic droit ({3}) ; un texte y entre en le faisant glisser, ou avec\n"
-            + "« Déplacer vers ». Un clic sur le dossier l'ouvre et le ferme.";
+            + "« Déplacer vers ». Un clic sur le dossier l'ouvre et le ferme.\n"
+            + "« {6} », dans le menu du clic droit, donne un numéro à l'élément : {4}…{5},\n"
+            + "depuis n'importe quel programme, le remettent dans le presse-papiers et vous ramènent.";
         PressKeys = "Appuyez sur les touches…";
         PressKeysStatus = "Appuyez sur les nouvelles touches : Ctrl ou Alt avec une lettre, un chiffre ou une touche de "
             + "fonction. Échap garde les actuelles, {0} revient à celles de départ.";
@@ -259,6 +265,12 @@ static partial class Strings
                 + "en haut de la colonne : elle apparaît estompée au survol, et un clic l'allume ou l'éteint. Un "
                 + "élément étoilé n'expire pas avec les jours de l'historique et reste jusqu'à ce que vous retiriez "
                 + "l'étoile ; copier à nouveau le même texte ne le déplace pas.",
+            "- « " + NumberMenu + " », dans le menu du clic droit, donne à un texte enregistré ou à un élément copié "
+                + "un numéro de 1 à " + MainForm.MaxNumber + " : depuis n'importe quel programme, " + MainForm.NumberName(1)
+                + " et les suivants le remettent aussitôt dans le presse-papiers et vous ramènent où vous étiez. Gardez "
+                + "enfoncées les touches de " + pick + " et ajoutez le chiffre. Le numéro apparaît dans un petit cadre "
+                + "à droite de la ligne ; un élément copié qui en reçoit un prend aussi l'étoile, qui le garde. Chaque "
+                + "numéro appartient à un seul élément : donné à un autre, il passe à celui-ci.",
             "Le signe coloré à gauche dit ce qu'est l'élément : un texte, une adresse web, un texte enregistré. Les "
                 + "images montrent une miniature. À droite figure l'heure de la copie (le jour, si ce n'est pas "
                 + "aujourd'hui) ou le jour de l'enregistrement.",
@@ -339,6 +351,8 @@ static partial class Strings
             Key(Keys.Control | MainForm.SaveKey) + "\tEnregistre l'élément copié, ou modifie l'élément enregistré.",
             Key(Keys.Control | MainForm.DeleteKey) + "\tSupprime l'élément sélectionné.",
             Key(Keys.Control | MainForm.PinKey) + "\tGarde l'élément copié en haut, ou le laisse partir.",
+            MainForm.NumberName(1) + "…" + MainForm.MaxNumber + "\tMet dans le presse-papiers l'élément qui a ce "
+                + "numéro et revient à la fenêtre de départ.",
             "Les deux premiers marchent partout ; les autres dans la liste. Tant qu'il est actif, " + pick
                 + " n'arrive plus aux autres programmes.",
             "Dans les options, sous « " + HotkeysTitle + " », les deux premiers se désactivent et se changent : le "
@@ -396,6 +410,7 @@ static partial class Strings
                 + "de tout : le compte à rebours et « " + Cancel + " » restent visibles.",
             "- Le menu du clic droit contient aussi les textes enregistrés, chaque dossier un sous-menu : en choisir un "
                 + "le remet dans le presse-papiers, prêt pour Ctrl+V ou pour " + type + ", sans ouvrir la fenêtre.",
+            "- À côté d'un texte enregistré qui a un numéro figurent ses touches.",
             "- L'icône est en couleur quand le presse-papiers contient du texte, grise sinon.",
             "- Lancer le programme une seconde fois fait réapparaître la fenêtre de celui déjà ouvert.",
 

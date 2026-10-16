@@ -31,6 +31,7 @@ static partial class Strings
         Open = "Apri"; Exit = "Esci"; Pause = "Sospendi la cattura"; Resume = "Riprendi la cattura";
         ShowContent = "Mostra il contenuto"; MoveTo = "Sposta in"; NewFolder = "Nuova cartella…";
         Pin = "Tieni in alto"; Unpin = "Togli dall'alto"; OutOfFolders = "Fuori dalle cartelle"; EmptyFolder = "Vuota";
+        NumberMenu = "Scorciatoia"; NoNumber = "Nessuna";
 
         TrayReady = ": testo pronto negli appunti"; TrayEmpty = ": appunti senza testo"; TrayPaused = ", cattura in pausa";
         TrayHint = "Sono ancora attivo qui. Clic per riaprire, tasto destro e poi {0} per chiudere.";
@@ -41,6 +42,9 @@ static partial class Strings
         PausedSay = "In pausa: quello che copi non viene ricordato, finché non riprendi la cattura.";
         ResumedSay = "La cattura è ripresa: quello che copi torna nell'elenco.";
         Pinned = "Resta in alto: {0}."; Unpinned = "Non è più in alto: {0}.";
+        NumberGiven = "{0} ora mette negli appunti «{1}», da qualsiasi programma.";
+        NumberTaken = "«{0}» non ha più una scorciatoia.";
+        NumberFree = "Nessuna voce ha ancora {0}: dalla a una con «{1}», nel suo menu del tasto destro.";
         OnClipboard = "Negli appunti: {0}. Incollalo con Ctrl+V.";
         OnClipboardOrType = "Negli appunti: {0}. Incollalo con Ctrl+V o digitalo con {1}.";
         AskReplace = "«{0}» esiste già. Vuoi sostituirlo?";
@@ -108,7 +112,9 @@ static partial class Strings
             + "I testi salvati restano nel registro di Windows, cifrati per il tuo utente, e\n"
             + "se ne vede solo il nome. Si possono raccogliere in cartelle: «Nuova cartella» è nel\n"
             + "menu del tasto destro ({3}); un testo ci entra trascinandolo, o con\n"
-            + "«Sposta in». Un clic sulla cartella la apre e la chiude.";
+            + "«Sposta in». Un clic sulla cartella la apre e la chiude.\n"
+            + "«{6}», nel menu del tasto destro, dà un numero alla voce: {4}…{5}, da qualsiasi\n"
+            + "programma, la rimettono negli appunti e ti riportano dov'eri.";
         PressKeys = "Premi i tasti…";
         PressKeysStatus = "Premi i tasti nuovi: Ctrl o Alt con una lettera, una cifra o un tasto funzione. "
             + "Esc lascia quelli di adesso, {0} torna a quelli di partenza.";
@@ -249,6 +255,11 @@ static partial class Strings
                 + "tiene in cima alla colonna: compare sbiadita quando ci passi sopra, e un clic la accende o la spegne. "
                 + "Una voce con la stellina non scade con i giorni della cronologia e resta lì finché non la togli; "
                 + "copiare di nuovo lo stesso testo non la sposta.",
+            "- «" + NumberMenu + "», nel menu del tasto destro, dà a un testo salvato o a una voce copiata un numero "
+                + "da 1 a " + MainForm.MaxNumber + ": da qualsiasi programma, " + MainForm.NumberName(1) + " e gli altri "
+                + "la rimettono subito negli appunti e ti riportano dov'eri. Tieni premuti i tasti di " + pick + " e "
+                + "aggiungi la cifra. Il numero compare in un riquadro a destra della riga; una voce copiata che lo "
+                + "riceve prende anche la stellina, che la tiene. Ogni numero è di una voce sola: dato a un'altra, passa a lei.",
             "Il segno colorato a sinistra dice che cos'è la voce: un testo, un indirizzo web, un testo salvato. Le "
                 + "immagini mostrano una miniatura. A destra c'è l'ora della copia (il giorno, se non è di oggi) o il "
                 + "giorno del salvataggio.",
@@ -324,6 +335,8 @@ static partial class Strings
             Key(Keys.Control | MainForm.SaveKey) + "\tSalva la voce copiata, o modifica quella salvata.",
             Key(Keys.Control | MainForm.DeleteKey) + "\tElimina la voce selezionata.",
             Key(Keys.Control | MainForm.PinKey) + "\tTiene in alto la voce copiata, o la lascia andare.",
+            MainForm.NumberName(1) + "…" + MainForm.MaxNumber + "\tMette negli appunti la voce con quel numero e "
+                + "torna alla finestra di partenza.",
             "Le prime due funzionano ovunque; le altre valgono nell'elenco. Finché è attiva, " + pick + " non arriva "
                 + "più agli altri programmi.",
             "Nelle opzioni, sotto «" + HotkeysTitle + "», le prime due si spengono e si cambiano: il pulsante accanto a "
@@ -380,6 +393,7 @@ static partial class Strings
                 + Cancel + "» restano in vista.",
             "- Nel menu del tasto destro ci sono anche i testi salvati, ogni cartella un sottomenu: sceglierne uno lo "
                 + "rimette negli appunti, pronto per Ctrl+V o per " + type + ", senza aprire la finestra.",
+            "- Accanto a un testo salvato con un numero ci sono i suoi tasti.",
             "- L'icona è a colori se negli appunti c'è del testo, grigia se non c'è.",
             "- Avviare il programma una seconda volta fa ricomparire la finestra di quello già aperto.",
 

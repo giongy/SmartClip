@@ -614,12 +614,14 @@ static class Look
                 e.Graphics.FillPath(fill, shape);
         }
 
-        // The menu leaves the room asked before the text (Space) at its end: the text moves into it.
+        // The menu leaves the room asked before the text (Space) at its end: the text moves into it, and what
+        // is written on the right of an entry (its keys) along with it, quieter.
         protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
         {
             Rectangle area = e.TextRectangle;
             area.Offset((int)(MenuText * Zoom), 0);
-            TextRenderer.DrawText(e.Graphics, e.Text, e.TextFont, area, e.Item.Enabled ? Ink : Blend(Muted, Well, 0.35f), e.TextFormat);
+            TextRenderer.DrawText(e.Graphics, e.Text, e.TextFont, area,
+                !e.Item.Enabled ? Blend(Muted, Well, 0.35f) : e.Text != e.Item.Text ? Muted : Ink, e.TextFormat);
         }
 
         // The arrow of a submenu as the sign of a closed folder.
