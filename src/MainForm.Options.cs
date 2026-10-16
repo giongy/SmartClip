@@ -93,26 +93,33 @@ partial class MainForm
         };
         Look.Style(themeMenu);
         Label themeLabel = PlacePicker(themeButton, ThemeName(Look.Chosen), Strings.ThemeOption, themeMenu, ref top);
-        // The font, each written in itself, and the size of the text: like the language, they take a new start.
+        // The font of the entries, each written in itself, and its size in pixels: they change at once. The one
+        // in use cannot be chosen again.
         ContextMenuStrip fontMenu = new ContextMenuStrip();
         foreach (string each in Look.FontNames)
         {
             string name = each;   // a variable of its own for the delegate
-            ToolStripItem item = fontMenu.Items.Add(Look.FontLabel(name), null, delegate { ChangeFont(name); });
-            item.Font = new Font(name, Look.TextFont.SizeInPoints);
-            item.Enabled = name != Look.FontName;
+            fontMenu.Items.Add(Look.FontLabel(name), null, delegate { UseEntryFont(name, Look.EntrySize); }).Font =
+                new Font(name, Look.TextFont.SizeInPoints);
         }
+        fontMenu.Opening += delegate
+        {
+            for (int i = 0; i < fontMenu.Items.Count; i++) fontMenu.Items[i].Enabled = Look.FontNames[i] != Look.EntryFamily;
+        };
         Look.Style(fontMenu);
-        Label fontLabel = PlacePicker(fontButton, Look.FontLabel(Look.FontName), Strings.FontOption, fontMenu, ref top);
-        fontButton.Font = new Font(Look.FontName, Look.TextFont.SizeInPoints);
+        Label fontLabel = PlacePicker(fontButton, "", Strings.FontOption, fontMenu, ref top);
         ContextMenuStrip sizeMenu = new ContextMenuStrip();
-        foreach (int each in Look.Sizes)
+        foreach (int each in Look.EntrySizes)
         {
             int size = each;
-            sizeMenu.Items.Add(SizeName(size), null, delegate { ChangeSize(size); }).Enabled = size != Look.TextSize;
+            sizeMenu.Items.Add(string.Format(Strings.Pixels, size), null, delegate { UseEntryFont(Look.EntryFamily, size); }).Tag = size;
         }
+        sizeMenu.Opening += delegate
+        {
+            foreach (ToolStripItem item in sizeMenu.Items) item.Enabled = (int)item.Tag != Look.EntrySize;
+        };
         Look.Style(sizeMenu);
-        Label sizeLabel = PlacePicker(sizeButton, SizeName(Look.TextSize), Strings.SizeOption, sizeMenu, ref top);
+        Label sizeLabel = PlacePicker(sizeButton, "", Strings.SizeOption, sizeMenu, ref top);
         PlaceOption(trayBox, Strings.TrayOption, ref top);
         trayBox.Checked = true;
         PlaceOption(leaveBox, Strings.LeaveOption, ref top);
@@ -135,8 +142,8 @@ partial class MainForm
         Tip(Strings.AltCodeTip, altCodeBox);
         Tip(string.Format(Strings.LanguageTip, Program.AppName), languageLabel, languageButton);
         Tip(string.Format(Strings.ThemeTip, Strings.ThemeSystem), themeLabel, themeButton);
-        Tip(string.Format(Strings.FontTip, Program.AppName), fontLabel, fontButton);
-        Tip(string.Format(Strings.SizeTip, Program.AppName, SizeName(Look.DefaultSize)), sizeLabel, sizeButton);
+        Tip(Strings.FontTip, fontLabel, fontButton);
+        Tip(string.Format(Strings.SizeTip, string.Format(Strings.Pixels, Look.DefaultEntrySize)), sizeLabel, sizeButton);
         Tip(Strings.HistoryTip, historyBox);
         Tip(string.Format(Strings.KeepTip, Texts.Folder, Texts.MaxRecent, Texts.MaxPictures, MaxShown), keepLabel, keepBox);
         Tip(string.Format(Strings.FolderTip, Texts.Folder), folderLink);
@@ -458,8 +465,9 @@ partial class MainForm
         leaveBox.Checked = Transfer(key, save, "HideOnLeave", leaveBox.Checked);
         language = Transfer(key, save, LanguageSetting, language);   // read again by SavedLanguage, before the window
         Transfer(key, save, ThemeSetting, (int)Look.Chosen);         // read by SavedTheme, before the window
-        if (fontName != null) fontName = Transfer(key, save, FontSetting, fontName);   // read again by SavedFont
-        textSize = Transfer(key, save, SizeSetting, textSize);       // read again by SavedSize
+        string entryFamily = Transfer(key, save, "EntryFont", Look.EntryFamily);
+        int entrySize = Transfer(key, save, "EntrySize", Look.EntrySize);
+        if (!save) UseEntryFont(entryFamily, entrySize);
         savedColumn = Transfer(key, save, "SavedWidth", savedColumn);   // applied when the window loads
 
         // Window position. Reading starts from a point outside every screen: it stays there, and is ignored,
@@ -546,56 +554,20 @@ partial class MainForm
         themeButton.Text = ThemeName(theme);
     }
 
-    // The font and the size of the text the windows are built with, as saved: read, like the language, before
-    // the first window. Null and zero if nobody chose them, or if they cannot be read.
-    public static string SavedFont()
+    // Writes the entries in another font or size, at once: the lists are filled again, which measures their rows
+    // anew, and an entry shown whole takes the font when it is shown next.
+    void UseEntryFont(string family, int size)
     {
-        try
+        Look.UseEntryFont(family, size);
+        foreach (ListBox list in new ListBox[] { recentList, savedList })
         {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SettingsKey))
-            {
-                return key == null ? null : key.GetValue(FontSetting) as string;
-            }
+            list.Font = Look.EntryFont;
+            list.ItemHeight = list.Font.Height + RowPadding;
         }
-        catch (Exception)
-        {
-            return null;
-        }
-    }
-
-    public static int SavedSize()
-    {
-        try
-        {
-            using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SettingsKey))
-            {
-                object size = key == null ? null : key.GetValue(SizeSetting);
-                return size is int ? (int)size : 0;
-            }
-        }
-        catch (Exception)
-        {
-            return 0;
-        }
-    }
-
-    // A size of the text as the options name it.
-    static string SizeName(int size)
-    {
-        int index = Array.IndexOf(Look.Sizes, size);
-        string[] names = { Strings.SizeSmall, Strings.SizeNormal, Strings.SizeLarge, Strings.SizeLarger };
-        return names[Math.Max(0, index)];   // Sizes and names go together
-    }
-
-    // Another font, or another size of the text: the windows are built for them, so the program starts again.
-    void ChangeFont(string name)
-    {
-        if (name != Look.FontName) Restart(delegate { fontName = name; });
-    }
-
-    void ChangeSize(int size)
-    {
-        if (size != Look.TextSize) Restart(delegate { textSize = size; });
+        fontButton.Text = Look.FontLabel(Look.EntryFamily);
+        fontButton.Font = new Font(Look.EntryFamily, Look.TextFont.SizeInPoints);
+        sizeButton.Text = string.Format(Strings.Pixels, Look.EntrySize);
+        Filter();
     }
 
     // Another language: the settings are saved with it and the program starts again, which shows every text

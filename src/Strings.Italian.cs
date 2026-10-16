@@ -149,8 +149,7 @@ static partial class Strings
         AltCodeOption = "Alt+codice per i simboli che la tastiera non ha";
         LanguageOption = "Lingua (Language):";
         ThemeOption = "Tema:"; ThemeSystem = "Come Windows"; ThemeLight = "Chiaro"; ThemeDark = "Scuro";
-        FontOption = "Carattere:"; SizeOption = "Dimensione del testo:";
-        SizeSmall = "Piccola"; SizeNormal = "Normale"; SizeLarge = "Grande"; SizeLarger = "Molto grande";
+        FontOption = "Carattere delle voci:"; SizeOption = "Dimensione delle voci:"; Pixels = "{0} px";
         TrayOption = "Resta attivo nell'area di notifica (tray)";
         LeaveOption = "Nascondi passando a un altro programma";
         StartOption = "Avvia insieme a Windows";
@@ -178,9 +177,10 @@ static partial class Strings
         LanguageTip = "La lingua del programma. Cambiandola {0} si riavvia, e si riapre subito.";
         ThemeTip = "Colori chiari o scuri. «{0}» segue la modalità che Windows imposta per le app,\n"
             + "anche quando cambia a programma aperto.";
-        FontTip = "Il carattere delle finestre. Cambiarlo riavvia {0}, che si riapre subito.";
-        SizeTip = "Quanto è grande il testo: le finestre crescono con lui. «{1}» è la dimensione del testo di Windows 11.\n"
-            + "Cambiarla riavvia {0}, che si riapre subito.";
+        FontTip = "Il carattere di ciò che hai copiato e salvato: le righe degli elenchi, la voce vista per intero\n"
+            + "e il contenuto di un testo salvato. Pulsanti ed etichette restano come sono. Cambia subito.";
+        SizeTip = "Quanto è grande ciò che hai copiato e salvato, in pixel; {0} è il testo di Windows 11.\n"
+            + "Pulsanti ed etichette restano come sono. Cambia subito.";
         HistoryTip = "L'elenco propone i testi e le immagini copiati mentre il programma è aperto.\n"
             + "Ciò che i gestori di password segnano come riservato non viene ricordato.\n"
             + "Disattivala se copi password da programmi che non lo fanno: nell'elenco si\n"
@@ -392,7 +392,7 @@ static partial class Strings
                 + ", e dà loro altri tasti.",
             "- " + HistoryTitle + ": se ricordare ciò che copi, per quanti giorni, il collegamento alla cartella dei "
                 + "file e il pulsante che la pulisce subito.",
-            "- " + ProgramTitle + ": la lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), il carattere e la dimensione del testo, se restare attivo nell'area di notifica e nascondersi passando a un "
+            "- " + ProgramTitle + ": la lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), il carattere e la dimensione delle voci (in pixel; cambiano subito), se restare attivo nell'area di notifica e nascondersi passando a un "
                 + "altro programma, se partire insieme a Windows, e i pulsanti per esportare e importare.",
 
             "# Esportare e importare",

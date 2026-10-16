@@ -355,17 +355,17 @@ static class TestProgram
             "saved texts come before the copied ones");
         // A font that is not there, or a size that is not offered, as a settings value written by hand: the defaults.
         string firstFont = Look.FontNames[0];
-        Look.UseFont("No Such Font", 999);
-        Check(Look.FontName == firstFont && Look.TextSize == Look.DefaultSize && Look.TextFont.Name == firstFont,
-            "an unknown font or size falls back to the defaults");
-        float usual = Look.Zoom;
+        float window = Look.TextFont.SizeInPoints;
+        Look.UseEntryFont("No Such Font", 999);
+        Check(Look.EntryFamily == firstFont && Look.EntrySize == Look.DefaultEntrySize && Look.EntryFont.Name == firstFont,
+            "an unknown font or size of the entries falls back to the defaults");
         string lastFont = Look.FontNames[Look.FontNames.Length - 1];
-        Look.UseFont(lastFont, Look.Sizes[Look.Sizes.Length - 1]);
-        Check(Look.TextFont.Name == lastFont && Math.Abs(Look.StrongFont.SizeInPoints - Look.TextFont.SizeInPoints) < 0.01f
-            && Look.TitleFont.SizeInPoints > Look.TextFont.SizeInPoints
-            && Math.Abs(Look.Zoom / usual - (float)Look.TextSize / Look.DefaultSize) < 0.001f,
-            "the heavier faces follow the font, and the windows grow with the text");
-        Look.UseFont(null, Look.DefaultSize);
+        int largest = Look.EntrySizes[Look.EntrySizes.Length - 1];
+        Look.UseEntryFont(lastFont, largest);
+        Check(Look.EntryFont.Name == lastFont && Math.Abs(Look.EntryFont.SizeInPoints - largest * 0.75f) < 0.01f
+            && Math.Abs(Look.StrongEntryFont.SizeInPoints - Look.EntryFont.SizeInPoints) < 0.01f
+            && Look.TextFont.SizeInPoints == window, "the entries take their font and size in pixels, the windows keep theirs");
+        Look.UseEntryFont(null, Look.DefaultEntrySize);
         LanguagesTest();
         return failed == 0 ? 0 : 1;
     }
@@ -838,7 +838,7 @@ static class TestProgram
             Form shownPeek = (Form)typeof(MainForm).GetField("peek", hidden).GetValue(form);
             Snap(form, path + "-real-peek.png");
             Console.WriteLine("[{0}] an entry cut by its row is shown whole, one that fits is not", shownPeek.Visible
-                && !(bool)typeof(MainForm).GetMethod("Cut", hidden).Invoke(form, new object[] { recent, recent.Items[0], recent.GetItemRectangle(0) })
+                && !(bool)typeof(MainForm).GetMethod("Cut", hidden).Invoke(form, new object[] { recent, new Entry(null, "ok"), recent.GetItemRectangle(0) })
                 ? "PASS" : "FAIL");
             // A long list, with the thin bar that scrolls it, moved a little way down.
             List<Entry> many = (List<Entry>)typeof(MainForm).GetField("entries", hidden).GetValue(form);

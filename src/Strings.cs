@@ -190,8 +190,7 @@ static partial class Strings
     public static string AltCodeOption = "Alt codes for symbols with no key";
     public static string LanguageOption = "Language:";
     public static string ThemeOption = "Theme:", ThemeSystem = "Same as Windows", ThemeLight = "Light", ThemeDark = "Dark";
-    public static string FontOption = "Font:", SizeOption = "Text size:";
-    public static string SizeSmall = "Small", SizeNormal = "Normal", SizeLarge = "Large", SizeLarger = "Extra large";
+    public static string FontOption = "Font of the entries:", SizeOption = "Size of the entries:", Pixels = "{0} px";
     public static string TrayOption = "Stay in the notification area (tray)";
     public static string LeaveOption = "Hide when switching to another program";
     public static string StartOption = "Start with Windows";
@@ -219,9 +218,10 @@ static partial class Strings
     public static string LanguageTip = "The language of the program. Changing it restarts {0}, which opens again at once.";
     public static string ThemeTip = "Light or dark colours. “{0}” follows the mode Windows sets for apps,\n"
         + "also when it changes while the program is open.";
-    public static string FontTip = "The font of the windows. Changing it restarts {0}, which opens again at once.";
-    public static string SizeTip = "How large the text is: the windows grow with it. “{1}” is the size of the text of Windows 11.\n"
-        + "Changing it restarts {0}, which opens again at once.";
+    public static string FontTip = "The font of what you copied and saved: the rows of the lists, an entry shown whole\n"
+        + "and the content of a saved text. Buttons and labels stay as they are. It changes at once.";
+    public static string SizeTip = "How large what you copied and saved is written, in pixels; {0} is the text of Windows 11.\n"
+        + "Buttons and labels stay as they are. It changes at once.";
     public static string HistoryTip = "The list offers the texts and pictures copied while the program is open.\n"
         + "What password managers mark as private is not remembered.\n"
         + "Turn it off if you copy passwords from programs that do not: they would be\n"
@@ -435,7 +435,7 @@ static partial class Strings
                 + "gives them other keys.",
             "- " + HistoryTitle + ": whether to remember what you copy, for how many days, the link to the folder of "
                 + "the files and the button that cleans it at once.",
-            "- " + ProgramTitle + ": the language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of the text, whether to stay in the notification area and hide when you switch "
+            "- " + ProgramTitle + ": the language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of the entries (in pixels; they change at once), whether to stay in the notification area and hide when you switch "
                 + "to another program, whether to start with Windows, and the buttons to export and import.",
 
             "# Export and import",

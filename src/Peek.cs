@@ -111,6 +111,7 @@ class Peek : Form
     // Shows an entry under the given row of the screen, or above it where there is no room below.
     public void Reveal(Entry entry, Rectangle row, float zoom)
     {
+        Font = Look.EntryFont;   // the font of the entries, which the user may have changed since
         // The colours of the moment: Windows may have gone dark or light since the window was made.
         BackColor = Look.Well;
         ForeColor = Look.Ink;

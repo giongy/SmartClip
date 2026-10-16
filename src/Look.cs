@@ -208,9 +208,8 @@ static class Look
     const float MarkShare = 0.45f;   // how much of the height of a selected row its mark takes
     const string ModernFont = "Segoe UI Variable Text";   // what Windows 11 writes its own windows in
     // Its heavier face, for what stands out in a list, and the one of the titles, larger: Windows writes the name
-    // of that one cut at 31 letters. Where they are missing (Windows 10), the semibold Segoe UI.
+    // of that one cut at 31 letters. Where they are missing (Windows 10), the semibold face of the family.
     const string StrongName = "Segoe UI Variable Text Semibold", TitleName = "Segoe UI Variable Display Semib";
-    const string OldStrongName = "Segoe UI Semibold";
     const float TitleGrowth = 1.45f;   // a title is this much larger than the text, as in Windows 11
     // The signs are the icons of Windows itself, from its font of icons: that of Windows 11, or the older one of
     // Windows 10. Without either they are drawn by hand.
@@ -225,30 +224,29 @@ static class Look
     public const string ThemeChange = "ImmersiveColorSet";   // what WM_SETTINGCHANGE names when that changes
     const int AppModeBuild = 18362;   // Windows 10 1903, from which SetPreferredAppMode is what it is
 
-    // The fonts the user can choose for the windows, those Windows has: the first one it has is the default.
-    static readonly string[] Families = { ModernFont, "Segoe UI", "Aptos", "Calibri", "Arial", "Verdana", "Tahoma" };
-    // The sizes of the text, in percent of the font of the message boxes of Windows (which follows the text
-    // size set in its accessibility settings): the windows were designed for 100, and grow with the text.
-    public static readonly int[] Sizes = { 100, 117, 133, 150 };
-    public const int DefaultSize = 117;   // 14 pixels at 96 dpi, the text of Windows 11
-
-    static readonly float ScreenZoom = SystemZoom();   // the program is aware of the scale of the system
+    // How much larger than designed this screen draws: the program is aware of the scale of the system.
+    public static readonly float Zoom = SystemZoom();
     static readonly Font IconProbe = Installed(IconName, 10) ?? Installed(OldIconName, 10);   // null: no font of icons
     static readonly Dictionary<int, Font> IconFonts = new Dictionary<int, Font>();   // by size in pixels
 
-    // The font of every window, its heavier face for what stands out, and the larger one of titles. Set before
-    // the first window by UseFont: a window is built for them, so another font takes a new start.
-    public static Font TextFont { get; private set; }
-    public static Font StrongFont { get; private set; }
-    public static Font TitleFont { get; private set; }
-    public static string FontName { get; private set; }   // the family chosen, one of FontNames
-    public static int TextSize { get; private set; }      // one of Sizes
+    // The font of every window: the modern one where Windows has it, in the size the user set for message
+    // boxes; elsewhere the font of the message boxes itself. Its heavier face, for what stands out, and the
+    // larger one of titles; where Segoe UI Variable is missing (Windows 10), the semibold Segoe UI.
+    public static readonly Font TextFont = Installed(ModernFont, SystemFonts.MessageBoxFont.SizeInPoints) ?? SystemFonts.MessageBoxFont;
+    public static readonly Font StrongFont = Heavy(TextFont.Name, TextFont.SizeInPoints, false);
+    public static readonly Font TitleFont = Heavy(TextFont.Name, TextFont.SizeInPoints * TitleGrowth, true);
 
-    // How much larger than designed the windows are drawn: the scale of the screen times that of the text.
-    public static float Zoom
-    {
-        get { return ScreenZoom * TextSize / 100f; }
-    }
+    // The entries of the lists, and the preview of one, are written in a font of their own, which the user
+    // chooses among those of Families that Windows has, with its size in pixels at 96 dpi; the rest of the
+    // windows stays as designed. The first family Windows has is the default.
+    static readonly string[] Families = { ModernFont, "Segoe UI", "Aptos", "Calibri", "Arial", "Verdana", "Tahoma",
+        "Cascadia Mono", "Consolas" };
+    public static readonly int[] EntrySizes = { 11, 12, 13, 14, 15, 16, 18, 20 };
+    public const int DefaultEntrySize = 14;   // the text of Windows 11: a little larger than that of the windows
+    public static Font EntryFont { get; private set; }
+    public static Font StrongEntryFont { get; private set; }   // for a folder among the entries
+    public static string EntryFamily { get; private set; }     // one of FontNames
+    public static int EntrySize { get; private set; }          // one of EntrySizes
 
     // The fonts that can be chosen: those of Families that Windows has.
     public static string[] FontNames
@@ -269,23 +267,28 @@ static class Look
         return font != null;
     }
 
-    // Takes a font and a size: what is not known or not installed falls back to the defaults.
-    public static void UseFont(string name, int size)
+    // Takes the font and the size of the entries: what is not known or not installed falls back to the defaults.
+    public static void UseEntryFont(string name, int size)
     {
-        if (Array.IndexOf(FontNames, name) < 0) name = FontNames.Length > 0 ? FontNames[0] : null;
-        if (Array.IndexOf(Sizes, size) < 0) size = DefaultSize;
-        FontName = name;
-        TextSize = size;
-        Font usual = SystemFonts.MessageBoxFont;
-        float points = usual.SizeInPoints * size / 100f, title = points * TitleGrowth;
-        TextFont = name == null ? new Font(usual.FontFamily, points) : new Font(name, points);
-        // The heavier faces: those of Segoe UI Variable, or the semibold face of the family if it has one, or bold.
-        bool modern = name == ModernFont;
-        string heavy = (name ?? usual.FontFamily.Name) + " Semibold";
-        StrongFont = (modern ? Installed(StrongName, points) : Installed(heavy, points)) ?? new Font(TextFont, FontStyle.Bold);
-        TitleFont = (modern ? Installed(TitleName, title) : Installed(heavy, title))
-            ?? new Font(TextFont.FontFamily, title, FontStyle.Bold);
+        string[] names = FontNames;
+        if (Array.IndexOf(names, name) < 0) name = names.Length > 0 ? names[0] : TextFont.Name;
+        if (Array.IndexOf(EntrySizes, size) < 0) size = DefaultEntrySize;
+        EntryFamily = name;
+        EntrySize = size;
+        float points = size * 72f / 96;   // pixels at 96 dpi: Windows makes them larger with the screen
+        EntryFont = new Font(name, points);
+        StrongEntryFont = Heavy(name, points, false);
     }
+
+    // The heavier face of a family: those of Segoe UI Variable (the Display one for titles), the semibold face
+    // of the family if it has one, or else its bold.
+    static Font Heavy(string family, float points, bool title)
+    {
+        Font found = family == ModernFont ? Installed(title ? TitleName : StrongName, points)
+            : Installed(family + " Semibold", points);
+        return found ?? new Font(family, points, FontStyle.Bold);
+    }
+
 
     // A font by name, if Windows has it; otherwise null.
     static Font Installed(string name, float size)
@@ -312,9 +315,10 @@ static class Look
 
     static Look()
     {
-        UseFont(null, DefaultSize);   // until the settings are read
+        UseEntryFont(null, DefaultEntrySize);   // until the settings are read
         Use(WindowsDark());
     }
+
 
     // Takes the light or the dark colours. Called by itself at the start; the checks call it to take pictures.
     public static void Use(bool dark)

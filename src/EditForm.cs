@@ -73,6 +73,7 @@ class EditForm : Form
             contentBox.Multiline = true;
             contentBox.AcceptsReturn = true;
             contentBox.ScrollBars = ScrollBars.Vertical;
+            contentBox.Font = Look.EntryFont;   // what is written is an entry: in its font
             contentBox.SetBounds(Edge, contentLabel.Top + LabelRow, FieldWidth, ContentHeight);
             Panel contentFrame = Look.Frame(contentBox);
             Controls.AddRange(new Control[] { contentLabel, contentFrame });

@@ -75,7 +75,6 @@ partial class MainForm : Form
     const string OldSettingsKey = @"Software\PasswordPaste";   // the name of the program up to version 1.2
     const string LanguageSetting = "Language";                 // read before the window exists: see SavedLanguage
     const string ThemeSetting = "Theme";                       // the same: see SavedTheme
-    const string FontSetting = "Font", SizeSetting = "TextSize";   // the same: see SavedFont and SavedSize
     const int TrayTextLimit = 63;                              // the most a NotifyIcon accepts as its tooltip
 
     // Desktop, taskbar, Start menu and Alt+Tab switcher: never the intended target.
@@ -157,10 +156,8 @@ partial class MainForm : Form
     readonly List<ToolStripItem> traySaved = new List<ToolStripItem>();   // what the icon menu lists of the saved texts
     readonly RoundButton languageButton = new RoundButton();   // shows the language and opens the list of the others
     readonly RoundButton themeButton = new RoundButton();      // the same for the theme
-    readonly RoundButton fontButton = new RoundButton(), sizeButton = new RoundButton();   // and for the font and its size
+    readonly RoundButton fontButton = new RoundButton(), sizeButton = new RoundButton();   // and for the font of the entries and its size
     string language = Strings.Code;   // saved with the settings: another one only on the way to a restart
-    string fontName = Look.FontName;  // the same for the font
-    int textSize = Look.TextSize;     // and its size
 
     public MainForm() : this(false)
     {
@@ -318,6 +315,7 @@ partial class MainForm : Form
         Controls.AddRange(optionControls.ToArray());
         // No AcceptButton: Enter among the options would start typing the clipboard.
 
+        UseEntryFont(Look.EntryFamily, Look.EntrySize);   // the default, until the settings say otherwise
         LoadSettings();
         NameHotkeys();
         ApplyHistory();

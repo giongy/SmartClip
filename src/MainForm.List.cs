@@ -76,11 +76,12 @@ partial class MainForm
             list.IntegralHeight = false;
             list.BorderStyle = BorderStyle.None;
             list.DrawMode = DrawMode.OwnerDrawVariable;
-            list.ItemHeight = Font.Height + RowPadding;
+            list.Font = Look.EntryFont;   // the entries have a font of their own, chosen in the options
+            list.ItemHeight = list.Font.Height + RowPadding;
             list.ContextMenuStrip = listMenu;
             list.MeasureItem += delegate(object sender, MeasureItemEventArgs e)
             {
-                e.ItemHeight = ((Entry)list.Items[e.Index]).Picture ? Font.Height * PictureLines : list.ItemHeight;
+                e.ItemHeight = ((Entry)list.Items[e.Index]).Picture ? list.Font.Height * PictureLines : list.ItemHeight;
             };
             list.DrawItem += DrawEntry;
             // One entry is selected in the whole window: selecting in a column clears the other.
@@ -313,7 +314,7 @@ partial class MainForm
     bool Cut(ListBox list, Entry entry, Rectangle row)
     {
         // Measured without the ellipsis of the row: asked how wide the text is, with it the answer is the dots alone.
-        return entry.Label != entry.Text.Trim() || TextRenderer.MeasureText(entry.Label, Font, Size.Empty,
+        return entry.Label != entry.Text.Trim() || TextRenderer.MeasureText(entry.Label, list.Font, Size.Empty,
             LineFlags & ~TextFormatFlags.EndEllipsis).Width > Content(list, entry, row).Width - SignRoom;
     }
 
@@ -347,7 +348,7 @@ partial class MainForm
     int WhenRoom(Entry entry)
     {
         string when = When(entry);
-        return when == null ? 0 : TimeGap + TextRenderer.MeasureText(when, Font, Size.Empty, TextFormatFlags.NoPadding).Width;
+        return when == null ? 0 : TimeGap + TextRenderer.MeasureText(when, Look.EntryFont, Size.Empty, TextFormatFlags.NoPadding).Width;
     }
 
     // The part of a row left to its sign and its text: up to when it was copied or saved, which comes
@@ -364,14 +365,14 @@ partial class MainForm
     Rectangle NumberArea(ListBox list, Entry entry, Rectangle row)
     {
         int right = row.Right - TimeGap - (list == recentList ? StarArea(row).Width + TimeGap : 0);
-        int side = Font.Height, width = entry.Number > 0 ? side + NumberPadding : 0;
+        int side = list.Font.Height, width = entry.Number > 0 ? side + NumberPadding : 0;
         return new Rectangle(right - width, row.Top + (row.Height - side) / 2, width, side);
     }
 
     // What the sign of an entry takes at the left of its row, with the air after it.
     int SignRoom
     {
-        get { return Font.Height + 2 * PreviewMargin; }
+        get { return Look.EntryFont.Height + 2 * PreviewMargin; }
     }
 
     void DrawGlyph(object sender, PaintEventArgs e)
@@ -483,14 +484,14 @@ partial class MainForm
             label = Rectangle.FromLTRB(label.Left + SignRoom, label.Top, label.Right, label.Bottom);
         }
         // A folder stands out.
-        TextRenderer.DrawText(e.Graphics, entry.Label, entry.IsGroup ? Look.StrongFont : e.Font, label, list.ForeColor,
+        TextRenderer.DrawText(e.Graphics, entry.Label, entry.IsGroup ? Look.StrongEntryFont : e.Font, label, list.ForeColor,
             TextFormatFlags.VerticalCenter | LineFlags);
     }
 
     // Where the star of a copied entry is drawn, at the right end of its row.
     Rectangle StarArea(Rectangle row)
     {
-        int side = Font.Height;
+        int side = Look.EntryFont.Height;
         return new Rectangle(row.Right - TimeGap - side, row.Top + (row.Height - side) / 2, side, side);
     }
 

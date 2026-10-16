@@ -59,7 +59,6 @@ static class Program
 
             Strings.Use(MainForm.SavedLanguage());   // before any window: every text comes from here
             Native.SetProcessDPIAware();
-            Look.UseFont(MainForm.SavedFont(), MainForm.SavedSize());   // the windows are built for that text
             Look.Choose(MainForm.SavedTheme());   // the windows are built in its colours
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);

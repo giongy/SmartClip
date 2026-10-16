@@ -38,7 +38,7 @@ condiviso su GitHub).
     lingua dimentica resta in inglese. I testi con valori usano `{0}`, `{1}` e `string.Format`. Le date dei
     giorni (`DayFormat`) e le virgolette (`Quote`) cambiano con la lingua; i nomi dei tasti Maiusc/Canc/Invio
     sono quelli delle tastiere di ogni lingua (`ShiftName`, usato anche da `MainForm.NameOf`).
-  - `Look.cs` — colori chiari e scuri, caratteri (`Look.TextFont`, `StrongFont`, `TitleFont`), icone (`Draw`),
+  - `Look.cs` — colori chiari e scuri, caratteri (`Look.TextFont`, `StrongFont`, `TitleFont`, `EntryFont`), icone (`Draw`),
     righe (`DrawRow`, `DrawTopic`), menu, suggerimenti e controlli disegnati: `Look`, `Card`, `RoundButton`, `Toggle`.
   - `Motion.cs` — ciò che si muove: `Fade` (un valore che va verso 0 o 1 a piccoli passi), `Glow` (la luce sotto
     il puntatore nelle righe di un elenco), `RowList` (un `ListBox` con la sua `Glow`, che avvisa quando scorre),
@@ -317,21 +317,21 @@ condiviso su GitHub).
   dall'utente al posto dei quadratini), l'attesa è una casella di testo
   numerica e la tastiera del server un interruttore (prima `NumericUpDown` e `ComboBox`, rimasti chiari).
   Il carattere è `Look.TextFont`, usato da tutte le finestre: Segoe UI Variable Text dove c'è (Windows 11),
-  altrimenti il primo che Windows ha di `Look.Families`.
-- Carattere e dimensione del testo (voluti dall'utente il 16/10/2026: «il font di default più grande» e
-  un'opzione per cambiarli): in «Programma», sotto il tema, due pulsanti con menu come la lingua (`fontButton`,
+  altrimenti quello dei messaggi di sistema, alla loro dimensione. Pulsanti ed etichette restano sempre così.
+- Carattere e dimensione delle voci (voluti dall'utente il 16/10/2026: il testo di ciò che si copia più grande,
+  e «il classico font select con 11px, 12px…»; prima ho fatto ingrandire tutta l'interfaccia, ma l'utente la
+  voleva com'era): in «Programma», sotto il tema, due pulsanti con menu come la lingua (`fontButton`,
   `sizeButton`; nel menu ogni carattere è scritto in se stesso, `Look.FontLabel` toglie «Text» a Segoe UI
-  Variable). Caratteri: quelli di `Look.Families` che Windows ha (`FontNames`). Dimensioni: `Look.Sizes`, in
-  percento del carattere dei messaggi di Windows (che segue la dimensione del testo delle sue impostazioni di
-  accessibilità), con nomi Piccola/Normale/Grande/Molto grande; default 117 (`DefaultSize`, i 14 px del testo di
-  Windows 11: prima era 100). Impostazioni `Font` (nome) e `TextSize` (percento), lette da `Main` con
-  `SavedFont`/`SavedSize` e passate a `Look.UseFont` prima della prima finestra (valori sconosciuti: i
-  default). Come la lingua, cambiarli riavvia (`Restart`, che serve anche a `ChangeLanguage`): le finestre sono
-  costruite per quel testo. **Le finestre crescono con il testo**: sono disegnate per 100 e, alla fine del
-  costruttore, `Scale(Look.Zoom)`, dove `Look.Zoom` = scala dello schermo × dimensione del testo; per questo
-  `AutoScaleMode.None` (vedi le trappole). Tutte le misure a mano usano `Look.Zoom` (o `MainForm.Zoom`, che è lo
-  stesso). Con «Molto grande» e Verdana la finestra a 100% di scala è 982 × 839: su uno schermo da 768 non ci
-  sta (non gestito).
+  Variable). Valgono per le righe dei due elenchi, l'anteprima (`Peek`) e il contenuto in `EditForm`:
+  `Look.EntryFont` e `StrongEntryFont` (per le cartelle). Caratteri: quelli di `Look.Families` che Windows ha
+  (`FontNames`), monospaziati compresi. Dimensioni: `Look.EntrySizes`, in pixel a 96 dpi (11–20), default 14
+  (`DefaultEntrySize`, il testo di Windows 11, prima era 12). Cambiano subito (`UseEntryFont` di `MainForm`, che
+  rimisura le righe riempiendo di nuovo gli elenchi). Impostazioni `EntryFont` (nome) e `EntrySize` (pixel);
+  valori sconosciuti tornano ai default. Tutto ciò che sta in una riga si misura da `Look.EntryFont`, non dal
+  carattere della finestra.
+- Le finestre si costruiscono come disegnate e alla fine del costruttore `Scale(Look.Zoom)`, con
+  `AutoScaleMode.None` (vedi le trappole); `Look.Zoom` è la scala dello schermo. `Restart` (riavvio con
+  `/restart`) serve a `ChangeLanguage`.
   Barra del titolo e barre di scorrimento scure non compaiono nelle immagini di `tests.exe shot`: per
   vederle c'è `tests.exe real <prefisso>`, che mostra le finestre un attimo e fotografa lo schermo.
   Forme arrotondate (l'utente trovava la finestra piatta e asettica, ma i colori vanno bene): ricerca, colonne
