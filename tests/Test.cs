@@ -109,6 +109,29 @@ static class TestProgram
         Native.SetProcessDPIAware();
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
+        // Never what belongs to the user: settings and saved texts under a key of their own, history and log in a
+        // folder of their own. Both are emptied before and removed after.
+        string sandbox = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "SmartClip test " + Guid.NewGuid());
+        MainForm.SettingsKey = TestKey;
+        MainForm.OldSettingsKey = TestKey + @"\Old";
+        Texts.Folder = System.IO.Path.Combine(sandbox, "History");
+        Log.FileName = System.IO.Path.Combine(sandbox, Program.AppName + ".log");
+        Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(TestKey, false);
+        try
+        {
+            return Run(args);
+        }
+        finally
+        {
+            Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(TestKey, false);
+            if (System.IO.Directory.Exists(sandbox)) System.IO.Directory.Delete(sandbox, true);
+        }
+    }
+
+    const string TestKey = @"Software\" + Program.AppName + " test";
+
+    static int Run(string[] args)
+    {
         string mode = args.Length > 0 ? args[0] : "";
         // The pictures can be taken in any language: "shot <png> it". Everything else runs in English.
         if (args.Length > 2 && (mode == "shot" || mode == "real" || mode == "store")) Strings.Use(args[2]);
@@ -141,30 +164,14 @@ static class TestProgram
         return data;
     }
 
-    // The logic behind the list, without opening it and without touching the clipboard. A number given here is
-    // taken from whatever had it, the user's saved texts too: theirs are put back afterwards.
+    // The logic behind the list, without opening it and without touching the clipboard.
     static int TextsTest()
     {
-        const string numbersKey = MainForm.SettingsKey + @"\Saved\Numbers";
-        Dictionary<string, object> numbers = new Dictionary<string, object>();
-        using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(numbersKey))
-            if (key != null) foreach (string name in key.GetValueNames()) numbers[name] = key.GetValue(name);
-        try
-        {
-            return ListTest();
-        }
-        finally
-        {
-            Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(numbersKey, false);
-            if (numbers.Count > 0)
-                using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(numbersKey))
-                    foreach (KeyValuePair<string, object> number in numbers)
-                        key.SetValue(number.Key, number.Value, Microsoft.Win32.RegistryValueKind.DWord);
-        }
-    }
+        Check(MainForm.SettingsKey == TestKey && Texts.Folder.StartsWith(System.IO.Path.GetTempPath())
+            && Log.FileName.StartsWith(System.IO.Path.GetTempPath()), "the checks keep away from the settings, texts and history of the user");
+        Log.Error(new InvalidOperationException("a test of the log"));
+        Check(System.IO.File.ReadAllText(Log.FileName).IndexOf("a test of the log") > 0, "an error goes to the log");
 
-    static int ListTest()
-    {
         Check(!Texts.IsPrivate(Copied(null, 0)), "plain text is not private");
         Check(Texts.IsPrivate(Copied("ExcludeClipboardContentFromMonitorProcessing", 1)), "a marker format makes it private");
         Check(Texts.IsPrivate(Copied("Clipboard Viewer Ignore", 1)), "the older marker format too");

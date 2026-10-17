@@ -2,7 +2,7 @@
 
 *English below.*
 
-Ultimo aggiornamento: 15 ottobre 2026
+Ultimo aggiornamento: 17 ottobre 2026
 
 SmartClip è un gestore degli appunti che funziona interamente sul tuo PC. **Non si collega a Internet, non ha
 account, pubblicità né statistiche d'uso, e non invia niente a nessuno**, nemmeno all'autore.
@@ -18,6 +18,9 @@ Tutto resta sul tuo PC, nel tuo profilo utente di Windows:
 - **I testi che salvi con un nome**: nel registro di Windows, **cifrati** per il tuo utente (Windows Data
   Protection): un altro utente dello stesso PC non li può leggere.
 - **Le impostazioni**: nel registro di Windows.
+- **Il registro degli errori** (`SmartClip.log`, accanto alla cartella della cronologia): quando qualcosa va storto,
+  cosa non ha funzionato e dove, per poter capire un problema. Mai il contenuto di ciò che copi o salvi. Resta
+  sul tuo PC come tutto il resto.
 - **I file di esportazione**: solo se li chiedi tu, nel posto che scegli. Contengono i testi in chiaro.
 
 ## Come cancellare i dati
@@ -42,7 +45,7 @@ Per domande: https://github.com/giongy/SmartClip/issues
 
 # SmartClip privacy policy
 
-Last updated: October 15, 2026
+Last updated: October 17, 2026
 
 SmartClip is a clipboard manager that runs entirely on your PC. **It does not connect to the Internet, has no
 accounts, ads or usage statistics, and sends nothing to anyone**, not even to its author.
@@ -58,6 +61,9 @@ Everything stays on your PC, in your Windows user profile:
 - **The texts you save under a name**: in the Windows registry, **encrypted** for your user (Windows Data
   Protection): another user of the same PC cannot read them.
 - **The settings**: in the Windows registry.
+- **The error log** (`SmartClip.log`, beside the history folder): when something goes wrong, what failed and
+  where, so that a problem can be looked into. Never the content of what you copy or save. It stays on your PC
+  like everything else.
 - **Export files**: only when you ask for them, where you choose. They hold the texts unencrypted.
 
 ## How to delete your data

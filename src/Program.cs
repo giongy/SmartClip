@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
@@ -24,6 +25,11 @@ static class Program
         Version version = typeof(Program).Assembly.GetName().Version;
         return version.Revision == 0 ? version.ToString(3) : version.ToString();
     }
+
+    // Where the program keeps what it writes to disk: the history, the log. From the Store package, inside the data
+    // folder Windows gives it, which Explorer can open as it is.
+    public static readonly string DataFolder = Packaged.Family != null ? Packaged.DataFolder
+        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), AppName);
 
     public static readonly uint ShowMessage = Native.RegisterWindowMessage(AppName + ".Show");
     const string SingleInstance = AppName + ".SingleInstance";
@@ -58,6 +64,14 @@ static class Program
             }
 
             Strings.Use(MainForm.SavedLanguage());   // before any window: every text comes from here
+            // What nobody caught: written to the log and said in the program's own words, instead of the window of
+            // Windows Forms with its stack trace in English. The program goes on.
+            Application.SetUnhandledExceptionMode(UnhandledExceptionMode.CatchException);
+            Application.ThreadException += delegate(object sender, ThreadExceptionEventArgs e) { Report(e.Exception); };
+            AppDomain.CurrentDomain.UnhandledException += delegate(object sender, UnhandledExceptionEventArgs e)
+            {
+                Log.Error(e.ExceptionObject as Exception);   // on another thread: the program is ending
+            };
             Native.SetProcessDPIAware();
             Look.Choose(MainForm.SavedTheme());   // the windows are built in its colours
             MainForm.UseSavedInterface();         // and for the font of the interface
@@ -68,6 +82,31 @@ static class Program
             if (restarting) form.ShowOptions();   // the language was changed there
             Application.Run(form);
         }
+    }
+
+    static bool reported;   // the first error is said, the next ones only written: one that repeats must not flood the screen
+
+    // The window is shown a moment later, from the message loop: while this handler runs, Windows Forms drops any
+    // other error without a word, so it must not stay open for as long as the window does.
+    static void Report(Exception ex)
+    {
+        Log.Error(ex);
+        if (reported) return;
+        reported = true;
+        string text = string.Format(Strings.UnexpectedError, ex.Message, Log.FileName);
+        SendOrPostCallback tell = delegate
+        {
+            try
+            {
+                AskForm.Tell(null, text);
+            }
+            catch (Exception)
+            {
+                // Not even the window can be shown: what went wrong is in the log all the same.
+            }
+        };
+        if (SynchronizationContext.Current != null) SynchronizationContext.Current.Post(tell, null);
+        else tell(null);
     }
 }
 

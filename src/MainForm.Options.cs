@@ -412,9 +412,9 @@ partial class MainForm
                 if (key != null) TransferSettings(key, false);
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Settings unreadable or of an unexpected type: the defaults stay.
+            Log.Error(ex);   // settings unreadable or of an unexpected type: the defaults stay
         }
     }
 
@@ -427,9 +427,9 @@ partial class MainForm
                 TransferSettings(key, true);
             }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Registry not writable: the settings are not remembered.
+            Log.Error(ex);   // registry not writable: the settings are not remembered
         }
     }
 

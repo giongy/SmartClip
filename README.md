@@ -198,6 +198,8 @@ Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key t
   you ask for the content from the right-click menu.
 - A saved text put back on the clipboard is marked as private, so that Windows clipboard history (Win+V) and other
   clipboard managers skip it.
+- When something goes wrong, what failed and where is written to `SmartClip.log` beside the history folder, to
+  look into a problem: never what you copied or saved. The file starts again past 256 KB.
 - An entry is chosen when you release Enter, so a held key cannot repeat into the window the focus returns to.
 
 ## How it works
@@ -247,6 +249,10 @@ the privacy policy in [`PRIVACY.md`](PRIVACY.md).
 - `tests.exe type` opens a small window and really types into it: all ASCII characters, accented letters, AltGr
   symbols, Unicode, Alt codes, Tab and Enter. It then checks that a wrong window and a cancel both stop everything.
   It takes the keyboard focus for a couple of seconds, so keep your hands off while it runs.
+
+The checks never touch your own data: settings and saved texts go under a registry key of their own, history and
+log into a temporary folder, all removed at the end. GitHub runs `test.cmd ci` (every check but typing, which
+needs a desktop) at every push, before a release is made.
 
 Three more modes are not part of `test.cmd` and only produce pictures: `tests.exe shot <prefix>` draws the windows
 off screen, `tests.exe real <prefix>` shows them for a moment and photographs the screen, and

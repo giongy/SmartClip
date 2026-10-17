@@ -1,6 +1,8 @@
 @echo off
 rem Builds and runs the automated checks. During the typing test a small window appears for a couple
 rem of seconds and the program types into it by itself: do not touch keyboard or mouse.
+rem "test.cmd ci", as GitHub runs it before a release: without the typing test, which needs a desktop to
+rem type into, and without the pauses.
 setlocal
 set HERE=%~dp0
 set CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe
@@ -23,19 +25,21 @@ echo.
 echo Controllo l'elenco dei testi...
 "%HERE%tests.exe" texts
 if errorlevel 1 goto failed
+if /i "%~1"=="ci" goto passed
 
 echo.
 echo Controllo la digitazione...
 "%HERE%tests.exe" type
 if errorlevel 1 goto failed
 
+:passed
 echo.
 echo TUTTI I CONTROLLI SUPERATI.
-pause
+if /i not "%~1"=="ci" pause
 exit /b 0
 
 :failed
 echo.
 echo CONTROLLI NON SUPERATI.
-pause
+if /i not "%~1"=="ci" pause
 exit /b 1

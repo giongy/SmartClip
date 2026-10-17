@@ -146,13 +146,14 @@ static class Texts
     const int HeaderSize = sizeof(byte) + sizeof(long) + sizeof(int), PictureHeader = 3 * sizeof(int);
     public const string DayFormat = "yyyy-MM-dd";
     const string Extension = ".clips";
-    // From the Store package, inside the data folder Windows gives it, which Explorer can open as it is.
-    public static string Folder = Path.Combine(Packaged.Family != null ? Packaged.DataFolder
-        : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), Program.AppName), "History");
+    public static string Folder = Path.Combine(Program.DataFolder, "History");   // the checks use one of their own
     static int keepDays;       // zero: nothing goes to disk
     static DateTime pruned;    // the day the expired files were last removed
     static bool loaded;        // the history files were read: before that, nobody knows which hold a pinned entry
-    const string SavedKey = MainForm.SettingsKey + @"\Saved";
+    static string SavedKey
+    {
+        get { return MainForm.SettingsKey + @"\Saved"; }
+    }
     const string DatesKey = "Dates";   // under the saved texts: when each was saved, under the same name
     const string NumbersKey = "Numbers";   // the same: the number of each that has one
     // The folders of the saved texts ("groups" here: Folder is where the history is). Under the saved texts,
@@ -298,11 +299,13 @@ static class Texts
         {
             write();
         }
-        catch (IOException)
+        catch (IOException ex)
         {
+            Log.Error(ex);
         }
-        catch (UnauthorizedAccessException)
+        catch (UnauthorizedAccessException ex)
         {
+            Log.Error(ex);
         }
     }
 
@@ -479,9 +482,9 @@ static class Texts
                     stream.SetLength(end);
                 }
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // A file that cannot be opened or makes no sense: what was read up to here stays, the file too.
+            Log.Error(ex);   // a file that cannot be opened or makes no sense: what was read up to here stays, the file too
         }
     }
 

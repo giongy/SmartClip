@@ -59,6 +59,7 @@ static partial class Strings
         + "Of a folder it deletes only the folder: what it holds moves up one level.";
     public static string DividerTip = "Drag to give the saved texts more or less room.\nDouble-click: the starting width.";
     public static string Error = "Error: {0}";
+    public static string UnexpectedError = "Something went wrong: {0}\n\nThe program goes on. The details are in {1}.";
 
     // --- Menus ---
     public static string Open = "Open", Exit = "Exit", Pause = "Pause capture", Resume = "Resume capture";

@@ -2,7 +2,7 @@ name: Release
 
 # Publishes SmartClip.exe as a GitHub release whenever the version number changes: the number is the
 # AssemblyVersion line of src/Program.cs, and a release is created only if none carries it yet. So a
-# release is made by changing that line and pushing; every other push ends at the first step. Each release
+# release is made by changing that line and pushing; every other push only runs the checks. Each release
 # also leaves the Microsoft Store package (MSIX) among the artifacts of the run; started by hand, the
 # workflow makes the package even when the release exists already.
 on:
@@ -13,6 +13,7 @@ on:
       - "build.cmd"
       - "SmartClip.ico"
       - "packaging/**"
+      - "tests/**"
       - ".github/workflows/release.yml"
   workflow_dispatch:
 
@@ -26,6 +27,12 @@ jobs:
       GH_TOKEN: ${{ github.token }}
     steps:
       - uses: actions/checkout@v7
+
+      # The automated checks, at every push: a release is never made from code that fails them. The typing test
+      # is left out, as it needs a desktop to type into.
+      - name: Controlla
+        shell: cmd
+        run: tests\test.cmd ci
 
       # 2.1.0.0 in the source becomes the tag v2.1.0, and 2.1.0.1 the tag v2.1.0.1: the fourth number counts
       # only when it is not zero, as in the title of the window.

@@ -70,8 +70,9 @@ partial class MainForm : Window
     // What a row says at its right end: when it was copied, how many texts a folder holds.
     const TextFormatFlags RightFlags = TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.SingleLine
         | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
-    public const string SettingsKey = @"Software\" + Program.AppName;
-    const string OldSettingsKey = @"Software\PasswordPaste";   // the name of the program up to version 1.2
+    // The checks point both elsewhere, so that they never touch the settings and the saved texts of the user.
+    public static string SettingsKey = @"Software\" + Program.AppName;
+    public static string OldSettingsKey = @"Software\PasswordPaste";   // the name of the program up to version 1.2
     const string LanguageSetting = "Language";                 // read before the window exists: see SavedLanguage
     const string ThemeSetting = "Theme";                       // the same: see SavedTheme
     const string FaceSetting = "InterfaceFont", FaceSizeSetting = "InterfaceSize";   // and see UseSavedInterface
@@ -411,9 +412,10 @@ partial class MainForm : Window
         }
     }
 
-    // What went wrong stays in the status line until the next message.
+    // What went wrong stays in the status line until the next message, and in the log.
     void ShowError(Exception ex)
     {
+        Log.Error(ex);
         status.Text = string.Format(Strings.Error, ex.Message);
     }
 

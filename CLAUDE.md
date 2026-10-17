@@ -12,7 +12,14 @@ condiviso su GitHub).
 
 - `src\` — il programma, un file per responsabilità (fino alla 2.0 era un solo `SmartClip.cs`, diviso quando ha
   superato le 2000 righe; nessuno spazio dei nomi, le classi si vedono tutte tra loro):
-  - `Program.cs` — avvio, istanza unica, attributi dell'assembly.
+  - `Program.cs` — avvio, istanza unica, attributi dell'assembly, la cartella dei dati (`Program.DataFolder`:
+    `%LOCALAPPDATA%\SmartClip`, dal pacchetto `LocalState`), gli errori che nessuno ha preso
+    (`Application.ThreadException` → `Report`: nel log e in una `AskForm` con `Strings.UnexpectedError`, solo il
+    primo per sessione; il programma continua).
+  - `Log.cs` — il registro degli errori, `SmartClip.log` nella cartella dei dati (ricomincia oltre 256 KB, il
+    precedente resta come `.old`). Mai il contenuto di ciò che si copia o si salva. Lo scrivono `Report`,
+    `ShowError` (gli errori della riga di stato), le impostazioni illeggibili, i file della cronologia rifiutati
+    dal disco o illeggibili. Non lo scrive `Texts.Remember`: gli appunti occupati da un altro programma sono normali.
   - `MainForm*.cs` — la finestra, una sola classe `partial` divisa in cinque file quando ha superato di nuovo
     le 2000 righe (i nomi dei membri non sono cambiati: i test li cercano per riflessione):
     - `MainForm.cs` — costanti e campi (tutti qui, in cima), costruttore con la disposizione, viste, riga di
@@ -83,7 +90,9 @@ condiviso su GitHub).
 - `build.cmd` — compila `src\*.cs` in `SmartClip.exe`. `SmartClip.ico` è facoltativa. L'eseguibile non sta
   più in git (`.gitignore`): si scarica dalle release.
 - `.github/workflows/release.yml` — pubblica l'eseguibile come release di GitHub. **Per fare una release si
-  cambia `AssemblyVersion` in `src\Program.cs` e si fa push**: il flusso compila con `build.cmd` e crea la
+  cambia `AssemblyVersion` in `src\Program.cs` e si fa push**: il flusso esegue prima i controlli
+  (`tests\test.cmd ci`, a ogni push, anche senza release: se falliscono la release non si fa), poi compila con
+  `build.cmd` e crea la
   release `vX.Y.Z` solo se con quel numero non esiste ancora (scelta dell'utente, invece di una release a
   ogni push). Il numero di versione sta solo lì; la finestra lo mostra nel titolo (`Program.Version`). La
   quarta cifra conta solo se non è zero: `2.1.0.0` è `v2.1.0`, `2.1.0.1` è `v2.1.0.1`.
@@ -203,7 +212,6 @@ condiviso su GitHub).
   copiati nei bit 3-6 del tipo del blocco (`NumberMask`), solo se fissati: dare un numero a una voce copiata le
   mette la stellina, toglierle la stellina toglie il numero. Rinominare un testo, o salvare una voce copiata, porta
   il numero con sé (`Edit`). Non si esporta.
-  I test (`texts`) salvano e rimettono i numeri dell'utente, perché `Free` li toglierebbe.
 - «Pulisci ora…» nelle opzioni (voluto dall'utente): elimina subito ciò che è stato copiato prima degli ultimi
   N giorni scritti nella casella accanto (`Spared`, non è un'impostazione: riparte da 0, cioè tutto), dopo una
   conferma. `Texts.Clean` e la retention passano dallo stesso `Drop`; le voci fissate restano. Il pulsante si
@@ -476,17 +484,27 @@ condiviso su GitHub).
 - `Control.Visible` risponde falso se la finestra è nascosta: quale vista è attiva lo dice `optionsShown`.
   Lo stesso vale per le voci di un menu mentre si sta aprendo (`Opening`): «Sposta in» restava vuoto perché
   il codice rileggeva `moveItem.Visible` appena assegnato.
-- Avviare il programma vero o creare `MainForm` nei test riscrive le impostazioni dell'utente alla chiusura:
-  salvarle prima e ripristinarle dopo.
+- Mentre il gestore di `Application.ThreadException` è in corso, WinForms scarta in silenzio ogni altro errore,
+  senza nemmeno chiamare il gestore: per questo `Report` scrive nel log e torna subito, e la finestra si apre dopo
+  (`SynchronizationContext.Post`). Provato dal vivo il 17/10/2026 con due errori provocati: prima il secondo
+  mancava dal log.
+- Avviare il programma vero riscrive le impostazioni dell'utente alla chiusura. I test no: vedi sotto.
+- `MainForm.SettingsKey` e `Texts.Folder` vanno cambiati insieme: con le impostazioni di una chiave vuota vale il
+  default di 30 giorni, che sulla cartella vera della cronologia cancellerebbe i giorni più vecchi dell'utente.
 
 ## Controlli
 
-`tests\test.cmd` compila `tests.exe` (`src\*.cs` + `Test.cs`, ingresso `TestProgram`) ed esegue:
+`tests\test.cmd` compila `tests.exe` (`src\*.cs` + `Test.cs`, ingresso `TestProgram`) ed esegue `map`, `texts`
+e `type`; `test.cmd ci` salta `type` (vuole un desktop su cui digitare) e le pause, ed è ciò che GitHub esegue a
+ogni push. **I test non toccano mai i dati dell'utente**: `TestProgram.Main` punta `MainForm.SettingsKey` (e
+`OldSettingsKey`) su `HKCU\Software\SmartClip test`, `Texts.Folder` e `Log.FileName` su una cartella temporanea,
+e cancella tutto prima e dopo. Vale per ogni modo, anche `shot`, `real` e `store`, che quindi partono dalle
+impostazioni di default.
 
 - `tests.exe map` — stampa la mappa della tastiera attiva e confronta la tabella americana (solo lettere e
   cifre, se il layout USA non è installato).
 - `tests.exe texts` — la logica dell'elenco, senza aprirlo e senza toccare gli appunti: formati riservati,
-  testi copiati, cronologia su disco (in una cartella temporanea, non in quella dell'utente), ricerca, andata e ritorno cifrata di un testo salvato (scrive e toglie un valore `~test …`).
+  testi copiati, cronologia su disco (in una cartella temporanea, non in quella dell'utente), ricerca, andata e ritorno cifrata di un testo salvato (nella chiave di prova), il log.
 - `tests.exe type` — apre una finestrella e ci digita davvero: tutti i caratteri ASCII, accentate, simboli con
   AltGr, Unicode, Alt+codice, Tab, Invio; poi verifica che finestra sbagliata e annullamento blocchino tutto.
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.
@@ -494,8 +512,8 @@ condiviso su GitHub).
   finte, opzioni con ogni pagina in `-options-1`…`-4`, stati lunghi) per controllare l'aspetto senza mostrarla.
 - `tests.exe store <cartella> <lingua>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno
   sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>` (in chiaro, tranne l'ultima, `8-dark`), e
-  l'icona 300 × 300 in `<cartella>`. Mostra le finestre qualche secondo; a programma chiuso e salvando prima le
-  impostazioni, come `real`.
+  l'icona 300 × 300 in `<cartella>`. Mostra le finestre qualche secondo; a programma chiuso, come `real`, perché le
+  scorciatoie non risultino occupate.
 - `shot`, `real` e `store` accettano la lingua come ultimo argomento (`en`, `es`, `fr`, `it`; senza, inglese) e
   usano voci finte in quella lingua (`Sample`). Per le immagini vere `tests.exe` va compilato con
   `/resource:SmartClip.ico,SmartClip.ico`, altrimenti la barra del titolo ha l'icona generica; `real` mette dietro
