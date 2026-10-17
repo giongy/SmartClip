@@ -98,7 +98,7 @@ Copy a password, click into the field of the remote window and let SmartClip do 
 
 Everything you copy, texts and pictures, stays in a list you can bring up from any program with a hotkey. Type a few words to find it, press Enter and you are back where you were, with the entry on the clipboard, ready to paste or to type.
 
-The texts you use often, such as a signature, an address or a password, can be saved under a name and arranged in folders and subfolders. They are also in the menu of the icon by the clock, ready to take without even opening the window.
+The texts and pictures you use often, such as a signature, an address or a password, can be saved, under a name if you like, and arranged in folders and subfolders. They are also in the menu of the icon by the clock, ready to take without even opening the window.
 
 Built with privacy in mind:
 • saved texts are encrypted for your Windows user;
@@ -120,13 +120,13 @@ History of copied texts and pictures, with instant search
 List available from any program with a hotkey
 Entries kept at the top for a while with an arrow
 Saved texts and copied entries pasted anywhere with Ctrl+Shift+1…9
-Encrypted saved texts, arranged in folders and subfolders
+Encrypted saved texts and pictures, with or without a name, in folders and subfolders
 Saved texts also in the tray icon menu, without opening the window
 Full preview of long texts and pictures
 Customizable hotkeys
 Private copies from password managers are not remembered
 Pause capturing with one click
-Export and import to a text file
+Export and import to a text file, and the database in the folder you choose
 Starts with Windows, hidden in the notification area
 Built-in guide, organized by topic
 Windows 11 look with the icons of Windows, light or dark theme, fonts and sizes of the interface and of the entries of your choice
@@ -149,11 +149,15 @@ paste blocked
 ### What's new in this version
 
 ```
-Larger text for what you copy and save: the entries are now written at 14 px by default, the size of the text of Windows 11. The time or the day of each entry has moved to a small line under it, so the text gets the whole row.
+A sturdier base: everything you copy and save now lives in one database, the SQLite that comes with Windows. Your history and saved texts move in by themselves at the first start.
 
-Fonts of your choice, under Options > Program: one for the interface (buttons, options, the guide, menus), from 12 to 16 px, 13 by default, and one for the entries, from 11 to 20 px, which applies at once. Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, or the monospaced Cascadia Mono and Consolas, among those Windows has.
+Saved entries no longer need a name: without one, the list shows their content, handy for a second e-mail address. Copied pictures can be saved too, in folders like the texts.
 
-The window now remembers the size you give it, as well as its position, and comes back onto the screen if it no longer fits.
+The star is now an arrow: it keeps an entry at the top for a while, until its days are over. With 0 days the history keeps today's copies.
+
+Under Options > History, choose where the database lives and see how much room it takes. Copied pictures take at most 200 MB: beyond that the oldest go, and a red bar under the list says so.
+
+The options open in a window of their own, beside the list. Every other row of the copied entries is a shade apart, and the windows have slimmer margins.
 ```
 
 ### Screenshot captions
@@ -194,7 +198,7 @@ Copia una password, clicca nel campo della finestra remota e lascia fare a Smart
 
 Tutto quello che copi, testi e immagini, resta in un elenco che si apre da qualsiasi programma con una scorciatoia. Scrivi qualche parola per trovarlo, premi Invio e torni dov'eri con la voce già negli appunti, pronta da incollare o da digitare.
 
-I testi che usi spesso, come una firma, un indirizzo o una password, li salvi con un nome e li organizzi in cartelle e sottocartelle. Li trovi anche nel menu dell'icona vicino all'orologio, da prendere senza nemmeno aprire la finestra.
+I testi e le immagini che usi spesso, come una firma, un indirizzo o una password, li salvi, con un nome se vuoi, e li organizzi in cartelle e sottocartelle. Li trovi anche nel menu dell'icona vicino all'orologio, da prendere senza nemmeno aprire la finestra.
 
 Pensato per la riservatezza:
 • i testi salvati sono cifrati per il tuo utente di Windows;
@@ -216,13 +220,13 @@ Cronologia di testi e immagini copiati, con ricerca istantanea
 Elenco richiamabile da qualsiasi programma con una scorciatoia
 Voci tenute in cima per un po' con una freccia
 Testi salvati e voci copiate incollati ovunque con Ctrl+Maiusc+1…9
-Testi salvati cifrati, organizzati in cartelle e sottocartelle
+Testi e immagini salvati cifrati, con o senza nome, in cartelle e sottocartelle
 Testi salvati anche nel menu dell'icona, senza aprire la finestra
 Anteprima completa di testi lunghi e immagini
 Scorciatoie da tastiera personalizzabili
 Le copie riservate dei gestori di password non vengono ricordate
 Cattura sospendibile con un clic
-Esportazione e importazione in un file di testo
+Esportazione e importazione in un file di testo, e il database nella cartella che scegli
 Avvio con Windows, nascosto nell'area di notifica
 Guida integrata, divisa per argomenti
 Aspetto da Windows 11 con le icone di Windows, tema chiaro o scuro, caratteri e dimensioni di interfaccia e voci a scelta
@@ -245,11 +249,15 @@ digitare password
 ### Novità di questa versione
 
 ```
-Testo più grande per ciò che copi e salvi: le voci ora sono scritte a 14 px, la dimensione del testo di Windows 11. L'ora o il giorno di ogni voce sono scesi su una piccola riga sotto, così il testo ha tutta la riga.
+Una base più solida: tutto ciò che copi e salvi ora sta in un unico database, il SQLite incluso in Windows. Cronologia e testi salvati ci si spostano da soli al primo avvio.
 
-Caratteri a scelta, in Opzioni > Programma: uno per l'interfaccia (pulsanti, opzioni, la guida, i menu), da 12 a 16 px, 13 di default, e uno per le voci, da 11 a 20 px, che vale subito. Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, o i monospaziati Cascadia Mono e Consolas, tra quelli che Windows ha.
+Le voci salvate non hanno più bisogno di un nome: senza, l'elenco ne mostra il contenuto, comodo per un secondo indirizzo email. Anche le immagini copiate si possono salvare, in cartelle come i testi.
 
-La finestra ora ricorda la dimensione che le dai, oltre alla posizione, e torna sullo schermo se non ci sta più.
+La stellina ora è una freccia: tiene una voce in cima per un po', finché non scadono i suoi giorni. Con 0 giorni la cronologia tiene le copie di oggi.
+
+In Opzioni > Cronologia scegli dove tenere il database e vedi quanto spazio occupa. Le immagini copiate occupano al massimo 200 MB: oltre, le più vecchie se ne vanno, e una barra rossa sotto l'elenco lo dice.
+
+Le opzioni si aprono in una finestra a parte, accanto all'elenco. Le righe delle voci copiate si alternano con una tinta leggera, e le finestre hanno margini più sottili.
 ```
 
 ### Didascalie delle schermate
@@ -290,7 +298,7 @@ Copia una contraseña, haz clic en el campo de la ventana remota y deja que Smar
 
 Todo lo que copias, textos e imágenes, queda en una lista que se abre desde cualquier programa con un atajo. Escribe unas palabras para encontrarlo, pulsa Intro y vuelves a donde estabas con la entrada ya en el portapapeles, lista para pegar o teclear.
 
-Los textos que usas a menudo, como una firma, una dirección o una contraseña, los guardas con un nombre y los organizas en carpetas y subcarpetas. También están en el menú del icono junto al reloj, listos para tomar sin abrir siquiera la ventana.
+Los textos y las imágenes que usas a menudo, como una firma, una dirección o una contraseña, los guardas, con un nombre si quieres, y los organizas en carpetas y subcarpetas. También están en el menú del icono junto al reloj, listos para tomar sin abrir siquiera la ventana.
 
 Pensado para la privacidad:
 • los textos guardados están cifrados para tu usuario de Windows;
@@ -312,13 +320,13 @@ Historial de textos e imágenes copiados, con búsqueda instantánea
 Lista disponible desde cualquier programa con un atajo
 Entradas mantenidas arriba un tiempo con una flecha
 Textos guardados y entradas copiadas pegados en cualquier sitio con Ctrl+Mayús+1…9
-Textos guardados cifrados, organizados en carpetas y subcarpetas
+Textos e imágenes guardados cifrados, con o sin nombre, en carpetas y subcarpetas
 Textos guardados también en el menú del icono, sin abrir la ventana
 Vista previa completa de textos largos e imágenes
 Atajos de teclado personalizables
 Las copias privadas de los gestores de contraseñas no se recuerdan
 Captura que se pausa con un clic
-Exportación e importación a un archivo de texto
+Exportación e importación a un archivo de texto, y la base de datos en la carpeta que elijas
 Inicio con Windows, oculto en el área de notificación
 Guía integrada, dividida por temas
 Aspecto de Windows 11 con los iconos de Windows, tema claro u oscuro, fuentes y tamaños de la interfaz y de las entradas a elegir
@@ -341,11 +349,15 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Texto más grande para lo que copias y guardas: las entradas ahora se escriben a 14 px, el tamaño del texto de Windows 11. La hora o el día de cada entrada han bajado a una pequeña línea debajo, así el texto tiene toda la fila.
+Una base más sólida: todo lo que copias y guardas está ahora en una sola base de datos, el SQLite que trae Windows. El historial y los textos guardados se trasladan solos en el primer inicio.
 
-Fuentes a elegir, en Opciones > Programa: una para la interfaz (botones, opciones, la guía, los menús), de 12 a 16 px, 13 por defecto, y otra para las entradas, de 11 a 20 px, que se aplica enseguida. Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, o las monoespaciadas Cascadia Mono y Consolas, entre las que tiene Windows.
+Las entradas guardadas ya no necesitan un nombre: sin él, la lista muestra su contenido, útil para una segunda dirección de correo. También las imágenes copiadas se pueden guardar, en carpetas como los textos.
 
-La ventana ahora recuerda el tamaño que le das, además de su posición, y vuelve a la pantalla si ya no cabe.
+La estrella ahora es una flecha: mantiene una entrada arriba un tiempo, hasta que vencen sus días. Con 0 días el historial guarda las copias de hoy.
+
+En Opciones > Historial eliges dónde guardar la base de datos y ves cuánto espacio ocupa. Las imágenes copiadas ocupan como máximo 200 MB: por encima, las más antiguas se van, y una barra roja bajo la lista lo dice.
+
+Las opciones se abren en una ventana aparte, junto a la lista. Las filas de las entradas copiadas se alternan con un tono suave, y las ventanas tienen márgenes más finos.
 ```
 
 ### Leyendas de las capturas
@@ -386,7 +398,7 @@ Copiez un mot de passe, cliquez dans le champ de la fenêtre distante et laissez
 
 Tout ce que vous copiez, textes et images, reste dans une liste qui s'ouvre depuis n'importe quel programme avec un raccourci. Tapez quelques mots pour le retrouver, appuyez sur Entrée et vous revenez où vous étiez, l'élément déjà dans le presse-papiers, prêt à coller ou à saisir.
 
-Les textes que vous utilisez souvent, comme une signature, une adresse ou un mot de passe, s'enregistrent sous un nom et se rangent dans des dossiers et sous-dossiers. Ils sont aussi dans le menu de l'icône près de l'horloge, prêts à prendre sans même ouvrir la fenêtre.
+Les textes et les images que vous utilisez souvent, comme une signature, une adresse ou un mot de passe, s'enregistrent, sous un nom si vous voulez, et se rangent dans des dossiers et sous-dossiers. Ils sont aussi dans le menu de l'icône près de l'horloge, prêts à prendre sans même ouvrir la fenêtre.
 
 Pensé pour la confidentialité :
 • les textes enregistrés sont chiffrés pour votre utilisateur Windows ;
@@ -408,13 +420,13 @@ Historique des textes et images copiés, avec recherche instantanée
 Liste accessible depuis n'importe quel programme avec un raccourci
 Éléments gardés un moment en haut avec une flèche
 Textes enregistrés et éléments copiés collés partout avec Ctrl+Maj+1…9
-Textes enregistrés chiffrés, rangés en dossiers et sous-dossiers
+Textes et images enregistrés chiffrés, avec ou sans nom, dans des dossiers et sous-dossiers
 Textes enregistrés aussi dans le menu de l'icône, sans ouvrir la fenêtre
 Aperçu complet des textes longs et des images
 Raccourcis clavier personnalisables
 Les copies privées des gestionnaires de mots de passe ne sont pas mémorisées
 Capture suspendue en un clic
-Export et import dans un fichier texte
+Export et import dans un fichier texte, et la base de données dans le dossier de votre choix
 Démarrage avec Windows, caché dans la zone de notification
 Guide intégré, organisé par sujet
 Aspect Windows 11 avec les icônes de Windows, thème clair ou sombre, polices et tailles de l'interface et des éléments au choix
@@ -437,11 +449,15 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Un texte plus grand pour ce que vous copiez et enregistrez : les éléments sont maintenant écrits en 14 px, la taille du texte de Windows 11. L'heure ou le jour de chaque élément sont descendus sur une petite ligne en dessous : le texte a toute la ligne.
+Une base plus solide : tout ce que vous copiez et enregistrez est maintenant dans une seule base de données, le SQLite fourni avec Windows. L'historique et les textes enregistrés y passent tout seuls au premier démarrage.
 
-Des polices au choix, dans Options > Programme : une pour l'interface (boutons, options, le guide, les menus), de 12 à 16 px, 13 par défaut, et une pour les éléments, de 11 à 20 px, qui s'applique aussitôt. Segoe UI Variable, Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, ou les polices à chasse fixe Cascadia Mono et Consolas, parmi celles que Windows possède.
+Les éléments enregistrés n'ont plus besoin d'un nom : sans nom, la liste montre leur contenu, pratique pour une deuxième adresse e-mail. Les images copiées peuvent aussi être enregistrées, dans des dossiers comme les textes.
 
-La fenêtre retient maintenant la taille que vous lui donnez, en plus de sa position, et revient sur l'écran si elle n'y tient plus.
+L'étoile est devenue une flèche : elle garde un élément en haut un moment, jusqu'à la fin de ses jours. Avec 0 jour, l'historique garde les copies d'aujourd'hui.
+
+Dans Options > Historique, choisissez où garder la base de données et voyez la place qu'elle occupe. Les images copiées occupent au maximum 200 Mo : au-delà, les plus anciennes partent, et une barre rouge sous la liste le signale.
+
+Les options s'ouvrent dans une fenêtre à part, à côté de la liste. Les lignes des éléments copiés alternent avec une teinte légère, et les fenêtres ont des marges plus fines.
 ```
 
 ### Légendes des captures
