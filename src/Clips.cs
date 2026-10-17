@@ -63,6 +63,10 @@ sealed class Clips : IDisposable
     static readonly string EntryColumns ="id, kind, CASE WHEN kind = " + TextKind + " THEN content END, preview, width, height,"
         + " copied_at, saved, saved_at, name, folder_id, pinned, number";
 
+    public const string Memory = ":memory:";   // a database that is not a file: when the file cannot be opened
+    // Where the program keeps it; the checks use one of their own.
+    public static string DefaultFile = System.IO.Path.Combine(Program.DataFolder, Program.AppName + ".db");
+
     readonly Database data;
     readonly string path;
     DateTime pruned;   // the day the expired entries were last removed
@@ -77,6 +81,7 @@ sealed class Clips : IDisposable
     public Clips(string path, Action<Clips> fill)
     {
         this.path = path;
+        if (path != Memory) Directory.CreateDirectory(System.IO.Path.GetDirectoryName(System.IO.Path.GetFullPath(path)));
         data = new Database(path);
         try
         {
@@ -125,6 +130,12 @@ sealed class Clips : IDisposable
     public void Dispose()
     {
         data.Dispose();
+    }
+
+    // Several changes that must happen together, or not at all: see Database.Begin.
+    public Transaction Begin()
+    {
+        return data.Begin();
     }
 
     // --- Days ---
@@ -428,23 +439,62 @@ sealed class Clips : IDisposable
     // A new folder inside 'parent' (0: outside them all). Returns its id; refused if the name is taken there.
     public long AddFolder(long parent, string name)
     {
-        data.Execute("INSERT INTO folders (parent_id, name, name_key) VALUES (?1, ?2, ?3)", parent, name, Key(name));
+        data.Execute("INSERT INTO folders (parent_id, name, name_key) VALUES (?1, ?2, ?3)", parent, Name(name), Key(name));
         return data.LastId;
     }
 
     // Refused if the name is taken where the folder is.
     public void RenameFolder(long id, string name)
     {
-        data.Execute("UPDATE folders SET name = ?2, name_key = ?3 WHERE id = ?1", id, name, Key(name));
+        data.Execute("UPDATE folders SET name = ?2, name_key = ?3 WHERE id = ?1", id, Name(name), Key(name));
     }
 
     // Moves a folder, with all it holds, into another (0: out of them all). Never into itself or one it holds;
     // refused if the name is taken there.
     public void MoveFolder(long id, long parent)
     {
+        Refuse(id, parent);
+        data.Execute("UPDATE folders SET parent_id = ?2 WHERE id = ?1", id, parent);
+    }
+
+    // Gives a folder another name and another place at once, checked as a whole: a name that would clash only
+    // halfway, between the two changes, does not count.
+    public void PlaceFolder(long id, long parent, string name)
+    {
+        Refuse(id, parent);
+        data.Execute("UPDATE folders SET parent_id = ?2, name = ?3, name_key = ?4 WHERE id = ?1", id, parent, Name(name), Key(name));
+    }
+
+    void Refuse(long id, long parent)
+    {
         for (long at = parent; at != 0; at = ParentOf(at))
             if (at == id) throw new ArgumentException("A folder cannot go inside itself");
-        data.Execute("UPDATE folders SET parent_id = ?2 WHERE id = ?1", id, parent);
+    }
+
+    // The folder at a path, the names from the outermost joined by Texts.Separator, or 0 if there is none.
+    public long FindFolder(string path)
+    {
+        return Walk(path, false);
+    }
+
+    // The same, making the folders of the path that are missing.
+    public long MakeFolder(string path)
+    {
+        return Walk(path, true);
+    }
+
+    long Walk(string path, bool make)
+    {
+        if (path == null) return 0;
+        long at = 0;
+        foreach (string name in path.Split(Texts.Separator))
+        {
+            object found = data.Value("SELECT id FROM folders WHERE parent_id = ?1 AND name_key = ?2", at, Key(name));
+            if (found != null) at = (long)found;
+            else if (make) at = AddFolder(at, name);
+            else return 0;
+        }
+        return at;
     }
 
     public void OpenFolder(long id, bool open)
@@ -551,8 +601,8 @@ sealed class Clips : IDisposable
 
     // --- Rows and values ---
 
-    // An entry from a row of EntryColumns.
-    static Entry Read(Statement row)
+    // An entry from a row of EntryColumns. The whole of a picture is read only when it is asked for.
+    Entry Read(Statement row)
     {
         bool saved = row.Bool(7);
         string name = row.Text(9);
@@ -571,7 +621,9 @@ sealed class Clips : IDisposable
             byte[] content = row.Blob(2);
             entry = new Entry(name, Encoding.UTF8.GetString(saved ? Unprotect(content) : content), time);
         }
-        entry.Id = row.Long(0);
+        long id = row.Long(0);
+        if (entry.Picture) entry.PngSource = delegate { return Png(id); };
+        entry.Id = id;
         entry.Saved = saved;
         entry.FolderId = row.IsNull(10) ? 0 : row.Long(10);
         entry.Pinned = row.Bool(11);

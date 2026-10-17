@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
@@ -111,8 +112,8 @@ partial class MainForm
         Tip(Strings.FontTip, fontLabel, fontButton);
         Tip(string.Format(Strings.SizeTip, PixelsName(Look.DefaultEntrySize)), sizeLabel, sizeButton);
         Tip(Strings.HistoryTip, historyBox);
-        Tip(string.Format(Strings.KeepTip, Texts.Folder, Texts.MaxRecent, Texts.MaxPictures, MaxShown), keepLabel, keepBox);
-        Tip(string.Format(Strings.FolderTip, Texts.Folder), folderLink);
+        Tip(string.Format(Strings.KeepTip, MaxShown), keepLabel, keepBox);
+        Tip(string.Format(Strings.FolderTip, DataFolder), folderLink);
         Tip(Strings.CleanTip, cleanLabel, cleanBox, cleanButton);
         Tip(string.Format(Strings.TrayTip, Strings.Exit), trayBox);
         Tip(string.Format(Strings.StartTip, Program.AppName), startBox);
@@ -210,14 +211,21 @@ partial class MainForm
         return Math.Max(min, Math.Min(max, value));
     }
 
-    // Hands the two settings of the history to what keeps it, in memory and on disk.
+    // Hands the two settings of the history to the database: for how many days the copied entries stay, or none
+    // at all.
     void ApplyHistory()
     {
         Change(delegate
         {
-            if (historyBox.Checked) Texts.Keep(Retention);
-            else Texts.Clear();
+            if (historyBox.Checked) clips.Keep(Retention);
+            else clips.ClearCopied();
         });
+    }
+
+    // The folder of the database, where the log is too.
+    static string DataFolder
+    {
+        get { return Path.GetDirectoryName(Clips.DefaultFile); }
     }
 
     // A row with a number to write: its description on the left, its box at the right edge of the page.
@@ -303,7 +311,13 @@ partial class MainForm
             dialog.FileName = Program.AppName + " " + DateTime.Today.ToString(Texts.DayFormat) + Backup.Extension;
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
             BackupResult result = null;
-            if (!Change(delegate { result = Backup.Export(dialog.FileName, all); })) return;
+            if (!Change(delegate
+            {
+                // The saved ones as their column has them, folders included; the copied ones all, not only those listed.
+                List<Entry> chosen = new List<Entry>(entries);
+                if (all) chosen.AddRange(clips.Copied(int.MaxValue, new string[0]));
+                result = Backup.Export(dialog.FileName, chosen);
+            })) return;
             string saved = Count(result.Saved, Strings.SavedOne, Strings.SavedMany);
             Say((all ? string.Format(Strings.ExportedAll, saved, Count(result.Copied, Strings.CopiedOne, Strings.CopiedMany))
                 : string.Format(Strings.Exported, saved))
@@ -322,7 +336,7 @@ partial class MainForm
             BackupResult result = null;
             if (!Change(delegate
             {
-                result = Backup.Import(dialog.FileName, copied, delegate(int clashes)
+                result = Backup.Import(clips, dialog.FileName, copied, delegate(int clashes)
                 {
                     return Ask((clashes == 1 ? Strings.ClashOne : string.Format(Strings.ClashMany, clashes)) + Strings.ClashChoice);
                 });
@@ -349,17 +363,21 @@ partial class MainForm
         string what = days == 0 ? Strings.CleanEverything : days == 1 ? Strings.CleanBeforeToday
             : string.Format(Strings.CleanBeforeDays, days);
         if (!Ask(string.Format(Strings.AskClean, what))) return;
-        int before = Texts.Recent.Count;
-        if (!Change(delegate { Texts.Clean(days); })) return;
-        int removed = before - Texts.Recent.Count;
+        int removed = 0;
+        if (!Change(delegate
+        {
+            int before = clips.CopiedCount();
+            clips.Clean(days);
+            removed = before - clips.CopiedCount();
+        })) return;
         Say(removed == 0 ? Strings.NothingToClean : removed == 1 ? Strings.CleanedOne : string.Format(Strings.CleanedMany, removed));
         Reload();
     }
 
-    // Shows the folder of the history files in Explorer.
+    // Shows the folder of the database in Explorer.
     void OpenFolder()
     {
-        if (Directory.Exists(Texts.Folder)) Change(delegate { Process.Start(Texts.Folder); });
+        if (Directory.Exists(DataFolder)) Change(delegate { Process.Start(DataFolder); });
         else Say(Strings.NoHistoryFolder);
     }
 

@@ -101,6 +101,7 @@ partial class MainForm : Window
     readonly ContextMenuStrip listMenu = new ContextMenuStrip();
     readonly Peek peek = new Peek();              // shows whole the entry of a row
     readonly Timer rest = new Timer();            // runs while the pointer rests on a row, and while a text asked for is in view
+    RowList resting;                              // the list whose row the pointer rests on
     bool peekAsked;                               // what is in view was asked for from the menu: moving the pointer leaves it there
     readonly Timer fade = new Timer();            // runs while the status line holds a passing message
     Entry grabbed;                                // the saved text the button went down on: it may be dragged to a folder
@@ -147,7 +148,9 @@ partial class MainForm : Window
     bool trayHintShown;   // the balloon explaining where the window went is shown only once
     volatile bool cancel;
     bool optionsShown;
-    List<Entry> entries = new List<Entry>();
+    Clips clips;          // what the list keeps: copied and saved entries, folders
+    string unavailable;   // why the database could not be opened: the status line says it whenever it is idle
+    List<Entry> entries = new List<Entry>();   // the saved entries and the folders, as their column shows them
     // How many texts each folder holds, those of the folders inside it too: counted when the lists are filled,
     // drawn on its row.
     readonly Dictionary<string, int> held = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
@@ -315,11 +318,11 @@ partial class MainForm : Window
         Controls.AddRange(optionControls.ToArray());
         // No AcceptButton: Enter among the options would start typing the clipboard.
 
+        OpenClips();
         UseEntryFont(Look.EntryFamily, Look.EntrySize);   // the default, until the settings say otherwise
         LoadSettings();
         NameHotkeys();
         ApplyHistory();
-        Change(Texts.Read);
         historyBox.CheckedChanged += delegate
         {
             ApplyHistory();
@@ -369,6 +372,25 @@ partial class MainForm : Window
         if (hidden && trayBox.Checked) startHidden = true;
         else if (hidden) WindowState = FormWindowState.Minimized;
         Finish();
+    }
+
+    // Opens the database of the list. The first time, what the versions before kept in the registry and in the
+    // history files moves in; if that fails, nothing is left half done and the next start tries again. A database
+    // that cannot be opened (locked, damaged, written by a newer version) leaves the list working in memory, and
+    // the status line says so until the program closes.
+    void OpenClips()
+    {
+        try
+        {
+            clips = new Clips(Clips.DefaultFile, delegate(Clips fresh) { Migration.Run(fresh, SettingsKey, Migration.OldHistory); });
+            return;
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex);
+            unavailable = string.Format(Strings.DatabaseUnavailable, ex.Message);
+        }
+        clips = new Clips(Clips.Memory);
     }
 
     // Opens the guide, or brings it forward if it is already open. It is not a dialog: it can stay beside
@@ -469,10 +491,11 @@ partial class MainForm : Window
     }
 
     // With nothing to say the status line is silent, and leaves its room to the lists: how to type a
-    // password is in the tooltip of its button and in the guide.
+    // password is in the tooltip of its button and in the guide. Only a database that could not be opened is
+    // said always.
     void ShowIdle()
     {
-        status.Text = "";
+        status.Text = unavailable ?? "";
     }
 
     // Started hidden: the window that Application.Run wants to show stays invisible, but its handle is created
@@ -609,8 +632,9 @@ partial class MainForm : Window
         else if (m.Msg == Native.WM_CLIPBOARDUPDATE)
         {
             ShowClipboardState();
-            if (historyBox.Checked && !paused && Native.GetClipboardSequenceNumber() != ownCopy) Texts.Remember();
-            Reload();
+            // Only the copied entries can have changed: the saved ones are not read again.
+            if (historyBox.Checked && !paused && Native.GetClipboardSequenceNumber() != ownCopy) Texts.Remember(clips);
+            ReloadCopied();
         }
         base.WndProc(ref m);
     }
@@ -647,7 +671,7 @@ partial class MainForm : Window
         Dictionary<string, ToolStripMenuItem> folders = new Dictionary<string, ToolStripMenuItem>(StringComparer.OrdinalIgnoreCase);
         foreach (Entry each in entries)
         {
-            if (each.Name == null) continue;
+            if (!each.Saved) continue;
             Entry entry = each;   // a variable of its own for the delegate
             string place = PlaceOf(entry);
             ToolStripMenuItem holder;
@@ -699,6 +723,7 @@ partial class MainForm : Window
             peek.Dispose();
             rest.Dispose();
             fade.Dispose();
+            if (clips != null) clips.Dispose();
         }
         base.Dispose(disposing);
     }

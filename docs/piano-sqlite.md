@@ -258,9 +258,15 @@ Ogni passo si chiude con i test che passano e lascia il programma funzionante.
    testi e 2 immagini copiati, nessun errore; il database pesa 80 KB.
 4. **Il cambio**: la finestra usa `Clips`, la migrazione parte al primo avvio, il codice vecchio di registro e
    `.clips` sparisce. L'interfaccia resta quella di oggi, salvo ciò che la migrazione impone (la stellina diventa
-   freccia e scade). Release a sé, da provare dal vivo prima di andare avanti.
+   freccia e scade). Release a sé, da provare dal vivo prima di andare avanti. — Scritto il 17/10/2026, test
+   verdi; da provare dal vivo dall'utente prima della release 4.0. Scelte: la finestra conosce ancora le cartelle
+   per percorso (`FolderAt` traduce in id), così l'interfaccia è cambiata il meno possibile; i salvati restano in
+   memoria e si ricaricano solo quando cambiano, i copiati si chiedono al database a ogni filtro; se il database
+   non si apre si lavora in memoria e la riga di stato lo dice; «0 giorni» vuol dire solo oggi; i testi delle
+   quattro lingue, la guida, README, PRIVACY e la scheda dello Store parlano già di freccia e database.
 5. **Le funzioni nuove**: salvati senza nome, immagini salvabili, righe e anteprima dei salvati senza nome,
-   esportazione aggiornata.
+   esportazione aggiornata. — I salvati senza nome (finestra, righe, anteprima, esportazione) sono entrati nella
+   4.0, chiesti dall'utente mentre la provava. Restano le immagini salvabili.
 6. **La cartella del database**: impostazione, pagina «Dati», spostamento, avvertenze, cartella irraggiungibile.
 7. **Documentazione**: guida e README nelle quattro lingue, `PRIVACY.md` (dove stanno i dati), scheda dello Store
    se cita la cronologia, `CLAUDE.md` (sezioni su cronologia, salvati, cartelle, stellina, numeri, trappole).

@@ -18,10 +18,11 @@ static partial class Strings
         PausedEmpty = "In pausa: quello che copi non viene ricordato"; CopyHint = "Quello che copi comparirà qui";
         NoSaved = "Nessun testo salvato";
         NewTip = "Scrive un testo nuovo da tenere, con il suo nome ({0}).";
-        SaveTip = "Su una voce copiata: la salva con un nome, e puoi ritoccarne il contenuto.\n"
+        SaveTip = "Su una voce copiata: la salva perché non scada mai, con un nome o senza,\n"
+            + "e puoi ritoccarne il contenuto. Con il nome l'elenco mostra il nome, non il contenuto.\n"
             + "Su una voce salvata: ne cambia il nome o il contenuto ({0}).\n"
             + "Su una cartella: le cambia il nome o il posto.\n"
-            + "Le immagini restano solo in memoria e non si salvano.";
+            + "Le immagini non si salvano.";
         HelpTip = "Apre la guida: tutto quello che il programma sa fare ({0}).";
         DeleteTip = "Elimina il testo salvato, o toglie dall'elenco la voce copiata ({0}).\n"
             + "Di una cartella elimina solo la cartella: quello che contiene sale di un livello.";
@@ -110,9 +111,9 @@ static partial class Strings
             + "digiti con {1}. Con un clic la finestra resta aperta, con {0} o un\n"
             + "doppio clic torni dov'eri. Il tasto destro apre il menu della voce.\n"
             + "Fermando il puntatore su una voce copiata la vedi per intero.\n"
-            + "La stellina a destra di una voce copiata ({2}) la tiene in cima all'elenco,\n"
-            + "anche oltre i giorni della cronologia, finché non la togli.\n"
-            + "I testi salvati restano nel registro di Windows, cifrati per il tuo utente, e\n"
+            + "La freccia a destra di una voce copiata ({2}) la tiene per un po' in cima all'elenco:\n"
+            + "se ne va comunque quando scadono i suoi giorni. Ciò che deve restare, salvalo.\n"
+            + "I testi salvati non scadono mai, sono cifrati per il tuo utente, e\n"
             + "se ne vede solo il nome. Si possono raccogliere in cartelle: «Nuova cartella» è nel\n"
             + "menu del tasto destro ({3}); un testo ci entra trascinandolo, o con\n"
             + "«Sposta in». Un clic sulla cartella la apre e la chiude.\n"
@@ -160,8 +161,8 @@ static partial class Strings
         PickOption = "Apri l'elenco";
         QuickOption = "Incolla per numero";
         HistoryOption = "Ricorda i testi e le immagini copiati";
-        KeepOption = "Giorni su disco (0: solo in memoria):";
-        FolderLink = "Apri la cartella della cronologia";
+        KeepOption = "Giorni da tenere (0: solo oggi):";
+        FolderLink = "Apri la cartella dei dati";
         SpareOption = "Pulendo, tieni gli ultimi giorni (0: niente):";
         CleanButton = "Pulisci ora…";
         DelayTip = "Per quanti secondi la finestra di destinazione deve restare in primo piano\n"
@@ -192,17 +193,17 @@ static partial class Strings
             + "Ciò che i gestori di password segnano come riservato non viene ricordato.\n"
             + "Disattivala se copi password da programmi che non lo fanno: nell'elenco si\n"
             + "leggerebbero in chiaro. Spenta, cancella anche la cronologia su disco.";
-        KeepTip = "Per quanti giorni ciò che copi resta nella cronologia, anche dopo la chiusura.\n"
-            + "Sta in {0},\n"
-            + "un file per giorno, scritto in chiaro: i giorni scaduti si eliminano da soli.\n"
-            + "Con 0 niente va su disco: restano in memoria le ultime {1} cose copiate, di cui al\n"
-            + "massimo {2} immagini, e spariscono alla chiusura.\n"
-            + "L'elenco mostra le {3} più recenti: le altre si trovano con la ricerca.";
-        FolderTip = "Apre in Esplora file la cartella con i file della cronologia, uno per giorno:\n{0}";
-        CleanTip = "Elimina subito dalla cronologia, in memoria e su disco, quello che hai copiato prima\n"
-            + "degli ultimi giorni scritti qui sopra: con 1 resta solo oggi, con 0 non resta niente.\n"
-            + "Prima chiede conferma. Le voci con la stellina e i testi salvati non vengono toccati,\n"
-            + "e nemmeno gli appunti. I giorni su disco restano quelli impostati.";
+        KeepTip = "Per quanti giorni ciò che copi resta nella cronologia, anche dopo la chiusura,\n"
+            + "contando oggi come primo: con 0 resta solo quello che hai copiato oggi.\n"
+            + "Anche le voci in alto se ne vanno quando scadono i loro giorni; i testi salvati mai.\n"
+            + "La cronologia sta su disco in chiaro. L'elenco mostra le {0} più recenti:\n"
+            + "le altre si trovano con la ricerca.";
+        FolderTip = "Apre in Esplora file la cartella del database, che contiene ciò che hai copiato\n"
+            + "e salvato, e del registro degli errori:\n{0}";
+        CleanTip = "Elimina subito dalla cronologia quello che hai copiato prima degli ultimi giorni\n"
+            + "scritti qui sopra: con 1 resta solo oggi, con 0 non resta niente.\n"
+            + "Prima chiede conferma. Vanno anche le voci in alto; i testi salvati non vengono\n"
+            + "toccati, e nemmeno gli appunti. I giorni da tenere restano quelli impostati.";
         TrayTip = "Attiva: chiudendo o riducendo a icona la finestra il programma resta in funzione\n"
             + "come icona vicino all'orologio, e le scorciatoie continuano a funzionare.\n"
             + "Clic sull'icona per riaprire la finestra, tasto destro e poi {0} per chiudere.\n"
@@ -232,13 +233,17 @@ static partial class Strings
         HistoryOffImport = " La cronologia è spenta: i copiati non sono stati importati.";
         CleanEverything = "tutto quello che hai copiato"; CleanBeforeToday = "quello che hai copiato prima di oggi";
         CleanBeforeDays = "quello che hai copiato prima degli ultimi {0} giorni (oggi compreso)";
-        AskClean = "Vuoi eliminare {0}?\n\nLe voci con la stellina e i testi salvati restano.";
+        AskClean = "Vuoi eliminare {0}?\n\nI testi salvati restano; vanno anche le voci in alto.";
         NothingToClean = "Niente da eliminare nella cronologia.";
         CleanedOne = "Eliminata 1 voce dalla cronologia."; CleanedMany = "Eliminate {0} voci dalla cronologia.";
-        NoHistoryFolder = "La cartella della cronologia non esiste ancora: su disco non c'è niente.";
+        NoHistoryFolder = "La cartella dei dati non esiste ancora: su disco non c'è niente.";
+        DatabaseUnavailable = "L'elenco non si può tenere su disco ({0}): ciò che copi e salvi ora si perde alla "
+            + "chiusura del programma.";
 
         NewTextTitle = "Nuovo testo"; SaveCopiedTitle = "Salva il testo copiato"; EditSavedTitle = "Modifica il testo salvato";
-        NameLabel = "Nome (è ciò che si vede nell'elenco):"; ContentLabel = "Contenuto:";
+        NameLabel = "Nome (facoltativo):"; ContentLabel = "Contenuto:";
+        NameHintEmpty = "Senza nome, nell'elenco si vedrà il contenuto.";
+        NameHintNamed = "Nell'elenco si vedrà «{0}»; il contenuto resta nascosto, adatto alle password.";
         FolderOf = "Cartella: "; NoFolder = "Nessuna cartella"; Inside = "Dentro: ";
         NewFolderTitle = "Nuova cartella"; RenameFolderTitle = "Rinomina la cartella"; FolderNameLabel = "Nome della cartella:";
         Save = "Salva";
@@ -279,15 +284,15 @@ static partial class Strings
             "- Fermando il puntatore su una voce copiata che nella riga non ci sta tutta, dopo un attimo compare per "
                 + "intero in un riquadro: il testo con tutte le sue righe, l'immagine più grande. Sparisce appena "
                 + "sposti il puntatore.",
-            "- La stellina all'estremità destra di una voce copiata (" + Key(Keys.Control | MainForm.PinKey) + ") la "
-                + "tiene in cima alla colonna: compare sbiadita quando ci passi sopra, e un clic la accende o la spegne. "
-                + "Una voce con la stellina non scade con i giorni della cronologia e resta lì finché non la togli; "
-                + "copiare di nuovo lo stesso testo non la sposta.",
+            "- La freccia all'estremità destra di una voce copiata (" + Key(Keys.Control | MainForm.PinKey) + ") la "
+                + "tiene per un po' in cima alla colonna: compare sbiadita quando ci passi sopra, e un clic la accende o "
+                + "la spegne. La voce se ne va comunque quando scadono i giorni della cronologia: ciò che deve restare, "
+                + "salvalo. Copiare di nuovo lo stesso testo lo riporta in cima con l'ora nuova, freccia e numero compresi.",
             "- «" + NumberMenu + "», nel menu del tasto destro, dà a un testo salvato o a una voce copiata un numero "
                 + "da 1 a " + MainForm.MaxNumber + ": poi, da qualsiasi programma, " + MainForm.NumbersName + " la "
                 + "incollano subito nella finestra in cui stai lavorando, senza aprire questa (la voce va negli appunti "
                 + "e Ctrl+V segue da solo). Il numero compare in un riquadro a destra della riga, e accanto al testo "
-                + "salvato nel menu dell'icona; una voce copiata che lo riceve prende anche la stellina, che la tiene. "
+                + "salvato nel menu dell'icona. Una voce copiata tiene il suo numero finché non scadono i suoi giorni. "
                 + "Ogni numero è di una voce sola: dato a un'altra, passa a lei.",
             "Il segno colorato a sinistra dice che cos'è la voce: un testo, un indirizzo web, un testo salvato. Le "
                 + "immagini mostrano una miniatura. Sotto la voce, in piccolo a destra, c'è l'ora della copia (il giorno, se non è di oggi) o il "
@@ -300,11 +305,12 @@ static partial class Strings
             "La colonna dei copiati mostra le " + MainForm.MaxShown + " voci più recenti: le altre si trovano con la ricerca.",
 
             "# I testi salvati",
-            "Sono le cose che vuoi avere sempre a portata di mano: una firma, un indirizzo, una password. Ognuno ha un "
-                + "nome, ed è solo il nome che si vede nell'elenco.",
+            "Sono le cose che vuoi avere sempre a portata di mano: una firma, un indirizzo, una password. Non scadono "
+                + "mai. Il nome è facoltativo: con il nome, l'elenco mostra solo il nome e il contenuto resta nascosto, "
+                + "adatto a una password; senza, l'elenco mostra il contenuto, come per un secondo indirizzo email.",
             "- «" + New + "» (" + Key(Keys.Control | MainForm.NewKey) + ") scrive un testo da zero.",
-            "- «" + SaveDots + "» (" + Key(Keys.Control | MainForm.SaveKey) + "), su una voce copiata, la tiene con un "
-                + "nome; prima di salvare puoi ritoccarne il contenuto.",
+            "- «" + SaveDots + "» (" + Key(Keys.Control | MainForm.SaveKey) + "), su una voce copiata, la tiene, con un "
+                + "nome o senza; prima di salvare puoi ritoccarne il contenuto.",
             "- «" + EditDots + "» (" + Key(Keys.Control | MainForm.SaveKey) + "), su una voce salvata, ne cambia il nome "
                 + "o il contenuto.",
             "- «" + Delete + "» (" + Key(Keys.Control | MainForm.DeleteKey) + ") cancella il testo salvato, oppure toglie "
@@ -313,8 +319,8 @@ static partial class Strings
                 + "qualche secondo: l'elenco ne mostra solo il nome, e passarci sopra con il puntatore non basta.",
             "- I testi salvati sono anche nel menu dell'icona vicino all'orologio: sceglierne uno lo rimette negli "
                 + "appunti senza aprire la finestra.",
-            "I testi salvati stanno nel registro di Windows, cifrati per il tuo utente: un altro utente dello stesso PC "
-                + "non li può leggere. Quando ne rimetti uno negli appunti viene segnato come riservato, perché la "
+            "I testi salvati non scadono mai. Stanno nel database del programma, cifrati per il tuo utente: un altro "
+                + "utente dello stesso PC non li può leggere. Quando ne rimetti uno negli appunti viene segnato come riservato, perché la "
                 + "cronologia di Windows (Win+V) e gli altri gestori di appunti lo ignorino. Le immagini non si possono salvare.",
 
             "# Le cartelle",
@@ -378,15 +384,15 @@ static partial class Strings
             "# La cronologia",
             "Quello che copi resta nell'elenco per un numero di giorni che decidi tu (" + Texts.DefaultKeepDays
                 + " se non lo cambi), anche dopo aver chiuso il programma o spento il PC.",
-            "- Sta in " + Texts.Folder + ", un file per giorno, scritto in chiaro. I giorni scaduti si eliminano da soli.",
-            "- Con 0 giorni niente va su disco: restano in memoria le ultime " + Texts.MaxRecent + " cose copiate, di "
-                + "cui al massimo " + Texts.MaxPictures + " immagini, e spariscono alla chiusura.",
+            "- Sta in chiaro in " + Clips.DefaultFile + ", insieme ai testi salvati, che invece sono cifrati. I "
+                + "giorni scaduti si eliminano da soli.",
+            "- Con 0 giorni resta solo quello che hai copiato oggi.",
             "- Quello che i gestori di password segnano come riservato non viene ricordato.",
-            "- Le voci con la stellina restano anche oltre quei giorni.",
+            "- Anche le voci in alto se ne vanno quando scadono i loro giorni: ciò che deve restare, salvalo.",
             "- Nelle opzioni, «" + CleanButton + "» elimina subito quello che hai copiato prima degli ultimi giorni che "
-                + "scrivi accanto: con 1 resta solo oggi, con 0 non resta niente. Chiede conferma, e non tocca le voci "
-                + "con la stellina né i testi salvati.",
-            "- Spegnendo la cronologia nelle opzioni si svuotano l'elenco e i file su disco, stelline comprese.",
+                + "scrivi accanto: con 1 resta solo oggi, con 0 non resta niente. Chiede conferma; vanno anche le voci "
+                + "in alto, i testi salvati non vengono mai toccati.",
+            "- Spegnendo la cronologia nelle opzioni si svuota l'elenco e si elimina dal disco ciò che hai copiato.",
 
             "# Le opzioni",
             "Il pulsante «" + Options + "» le mostra al posto dell'elenco, e «" + List + "» torna indietro. Fermando il "
@@ -397,8 +403,8 @@ static partial class Strings
                 + "svuotare gli appunti dopo, la digitazione lenta e i simboli composti con Alt+codice.",
             "- " + HotkeysTitle + ": accende e spegne " + type + ", " + pick + " e " + MainForm.NumbersName
                 + ", e dà loro altri tasti.",
-            "- " + HistoryTitle + ": se ricordare ciò che copi, per quanti giorni, il collegamento alla cartella dei "
-                + "file e il pulsante che la pulisce subito.",
+            "- " + HistoryTitle + ": se ricordare ciò che copi, per quanti giorni, il collegamento alla cartella del "
+                + "database e il pulsante che pulisce subito la cronologia.",
             "- " + ProgramTitle + ": la lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), il carattere e la dimensione dell'interfaccia (pulsanti, opzioni, questa guida: in pixel, riavviano il programma) e quelli delle voci (cambiano subito), se restare attivo nell'area di notifica e nascondersi passando a un "
                 + "altro programma, se partire insieme a Windows, e i pulsanti per esportare e importare.",
 
@@ -407,7 +413,7 @@ static partial class Strings
                 + "riprendono, per una copia di sicurezza o per passarli a un altro PC. Ognuno chiede se vuoi solo i "
                 + "testi salvati o tutto, cioè anche le cose copiate.",
             "- «" + ExportButton + "» scrive un file di testo che si apre con il Blocco note: i testi salvati con le "
-                + "loro cartelle e, se lo chiedi, le cose copiate con l'ora e la stellina. Le immagini non ci vanno.",
+                + "loro cartelle e, se lo chiedi, le cose copiate con l'ora e la freccia. Le immagini non ci vanno.",
             "- Nel file i testi sono in chiaro, password comprese: tienilo in un posto sicuro.",
             "- «" + ImportButton + "» legge un file così e aggiunge ciò che contiene a quello che c'è già. Se un testo "
                 + "salvato ha il nome di uno esistente chiede quale tenere; le cose copiate che l'elenco ha già non si "

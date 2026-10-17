@@ -28,6 +28,8 @@ static class Migration
     const byte TextKind = 1, PictureKind = 2, KindMask = 0x07, PinnedKind = 0x80, NumberMask = 0x78;
     const int NumberShift = 3, HeaderSize = 1 + 8 + 4, PictureHeader = 3 * 4;
     const string Extension = ".clips";
+    // Where the history files were, one per day; the checks use a folder of their own.
+    public static string OldHistory = Path.Combine(Program.DataFolder, "History");
 
     public static MigrationResult Run(Clips clips, string settingsKey, string historyFolder)
     {

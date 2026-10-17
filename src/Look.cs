@@ -238,7 +238,7 @@ class RoundButton : Button
 }
 
 // The small signs drawn beside entries, on buttons and beside the pages of the options: they are where the colour is.
-enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, List, Keys, Search, Help, Opened, Closed, Bolt, History }
+enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, List, Keys, Search, Help, Opened, Closed, Bolt, History, Up }
 
 // The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
 enum Theme { System, Light, Dark }
@@ -650,6 +650,7 @@ static class Look
             case Sign.Opened: return "";    // ChevronDown
             case Sign.Closed: return "";    // ChevronRight
             case Sign.Bolt: return "";      // LightningBolt
+            case Sign.Up: return "";   // Up
             default: return "";             // History
         }
     }
@@ -659,7 +660,7 @@ static class Look
     public static void Draw(Graphics g, Sign sign, Rectangle box, Color? colour)
     {
         float u = box.Width / 16f, x = box.Left, y = box.Top;
-        Color own = sign == Sign.Text || sign == Sign.Search || sign == Sign.Keys ? Accent
+        Color own = sign == Sign.Text || sign == Sign.Search || sign == Sign.Keys || sign == Sign.Up ? Accent
             : sign == Sign.Link || sign == Sign.Opened || sign == Sign.Closed || sign == Sign.History ? Teal
             : sign == Sign.Star || sign == Sign.Edit || sign == Sign.Bolt ? Amber : sign == Sign.Plus ? Green
             : sign == Sign.Delete ? Red : Purple;
@@ -749,6 +750,11 @@ static class Look
                 case Sign.Bolt:
                     g.DrawLines(pen, new PointF[] { new PointF(x + 9.5f * u, y + 2 * u), new PointF(x + 5 * u, y + 9 * u),
                         new PointF(x + 11 * u, y + 7.5f * u), new PointF(x + 6.5f * u, y + 14 * u) });
+                    break;
+                case Sign.Up:   // an arrow pointing up
+                    g.DrawLine(pen, x + 8 * u, y + 13 * u, x + 8 * u, y + 3.5f * u);
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 3.5f * u, y + 8 * u), new PointF(x + 8 * u, y + 3.5f * u),
+                        new PointF(x + 12.5f * u, y + 8 * u) });
                     break;
                 case Sign.History:   // a clock
                     g.DrawEllipse(pen, x + 2 * u, y + 2 * u, 12 * u, 12 * u);

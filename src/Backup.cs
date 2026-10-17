@@ -50,23 +50,22 @@ static class Backup
     const string TimeFormat = "yyyy-MM-dd HH:mm:ss";
     public const string Extension = ".txt";
 
-    // 'all': what was copied too, not only the saved texts.
-    public static BackupResult Export(string path, bool all)
+    // Writes the entries given, the saved ones with the rows of their folders and, if asked, the copied ones.
+    public static BackupResult Export(string path, List<Entry> entries)
     {
-        List<Entry> entries = Texts.Load();
         BackupResult result = new BackupResult();
         foreach (Entry entry in entries)
         {
-            if (entry.IsGroup || entry.Name == null && !all) continue;
-            if (entry.Name != null) result.Saved++;
-            else if (entry.Picture) result.Pictures++;
+            if (entry.IsGroup) continue;
+            if (entry.Picture) result.Pictures++;
+            else if (entry.Saved) result.Saved++;
             else result.Copied++;
         }
-        File.WriteAllLines(path, Lines(entries, all), new UTF8Encoding(true));   // with the mark that tells Notepad the encoding
+        File.WriteAllLines(path, Lines(entries), new UTF8Encoding(true));   // with the mark that tells Notepad the encoding
         return result;
     }
 
-    public static List<string> Lines(List<Entry> entries, bool all)
+    public static List<string> Lines(List<Entry> entries)
     {
         BackupWords words;
         if (!Words.TryGetValue(Strings.Code, out words)) words = Words["en"];
@@ -76,9 +75,9 @@ static class Backup
         lines.Add(Strings.ExportEditNote);
         foreach (Entry entry in entries)
         {
-            if (entry.Picture || entry.Name == null && !all) continue;
+            if (entry.Picture) continue;
             lines.Add("");
-            lines.Add(entry.IsGroup ? words.Group : entry.Name != null ? words.Saved : words.Copied);
+            lines.Add(entry.IsGroup ? words.Group : entry.Saved ? words.Saved : words.Copied);
             if (entry.Name != null) lines.Add(words.Name + entry.Name);
             if (entry.Group != null) lines.Add(words.Folder + entry.Group);
             if (entry.Time != DateTime.MinValue) lines.Add(words.Time + entry.Time.ToString(TimeFormat, CultureInfo.InvariantCulture));
@@ -139,12 +138,14 @@ static class Backup
             {
                 Entry folder = new Entry(Texts.CleanPath(name), "", DateTime.MinValue);
                 folder.IsGroup = true;
+                folder.Saved = true;
                 entries.Add(folder);
             }
-            else if (mark == SavedMark && !string.IsNullOrEmpty(name) && content.Trim().Length > 0)
+            else if (mark == SavedMark && content.Trim().Length > 0)   // the name is optional
             {
                 Entry saved = new Entry(name, content, time);
-                saved.Group = Texts.CleanPath(group);   // a folder inside another is its path, as in the registry
+                saved.Saved = true;
+                saved.Group = Texts.CleanPath(group);   // a folder inside another is its path, as the list writes it
                 entries.Add(saved);
             }
             else if (mark == CopiedMark && content.Trim().Length > 0)
@@ -186,40 +187,51 @@ static class Backup
         return entries;
     }
 
-    // Takes in an exported file. A saved text whose name is taken replaces the one there only if 'replace',
-    // told how many there are, says so. 'all': the copied texts too, those the list does not hold already.
-    public static BackupResult Import(string path, bool all, Func<int, bool> replace)
+    // Takes in an exported file, all of it or nothing. A saved text whose name is taken replaces the one there only
+    // if 'replace', told how many there are, says so. 'all': the copied texts too, those the list does not hold
+    // already; those whose days are over go at once.
+    public static BackupResult Import(Clips clips, string path, bool all, Func<int, bool> replace)
     {
-        List<Entry> found = Parse(File.ReadAllLines(path, Encoding.UTF8)), copied = new List<Entry>();
-        // The names of the saved texts there are, as the registry compares them.
-        HashSet<string> present = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (Entry entry in Texts.Load())
-            if (entry.Name != null && !entry.IsGroup) present.Add(entry.Name);
-        Predicate<Entry> taken = delegate(Entry entry) { return entry.Name != null && !entry.IsGroup && present.Contains(entry.Name); };
+        List<Entry> found = Parse(File.ReadAllLines(path, Encoding.UTF8));
+        Predicate<Entry> taken = delegate(Entry entry) { return entry.Saved && !entry.IsGroup && Named(clips, entry) != 0; };
         int clashes = found.FindAll(taken).Count;
         bool overwrite = clashes > 0 && replace(clashes);
-        HashSet<string> groups = new HashSet<string>(Texts.Groups(), StringComparer.OrdinalIgnoreCase);
+        // Saved entries without a name have nothing to be known by but their content: one the list has is not repeated.
+        HashSet<string> unnamed = new HashSet<string>();
+        foreach (Entry entry in clips.Saved())
+            if (entry.Name == null && !entry.Picture) unnamed.Add(entry.Text.Replace("\r\n", "\n"));
         BackupResult result = new BackupResult();
-        foreach (Entry entry in found)
+        using (Transaction transaction = clips.Begin())
         {
-            if (entry.Name == null)
+            foreach (Entry entry in found)
             {
-                if (all) copied.Add(entry);
-                continue;
+                if (!entry.Saved)
+                {
+                    if (all && clips.Import(entry.Text, entry.Time, entry.Pinned)) result.Copied++;
+                    continue;
+                }
+                // A folder of the file, or one a text names without the file having it.
+                long folder = clips.MakeFolder(entry.IsGroup ? entry.Name : entry.Group);
+                if (entry.IsGroup) continue;
+                long same = Named(clips, entry);
+                if (entry.Name == null && !unnamed.Add(entry.Text.Replace("\r\n", "\n"))) continue;
+                if (same != 0 && !overwrite) result.Kept++;
+                else
+                {
+                    if (same != 0) clips.Change(same, entry.Name, entry.Text, folder);
+                    else clips.AddSaved(entry.Name, entry.Text, folder, entry.Time);
+                    result.Saved++;
+                }
             }
-            // A folder of the file, or one a text names without the file having it.
-            string group = entry.IsGroup ? entry.Name : entry.Group;
-            if (group != null && groups.Add(group)) Texts.SetGroup(group, true);
-            if (entry.IsGroup) continue;
-            if (taken(entry) && !overwrite)
-            {
-                result.Kept++;
-                continue;
-            }
-            Texts.Save(entry.Name, entry.Text, entry.Group, entry.Time);
-            result.Saved++;
+            transaction.Commit();
         }
-        result.Copied = Texts.Restore(copied);
+        clips.Prune();
         return result;
+    }
+
+    // The saved entry with the name of one of the file, or 0. One without a name clashes with none.
+    static long Named(Clips clips, Entry entry)
+    {
+        return entry.Name == null ? 0 : clips.Named(entry.Name);
     }
 }

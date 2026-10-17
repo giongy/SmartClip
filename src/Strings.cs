@@ -50,10 +50,11 @@ static partial class Strings
         PausedEmpty = "Paused: what you copy is not remembered", CopyHint = "What you copy will appear here",
         NoSaved = "No saved texts";
     public static string NewTip = "Writes a new text to keep, with its name ({0}).";
-    public static string SaveTip = "On a copied entry: saves it under a name, and you can touch up its content.\n"
+    public static string SaveTip = "On a copied entry: saves it so that it never expires, with a name or without,\n"
+        + "and you can touch up its content. With a name the list shows the name, not the content.\n"
         + "On a saved entry: changes its name or content ({0}).\n"
         + "On a folder: renames it or moves it.\n"
-        + "Pictures stay in memory only and cannot be saved.";
+        + "Pictures cannot be saved.";
     public static string HelpTip = "Opens the guide: everything the program can do ({0}).";
     public static string DeleteTip = "Deletes the saved text, or drops the copied entry from the list ({0}).\n"
         + "Of a folder it deletes only the folder: what it holds moves up one level.";
@@ -149,9 +150,9 @@ static partial class Strings
         + "type it with {1}. With a click the window stays open, with {0} or a double click\n"
         + "you go back where you were. Right-click opens the entry's menu.\n"
         + "Resting the pointer on a copied entry shows it whole.\n"
-        + "The star at the right of a copied entry ({2}) keeps it at the top of the list,\n"
-        + "also beyond the days of the history, until you remove it.\n"
-        + "Saved texts stay in the Windows registry, encrypted for your user, and only\n"
+        + "The arrow at the right of a copied entry ({2}) keeps it at the top of the list\n"
+        + "for a while: it still goes when its days are over. What is to stay, save it.\n"
+        + "Saved texts never expire, are kept encrypted for your user, and only\n"
         + "their name is shown. They can be gathered in folders: “New folder” is in the\n"
         + "right-click menu ({3}); a text goes in by dragging it, or with “Move to”.\n"
         + "A click on a folder opens and closes it.\n"
@@ -201,8 +202,8 @@ static partial class Strings
     public static string PickOption = "Open the list";
     public static string QuickOption = "Paste by number";
     public static string HistoryOption = "Remember copied texts and pictures";
-    public static string KeepOption = "Days on disk (0: memory only):";
-    public static string FolderLink = "Open the history folder";
+    public static string KeepOption = "Days kept (0: today only):";
+    public static string FolderLink = "Open the data folder";
     public static string SpareOption = "Keep the last days when cleaning (0: none):";
     public static string CleanButton = "Clean now…";
     public static string DelayTip = "How many seconds the target window must stay in the foreground\n"
@@ -233,17 +234,17 @@ static partial class Strings
         + "What password managers mark as private is not remembered.\n"
         + "Turn it off if you copy passwords from programs that do not: they would be\n"
         + "readable in the list. Turning it off also deletes the history on disk.";
-    public static string KeepTip = "How many days what you copy stays in the history, also after closing.\n"
-        + "It is kept in {0},\n"
-        + "one file per day, unencrypted: expired days are deleted by themselves.\n"
-        + "With 0 nothing goes to disk: the last {1} copied items, of which at most\n"
-        + "{2} pictures, stay in memory and are gone when the program closes.\n"
-        + "The list shows the {3} most recent: search finds the others.";
-    public static string FolderTip = "Opens in File Explorer the folder with the history files, one per day:\n{0}";
-    public static string CleanTip = "Deletes at once from the history, in memory and on disk, what you copied before\n"
-        + "the last days written above: with 1 only today stays, with 0 nothing does.\n"
-        + "It asks first. Starred entries and saved texts are not touched, nor is the\n"
-        + "clipboard. The days on disk stay as set.";
+    public static string KeepTip = "How many days what you copy stays in the history, also after closing,\n"
+        + "today being the first: with 0 only what you copied today stays.\n"
+        + "Entries kept at the top go when their days are over too; saved texts never do.\n"
+        + "The history is kept on disk unencrypted. The list shows the {0} most recent:\n"
+        + "search finds the others.";
+    public static string FolderTip = "Opens in File Explorer the folder of the database, which holds what you copied\n"
+        + "and saved, and of the error log:\n{0}";
+    public static string CleanTip = "Deletes at once from the history what you copied before the last days\n"
+        + "written above: with 1 only today stays, with 0 nothing does.\n"
+        + "It asks first. Entries kept at the top go too; saved texts are not touched,\n"
+        + "nor is the clipboard. The days kept stay as set.";
     public static string TrayTip = "On: closing or minimising the window keeps the program running as an icon\n"
         + "by the clock, and the hotkeys keep working.\n"
         + "Click the icon to reopen the window; right-click and then {0} to quit.\n"
@@ -274,14 +275,18 @@ static partial class Strings
     public static string HistoryOffImport = " The history is off: the copied items were not imported.";
     public static string CleanEverything = "everything you copied", CleanBeforeToday = "what you copied before today",
         CleanBeforeDays = "what you copied before the last {0} days (today included)";
-    public static string AskClean = "Delete {0}?\n\nStarred entries and saved texts stay.";
+    public static string AskClean = "Delete {0}?\n\nSaved texts stay; entries kept at the top go too.";
     public static string NothingToClean = "Nothing to delete in the history.";
     public static string CleanedOne = "1 entry deleted from the history.", CleanedMany = "{0} entries deleted from the history.";
-    public static string NoHistoryFolder = "The history folder does not exist yet: nothing is on disk.";
+    public static string NoHistoryFolder = "The data folder does not exist yet: nothing is on disk.";
+    public static string DatabaseUnavailable = "The list cannot be kept on disk ({0}): what you copy and save now is lost "
+        + "when the program closes.";
 
     // --- The window of a saved text or a folder ---
     public static string NewTextTitle = "New text", SaveCopiedTitle = "Save the copied text", EditSavedTitle = "Edit the saved text";
-    public static string NameLabel = "Name (what the list shows):", ContentLabel = "Content:";
+    public static string NameLabel = "Name (optional):", ContentLabel = "Content:";
+    public static string NameHintEmpty = "Without a name, the list shows the content.";
+    public static string NameHintNamed = "The list shows “{0}”; the content stays hidden, which suits a password.";
     public static string FolderOf = "Folder: ", NoFolder = "No folder", Inside = "Inside: ";
     public static string NewFolderTitle = "New folder", RenameFolderTitle = "Rename the folder", FolderNameLabel = "Folder name:";
     public static string Save = "Save";
@@ -324,15 +329,15 @@ static partial class Strings
             "- Right-click selects the entry and opens its menu, without touching the clipboard.",
             "- Resting the pointer on a copied entry its row cuts short shows it whole after a moment, in a small "
                 + "box: the text with all its lines, the picture larger. It goes as soon as you move the pointer.",
-            "- The star at the right end of a copied entry (" + Key(Keys.Control | MainForm.PinKey) + ") keeps it at "
-                + "the top of the column: it shows faintly when the pointer is over it, and a click turns it on or "
-                + "off. A starred entry does not expire with the days of the history and stays until you remove the "
-                + "star; copying the same text again does not move it.",
+            "- The arrow at the right end of a copied entry (" + Key(Keys.Control | MainForm.PinKey) + ") keeps it at "
+                + "the top of the column for a while: it shows faintly when the pointer is over it, and a click turns "
+                + "it on or off. The entry still goes when the days of the history are over: what is to stay, save it. "
+                + "Copying the same text again brings it back to the top with the new time, arrow and number included.",
             "- “" + NumberMenu + "”, in the right-click menu, gives a saved text or a copied entry a number from 1 to "
                 + MainForm.MaxNumber + ": then, from any program, " + MainForm.NumbersName + " paste it at once into "
                 + "the window you are working in, without opening this one (the entry goes on the clipboard and Ctrl+V "
                 + "follows by itself). The number shows in a small frame at the right of the row, and beside the saved "
-                + "text in the icon menu; a copied entry that gets one also gets the star, which keeps it. Each number "
+                + "text in the icon menu. A copied entry keeps its number until its days are over. Each number "
                 + "belongs to one entry: given to another, it moves.",
             "The coloured sign on the left says what the entry is: a text, a web address, a saved text. Pictures "
                 + "show a thumbnail. Under the entry, small and on the right, is the time of the copy (the day, if not today) or the day it was saved.",
@@ -344,11 +349,12 @@ static partial class Strings
             "The column of the copied items shows the " + MainForm.MaxShown + " most recent: search finds the others.",
 
             "# Saved texts",
-            "They are what you want always at hand: a signature, an address, a password. Each has a name, and "
-                + "only the name shows in the list.",
+            "They are what you want always at hand: a signature, an address, a password. They never expire. The "
+                + "name is optional: with one, the list shows only the name and the content stays hidden, which suits "
+                + "a password; without, the list shows the content, as for a second email address.",
             "- “" + New + "” (" + Key(Keys.Control | MainForm.NewKey) + ") writes a text from scratch.",
-            "- “" + SaveDots + "” (" + Key(Keys.Control | MainForm.SaveKey) + "), on a copied entry, keeps it under a "
-                + "name; before saving you can touch up its content.",
+            "- “" + SaveDots + "” (" + Key(Keys.Control | MainForm.SaveKey) + "), on a copied entry, keeps it, with "
+                + "a name or without; before saving you can touch up its content.",
             "- “" + EditDots + "” (" + Key(Keys.Control | MainForm.SaveKey) + "), on a saved entry, changes its name or content.",
             "- “" + Delete + "” (" + Key(Keys.Control | MainForm.DeleteKey) + ") deletes the saved text, or drops the "
                 + "copied entry from the list.",
@@ -356,8 +362,8 @@ static partial class Strings
                 + "seconds: the list shows only its name, and resting the pointer on it is not enough.",
             "- Saved texts are also in the menu of the icon by the clock: choosing one puts it back on the "
                 + "clipboard without opening the window.",
-            "Saved texts are kept in the Windows registry, encrypted for your user: another user of the same PC "
-                + "cannot read them. When you put one back on the clipboard it is marked as private, so that Windows "
+            "Saved texts never expire. They are kept in the program's database, encrypted for your user: another "
+                + "user of the same PC cannot read them. When you put one back on the clipboard it is marked as private, so that Windows "
                 + "clipboard history (Win+V) and other clipboard managers ignore it. Pictures cannot be saved.",
 
             "# Folders",
@@ -421,15 +427,15 @@ static partial class Strings
             "# History",
             "What you copy stays in the list for a number of days you decide (" + Texts.DefaultKeepDays
                 + " unless you change it), also after closing the program or turning off the PC.",
-            "- It is kept in " + Texts.Folder + ", one file per day, unencrypted. Expired days are deleted by themselves.",
-            "- With 0 days nothing goes to disk: the last " + Texts.MaxRecent + " copied items, of which at most "
-                + Texts.MaxPictures + " pictures, stay in memory and are gone when the program closes.",
+            "- It is kept unencrypted in " + Clips.DefaultFile + ", together with the saved texts, which are "
+                + "encrypted. Expired days are deleted by themselves.",
+            "- With 0 days only what you copied today stays.",
             "- What password managers mark as private is not remembered.",
-            "- Starred entries stay beyond those days too.",
+            "- Entries kept at the top go when their days are over too: what is to stay, save it.",
             "- In the options, “" + CleanButton + "” deletes at once what you copied before the last days written "
-                + "beside it: with 1 only today stays, with 0 nothing does. It asks first, and touches neither "
-                + "starred entries nor saved texts.",
-            "- Turning the history off in the options empties the list and the files on disk, stars included.",
+                + "beside it: with 1 only today stays, with 0 nothing does. It asks first; entries kept at the top "
+                + "go too, saved texts are never touched.",
+            "- Turning the history off in the options empties the list and deletes from disk what you copied.",
 
             "# Options",
             "The “" + Options + "” button shows them in place of the list, and “" + List + "” goes back. Resting the "
@@ -441,7 +447,7 @@ static partial class Strings
             "- " + HotkeysTitle + ": turns " + type + ", " + pick + " and " + MainForm.NumbersName + " on and off, and "
                 + "gives them other keys.",
             "- " + HistoryTitle + ": whether to remember what you copy, for how many days, the link to the folder of "
-                + "the files and the button that cleans it at once.",
+                + "the database and the button that cleans the history at once.",
             "- " + ProgramTitle + ": the language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of the interface (buttons, options, this guide: in pixels, they restart the program) and those of the entries (they change at once), whether to stay in the notification area and hide when you switch "
                 + "to another program, whether to start with Windows, and the buttons to export and import.",
 
@@ -450,7 +456,7 @@ static partial class Strings
                 + "them back, as a backup or to move them to another PC. Each asks whether you want the saved texts "
                 + "only or everything, that is the copied items too.",
             "- “" + ExportButton + "” writes a text file that Notepad opens: the saved texts with their folders "
-                + "and, if you ask, the copied items with their time and star. Pictures are left out.",
+                + "and, if you ask, the copied items with their time and arrow. Pictures are left out.",
             "- In the file the texts are unencrypted, passwords included: keep it somewhere safe.",
             "- “" + ImportButton + "” reads such a file and adds what it holds to what is already here. If a saved "
                 + "text has the name of an existing one it asks which to keep; copied items the list already has "

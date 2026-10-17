@@ -57,7 +57,8 @@ condiviso su GitHub).
     `Entrance` (una pagina che sale al suo posto), `Rail` (la barra di scorrimento sottile).
   - `AskForm.cs` — le domande e gli avvisi, al posto di `MessageBox` (`AskForm.Ask`, `AskForm.Tell`).
   - `Peek.cs` — il riquadro che mostra una voce per intero (`Peek`), accanto alla sua riga.
-  - `Texts.cs` — `Entry` e `Texts`: le voci dell'elenco, la cronologia su disco, i testi salvati.
+  - `Texts.cs` — `Entry` (una voce dell'elenco, o la riga di una cartella) e `Texts`: la lettura degli appunti
+    (`Remember`, che passa la copia a `Clips`), i formati riservati, la ricerca, i percorsi delle cartelle.
   - `Backup.cs` — esportazione e importazione in un file di testo (`Backup`, `BackupResult`).
   - `Typer.cs` — mappa dei tasti e invio (`Typer`, `Stroke`, `TypeOptions`, `TypeResult`).
   - `Native.cs` — funzioni e costanti di Windows.
@@ -68,9 +69,8 @@ condiviso su GitHub).
     mai scritti nel testo dell'istruzione, e i messaggi d'errore riportano l'istruzione ma non i valori. Testi
     legati con la loro lunghezza (il carattere zero non li taglia), byte vuoti con `zeroblob` (altrimenti
     diventerebbero NULL). Chiudere il database finalizza le istruzioni rimaste aperte, così il file si libera.
-    È il passo 1 di `docs\piano-sqlite.md`: per ora non lo usa nessuno tranne i test.
-  - `Clips.cs` — i dati dell'elenco in un file SQLite (passo 2 del piano, non ancora collegato alla finestra:
-    `Texts` resta quello in uso). Una tabella `entries` per copiati e salvati (`saved` 0/1; un salvato può non
+    Lo usa `Clips`.
+  - `Clips.cs` — i dati dell'elenco in un file SQLite (dalla 4.0; `docs\piano-sqlite.md`). Una tabella `entries` per copiati e salvati (`saved` 0/1; un salvato può non
     avere nome, è cifrato con DPAPI, contenuto e miniatura, e non scade mai; un copiato scade anche se in alto) e
     una `folders` ad albero (`parent_id`, 0 = fuori da tutte). Le regole le fa rispettare lo schema stesso
     (`Clips.Schema`: CHECK, UNIQUE, chiave esterna): nome e cartella solo sui salvati, niente freccia, testo per
@@ -84,14 +84,15 @@ condiviso su GitHub).
     (passo 3 del piano): i salvati dal registro, ancora cifrati così com'erano (anche quelli che qui non si
     leggono), con giorno, numero e cartella (i percorsi diventano l'albero); i copiati dai file `.clips`, con
     stellina (che diventa la freccia) e numero, senza i record eliminati e fino a un record troncato. **Legge
-    soltanto**: registro e file restano intatti (lo controlla un test byte per byte), a differenza di
-    `Texts.ReadFile`, che taglia i record troncati. Nessuna scadenza durante la migrazione. Un numero conteso va
-    alla prima voce, un nome già preso prende « (2)», un file illeggibile si salta e va nel log. Le costanti del
-    formato vecchio sono sue: quelle uguali in `Texts` spariranno con il passo 4. Provata il 17/10/2026 in sola
-    lettura sui dati veri dell'utente (4 salvati, 16 copiati, 2 immagini: tutto, dati vecchi intatti).
+    soltanto**: registro e file restano intatti (lo controlla un test byte per byte), per una versione precedente
+    che li cerchi ancora; li cancellerà una versione futura (passo 8 del piano). Nessuna scadenza durante la
+    migrazione. Un numero conteso va alla prima voce, un nome già preso prende « (2)», un file illeggibile si salta e
+    va nel log. È l'unico a conoscere il formato vecchio (la cartella è `Migration.OldHistory`). Provata il
+    17/10/2026 in sola lettura sui dati veri dell'utente (4 salvati, 16 copiati, 2 immagini: tutto, dati vecchi
+    intatti).
   - `Packaged.cs` — quando il programma gira dal pacchetto del Microsoft Store (`Packaged.Family` non nullo):
     avvio con Windows con la `StartupTask` del pacchetto invece della chiave `Run` (`Startup` lo chiama), avvio
-    all'accesso riconosciuto dall'attivazione invece che da `/tray`, cronologia in `LocalState` del pacchetto
+    all'accesso riconosciuto dall'attivazione invece che da `/tray`, database e log in `LocalState` del pacchetto
     (quella sotto `%LOCALAPPDATA%` Windows la sposterebbe in una copia nascosta che Esplora file non vede). È
     l'unico file con tipi di Windows Runtime: fuori dal pacchetto non vanno chiamati.
 - `packaging\` — il pacchetto MSIX per lo Store: `AppxManifest.xml` (identità da Partner Center, *Product
@@ -203,21 +204,28 @@ condiviso su GitHub).
 - Ctrl+D (`OpenList`) porta la finestra in primo piano da qualsiasi programma; dopo la scelta con Invio o
   doppio clic `GoBack` restituisce il primo piano alla finestra di partenza e rinasconde la finestra se era
   nascosta. Un clic singolo no (voluto dall'utente: la finestra spariva e la voce non si poteva più salvare).
-- La cronologia dei copiati (`Texts.Recent`) resta su disco per i giorni dell'opzione (`Texts.Keep`, 30 di
-  default): scelta dell'utente, che prima la voleva solo in memoria. Sta in `%LOCALAPPDATA%\SmartClip\History`,
-  **in chiaro** (l'utente non vuole cifratura: «sono cose mie sul mio PC») e in **un file al giorno**
-  (`2026-10-13.clips`), non uno per voce: l'utente copia centinaia di cose al giorno. Ogni copia si aggiunge in
-  coda (`Store`); la retention elimina i file dei giorni scaduti (`Prune`); una voce tolta si azzera sul posto
-  e il suo blocco si segna eliminato (`Erase`); un blocco troncato in coda si taglia alla lettura (`ReadFile`).
-  Con 0 giorni niente va su disco e valgono i limiti di memoria (30 voci, 5 immagini). Si scartano le copie che
-  i gestori di password segnano come riservate (`Texts.IsPrivate`). L'opzione spenta svuota elenco e disco.
-- Una voce copiata si può tenere in cima alla colonna (`Entry.Pinned`, voluto dall'utente): stellina
-  all'estremità destra della riga (`StarArea`, `OnStar`: lì il clic non sceglie la voce), menu del tasto destro
-  e Ctrl+P, tutti in `TogglePin`. Nel file è un bit del tipo del blocco (`PinnedKind`), cambiato sul posto
-  (`Texts.Pin`). Una voce fissata non scade: `Prune` tiene il file del suo giorno ma lo riscrive con le sole
-  voci fissate (`Shrink`; l'utente non voleva file pieni di zeri, i file senza stelline si cancellano); per questo non fa nulla finché `Read` non ha letto i file (`loaded`), altrimenti all'avvio li
-  cancellerebbe senza sapere delle stelline. Ricopiare lo stesso testo non la sposta e `Forget` non la toglie;
-  i limiti di memoria non la contano. L'ordine (fissate prima) lo dà `Texts.Load`.
+- Copiati e salvati stanno in un solo database SQLite (dalla 4.0, `docs\piano-sqlite.md`; prima i salvati
+  nel registro e la cronologia in un file al giorno): `Clips.DefaultFile`, cioè `SmartClip.db` nella cartella
+  dei dati (`Program.DataFolder`), accanto al log. `MainForm` lo apre in `OpenClips`; la prima volta vi porta i
+  dati vecchi (`Migration`, vedi sopra). Se non si apre (bloccato, rovinato, scritto da una versione più nuova,
+  migrazione fallita) l'elenco lavora su un database in memoria (`Clips.Memory`) e la riga di stato lo dice
+  sempre (`unavailable`, che `ShowIdle` rimette); il log ha il perché, e al prossimo avvio si riprova.
+- La cronologia dei copiati resta per i giorni dell'opzione (`Clips.Keep`, 30 di default), contando oggi: **0 vuol
+  dire solo le cose di oggi** (deciso con l'utente il 17/10/2026; prima era «solo in memoria», che non esiste
+  più). È **in chiaro** (l'utente non vuole cifratura: «sono cose mie sul mio PC»). La scadenza (`Prune`)
+  passa a ogni avvio e al primo inserimento di ogni giorno; una voce tolta si sovrascrive nel file
+  (`secure_delete`) e il file si restringe a poco a poco (`auto_vacuum = INCREMENTAL`, `Compact`). Copiare di nuovo
+  la stessa cosa aggiorna la stessa riga (impronta `hash`): torna in cima con l'ora nuova, tenendo freccia e
+  numero. Si scartano le copie che i gestori di password segnano come riservate (`Texts.IsPrivate`). L'opzione
+  spenta cancella tutti i copiati (`ClearCopied`). L'elenco ne chiede al database solo `MaxShown`, già filtrati
+  dalla ricerca (`Clips.Copied`, con `instr` sul testo per la ricerca `folded`): a ogni copia si rileggono solo i
+  copiati (`ReloadCopied`), mai i salvati.
+- Una voce copiata si può tenere in cima alla colonna **per un po'** (`Entry.Pinned`, la freccia, voluta
+  dall'utente al posto della stellina il 17/10/2026): freccia all'estremità destra della riga (`PinArea`, `OnPin`:
+  lì il clic non sceglie la voce, `Sign.Up`), menu del tasto destro e Ctrl+P, tutti in `TogglePin`. **Scade come
+  le altre**, e «Pulisci ora…» la toglie (l'utente: «se vuoi salvarlo lo salvi con l'apposita funzione; la freccia
+  serve temporaneamente a tenere in alto una voce»). `Forget` (la password digitata) non la toglie, né toglie una
+  voce con un numero.
 - Numeri delle voci (voluti dall'utente nella 3.9.2): un testo salvato o una voce copiata può avere un numero da 1
   a `MaxNumber` (9); i modificatori dell'opzione «Incolla per numero» (`quickKeys`, Ctrl+Maiusc di default:
   con Ctrl+Alt le cifre di molte tastiere scrivono simboli con AltGr) più la cifra sono una scorciatoia globale che
@@ -234,41 +242,41 @@ condiviso su GitHub).
   `QuickPaste` e `QuickKeys` (solo i modificatori). Si assegna e
   cambia da «Scorciatoia» nel menu del tasto destro (`ListNumbers`: «Nessuna» e i nove numeri, quello attuale
   disattivato, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento a destra della prima linea della riga,
-  prima della stellina (`NumberArea`), e nel menu del tray accanto al testo salvato
-  (`ShortcutKeyDisplayString`, che `MenuLook` scrive in grigio). Un numero è di una voce sola: `Texts.Number` lo
-  toglie prima a chi lo aveva (`Free`). Dei salvati sta in `Saved\Numbers` (nome → numero, come `Dates`), dei
-  copiati nei bit 3-6 del tipo del blocco (`NumberMask`), solo se fissati: dare un numero a una voce copiata le
-  mette la stellina, toglierle la stellina toglie il numero. Rinominare un testo, o salvare una voce copiata, porta
-  il numero con sé (`Edit`). Non si esporta.
+  prima della freccia (`NumberArea`), e nel menu del tray accanto al testo salvato
+  (`ShortcutKeyDisplayString`, che `MenuLook` scrive in grigio). Un numero è di una voce sola: `Clips.Number` lo
+  toglie prima a chi lo aveva, e lo schema lo vuole `UNIQUE`. **Un numero non salva una voce copiata** (deciso con
+  l'utente): resta finché la voce non scade, e se ne va con lei. `Numbered` lo chiede al database, perché una
+  voce copiata con un numero può stare oltre le `MaxShown` elencate. Salvare una voce copiata, o rinominare un
+  testo, tiene il numero: è la stessa riga. Non si esporta.
 - «Pulisci ora…» nelle opzioni (voluto dall'utente): elimina subito ciò che è stato copiato prima degli ultimi
   N giorni scritti nella casella accanto (`Spared`, non è un'impostazione: riparte da 0, cioè tutto), dopo una
-  conferma. `Texts.Clean` e la retention passano dallo stesso `Drop`; le voci fissate restano. Il pulsante si
-  mette con `PlaceButton`.
-- Anche le immagini copiate entrano in `Texts.Recent`, compresse in PNG; il loro `Text` è la descrizione che si
-  vede e si cerca. Se negli appunti c'è anche testo vince il testo. Non diventano testi salvati. Una volta nel
-  file, in memoria resta solo la miniatura: il PNG si rilegge quando serve (`Entry.LoadPng`).
-  La stessa copia annunciata più volte da Windows si riconosce confrontando i byte del PNG.
-  Nell'elenco occupano tre righe, con una miniatura (`Entry.Preview`, creata una volta alla copia).
-- I testi salvati stanno in `HKCU\Software\SmartClip\Saved`, un valore binario per nome, cifrato con DPAPI
-  per l'utente (`ProtectedData`, in `System.Security.dll` che `csc` riferisce già da solo). L'elenco ne mostra
-  solo il nome e, a destra, il giorno in cui è stato salvato: sta nella sottochiave `Saved\Dates`, sotto lo
-  stesso nome, così il formato dei testi non cambia e quelli salvati prima restano semplicemente senza data.
+  conferma. `Clips.Clean` e la scadenza passano dallo stesso `Drop`; vanno anche le voci in alto, mai i salvati.
+  Il pulsante si mette con `PlaceButton`.
+- Anche le immagini copiate entrano nel database, compresse in PNG, con una miniatura; il loro `Text` è la
+  descrizione che si vede, e la ricerca le trova per misura. Se negli appunti c'è anche testo vince il testo.
+  In memoria resta solo la miniatura: il PNG si legge quando serve (`Entry.LoadPng` → `PngSource` → `Clips.Png`).
+  La stessa copia annunciata più volte da Windows è la stessa riga (impronta del PNG).
+  Nell'elenco occupano tre righe, con la miniatura (`Entry.Preview`).
+- I testi salvati (`Entry.Saved`) stanno nello stesso database, contenuto e miniatura cifrati con DPAPI per
+  l'utente (`ProtectedData`, in `System.Security.dll` che `csc` riferisce già da solo); non hanno testo per la
+  ricerca né impronta, che li tradirebbero. Non scadono mai. L'elenco li tiene in memoria decifrati (`entries`,
+  `LoadSaved`, rifatto da `Reload` solo quando cambiano) e la ricerca li scorre lì (`Texts.Matches`). L'elenco
+  ne mostra solo il nome e, a destra, il giorno in cui sono stati salvati (quelli salvati prima che si tenesse il
+  giorno restano senza). Una voce si riconosce dal suo `Id`, non più dal nome.
 - Cartelle dei testi salvati (volute dall'utente), anche una dentro l'altra (sottocartelle volute dopo, dalla
-  3.8). Nel codice si chiamano «group», perché
-  `Texts.Folder` è già la cartella della cronologia. Stanno in due sottochiavi di `Saved`: `Folders` (un valore
-  per cartella, 1 se aperta: lo stato si ricorda) e `Places` (nome del testo → cartella), così il formato dei
-  testi non cambia. Una cartella è il suo **percorso**, i nomi uniti da `Texts.Separator` (`\`, vietato nei
-  nomi, `Refused`): `Lavoro\Server`. Le cartelle di prima sono semplicemente al primo livello. Gli aiuti
-  stanno in `Texts` (`Parent`, `Leaf`, `Join`, `Within`, `Depth`, `Display` con « › », `CleanPath` per i file
-  esportati); `Groups` ordina nome per nome (`ByPath`) e aggiunge le cartelle esterne mancanti. Nell'elenco una
-  cartella è una `Entry` con `IsGroup` e `Name` uguale al percorso (`Label` ne mostra l'ultimo nome, `Level`
-  dà il rientro), messa da `Texts.Load` subito prima dei suoi testi e poi delle sue sottocartelle: per questo
-  dove si scorre `entries` cercando i testi va escluso `IsGroup`. Una cartella chiusa nasconde anche quelle
-  dentro (`InView`). Clic o Invio la
-  aprono e chiudono (`Accept`, `ToggleGroup`), «Rinomina…» ed «Elimina» sono gli stessi pulsanti dei testi.
-  `RenameGroup` cambia il percorso di una cartella e di tutto ciò che contiene (`Rebase`): è anche lo
-  spostamento; con `null` elimina la cartella e il contenuto sale di un livello (scelta dell'utente: i testi
-  potrebbero essere password). «Nuova cartella…»
+  3.8). Nel codice si chiamano «group». Nel database sono un albero (`folders`, `parent_id`, `Folder`), ma la
+  finestra continua a conoscerle per **percorso**, i nomi uniti da `Texts.Separator` (`\`, vietato nei nomi,
+  `Refused`): `Lavoro\Server`. `LoadSaved` costruisce i percorsi e `FolderAt` (`Clips.FindFolder`) fa il
+  contrario; una riga di cartella ha in `FolderId` l'id della cartella. Gli aiuti sui percorsi stanno in `Texts`
+  (`Parent`, `Leaf`, `Join`, `Within`, `Depth`, `Display` con « › », `CleanPath` per i file esportati). Nell'elenco
+  una cartella è una `Entry` con `IsGroup` (e `Saved`) e `Name` uguale al percorso (`Label` ne mostra l'ultimo
+  nome, `Level` dà il rientro), messa subito prima dei suoi testi e poi delle sue sottocartelle, quelle affiancate
+  per nome: per questo dove si scorre `entries` cercando i testi va escluso `IsGroup`. Una cartella chiusa
+  nasconde anche quelle dentro (`InView`). Clic o Invio la aprono e chiudono (`Accept`, `ToggleGroup`),
+  «Rinomina…» ed «Elimina» sono gli stessi pulsanti dei testi. Rinominare e spostare insieme è `PlaceFolder` (un
+  solo aggiornamento, così un nome uguale solo a metà strada non conta); `DeleteFolder` elimina la cartella e il
+  contenuto sale di un livello (scelta dell'utente: i testi potrebbero essere password), riempiendo una cartella
+  con lo stesso nome se lassù c'è già. «Nuova cartella…»
   (Ctrl+Maiusc+N, nasce dentro la cartella della selezione) e «Sposta in» (anche per le cartelle, mai dentro
   se stesse: `CanGo`) stanno nel menu del tasto destro, che ora si apre anche senza selezione. In
   `EditForm` la cartella si sceglie da un pulsante che apre un menu (un `ComboBox` resterebbe chiaro), con il
@@ -286,12 +294,13 @@ condiviso su GitHub).
   in tutte, `BackupWords` in `Backup.cs`; quelli scritti prima delle lingue sono in italiano), pochi campi, poi il testo, una riga per riga dopo una tabulazione: è la
   tabulazione a distinguerlo dal resto, quindi un testo può contenere qualsiasi cosa. Le immagini non si
   esportano. L'importazione aggiunge: per i salvati con un nome già preso chiede una volta sola se sostituire;
-  i copiati tornano con la loro ora e la stellina nel file del loro giorno (`Texts.Restore`), tranne quelli che
-  l'elenco ha già; con la cronologia spenta non si importano.
+  i copiati tornano con la loro ora e la freccia (`Clips.Import`), tranne quelli che l'elenco ha già, e quelli
+  scaduti se ne vanno subito; con la cronologia spenta non si importano. Tutta l'importazione è una transazione
+  (`Backup.Import`), e le cartelle nominate dal file si creano (`MakeFolder`).
 - Ogni riga ha due linee (voluto dall'utente nella 3.9.3: con le voci a 14 px l'ora a destra si prendeva un pezzo
-  importante della riga): sopra segno, testo, numero e stellina (`Line`), sotto, piccola (`Look.CaptionFont`,
+  importante della riga): sopra segno, testo, numero e freccia (`Line`), sotto, piccola (`Look.CaptionFont`,
   `CaptionShare` della dimensione delle voci) e grigia, l'ora o il giorno (`When`) che finisce all'estremità destra,
-  sotto stellina e numero (`Caption`). L'altezza è `EntryHeight`, con un margine stretto (`RowPadding`) perché la
+  sotto freccia e numero (`Caption`). L'altezza è `EntryHeight`, con un margine stretto (`RowPadding`) perché la
   seconda linea dà già aria. Le righe che non dicono quando (cartelle, salvati senza data) sono alte uguali con
   tutto al centro; le immagini hanno il testo al centro della miniatura e l'ora in basso. Le righe a due livelli
   di prima, con sotto anche caratteri e righe, erano state scartate dall'utente: il numero di caratteri non gli serve.
@@ -308,7 +317,13 @@ condiviso su GitHub).
   oltre `DragSize`, così un clic resta un clic; `GroupAt` dice la cartella della riga sotto il puntatore
   (nessuna fuori dalle cartelle), `Aim` la illumina, il rilascio passa da `MoveTo` come «Sposta in».
 - I testi salvati si scrivono in `EditForm` (nome e contenuto), aperta da `Edit`: testo nuovo, voce copiata
-  da tenere, voce salvata da cambiare. Le stesse tre azioni stanno nei pulsanti sotto l'elenco, nel menu del
+  da tenere, voce salvata da cambiare. **Il nome è facoltativo** (deciso con l'utente il 17/10/2026): con il
+  nome l'elenco mostra il nome e nasconde il contenuto (adatto alle password), senza mostra il contenuto (la mail
+  secondaria). Sotto la casella una riga grigia lo dice mentre si scrive (`hint`, `NameHintEmpty`,
+  `NameHintNamed`); «Salva» vuole solo il contenuto. L'anteprima al passaggio del mouse compare anche sui salvati
+  senza nome (`Hover`, `resting`), «Mostra il contenuto» solo su quelli con il nome. Nel file esportato un salvato
+  senza nome non ha la riga `Name:`; reimportato non si ripete (si riconosce dal contenuto). Si salva solo dalla
+  finestra: un «Salva subito» senza finestra è stato proposto e scartato dall'utente. Le stesse tre azioni stanno nei pulsanti sotto l'elenco, nel menu del
   tasto destro e in Ctrl+N/S/E. Il nome scritto nella casella di ricerca è stato provato e scartato dall'utente
   (poco chiaro). Il clic sinistro sceglie la voce, il destro la seleziona soltanto.
 
@@ -507,8 +522,12 @@ condiviso su GitHub).
   tocca.
 - Una scorciatoia rifiutata da Windows toglie la spunta ma si salva come ancora voluta (`refused`): al prossimo
   avvio si riprova, invece di restare spenta per sempre.
-- Il registro non cambia maiuscole e minuscole di un nome che ha già: `Texts.Save` toglie il valore prima di
-  riscriverlo.
+- `COLLATE NOCASE` di SQLite ignora le maiuscole solo delle lettere inglesi: per i nomi dei salvati e delle
+  cartelle lo schema ha una colonna `name_key` scritta dal C# (`Clips.Key`, `ToUpperInvariant`).
+- Un testo di C# legato a SQLite senza la sua lunghezza si ferma al carattere zero, e dei byte vuoti diventano
+  NULL: `Statement.Bind` passa sempre la lunghezza e usa `zeroblob` per i vuoti.
+- `using System.IO` e una proprietà `Path` nella stessa classe si nascondono a vicenda: in `Clips` il percorso
+  del file è `FileName`, e `System.IO.Path` si scrive per intero.
 - `Control.Visible` risponde falso se la finestra è nascosta: quale vista è attiva lo dice `optionsShown`.
   Lo stesso vale per le voci di un menu mentre si sta aprendo (`Opening`): «Sposta in» restava vuoto perché
   il codice rileggeva `moveItem.Visible` appena assegnato.
@@ -517,28 +536,30 @@ condiviso su GitHub).
   (`SynchronizationContext.Post`). Provato dal vivo il 17/10/2026 con due errori provocati: prima il secondo
   mancava dal log.
 - Avviare il programma vero riscrive le impostazioni dell'utente alla chiusura. I test no: vedi sotto.
-- `MainForm.SettingsKey` e `Texts.Folder` vanno cambiati insieme: con le impostazioni di una chiave vuota vale il
-  default di 30 giorni, che sulla cartella vera della cronologia cancellerebbe i giorni più vecchi dell'utente.
+- `MainForm.SettingsKey` e `Clips.DefaultFile` vanno cambiati insieme: con le impostazioni di una chiave vuota vale
+  il default di 30 giorni, che sul database vero cancellerebbe i giorni più vecchi dell'utente.
 
 ## Controlli
 
 `tests\test.cmd` compila `tests.exe` (`src\*.cs` + `Test.cs`, ingresso `TestProgram`) ed esegue `map`, `texts`,
 `data` e `type`; `test.cmd ci` salta `type` (vuole un desktop su cui digitare) e le pause, ed è ciò che GitHub esegue a
 ogni push. **I test non toccano mai i dati dell'utente**: `TestProgram.Main` punta `MainForm.SettingsKey` (e
-`OldSettingsKey`) su `HKCU\Software\SmartClip test`, `Texts.Folder` e `Log.FileName` su una cartella temporanea,
-e cancella tutto prima e dopo. Vale per ogni modo, anche `shot`, `real` e `store`, che quindi partono dalle
-impostazioni di default.
+`OldSettingsKey`) su `HKCU\Software\SmartClip test`, `Clips.DefaultFile`, `Migration.OldHistory` e `Log.FileName` su
+una cartella temporanea, e cancella tutto prima e dopo. Vale per ogni modo, anche `shot`, `real` e `store`, che
+quindi partono dalle impostazioni di default e scrivono le voci finte (`FillSample`) nel database di prova: le
+cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
 
 - `tests.exe map` — stampa la mappa della tastiera attiva e confronta la tabella americana (solo lettere e
   cifre, se il layout USA non è installato).
-- `tests.exe texts` — la logica dell'elenco, senza aprirlo e senza toccare gli appunti: formati riservati,
-  testi copiati, cronologia su disco (in una cartella temporanea, non in quella dell'utente), ricerca, andata e ritorno cifrata di un testo salvato (nella chiave di prova), il log.
+- `tests.exe texts` — la logica attorno all'elenco, senza aprirlo e senza toccare gli appunti: formati riservati,
+  ricerca, percorsi delle cartelle, file esportato, caratteri, lingue, il log.
 - `tests.exe data` — il database, in file della cartella di prova: per ora lo strato SQLite (`SqliteTest`: testi
   e byte in andata e ritorno, NULL e byte vuoti, regole rifiutate, transazioni annidate, file liberato alla
   chiusura) e `Clips` (`ClipsTest`: copiati, freccia, immagini, numeri, regole dello schema provate scrivendo
   SQL a mano, salvati con e senza nome, giorni, cartelle) e la migrazione (`MigrationTest`: i dati vecchi li
   scrive il `Texts` di oggi nella chiave e nella cartella di prova, più i casi difficili scritti a mano; poi
-  il confronto voce per voce, i dati vecchi intatti, una migrazione fallita a metà che al riavvio riparte).
+  il confronto voce per voce, i dati vecchi intatti, una migrazione fallita a metà che al riavvio riparte) e
+  l'importazione di un file esportato (`BackupTest`).
 - `tests.exe type` — apre una finestrella e ci digita davvero: tutti i caratteri ASCII, accentate, simboli con
   AltGr, Unicode, Alt+codice, Tab, Invio; poi verifica che finestra sbagliata e annullamento blocchino tutto.
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.
@@ -573,8 +594,8 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - Che il formato «riservato» messo sui testi salvati tenga davvero fuori la cronologia di Windows (Win+V).
 - I formati riservati sugli appunti veri (provati solo su oggetti in memoria) e la cattura a ogni copia.
 - Le immagini dal vivo: cattura di una schermata vera e ritorno negli appunti.
-- La cronologia su disco dal vivo: provata solo da `tests.exe texts`, mai con migliaia di voci né con il
-  programma vero che scrive a ogni copia.
+- Il database con migliaia di voci (la ricerca, la scadenza, il file che si restringe): provato solo con le
+  poche dei test. E dal pacchetto dello Store, dove sta in `LocalState`.
 
 - Le ultime aggiunte dal vivo: l'anteprima con il puntatore fermo (vista solo chiamando `ShowPeek` da
   `tests.exe real`), il puntatore che la attraversa, il trascinamento in una cartella, i tasti nuovi premuti
@@ -590,7 +611,7 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - La finestra che si nasconde cliccando altrove, dal vivo: in particolare il clic sull'icona del tray e sul
   pulsante della barra delle applicazioni a finestra aperta (Explorer prende il primo piano: la finestra si
   nasconde e poi il clic la riapre?) e la riapertura senza `TopMost`.
-- Le sottocartelle e il menu del tray dal vivo: provati solo `RenameGroup`, l'ordine, `Filter` e la struttura
+- Le sottocartelle e il menu del tray dal vivo: provati solo `Clips` (cartelle), l'ordine, `Filter` e la struttura
   del menu (`texts`, `shot`), mai il clic vero su una voce del tray, il trascinamento di una cartella, la
   finestra di una cartella con la scelta del posto.
 - L'avvio vero all'accesso a Windows: provati la voce nel registro e l'avvio nascosto con un programmino usa e

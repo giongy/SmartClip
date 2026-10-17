@@ -24,7 +24,7 @@ partial class MainForm
         {
             if (savedList.SelectedIndex >= 0) ShowPeek(savedList, savedList.SelectedIndex, true);
         });
-        // Only for a copied entry: the same as a click on its star.
+        // Only for a copied entry: the same as a click on its arrow.
         ToolStripItem pinItem = listMenu.Items.Add("", null, delegate { TogglePin(Selected); });
         // The number that chooses the entry after the list hotkey: the numbers are listed when the menu opens.
         ToolStripMenuItem numberItem = new ToolStripMenuItem(Strings.NumberMenu);
@@ -45,15 +45,15 @@ partial class MainForm
             changeItem.Text = saveButton.Text;
             changeItem.Enabled = saveButton.Enabled;
             changeItem.Visible = deleteItem.Visible = entry != null;
-            showItem.Visible = entry != null && entry.Name != null && !entry.IsGroup;
-            pinItem.Visible = entry != null && entry.Name == null;
+            showItem.Visible = entry != null && entry.Saved && !entry.IsGroup && entry.Name != null;
+            pinItem.Visible = entry != null && !entry.Saved;
             pinItem.Text = entry != null && entry.Pinned ? Strings.Unpin : Strings.Pin;
             ListNumbers(numberItem, entry);
             // A saved text or a folder, wherever else it can go: a folder never into itself or one it holds.
             List<string> groups = entry == null ? new List<string>()
                 : GroupNames().FindAll(delegate(string group) { return !entry.IsGroup || !Texts.Within(group, entry.Name); });
             // Asked back, 'Visible' would answer false: the menu is not on screen yet.
-            bool movable = entry != null && entry.Name != null && (groups.Count > 0 || PlaceOf(entry) != null);
+            bool movable = entry != null && entry.Saved && (groups.Count > 0 || PlaceOf(entry) != null);
             moveItem.Visible = movable;
             moveItem.DropDownItems.Clear();
             if (!movable) return;
@@ -107,20 +107,20 @@ partial class MainForm
             };
             // One click leaves the window where it is, so that the entry can still be saved or deleted; a
             // double click, like Enter, also goes back to the window the list hotkey was pressed in.
-            // A click on the star of a copied entry does not choose it: it keeps it at the top, or lets it go.
+            // A click on the arrow of a copied entry does not choose it: it keeps it at the top, or lets it go.
             list.MouseClick += delegate(object sender, MouseEventArgs e)
             {
                 int index = list.RowAt(e.Location);
                 if (e.Button != MouseButtons.Left || index < 0) return;
-                if (OnStar(list, e.Location)) TogglePin((Entry)list.Items[index]);
+                if (OnPin(list, e.Location)) TogglePin((Entry)list.Items[index]);
                 else Accept(false);
             };
-            // The second click on a star finds another entry there: the first one moved the row.
+            // The second click on an arrow finds another entry there: the first one moved the row.
             // Nor does it count on a folder, which the first click has already opened or closed.
             list.MouseDoubleClick += delegate(object sender, MouseEventArgs e)
             {
                 int index = list.RowAt(e.Location);
-                if (e.Button == MouseButtons.Left && index >= 0 && !OnStar(list, e.Location) && !((Entry)list.Items[index]).IsGroup)
+                if (e.Button == MouseButtons.Left && index >= 0 && !OnPin(list, e.Location) && !((Entry)list.Items[index]).IsGroup)
                     Accept(true);
             };
             // The entry under the pointer lights up: a click would choose it.
@@ -133,11 +133,15 @@ partial class MainForm
         rest.Tick += delegate
         {
             rest.Stop();
-            int row = recentList.Glow.Row;
-            if (peek.Visible) HidePeek();
-            else if (row >= 0 && row < recentList.Items.Count && !listMenu.Visible && MouseButtons == MouseButtons.None
-                && recentList.RectangleToScreen(recentList.GetItemRectangle(row)).Contains(Cursor.Position))
-                ShowPeek(recentList, row, false);
+            if (peek.Visible || resting == null)
+            {
+                HidePeek();
+                return;
+            }
+            int row = resting.Glow.Row;
+            if (row >= 0 && row < resting.Items.Count && !listMenu.Visible && MouseButtons == MouseButtons.None
+                && resting.RectangleToScreen(resting.GetItemRectangle(row)).Contains(Cursor.Position))
+                ShowPeek(resting, row, false);
         };
 
         // A saved text, or a folder with all it holds, is dragged to a folder: onto the folder itself or onto
@@ -182,11 +186,57 @@ partial class MainForm
         search.TextChanged += delegate { active = null; Filter(); };
     }
 
+    // Everything again, the saved entries too: after anything that changed them.
     void Reload()
     {
-        Change(delegate { entries = Texts.Load(); });
+        Change(delegate { entries = LoadSaved(); });
+        ReloadCopied();
+    }
+
+    // The copied entries again, as after a copy: the saved ones are left as they are, not read and decrypted anew.
+    void ReloadCopied()
+    {
         Filter();
         HookNumbers();   // a number may have come or gone, with its entry
+    }
+
+    // The saved entries as their column shows them: those outside the folders first, then each folder right
+    // before its own entries and then the folders inside it. A folder is a row too (IsGroup), named by its path.
+    List<Entry> LoadSaved()
+    {
+        List<Folder> folders = clips.Folders();
+        Dictionary<long, string> paths = new Dictionary<long, string>();
+        Dictionary<long, List<Entry>> inside = new Dictionary<long, List<Entry>>();
+        foreach (Folder folder in folders)   // each after the one it is in
+        {
+            paths[folder.Id] = folder.ParentId == 0 ? folder.Name : Texts.Join(paths[folder.ParentId], folder.Name);
+            inside[folder.Id] = new List<Entry>();
+        }
+        List<Entry> saved = new List<Entry>();
+        foreach (Entry entry in clips.Saved())
+        {
+            List<Entry> holder;
+            if (entry.FolderId != 0 && inside.TryGetValue(entry.FolderId, out holder)) entry.Group = paths[entry.FolderId];
+            else holder = saved;
+            holder.Add(entry);
+        }
+        foreach (Folder folder in folders)
+        {
+            Entry row = new Entry(paths[folder.Id], "", DateTime.MinValue);
+            row.IsGroup = true;
+            row.Saved = true;   // it belongs with the saved ones
+            row.Open = folder.Open;
+            row.FolderId = folder.Id;
+            saved.Add(row);
+            saved.AddRange(inside[folder.Id]);
+        }
+        return saved;
+    }
+
+    // The id of the folder at a path the list knows, or 0 for none.
+    long FolderAt(string path)
+    {
+        return clips.FindFolder(path);
     }
 
     void Filter()
@@ -195,14 +245,23 @@ partial class MainForm
         // the selection must stay on the same entry, not jump back to the first.
         Entry selected = Selected;
         HidePeek();   // the row it belongs to may be about to move
+        string[] words = Texts.Words(search.Text);   // taken from the box once, not for each entry
+        bool searching = words.Length > 0;
+        // The copied entries come from the database, which searches them itself: the history can hold thousands.
+        List<Entry> recent = new List<Entry>();
+        int copied = 0;
+        Change(delegate
+        {
+            recent = clips.Copied(MaxShown, words);
+            copied = clips.CopiedCount();
+        });
         // What the titles of the columns and the rows of the folders count: the saved texts, not the folders,
         // those in a closed folder too. Counted once here rather than at every row drawn.
-        int copied = 0, saved = 0;
+        int saved = 0;
         held.Clear();
         foreach (Entry entry in entries)
         {
-            if (entry.Name == null) copied++;
-            else if (!entry.IsGroup)
+            if (!entry.IsGroup)
             {
                 saved++;
                 for (string group = entry.Group; group != null; group = Texts.Parent(group))
@@ -220,8 +279,7 @@ partial class MainForm
         savedList.BeginUpdate();
         recentList.Items.Clear();
         savedList.Items.Clear();
-        string[] words = Texts.Words(search.Text);   // taken from the box once, not for each entry
-        bool searching = words.Length > 0;
+        foreach (Entry entry in recent) ShowRow(recentList, entry, selected);
         // A folder is there unless one it is inside of is closed, and in a search only with what was found in
         // it: its row, and those of the folders around it, wait here until something of theirs is listed.
         Dictionary<string, bool> open = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
@@ -237,15 +295,13 @@ partial class MainForm
                 continue;
             }
             if (!Texts.Matches(entry, words)) continue;
-            // The history can hold thousands: the search reaches the others. The copied ones come last.
-            if (entry.Name == null && recentList.Items.Count == MaxShown) break;
             if (entry.Group != null)
             {
                 if (!searching && !InView(entry.Group, open)) continue;
                 foreach (Entry folder in waiting) ShowRow(savedList, folder, selected);
                 waiting.Clear();
             }
-            ShowRow(entry.Name == null ? recentList : savedList, entry, selected);
+            ShowRow(savedList, entry, selected);
         }
         if (selected != null)
         {
@@ -295,11 +351,12 @@ partial class MainForm
         if (row.Top < 0 || row.Bottom > list.ClientSize.Height) list.TopIndex = index;
     }
 
-    // Adds a row to a list; if it is the entry that was selected, it is selected again.
+    // Adds a row to a list; if it is the entry that was selected, it is selected again: an entry by its row in the
+    // database, a folder by its path.
     static void ShowRow(ListBox list, Entry entry, Entry selected)
     {
         int index = list.Items.Add(entry);
-        if (selected != null && entry.Name == selected.Name && entry.Text == selected.Text && entry.IsGroup == selected.IsGroup)
+        if (selected != null && entry.IsGroup == selected.IsGroup && (entry.IsGroup ? entry.Name == selected.Name : entry.Id == selected.Id))
             list.SelectedIndex = index;
     }
 
@@ -309,9 +366,11 @@ partial class MainForm
         if (list.Glow.Row == index) return;
         list.Cursor = index >= 0 ? Cursors.Hand : Cursors.Default;
         list.Glow.Set(index);   // the row lights up gradually, the one left fades
-        // What was in view belonged to the row the pointer left; a copied entry is shown whole if it rests there.
+        // What was in view belonged to the row the pointer left; an entry whose content the list shows (a copied one,
+        // a saved one without a name) is shown whole if it rests there. One with a name only when asked.
         if (!peekAsked || index < 0) HidePeek();
-        if (index < 0 || list != recentList) return;
+        if (index < 0 || list != recentList && ((Entry)list.Items[index]).Name != null) return;
+        resting = list;
         rest.Interval = RestMs;
         rest.Start();
     }
@@ -372,7 +431,7 @@ partial class MainForm
     static string When(Entry entry)
     {
         if (!Dated(entry)) return null;
-        return entry.Time.ToString(entry.Name == null && entry.Time.Date == DateTime.Today ? "HH:mm"
+        return entry.Time.ToString(!entry.Saved && entry.Time.Date == DateTime.Today ? "HH:mm"
             : entry.Time.Year == DateTime.Today.Year ? Strings.DayFormat : Strings.YearDayFormat, Strings.Culture);
     }
 
@@ -389,7 +448,7 @@ partial class MainForm
         get { return Look.EntryFont.Height + Look.CaptionFont.Height + RowPadding; }
     }
 
-    // The first line of a row, where its sign, its text, its number and its star are. A row that does not say when,
+    // The first line of a row, where its sign, its text, its number and its arrow are. A row that does not say when,
     // and a picture, which is taller, have them in the middle.
     static Rectangle Line(Entry entry, Rectangle row)
     {
@@ -398,14 +457,14 @@ partial class MainForm
     }
 
     // The small line at the bottom of a row, where when it was copied or saved ends at the right edge, under the
-    // star and the number.
+    // arrow and the number.
     static Rectangle Caption(Rectangle row)
     {
         int bottom = row.Bottom - RowPadding / 2;
         return Rectangle.FromLTRB(row.Left, bottom - Look.CaptionFont.Height, row.Right - TimeGap, bottom);
     }
 
-    // The part of the first line left to its sign and its text: up to the number, which comes before the star in a
+    // The part of the first line left to its sign and its text: up to the number, which comes before the arrow in a
     // row of the copied entries.
     Rectangle Content(ListBox list, Entry entry, Rectangle row)
     {
@@ -420,7 +479,7 @@ partial class MainForm
     Rectangle NumberArea(ListBox list, Entry entry, Rectangle row)
     {
         Rectangle line = Line(entry, row);
-        int right = row.Right - TimeGap - (list == recentList ? StarArea(line).Width + TimeGap : 0);
+        int right = row.Right - TimeGap - (list == recentList ? PinArea(line).Width + TimeGap : 0);
         int side = list.Font.Height, width = entry.Number > 0 ? side + NumberPadding : 0;
         return new Rectangle(right - width, line.Top + (line.Height - side) / 2, width, side);
     }
@@ -442,7 +501,7 @@ partial class MainForm
     static Sign SignOf(Entry entry)
     {
         if (entry.IsGroup) return entry.Open ? Sign.Opened : Sign.Closed;
-        if (entry.Name != null) return Sign.Star;
+        if (entry.Saved) return Sign.Star;
         string start = entry.Text.TrimStart();
         foreach (string prefix in new string[] { "http://", "https://", "www." })
             if (start.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return Sign.Link;
@@ -469,7 +528,7 @@ partial class MainForm
     void ShowActions()
     {
         Entry entry = Selected;
-        bool saved = entry != null && entry.Name != null;
+        bool saved = entry != null && entry.Saved;
         saveButton.Text = saved && entry.IsGroup ? Strings.RenameDots : saved ? Strings.EditDots : Strings.SaveDots;
         saveButton.Sign = saved ? Sign.Edit : Sign.Star;
         saveButton.Enabled = entry != null && !entry.Picture;
@@ -504,12 +563,12 @@ partial class MainForm
         }
         if (list == recentList)
         {
-            // At the right end, the star that keeps the entry at the top: in colour if it does, faint on the
-            // row where a click would light it.
-            Rectangle star = StarArea(line);
-            if (entry.Pinned) Look.Draw(e.Graphics, Sign.Star, star, null);
+            // At the right end, the arrow that keeps the entry at the top for a while: in colour if it does, faint
+            // on the row where a click would light it.
+            Rectangle arrow = PinArea(line);
+            if (entry.Pinned) Look.Draw(e.Graphics, Sign.Up, arrow, null);
             else if (selected || glow > 0)
-                Look.Draw(e.Graphics, Sign.Star, star, Look.Blend(list.BackColor, Look.Blend(Look.Muted, list.BackColor, 0.4f), selected ? 1 : glow));
+                Look.Draw(e.Graphics, Sign.Up, arrow, Look.Blend(list.BackColor, Look.Blend(Look.Muted, list.BackColor, 0.4f), selected ? 1 : glow));
         }
         if (entry.IsGroup)
         {
@@ -542,18 +601,18 @@ partial class MainForm
             TextFormatFlags.VerticalCenter | LineFlags);
     }
 
-    // Where the star of a copied entry is drawn, at the right end of the first line of its row.
-    Rectangle StarArea(Rectangle line)
+    // Where the arrow of a copied entry is drawn, at the right end of the first line of its row.
+    Rectangle PinArea(Rectangle line)
     {
         int side = Look.EntryFont.Height;
         return new Rectangle(line.Right - TimeGap - side, line.Top + (line.Height - side) / 2, side, side);
     }
 
-    // Whether the pointer is on the star of a row, or in the little room around it.
-    bool OnStar(RowList list, Point where)
+    // Whether the pointer is on the arrow of a row, or in the little room around it.
+    bool OnPin(RowList list, Point where)
     {
         int index = list.RowAt(where);
-        return list == recentList && index >= 0 && where.X >= StarArea(list.GetItemRectangle(index)).Left - TimeGap / 2;
+        return list == recentList && index >= 0 && where.X >= PinArea(list.GetItemRectangle(index)).Left - TimeGap / 2;
     }
 
     // The numbers an entry can be given, in its menu: the one it has cannot be chosen, and beside each that
@@ -571,35 +630,38 @@ partial class MainForm
             ToolStripMenuItem item = new ToolStripMenuItem(NumberName(number), null, delegate { Number(entry, number); });
             item.Enabled = entry.Number != number;
             Entry holder = Numbered(number);
-            if (holder != null && holder != entry) item.ShortcutKeyDisplayString = Shorten(holder.Label);
+            if (holder != null && holder.Id != entry.Id) item.ShortcutKeyDisplayString = Shorten(holder.Label);
             menu.DropDownItems.Add(item);
         }
     }
 
-    // The entry a number chooses, or null.
+    // The entry a number chooses, or null: from the database, since a copied one may be beyond those listed.
     Entry Numbered(int number)
     {
-        return entries.Find(delegate(Entry entry) { return !entry.IsGroup && entry.Number == number; });
+        Entry found = null;
+        Change(delegate { found = clips.Numbered(number); });
+        return found;
     }
 
-    // Gives an entry a number, taking it from the one that had it, or with zero takes its own away. A copied
-    // entry is pinned along. If another program has the keys of that number, Reload says so.
+    // Gives an entry a number, taking it from the one that had it, or with zero takes its own away. A copied entry
+    // keeps it until its days are over. If another program has the keys of that number, Reload says so.
     void Number(Entry entry, int number)
     {
-        if (!Change(delegate { Texts.Number(entry, number); })) return;
+        if (!Change(delegate { clips.Number(entry.Id, number); })) return;
         Say(number > 0 ? string.Format(Strings.NumberGiven, NumberName(number), Shorten(entry.Label))
             : string.Format(Strings.NumberTaken, Shorten(entry.Label)));
         numbersTaken = "";   // said again, even if it was said before: the user is choosing now
         Reload();
     }
 
-    // Keeps a copied entry at the top of its column, or lets it go back among the others.
+    // Keeps a copied entry at the top of its column for a while, or lets it go back among the others. Either way
+    // it goes when its days are over: what is to stay is saved.
     void TogglePin(Entry entry)
     {
-        if (entry == null || entry.Name != null) return;
-        Change(delegate { Texts.Pin(entry, !entry.Pinned); });
-        Say(string.Format(entry.Pinned ? Strings.Pinned : Strings.Unpinned, Shorten(entry.ToString())));
-        Reload();
+        if (entry == null || entry.Saved) return;
+        if (!Change(delegate { clips.Pin(entry.Id, !entry.Pinned); })) return;
+        Say(string.Format(!entry.Pinned ? Strings.Pinned : Strings.Unpinned, Shorten(entry.ToString())));
+        ReloadCopied();
     }
 
     void Step(int by)
@@ -622,8 +684,8 @@ partial class MainForm
         try
         {
             DataObject data = new DataObject();
-            // A saved text may be a password: marked so that Windows clipboard history and other monitors skip it.
-            if (entry.Name != null) data.SetData(Texts.PrivateMarker, new MemoryStream(new byte[sizeof(int)]));
+            // A saved entry may be a password: marked so that Windows clipboard history and other monitors skip it.
+            if (entry.Saved) data.SetData(Texts.PrivateMarker, new MemoryStream(new byte[sizeof(int)]));
             if (!entry.Picture)
             {
                 data.SetText(entry.Text);
@@ -640,7 +702,7 @@ partial class MainForm
             }
             ownCopy = Native.GetClipboardSequenceNumber();
         }
-        catch (Exception ex)   // the clipboard locked by another program, or a picture the history file no longer gives
+        catch (Exception ex)   // the clipboard locked by another program, or a picture the database no longer gives
         {
             ShowError(ex);
             return false;
@@ -695,21 +757,30 @@ partial class MainForm
             // Asked again, with what was written still there, if the name turns out to be taken.
             while (edit.ShowDialog(this) == DialogResult.OK)
             {
-                string name = edit.EntryName, oldName = source == null ? null : source.Name;
-                bool renamed = !Texts.SameName(name, oldName);
-                int number = source == null ? 0 : source.Number;
-                bool taken = renamed && entries.Exists(delegate(Entry entry) { return !entry.IsGroup && Texts.SameName(entry.Name, name); });
+                string name = edit.EntryName;   // empty: none, and the list shows the content
+                long other = 0;
+                if (name.Length > 0 && !Change(delegate { other = clips.Named(name); })) continue;
+                bool taken = other != 0 && (source == null || other != source.Id);
                 if (taken && !Ask(string.Format(Strings.AskReplace, name))) continue;
+                // All of it or nothing: the one replaced does not go unless this one is saved.
                 if (!Change(delegate
                 {
-                    Texts.Save(name, edit.Content, edit.Group);   // first, so that a failure leaves the old one in place
-                    if (renamed && oldName != null) Texts.Delete(oldName);
-                    // The number goes along to the new name, and from a copied entry to the text it becomes.
-                    if (renamed && number > 0) Texts.Number(name, number);
-                    Texts.Reveal(edit.Group);   // or the text would not be seen
+                    using (Transaction transaction = clips.Begin())
+                    {
+                        if (taken) clips.Remove(other);
+                        long folder = FolderAt(edit.Group);
+                        if (source == null) clips.AddSaved(name, edit.Content, folder, DateTime.Now);
+                        else
+                        {
+                            // A copied entry becomes saved in its own row, number and all.
+                            if (!source.Saved) clips.Save(source.Id, name, folder);
+                            clips.Change(source.Id, name, edit.Content, folder);
+                        }
+                        clips.Reveal(folder);   // or the text would not be seen
+                        transaction.Commit();
+                    }
                 })) continue;
-                if (source != null && source.Name == null) Texts.Remove(source);   // it now has a line among the saved ones
-                Say(string.Format(Strings.SavedSay, Shorten(name)));
+                Say(string.Format(Strings.SavedSay, Shorten(name.Length > 0 ? name : new Entry(null, edit.Content).Label)));
                 break;
             }
         }
@@ -761,9 +832,10 @@ partial class MainForm
                 if (Refused(edit.EntryName, edit.Group, old)) continue;
                 if (!Change(delegate
                 {
-                    if (old == null) Texts.SetGroup(path, true);
-                    else Texts.RenameGroup(old, path);
-                    Texts.Reveal(edit.Group);   // or the folder would not be seen
+                    long parentId = FolderAt(edit.Group);
+                    if (old == null) clips.AddFolder(parentId, edit.EntryName);
+                    else clips.PlaceFolder(FolderAt(old), parentId, edit.EntryName);
+                    clips.Reveal(parentId);   // or the folder would not be seen
                 })) continue;
                 Say(string.Format(old == null ? Strings.FolderCreated : Texts.SameName(Texts.Parent(path), Texts.Parent(old))
                     ? Strings.FolderRenamed : Strings.FolderMoved, Shorten(Texts.Display(path))));
@@ -779,9 +851,10 @@ partial class MainForm
         if (entry.IsGroup && Refused(Texts.Leaf(entry.Name), group, entry.Name)) return;
         if (!Change(delegate
         {
-            if (entry.IsGroup) Texts.RenameGroup(entry.Name, Texts.Join(group, Texts.Leaf(entry.Name)));
-            else Texts.Move(entry.Name, group);
-            Texts.Reveal(group);
+            long folder = FolderAt(group);
+            if (entry.IsGroup) clips.MoveFolder(entry.FolderId, folder);
+            else clips.Move(entry.Id, folder);
+            clips.Reveal(folder);
         })) return;
         Say(group == null ? string.Format(Strings.LeftFolder, Shorten(entry.Label))
             : string.Format(Strings.InFolder, Shorten(entry.Label), Shorten(Texts.Display(group))));
@@ -789,10 +862,10 @@ partial class MainForm
     }
 
     // Shows or hides the texts of a folder.
-    // Nothing else changed: the lists are filled again from what they have, without reading the registry anew.
+    // Nothing else changed: the lists are filled again from what they have, without reading the saved ones anew.
     void ToggleGroup(Entry group)
     {
-        if (!Change(delegate { Texts.SetGroup(group.Name, !group.Open); })) return;
+        if (!Change(delegate { clips.OpenFolder(group.FolderId, !group.Open); })) return;
         group.Open = !group.Open;
         Filter();
     }
@@ -801,7 +874,10 @@ partial class MainForm
     {
         Entry entry = Selected;
         if (entry == null) return;
-        if (entry.Name == null) Texts.Remove(entry);
+        if (!entry.Saved)
+        {
+            if (!Change(delegate { clips.Remove(entry.Id); })) return;
+        }
         else if (entry.IsGroup)
         {
             // Only the folder goes: what it holds is too easily a password to be deleted along. It moves up a level.
@@ -812,9 +888,9 @@ partial class MainForm
             string parent = Texts.Parent(entry.Name);
             if (!Ask(string.Format(Strings.AskDeleteFolder, Texts.Display(entry.Name))
                 + (!holds ? "" : parent == null ? Strings.DeleteFolderTop : string.Format(Strings.DeleteFolderUp, Texts.Display(parent))))
-                || !Change(delegate { Texts.RenameGroup(entry.Name, null); })) return;
+                || !Change(delegate { clips.DeleteFolder(entry.FolderId); })) return;
         }
-        else if (!Ask(string.Format(Strings.AskDelete, entry.Name)) || !Change(delegate { Texts.Delete(entry.Name); })) return;
+        else if (!Ask(string.Format(Strings.AskDelete, entry.Label)) || !Change(delegate { clips.Remove(entry.Id); })) return;
         Reload();
     }
 

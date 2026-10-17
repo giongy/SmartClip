@@ -103,7 +103,7 @@ The texts you use often, such as a signature, an address or a password, can be s
 Built with privacy in mind:
 • saved texts are encrypted for your Windows user;
 • what password managers mark as private is not remembered;
-• you can pause capturing, choose how many days to keep the history, or keep it in memory only;
+• you can pause capturing and choose how many days to keep the history, or keep only today's;
 • no account, no ads, no Internet connection: your data stays on your PC.
 
 SmartClip is open source, under the MIT license. It speaks English, Spanish, French and Italian.
@@ -118,8 +118,8 @@ Adjustable wait before typing, and typing stops if the window changes
 US keyboard on the server, and symbols composed with Alt codes
 History of copied texts and pictures, with instant search
 List available from any program with a hotkey
-Important entries pinned to the top with a star
-Saved texts and starred entries pasted anywhere with Ctrl+Shift+1…9
+Entries kept at the top for a while with an arrow
+Saved texts and copied entries pasted anywhere with Ctrl+Shift+1…9
 Encrypted saved texts, arranged in folders and subfolders
 Saved texts also in the tray icon menu, without opening the window
 Full preview of long texts and pictures
@@ -199,7 +199,7 @@ I testi che usi spesso, come una firma, un indirizzo o una password, li salvi co
 Pensato per la riservatezza:
 • i testi salvati sono cifrati per il tuo utente di Windows;
 • ciò che i gestori di password segnano come riservato non viene ricordato;
-• puoi sospendere la cattura, scegliere per quanti giorni tenere la cronologia o tenerla solo in memoria;
+• puoi sospendere la cattura e scegliere per quanti giorni tenere la cronologia, o tenere solo quella di oggi;
 • nessun account, nessuna pubblicità, nessuna connessione a Internet: i tuoi dati restano sul tuo PC.
 
 SmartClip è open source, con licenza MIT. Parla italiano, inglese, spagnolo e francese.
@@ -214,8 +214,8 @@ Attesa regolabile prima di digitare, e la digitazione si ferma se cambi finestra
 Tastiera americana sul server e simboli composti con Alt+codice
 Cronologia di testi e immagini copiati, con ricerca istantanea
 Elenco richiamabile da qualsiasi programma con una scorciatoia
-Voci importanti fissate in cima con una stellina
-Testi salvati e voci con la stellina incollati ovunque con Ctrl+Maiusc+1…9
+Voci tenute in cima per un po' con una freccia
+Testi salvati e voci copiate incollati ovunque con Ctrl+Maiusc+1…9
 Testi salvati cifrati, organizzati in cartelle e sottocartelle
 Testi salvati anche nel menu dell'icona, senza aprire la finestra
 Anteprima completa di testi lunghi e immagini
@@ -295,7 +295,7 @@ Los textos que usas a menudo, como una firma, una dirección o una contraseña, 
 Pensado para la privacidad:
 • los textos guardados están cifrados para tu usuario de Windows;
 • lo que los gestores de contraseñas marcan como privado no se recuerda;
-• puedes pausar la captura, elegir cuántos días conservar el historial o tenerlo solo en memoria;
+• puedes pausar la captura y elegir cuántos días conservar el historial, o solo el de hoy;
 • sin cuenta, sin publicidad, sin conexión a Internet: tus datos se quedan en tu PC.
 
 SmartClip es de código abierto, con licencia MIT. Habla español, inglés, francés e italiano.
@@ -310,8 +310,8 @@ Espera ajustable antes de teclear, y el tecleo se detiene si cambia la ventana
 Teclado estadounidense en el servidor y símbolos compuestos con códigos Alt
 Historial de textos e imágenes copiados, con búsqueda instantánea
 Lista disponible desde cualquier programa con un atajo
-Entradas importantes fijadas arriba con una estrella
-Textos guardados y entradas con estrella pegados en cualquier sitio con Ctrl+Mayús+1…9
+Entradas mantenidas arriba un tiempo con una flecha
+Textos guardados y entradas copiadas pegados en cualquier sitio con Ctrl+Mayús+1…9
 Textos guardados cifrados, organizados en carpetas y subcarpetas
 Textos guardados también en el menú del icono, sin abrir la ventana
 Vista previa completa de textos largos e imágenes
@@ -391,7 +391,7 @@ Les textes que vous utilisez souvent, comme une signature, une adresse ou un mot
 Pensé pour la confidentialité :
 • les textes enregistrés sont chiffrés pour votre utilisateur Windows ;
 • ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé ;
-• vous pouvez suspendre la capture, choisir combien de jours garder l'historique, ou le garder seulement en mémoire ;
+• vous pouvez suspendre la capture et choisir combien de jours garder l'historique, ou seulement celui d'aujourd'hui ;
 • pas de compte, pas de publicité, pas de connexion à Internet : vos données restent sur votre PC.
 
 SmartClip est open source, sous licence MIT. Il parle français, anglais, espagnol et italien.
@@ -406,8 +406,8 @@ Attente réglable avant la saisie, qui s'arrête si la fenêtre change
 Clavier américain sur le serveur et symboles composés avec des codes Alt
 Historique des textes et images copiés, avec recherche instantanée
 Liste accessible depuis n'importe quel programme avec un raccourci
-Éléments importants épinglés en haut avec une étoile
-Textes enregistrés et éléments étoilés collés partout avec Ctrl+Maj+1…9
+Éléments gardés un moment en haut avec une flèche
+Textes enregistrés et éléments copiés collés partout avec Ctrl+Maj+1…9
 Textes enregistrés chiffrés, rangés en dossiers et sous-dossiers
 Textes enregistrés aussi dans le menu de l'icône, sans ouvrir la fenêtre
 Aperçu complet des textes longs et des images

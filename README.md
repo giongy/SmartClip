@@ -19,8 +19,9 @@ Formerly called PasswordPaste: the first start under the new name takes over its
 - One portable `.exe`, about 240 KB. No installer, no dependencies, no network access.
 - A handful of C# source files in `src`, compiled with the compiler already shipped with Windows.
 - Stops typing the moment the target window loses focus, so a password never lands in the wrong place.
-- The history of copied items is kept for the number of days you choose, or in memory only; saved texts are
-  encrypted for your Windows account.
+- The history of copied items is kept for the number of days you choose, or today only; saved texts never
+  expire and are encrypted for your Windows account. Everything is in one SQLite file, through the SQLite that
+  comes with Windows.
 - Light or dark theme, or the same as Windows sets for apps, switching on the fly: warm grey in the light,
   neutral grey in the dark, the icons of Windows itself (Segoe Fluent Icons), rounded menus, rows and buttons that
   light up gradually, thin scroll bars and the font of Windows 11 where it is installed, all without extra libraries.
@@ -61,7 +62,9 @@ window. A remote desktop client running full screen usually captures every short
 The main window has two columns. On the left, **Recently copied**: the things you copied while the program
 was running, texts and pictures (screenshots, for example), each picture with a small preview. They stay for the
 number of days set in the options, also across restarts; the column lists the 200 most recent, and the search
-reaches the rest. On the right, **Saved**: the texts you saved under a name, which stay until you delete them.
+reaches the rest. On the right, **Saved**: the texts you saved, which stay until you delete them. A name is
+optional: with one, the list shows only the name and the content stays hidden, which suits a password; without,
+the list shows the content.
 
 | Key | Action |
 | --- | --- |
@@ -75,7 +78,7 @@ reaches the rest. On the right, **Saved**: the texts you saved under a name, whi
 | Dragging a saved text or a folder | Onto a folder, or onto a text inside one, moves it there; onto a text outside the folders, or below the last row, takes it out |
 | Dragging the gap between the columns | Gives the saved texts more room, or less; the width is remembered. A double click there restores it |
 | Resizing the window | The copied items take the room; size and position are remembered for the next start, never smaller than the starting size |
-| The star at the right end of a copied entry, or Ctrl+P | Keeps the entry at the top of its column, also beyond the days of the history, until you take the star off |
+| The arrow at the right end of a copied entry, or Ctrl+P | Keeps the entry at the top of its column for a while: it still goes when its days are over. What is to stay, save it |
 | Ctrl+Shift+1 … Ctrl+Shift+9, in any program | Pastes the entry with that number into the active window, without opening SmartClip (see below) |
 | F1, or the **?** button | Opens the guide: everything the program does, by topic |
 
@@ -86,7 +89,8 @@ menu shows the text in the same small box for a few seconds.
 you copy until you choose **Resume capture**. It is not a setting: the next start
 always listens again.
 
-Three buttons under the lists manage the saved texts; each opens a small window with a name and a content box.
+Three buttons under the lists manage the saved texts; each opens a small window with a name, optional, and a
+content box. Under the name a grey line says what the list will show.
 
 Saved texts can be gathered in folders, and folders in other folders. **New folder…** is in the right-click menu
 (Ctrl+Shift+N) and creates the folder inside the selected one; **Move to** moves a saved text or a whole folder, and the window of a text or a folder has the same choice beside its
@@ -102,7 +106,7 @@ on the clipboard without opening the window. Only the names are shown there, as 
 | Button | Key | Action |
 | --- | --- | --- |
 | New… | Ctrl+N | Write a new text to keep |
-| Save… / Edit… | Ctrl+S | Save the selected copied text under a name, or change the name or content of a saved one |
+| Save… / Edit… | Ctrl+S | Save the selected copied text, with a name or without, or change the name or content of a saved one |
 | Delete | Ctrl+E | Delete the selected saved text, or drop a copied entry from the list |
 
 Once an entry is back on the clipboard, paste it with Ctrl+V as usual or type it with **Ctrl+Alt+V** where paste
@@ -119,8 +123,8 @@ program, **Ctrl+Shift+1** … **Ctrl+Shift+9** pastes that entry straight into t
 without opening SmartClip: the entry goes on the clipboard and Ctrl+V follows by itself, once you release the
 keys. The number shows in a small frame at the right of the entry's row, and in the tray menu beside a saved
 text. The same menu changes the number or takes it away (**None**); next to each number it says which entry has
-it now. A number belongs to one entry at a time: given to another, it moves. A copied entry that gets a number
-also gets the star, so that it does not expire; taking the star off takes the number too.
+it now. A number belongs to one entry at a time: given to another, it moves. A copied entry keeps its number until
+its days are over, and the number goes with it.
 
 Only the keys of the numbers some entry has are registered, so the others stay with the other programs. If
 another program already has one of them, the status line says which, and that number does not paste: give the
@@ -147,8 +151,8 @@ on an option shows its full explanation.
 | Open the list, with a button showing **Ctrl+D** | Enable the global hotkey that brings up the window with the list. While it is on, those keys no longer reach other programs: change them with the button, or turn the hotkey off. |
 | Paste by number, with a button showing **Ctrl+Shift+1…9** | Enable the keys that paste the numbered entries. Only the keys of the numbers in use are taken from other programs. The button takes the keys to hold: press them with any digit; it says which of the nine another program already uses. Del goes back to Ctrl+Shift. |
 | Remember copied texts and pictures | Keep the copied texts and pictures in the list. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. Turning it off also deletes the history on disk. |
-| Days on disk (0: memory only) | For how many days, 0 to 365, what you copy stays in the history, also after the program closes. With 0 nothing is written to disk: the last 30 copied items, of which at most 5 pictures, stay in memory and are gone when the program closes. |
-| Keep the last days when cleaning (0: none), with the button **Clean now…** | Deletes at once, from memory and disk, what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Starred entries and saved texts are not touched. |
+| Days kept (0: today only) | For how many days, 0 to 365, what you copy stays in the history, also after the program closes, today being the first: with 0 only what was copied today stays. Entries kept at the top go too when their days are over; saved texts never do. |
+| Keep the last days when cleaning (0: none), with the button **Clean now…** | Deletes at once what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Entries kept at the top go too; saved texts are not touched. |
 | Language | English, Español, Français or Italiano. Changing it restarts SmartClip, which opens again at once on the options. |
 | Theme | Same as Windows (the mode it sets for apps, followed also when it changes), Light or Dark. Changes at once. |
 | Font of the interface | The font of the program itself, the same in every window: buttons, labels, options, the guide, menus and questions. Segoe UI Variable (the default where it is installed), Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, Cascadia Mono or Consolas, among those Windows has; each is written in itself in the menu. The program restarts to apply it. |
@@ -171,7 +175,7 @@ texts **in clear**, passwords included. Importing adds to what is there: when a 
 existing one it asks which to keep, and copied texts already in the list are not repeated. A file exported in one
 language is read in any other. The shortcut numbers of the entries are not part of the file.
 
-Under the history options, the link **Open the history folder** opens the folder of the history files.
+Under the history options, the link **Open the data folder** opens the folder of the database and of the error log.
 
 The tray and window icon is coloured when the clipboard holds text and grey when it does not.
 
@@ -185,20 +189,23 @@ Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key t
   password.
 - Nothing is typed while Caps Lock is on.
 - The program waits for you to release the hotkey keys before typing, so they cannot alter the output.
-- Copied texts and pictures are never sent anywhere. The history is written **unencrypted** to
-  `%LOCALAPPDATA%\SmartClip\History` (in the Store version, under the package's own folder in
-  `%LOCALAPPDATA%\Packages`), one file per day, and each file is deleted when its day expires. Set the days
-  to 0 to keep everything in memory only. An entry you remove from the list is overwritten with zeros in its file.
-  With **Remember copied texts and pictures** off, the clipboard is read only when you start a run.
+- Copied texts and pictures are never sent anywhere. They are kept **unencrypted** in the database
+  `%LOCALAPPDATA%\SmartClip\SmartClip.db` (in the Store version, under the package's own folder in
+  `%LOCALAPPDATA%\Packages`), and removed when their days expire. An entry you remove from the list is
+  overwritten in the file, not only forgotten. With **Remember copied texts and pictures** off, the clipboard is
+  read only when you start a run.
 - What password managers and private browser windows mark as private (KeePass, Bitwarden and others do) is never
   remembered. A password typed with **Clear the clipboard after typing** on is dropped from the list and
-  from the history file too.
-- Saved texts are stored in the `Saved` subkey of the registry key above, encrypted with Windows DPAPI for your
-  user account: they cannot be read by another user or copied to another PC. Only their names are shown, until
-  you ask for the content from the right-click menu.
+  from the database too.
+- Saved texts are in the same database, encrypted with Windows DPAPI for your user account: they cannot be read
+  by another user or copied to another PC. Nothing readable is left of them in the file, not even what the
+  search uses. Of those with a name only the name is shown, until you ask for the content from the right-click
+  menu.
+- Versions before 4.0 kept saved texts in the registry and the history in one file per day. The first start of
+  4.0 copies them into the database, all at once or not at all, and leaves the old ones as they were.
 - A saved text put back on the clipboard is marked as private, so that Windows clipboard history (Win+V) and other
   clipboard managers skip it.
-- When something goes wrong, what failed and where is written to `SmartClip.log` beside the history folder, to
+- When something goes wrong, what failed and where is written to `SmartClip.log` beside the database, to
   look into a problem: never what you copied or saved. The file starts again past 256 KB.
 - An entry is chosen when you release Enter, so a held key cannot repeat into the window the focus returns to.
 
@@ -248,7 +255,7 @@ the privacy policy in [`PRIVACY.md`](PRIVACY.md).
   the encrypted round trip of a saved text through the registry.
 - `tests.exe data` checks the layer over the SQLite that comes with Windows (`winsqlite3.dll`): texts and bytes
   come back as they went in, broken rules are refused, transactions are all or nothing. It also checks the
-  database the list will move to (not in use yet): copied and saved entries, numbers, days, folders, and the
+  database of the list: copied and saved entries, numbers, days, folders, importing an exported file, and the
   migration of the registry and the history files into it, which must leave them exactly as they were.
 - `tests.exe type` opens a small window and really types into it: all ASCII characters, accented letters, AltGr
   symbols, Unicode, Alt codes, Tab and Enter. It then checks that a wrong window and a cancel both stop everything.

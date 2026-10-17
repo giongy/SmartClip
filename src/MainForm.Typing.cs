@@ -56,7 +56,8 @@ partial class MainForm
                 && Clipboard.ContainsText() && Clipboard.GetText() == copied)
             {
                 Clipboard.Clear();
-                Texts.Forget(copied);
+                clips.Forget(copied);
+                ReloadCopied();
             }
         }
         catch (Exception ex)   // for example the clipboard locked by another program

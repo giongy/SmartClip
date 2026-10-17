@@ -18,10 +18,11 @@ static partial class Strings
         PausedEmpty = "En pause : ce que vous copiez n'est pas mémorisé"; CopyHint = "Ce que vous copiez apparaîtra ici";
         NoSaved = "Aucun texte enregistré";
         NewTip = "Écrit un nouveau texte à garder, avec son nom ({0}).";
-        SaveTip = "Sur un élément copié : l'enregistre sous un nom, et vous pouvez retoucher son contenu.\n"
+        SaveTip = "Sur un élément copié : l'enregistre pour qu'il n'expire jamais, avec ou sans nom,\n"
+            + "et vous pouvez retoucher son contenu. Avec un nom, la liste montre le nom, pas le contenu.\n"
             + "Sur un élément enregistré : change son nom ou son contenu ({0}).\n"
             + "Sur un dossier : change son nom ou sa place.\n"
-            + "Les images restent seulement en mémoire et ne s'enregistrent pas.";
+            + "Les images ne s'enregistrent pas.";
         HelpTip = "Ouvre le guide : tout ce que sait faire le programme ({0}).";
         DeleteTip = "Supprime le texte enregistré, ou retire l'élément copié de la liste ({0}).\n"
             + "D'un dossier, il supprime seulement le dossier : son contenu remonte d'un niveau.";
@@ -114,9 +115,9 @@ static partial class Strings
             + "ou saisissez-le avec {1}. Avec un clic la fenêtre reste ouverte, avec {0} ou un\n"
             + "double-clic vous revenez où vous étiez. Le clic droit ouvre le menu de l'élément.\n"
             + "En laissant le pointeur sur un élément copié, vous le voyez en entier.\n"
-            + "L'étoile à droite d'un élément copié ({2}) le garde en haut de la liste,\n"
-            + "même au-delà des jours de l'historique, jusqu'à ce que vous la retiriez.\n"
-            + "Les textes enregistrés restent dans le registre de Windows, chiffrés pour votre utilisateur,\n"
+            + "La flèche à droite d'un élément copié ({2}) le garde un moment en haut de la liste :\n"
+            + "il part quand même quand ses jours expirent. Ce qui doit rester, enregistrez-le.\n"
+            + "Les textes enregistrés n'expirent jamais, sont chiffrés pour votre utilisateur,\n"
             + "et seul leur nom est visible. On peut les regrouper en dossiers : « Nouveau dossier » est\n"
             + "dans le menu du clic droit ({3}) ; un texte y entre en le faisant glisser, ou avec\n"
             + "« Déplacer vers ». Un clic sur le dossier l'ouvre et le ferme.\n"
@@ -166,8 +167,8 @@ static partial class Strings
         PickOption = "Ouvrir la liste";
         QuickOption = "Coller par numéro";
         HistoryOption = "Mémoriser les textes et images copiés";
-        KeepOption = "Jours sur disque (0 : en mémoire) :";
-        FolderLink = "Ouvrir le dossier de l'historique";
+        KeepOption = "Jours gardés (0 : aujourd'hui seul) :";
+        FolderLink = "Ouvrir le dossier des données";
         SpareOption = "Au nettoyage, garder les derniers jours :";
         CleanButton = "Nettoyer…";
         DelayTip = "Combien de secondes la fenêtre cible doit rester au premier plan avant que\n"
@@ -198,17 +199,17 @@ static partial class Strings
             + "Ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé.\n"
             + "Désactivez-la si vous copiez des mots de passe depuis des programmes qui ne le font pas :\n"
             + "ils seraient lisibles dans la liste. Désactivée, elle efface aussi l'historique sur disque.";
-        KeepTip = "Combien de jours ce que vous copiez reste dans l'historique, même après la fermeture.\n"
-            + "Il est gardé dans {0},\n"
-            + "un fichier par jour, en clair : les jours expirés s'effacent tout seuls.\n"
-            + "Avec 0, rien ne va sur le disque : les {1} derniers éléments copiés, dont au plus\n"
-            + "{2} images, restent en mémoire et disparaissent à la fermeture.\n"
-            + "La liste montre les {3} plus récents : la recherche trouve les autres.";
-        FolderTip = "Ouvre dans l'Explorateur de fichiers le dossier des fichiers de l'historique, un par jour :\n{0}";
-        CleanTip = "Efface aussitôt de l'historique, en mémoire et sur disque, ce que vous avez copié avant\n"
-            + "les derniers jours indiqués ci-dessus : avec 1, seul aujourd'hui reste ; avec 0, rien.\n"
-            + "Une confirmation est demandée. Les éléments étoilés et les textes enregistrés ne sont\n"
-            + "pas touchés, ni le presse-papiers. Les jours sur disque restent inchangés.";
+        KeepTip = "Combien de jours ce que vous copiez reste dans l'historique, même après la fermeture,\n"
+            + "aujourd'hui compris : avec 0, seul ce que vous avez copié aujourd'hui reste.\n"
+            + "Les éléments en haut partent aussi quand leurs jours expirent ; les textes enregistrés jamais.\n"
+            + "L'historique est gardé sur disque en clair. La liste montre les {0} plus récents :\n"
+            + "la recherche trouve les autres.";
+        FolderTip = "Ouvre dans l'Explorateur de fichiers le dossier de la base de données, qui garde ce que\n"
+            + "vous avez copié et enregistré, et du journal des erreurs :\n{0}";
+        CleanTip = "Efface aussitôt de l'historique ce que vous avez copié avant les derniers jours\n"
+            + "indiqués ci-dessus : avec 1, seul aujourd'hui reste ; avec 0, rien.\n"
+            + "Une confirmation est demandée. Les éléments en haut partent aussi ; les textes enregistrés\n"
+            + "ne sont pas touchés, ni le presse-papiers. Les jours gardés restent inchangés.";
         TrayTip = "Activée : fermer ou réduire la fenêtre laisse le programme tourner sous forme d'icône\n"
             + "près de l'horloge, et les raccourcis continuent de fonctionner.\n"
             + "Cliquez sur l'icône pour rouvrir la fenêtre ; clic droit puis {0} pour fermer.\n"
@@ -240,13 +241,17 @@ static partial class Strings
         HistoryOffImport = " L'historique est désactivé : les éléments copiés n'ont pas été importés.";
         CleanEverything = "tout ce que vous avez copié"; CleanBeforeToday = "ce que vous avez copié avant aujourd'hui";
         CleanBeforeDays = "ce que vous avez copié avant les {0} derniers jours (aujourd'hui compris)";
-        AskClean = "Voulez-vous supprimer {0} ?\n\nLes éléments étoilés et les textes enregistrés restent.";
+        AskClean = "Voulez-vous supprimer {0} ?\n\nLes textes enregistrés restent ; les éléments en haut partent aussi.";
         NothingToClean = "Rien à supprimer dans l'historique.";
         CleanedOne = "1 élément supprimé de l'historique."; CleanedMany = "{0} éléments supprimés de l'historique.";
-        NoHistoryFolder = "Le dossier de l'historique n'existe pas encore : rien n'est sur le disque.";
+        NoHistoryFolder = "Le dossier des données n'existe pas encore : rien n'est sur le disque.";
+        DatabaseUnavailable = "La liste ne peut pas être gardée sur disque ({0}) : ce que vous copiez et enregistrez "
+            + "maintenant sera perdu à la fermeture du programme.";
 
         NewTextTitle = "Nouveau texte"; SaveCopiedTitle = "Enregistrer le texte copié"; EditSavedTitle = "Modifier le texte enregistré";
-        NameLabel = "Nom (ce que montre la liste) :"; ContentLabel = "Contenu :";
+        NameLabel = "Nom (facultatif) :"; ContentLabel = "Contenu :";
+        NameHintEmpty = "Sans nom, la liste montrera le contenu.";
+        NameHintNamed = "La liste montrera « {0} » ; le contenu reste caché, ce qui convient à un mot de passe.";
         FolderOf = "Dossier : "; NoFolder = "Aucun dossier"; Inside = "Dans : ";
         NewFolderTitle = "Nouveau dossier"; RenameFolderTitle = "Renommer le dossier"; FolderNameLabel = "Nom du dossier :";
         Save = "Enregistrer";
@@ -289,16 +294,17 @@ static partial class Strings
             "- En laissant le pointeur sur un élément copié que sa ligne coupe, il apparaît en entier après un "
                 + "instant, dans un petit cadre : le texte avec toutes ses lignes, l'image en plus grand. Il disparaît "
                 + "dès que vous bougez le pointeur.",
-            "- L'étoile à l'extrémité droite d'un élément copié (" + Key(Keys.Control | MainForm.PinKey) + ") le garde "
-                + "en haut de la colonne : elle apparaît estompée au survol, et un clic l'allume ou l'éteint. Un "
-                + "élément étoilé n'expire pas avec les jours de l'historique et reste jusqu'à ce que vous retiriez "
-                + "l'étoile ; copier à nouveau le même texte ne le déplace pas.",
+            "- La flèche à l'extrémité droite d'un élément copié (" + Key(Keys.Control | MainForm.PinKey) + ") le garde "
+                + "un moment en haut de la colonne : elle apparaît estompée au survol, et un clic l'allume ou l'éteint. "
+                + "L'élément part quand même quand les jours de l'historique expirent : ce qui doit rester, "
+                + "enregistrez-le. Copier à nouveau le même texte le ramène en haut avec la nouvelle heure, flèche et "
+                + "numéro compris.",
             "- « " + NumberMenu + " », dans le menu du clic droit, donne à un texte enregistré ou à un élément copié "
                 + "un numéro de 1 à " + MainForm.MaxNumber + " : ensuite, depuis n'importe quel programme, "
                 + MainForm.NumbersName + " le collent aussitôt dans la fenêtre où vous travaillez, sans ouvrir celle-ci "
                 + "(l'élément va dans le presse-papiers et Ctrl+V suit tout seul). Le numéro apparaît dans un petit "
-                + "cadre à droite de la ligne, et à côté du texte enregistré dans le menu de l'icône ; un élément copié "
-                + "qui en reçoit un prend aussi l'étoile, qui le garde. Chaque numéro appartient à un seul élément : "
+                + "cadre à droite de la ligne, et à côté du texte enregistré dans le menu de l'icône. Un élément copié "
+                + "garde son numéro jusqu'à ce que ses jours expirent. Chaque numéro appartient à un seul élément : "
                 + "donné à un autre, il passe à celui-ci.",
             "Le signe coloré à gauche dit ce qu'est l'élément : un texte, une adresse web, un texte enregistré. Les "
                 + "images montrent une miniature. Sous l'élément, en petit à droite, figure l'heure de la copie (le jour, si ce n'est pas "
@@ -313,10 +319,12 @@ static partial class Strings
 
             "# Les textes enregistrés",
             "Ce sont les choses que vous voulez toujours avoir sous la main : une signature, une adresse, un mot de "
-                + "passe. Chacun a un nom, et seul le nom apparaît dans la liste.",
+                + "passe. Ils n'expirent jamais. Le nom est facultatif : avec un nom, la liste ne montre que le nom et le "
+                + "contenu reste caché, ce qui convient à un mot de passe ; sans, la liste montre le contenu, comme pour "
+                + "une deuxième adresse e-mail.",
             "- « " + New + " » (" + Key(Keys.Control | MainForm.NewKey) + ") écrit un texte de zéro.",
-            "- « " + SaveDots + " » (" + Key(Keys.Control | MainForm.SaveKey) + "), sur un élément copié, le garde sous "
-                + "un nom ; avant d'enregistrer, vous pouvez retoucher son contenu.",
+            "- « " + SaveDots + " » (" + Key(Keys.Control | MainForm.SaveKey) + "), sur un élément copié, le garde, avec "
+                + "ou sans nom ; avant d'enregistrer, vous pouvez retoucher son contenu.",
             "- « " + EditDots + " » (" + Key(Keys.Control | MainForm.SaveKey) + "), sur un élément enregistré, change "
                 + "son nom ou son contenu.",
             "- « " + Delete + " » (" + Key(Keys.Control | MainForm.DeleteKey) + ") supprime le texte enregistré, ou "
@@ -325,8 +333,8 @@ static partial class Strings
                 + "pendant quelques secondes : la liste ne montre que son nom, et le survoler ne suffit pas.",
             "- Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge : en choisir un le remet "
                 + "dans le presse-papiers sans ouvrir la fenêtre.",
-            "Les textes enregistrés sont dans le registre de Windows, chiffrés pour votre utilisateur : un autre "
-                + "utilisateur du même PC ne peut pas les lire. Quand vous en remettez un dans le presse-papiers, il "
+            "Les textes enregistrés n'expirent jamais. Ils sont dans la base de données du programme, chiffrés pour "
+                + "votre utilisateur : un autre utilisateur du même PC ne peut pas les lire. Quand vous en remettez un dans le presse-papiers, il "
                 + "est marqué comme privé, pour que l'historique de Windows (Win+V) et les autres gestionnaires de "
                 + "presse-papiers l'ignorent. Les images ne peuvent pas être enregistrées.",
 
@@ -395,15 +403,15 @@ static partial class Strings
             "# L'historique",
             "Ce que vous copiez reste dans la liste pendant un nombre de jours que vous choisissez ("
                 + Texts.DefaultKeepDays + " si vous ne le changez pas), même après avoir fermé le programme ou éteint le PC.",
-            "- Il est gardé dans " + Texts.Folder + ", un fichier par jour, en clair. Les jours expirés s'effacent tout seuls.",
-            "- Avec 0 jour, rien ne va sur le disque : les " + Texts.MaxRecent + " derniers éléments copiés, dont au "
-                + "plus " + Texts.MaxPictures + " images, restent en mémoire et disparaissent à la fermeture.",
+            "- Il est gardé en clair dans " + Clips.DefaultFile + ", avec les textes enregistrés, qui eux sont "
+                + "chiffrés. Les jours expirés s'effacent tout seuls.",
+            "- Avec 0 jour, seul ce que vous avez copié aujourd'hui reste.",
             "- Ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé.",
-            "- Les éléments étoilés restent même au-delà de ces jours.",
+            "- Les éléments en haut partent aussi quand leurs jours expirent : ce qui doit rester, enregistrez-le.",
             "- Dans les options, « " + CleanButton + " » efface aussitôt ce que vous avez copié avant les derniers jours "
-                + "indiqués à côté : avec 1, seul aujourd'hui reste ; avec 0, rien. Une confirmation est demandée, et "
-                + "les éléments étoilés comme les textes enregistrés ne sont pas touchés.",
-            "- Désactiver l'historique dans les options vide la liste et les fichiers sur disque, étoiles comprises.",
+                + "indiqués à côté : avec 1, seul aujourd'hui reste ; avec 0, rien. Une confirmation est demandée ; les "
+                + "éléments en haut partent aussi, les textes enregistrés ne sont jamais touchés.",
+            "- Désactiver l'historique dans les options vide la liste et efface du disque ce que vous avez copié.",
 
             "# Les options",
             "Le bouton « " + Options + " » les affiche à la place de la liste, et « " + List + " » revient en arrière. En "
@@ -415,7 +423,7 @@ static partial class Strings
             "- " + HotkeysTitle + " : active et désactive " + type + ", " + pick + " et " + MainForm.NumbersName
                 + ", et leur donne d'autres touches.",
             "- " + HistoryTitle + " : s'il faut mémoriser ce que vous copiez, pendant combien de jours, le lien vers le "
-                + "dossier des fichiers et le bouton qui le nettoie aussitôt.",
+                + "dossier de la base de données et le bouton qui nettoie aussitôt l'historique.",
             "- " + ProgramTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la taille de l'interface (boutons, options, ce guide : en pixels, elles redémarrent le programme) et celles des éléments (elles changent aussitôt), s'il faut rester dans la zone de notification et se masquer en passant "
                 + "à un autre programme, s'il faut démarrer avec Windows, et les boutons pour exporter et importer.",
 
@@ -424,7 +432,7 @@ static partial class Strings
                 + "reprennent, comme sauvegarde ou pour les passer à un autre PC. Chacun demande si vous voulez "
                 + "seulement les textes enregistrés ou tout, c'est-à-dire aussi les éléments copiés.",
             "- « " + ExportButton + " » écrit un fichier texte que le Bloc-notes ouvre : les textes enregistrés avec "
-                + "leurs dossiers et, si vous le demandez, les éléments copiés avec leur heure et leur étoile. Les "
+                + "leurs dossiers et, si vous le demandez, les éléments copiés avec leur heure et leur flèche. Les "
                 + "images n'y vont pas.",
             "- Dans le fichier, les textes sont en clair, mots de passe compris : gardez-le en lieu sûr.",
             "- « " + ImportButton + " » lit un tel fichier et ajoute son contenu à ce qui existe déjà. Si un texte "

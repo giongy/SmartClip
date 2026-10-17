@@ -109,12 +109,13 @@ static class TestProgram
         Native.SetProcessDPIAware();
         Application.EnableVisualStyles();
         Application.SetCompatibleTextRenderingDefault(false);
-        // Never what belongs to the user: settings and saved texts under a key of their own, history and log in a
-        // folder of their own. Both are emptied before and removed after.
+        // Never what belongs to the user: settings under a key of their own; the database, the old history and the
+        // log in a folder of their own. Both are emptied before and removed after.
         sandbox = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "SmartClip test " + Guid.NewGuid());
         MainForm.SettingsKey = TestKey;
         MainForm.OldSettingsKey = TestKey + @"\Old";
-        Texts.Folder = System.IO.Path.Combine(sandbox, "History");
+        Clips.DefaultFile = System.IO.Path.Combine(sandbox, Program.AppName + ".db");
+        Migration.OldHistory = System.IO.Path.Combine(sandbox, "History");
         Log.FileName = System.IO.Path.Combine(sandbox, Program.AppName + ".log");
         Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(TestKey, false);
         try
@@ -172,7 +173,57 @@ static class TestProgram
         SqliteTest();
         ClipsTest();
         MigrationTest();
+        BackupTest();
         return failed == 0 ? 0 : 1;
+    }
+
+    // An exported file taken back into a database: folders made as the file names them, the names already taken asked
+    // about once, the copied texts at their time unless the list has them, those whose days are over gone at once.
+    static void BackupTest()
+    {
+        string path = System.IO.Path.Combine(sandbox, "backup test.db"), file = System.IO.Path.Combine(sandbox, "backup test.txt");
+        using (Clips clips = new Clips(path))
+        {
+            clips.Keep(30);
+            long kept = clips.AddSaved("Firma", "vecchia", 0, DateTime.Now);
+            clips.AddText("già qui");
+            List<Entry> sent = new List<Entry>();
+            Entry folder = new Entry(@"Lavoro\Server", "", DateTime.MinValue);
+            folder.IsGroup = folder.Saved = true;
+            Entry signature = new Entry("Firma", "nuova", DateTime.Now);
+            signature.Saved = true;
+            signature.Group = @"Lavoro\Server";
+            Entry other = new Entry("Altro testo", "in una cartella che il file non elenca", DateTime.Now);
+            other.Saved = true;
+            other.Group = "Senza riga";
+            Entry here = new Entry(null, "già qui", DateTime.Now.AddDays(-1)), fromFile = new Entry(null, "dal file", DateTime.Now.AddDays(-1));
+            fromFile.Pinned = true;
+            sent.AddRange(new Entry[] { folder, signature, other, here, fromFile, new Entry(null, "vecchissimo", DateTime.Now.AddDays(-100)) });
+            System.IO.File.WriteAllLines(file, Backup.Lines(sent).ToArray(), new UTF8Encoding(true));
+
+            int asked = 0;
+            BackupResult result = Backup.Import(clips, file, true, delegate(int clashes) { asked = clashes; return false; });
+            List<Entry> saved = clips.Saved();
+            Check(asked == 1 && result.Kept == 1 && result.Saved == 1 && saved.Find(delegate(Entry e) { return e.Id == kept; }).Text == "vecchia",
+                "a name already taken is asked about once, and left as it was if the answer is no");
+            Check(clips.FindFolder(@"Lavoro\Server") != 0 && saved.Find(delegate(Entry e) { return e.Name == "Altro testo"; }).FolderId == clips.FindFolder("Senza riga"),
+                "folders are made as the file names them");
+            List<Entry> copied = clips.Copied(10, new string[0]);
+            Check(result.Copied == 2 && copied.Count == 2 && copied[0].Text == "dal file" && copied[0].Pinned
+                && !copied.Exists(delegate(Entry e) { return e.Text == "vecchissimo"; }),
+                "copied texts come back with their arrow, not twice, and not beyond the days kept");
+            result = Backup.Import(clips, file, false, delegate(int clashes) { asked = clashes; return true; });
+            Entry replaced = clips.Saved().Find(delegate(Entry e) { return e.Name == "Firma"; });
+            Check(asked == 2 && result.Saved == 2 && replaced.Id == kept && replaced.Text == "nuova" && replaced.FolderId == clips.FindFolder(@"Lavoro\Server")
+                && clips.CopiedCount() == 2, "if the answer is yes, they take what the file has; the copied ones only when asked");
+            Entry nameless = new Entry(null, "mail@second.example", DateTime.Now);
+            nameless.Saved = true;
+            System.IO.File.WriteAllLines(file, Backup.Lines(new List<Entry>(new Entry[] { nameless })).ToArray(), new UTF8Encoding(true));
+            Backup.Import(clips, file, false, delegate { return false; });
+            Backup.Import(clips, file, false, delegate { return false; });
+            Check(clips.Saved().FindAll(delegate(Entry e) { return e.Name == null; }).Count == 1,
+                "a saved text without a name comes in once, however many times the file is imported");
+        }
     }
 
     // What a folder holds, byte by byte, and the values of a registry key with those of its subkeys: to see that
@@ -200,51 +251,98 @@ static class TestProgram
         }
     }
 
-    // The data of the versions before the database, as their own code writes it, brought into a new one.
+    // A saved text as the versions before the database kept it in the registry: encrypted under its name, and beside
+    // it, under the same name, its day, its number, its folder. Each left out if null or 0.
+    static void OldSaved(string savedKey, string name, byte[] secret, DateTime? day, int number, string place)
+    {
+        using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(savedKey)) key.SetValue(name, secret);
+        if (day.HasValue)
+            using (Microsoft.Win32.RegistryKey dates = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(savedKey + @"\Dates"))
+                dates.SetValue(name, day.Value.Ticks, Microsoft.Win32.RegistryValueKind.QWord);
+        if (number > 0)
+            using (Microsoft.Win32.RegistryKey numbers = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(savedKey + @"\Numbers"))
+                numbers.SetValue(name, number, Microsoft.Win32.RegistryValueKind.DWord);
+        if (place != null)
+            using (Microsoft.Win32.RegistryKey places = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(savedKey + @"\Places"))
+                places.SetValue(name, place);
+    }
+
+    static byte[] Protected(string text)
+    {
+        return System.Security.Cryptography.ProtectedData.Protect(Encoding.UTF8.GetBytes(text), null,
+            System.Security.Cryptography.DataProtectionScope.CurrentUser);
+    }
+
+    // A record of a history file of the versions before the database, in the file of its day: the kind (1 a text,
+    // 2 a picture, 0 deleted; the star in the high bit and the number in the bits under it), the time in ticks, the
+    // length, then the content.
+    static void OldRecord(string folder, DateTime time, int kind, bool pinned, int number, byte[] content)
+    {
+        System.IO.Directory.CreateDirectory(folder);
+        string file = System.IO.Path.Combine(folder, time.ToString("yyyy-MM-dd") + ".clips");
+        using (System.IO.FileStream stream = new System.IO.FileStream(file, System.IO.FileMode.Append))
+        using (System.IO.BinaryWriter writer = new System.IO.BinaryWriter(stream))
+        {
+            writer.Write((byte)(kind | (pinned ? 0x80 | number << 3 : 0)));
+            writer.Write(time.Ticks);
+            writer.Write(content.Length);
+            writer.Write(content);
+        }
+    }
+
+    // Of a picture: width, height, the length of the preview, then preview and picture as PNG.
+    static byte[] OldPicture(Bitmap picture)
+    {
+        byte[] png = Entry.ToPng(picture), preview;
+        using (Bitmap small = new Bitmap(picture, picture.Width / 2, picture.Height / 2)) preview = Entry.ToPng(small);
+        using (System.IO.MemoryStream content = new System.IO.MemoryStream())
+        using (System.IO.BinaryWriter writer = new System.IO.BinaryWriter(content))
+        {
+            writer.Write(picture.Width);
+            writer.Write(picture.Height);
+            writer.Write(preview.Length);
+            writer.Write(preview);
+            writer.Write(png);
+            writer.Flush();
+            return content.ToArray();
+        }
+    }
+
+    // The data of the versions before the database, written as they wrote it, brought into a new one.
     static void MigrationTest()
     {
         string history = System.IO.Path.Combine(sandbox, "old history"), path = System.IO.Path.Combine(sandbox, "migrated.db");
-        string savedKey = MainForm.SettingsKey + @"\Saved", before = Texts.Folder;
-        Texts.Folder = history;
-        try
+        string savedKey = MainForm.SettingsKey + @"\Saved";
         {
-            // Saved texts and folders: one folder only implied by the one inside it, one closed.
-            Texts.SetGroup(@"Lavoro\Server", false);
-            Texts.SetGroup("Casa", true);
-            DateTime day = new DateTime(2025, 5, 6, 7, 8, 9);
-            Texts.Save("Banca", "pässwörd €", null, day);
-            Texts.Save("Server prod", "root:secret", @"Lavoro\Server");
-            Texts.Save("Wi-Fi", "casa123", "Casa");
-            Texts.Save("Orfano", "nessuna cartella", "Sparita");   // a folder that is not there
-            Texts.Number("Banca", 2);
-            using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(savedKey))
+            // Saved texts and folders: one folder only implied by the one inside it, one closed; a folder named
+            // that is not there, a text without a day, one encrypted by another Windows user, a number two claim.
+            using (Microsoft.Win32.RegistryKey folders = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(savedKey + @"\Folders"))
             {
-                key.SetValue("Senza data", System.Security.Cryptography.ProtectedData.Protect(Encoding.UTF8.GetBytes("vecchio"), null,
-                    System.Security.Cryptography.DataProtectionScope.CurrentUser));   // saved before the days were kept
-                key.SetValue("Illeggibile", new byte[] { 1, 2, 3 });   // as one encrypted by another Windows user
+                folders.SetValue(@"Lavoro\Server", 0, Microsoft.Win32.RegistryValueKind.DWord);
+                folders.SetValue("Casa", 1, Microsoft.Win32.RegistryValueKind.DWord);
             }
-            using (Microsoft.Win32.RegistryKey numbers = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(savedKey + @"\Numbers"))
-                numbers.SetValue("Wi-Fi", 2, Microsoft.Win32.RegistryValueKind.DWord);   // two claim one number
+            DateTime day = new DateTime(2025, 5, 6, 7, 8, 9);
+            OldSaved(savedKey, "Banca", Protected("pässwörd €"), day, 2, null);
+            OldSaved(savedKey, "Server prod", Protected("root:secret"), DateTime.Now, 0, @"Lavoro\Server");
+            OldSaved(savedKey, "Wi-Fi", Protected("casa123"), DateTime.Now, 2, "Casa");
+            OldSaved(savedKey, "Orfano", Protected("nessuna cartella"), DateTime.Now, 0, "Sparita");
+            OldSaved(savedKey, "Senza data", Protected("vecchio"), null, 0, null);
+            OldSaved(savedKey, "Illeggibile", new byte[] { 1, 2, 3 }, DateTime.Now, 0, null);
 
             // The history: today, last week and long ago (beyond the days kept by default), a star with a number,
             // a picture, an entry deleted, a record cut short, a file that cannot be read.
-            Texts.Recent.Clear();
-            Texts.Keep(30);
-            Texts.Add("copiato oggi");
-            Texts.Add("in alto");
-            Texts.Number(Texts.Recent[0], 7);
-            Texts.Add("cancellato");
-            Texts.Remove(Texts.Recent[0]);
+            DateTime now = DateTime.Today.AddHours(DateTime.Now.Hour).AddMinutes(DateTime.Now.Minute);
+            OldRecord(history, now.AddSeconds(-30), 1, false, 0, Encoding.UTF8.GetBytes("copiato oggi"));
+            OldRecord(history, now.AddSeconds(-20), 1, true, 7, Encoding.UTF8.GetBytes("in alto"));
+            OldRecord(history, now.AddSeconds(-10), 0, false, 0, new byte["cancellato".Length]);   // deleted: zeros
             using (Bitmap picture = new Bitmap(30, 20))
             {
                 picture.SetPixel(3, 3, Color.Green);
-                Texts.Add(picture);
+                OldRecord(history, now.AddSeconds(-40), 2, false, 0, OldPicture(picture));
             }
-            List<Entry> older = new List<Entry>();
-            older.Add(new Entry(null, "settimana scorsa", DateTime.Now.AddDays(-6)));
-            older.Add(new Entry(null, "cento giorni fa", DateTime.Now.AddDays(-100)));
-            Texts.Restore(older);
-            string today = System.IO.Path.Combine(history, DateTime.Today.ToString("yyyy-MM-dd") + ".clips");
+            OldRecord(history, DateTime.Now.AddDays(-6), 1, false, 0, Encoding.UTF8.GetBytes("settimana scorsa"));
+            OldRecord(history, DateTime.Now.AddDays(-100), 1, false, 0, Encoding.UTF8.GetBytes("cento giorni fa"));
+            string today = System.IO.Path.Combine(history, now.ToString("yyyy-MM-dd") + ".clips");
             using (System.IO.FileStream cut = new System.IO.FileStream(today, System.IO.FileMode.Append)) cut.Write(new byte[] { 1, 9, 9, 9 }, 0, 4);
             string locked = System.IO.Path.Combine(history, "2020-01-01.clips");
             string untouched = Fingerprint(history, savedKey);
@@ -273,7 +371,7 @@ static class TestProgram
 
                 List<Entry> copied = clips.Copied(MainForm.MaxShown, new string[0]);
                 Entry top = copied.Find(delegate(Entry e) { return e.Text == "in alto"; });
-                Check(top != null && top.Pinned && top.Number == 7 && copied[0] == top, "a starred entry is at the top, with its number");
+                Check(top != null && top.Pinned && top.Number == 7 && copied[0] == top, "an entry with the old star is at the top, with its number");
                 Check(copied.Exists(delegate(Entry e) { return e.Text == "cento giorni fa"; })
                     && copied.Exists(delegate(Entry e) { return e.Text == "settimana scorsa" && e.Time.Date == DateTime.Today.AddDays(-6); }),
                     "copied entries keep their days, also beyond those kept by default");
@@ -301,11 +399,6 @@ static class TestProgram
             }), "a failing migration says so");
             using (Clips clips = new Clips(again, delegate(Clips fresh) { result = Migration.Run(fresh, MainForm.SettingsKey, history); }))
                 Check(clips.Created && result.Saved == 6 && clips.Saved().Count == 5, "and the next start migrates everything");
-        }
-        finally
-        {
-            Texts.Recent.Clear();
-            Texts.Folder = before;
         }
     }
 
@@ -623,11 +716,13 @@ static class TestProgram
             "a file that cannot be opened is refused");
     }
 
-    // The logic behind the list, without opening it and without touching the clipboard.
+    // The logic around the list, without opening it and without touching the clipboard: private clipboard formats,
+    // the search, the paths of the folders, the exported file. What the list keeps is checked by 'data'.
     static int TextsTest()
     {
-        Check(MainForm.SettingsKey == TestKey && Texts.Folder.StartsWith(System.IO.Path.GetTempPath())
-            && Log.FileName.StartsWith(System.IO.Path.GetTempPath()), "the checks keep away from the settings, texts and history of the user");
+        Check(MainForm.SettingsKey == TestKey && Clips.DefaultFile.StartsWith(System.IO.Path.GetTempPath())
+            && Migration.OldHistory.StartsWith(System.IO.Path.GetTempPath()) && Log.FileName.StartsWith(System.IO.Path.GetTempPath()),
+            "the checks keep away from the settings, the database, the old history and the log of the user");
         Log.Error(new InvalidOperationException("a test of the log"));
         Check(System.IO.File.ReadAllText(Log.FileName).IndexOf("a test of the log") > 0, "an error goes to the log");
 
@@ -638,51 +733,8 @@ static class TestProgram
         Check(!Texts.IsPrivate(Copied("CanIncludeInClipboardHistory", 1)), "history allowed = 1 does not");
         Check(Texts.IsPrivate(Copied("CanUploadToCloudClipboard", 0)), "cloud upload = 0 makes it private");
 
-        Texts.Recent.Clear();
-        Texts.Add("one");
-        Texts.Add("two");
-        Texts.Add("one");
-        Check(Texts.Recent.Count == 2 && Texts.Recent[0].Text == "one" && Texts.Recent[1].Text == "two", "copied again moves to the top");
-        Texts.Add((string)null);
-        Texts.Add("  \r\n ");
-        Texts.Add(new string('x', 1000000));
-        Check(Texts.Recent.Count == 2, "nothing, blanks and huge texts are not remembered");
-        for (int i = 0; i < Texts.MaxRecent + 10; i++) Texts.Add("n" + i);
-        Check(Texts.Recent.Count == Texts.MaxRecent && Texts.Recent[0].Text == "n" + (Texts.MaxRecent + 9)
-            && !Texts.Recent.Exists(delegate(Entry e) { return e.Text == "one"; }), "the oldest ones drop out");
-        Texts.Forget("n" + (Texts.MaxRecent + 9));
-        Check(Texts.Recent.Count == Texts.MaxRecent - 1 && Texts.Recent[0].Text == "n" + (Texts.MaxRecent + 8),
-            "a typed and cleared password is forgotten");
-
-        Texts.Recent.Clear();
-        Texts.Add("text");
-        using (Bitmap picture = new Bitmap(40, 30))
-        {
-            picture.SetPixel(1, 1, Color.Red);
-            Texts.Add(picture);
-            Texts.Add(picture);
-            Check(Texts.Recent.Count == 2 && Texts.Recent[0].Picture, "the same picture announced twice is kept once");
-            Check(Texts.Recent[0].Preview != null && Texts.Recent[0].Preview.Width == 40 && Texts.Recent[1].Preview == null,
-            "a picture has a preview, a text has none");
-        Check(Texts.Recent[0].ToString().IndexOf("40×30") > 0 && Texts.Matches(Texts.Recent[0], "picture 40"),
-                "a picture is described by its size and found by it");
-            using (Image back = Image.FromStream(new System.IO.MemoryStream(Texts.Recent[0].LoadPng())))
-            using (Bitmap pixels = new Bitmap(back))
-                Check(back.Width == 40 && back.Height == 30 && pixels.GetPixel(1, 1).ToArgb() == Color.Red.ToArgb(),
-                    "and comes back identical from memory");
-            for (int i = 0; i < Texts.MaxPictures + 3; i++)
-            {
-                picture.SetPixel(2, 2, Color.FromArgb(i, i, i));
-                Texts.Add(picture);
-            }
-            Check(Texts.Recent.FindAll(delegate(Entry e) { return e.Picture; }).Count == Texts.MaxPictures
-                && Texts.Recent.Count == Texts.MaxPictures + 1, "only the last few pictures stay, texts are untouched");
-        }
-        HistoryTest();
-        Texts.Recent.Clear();
-        Texts.Add("copied");
-
         Entry city = new Entry("Città di Torino", "riga uno\nSeconda RIGA");
+        city.Saved = true;
         Check(Texts.Matches(city, ""), "an empty search matches everything");
         Check(Texts.Matches(city, "citta"), "accents do not count");
         Check(Texts.Matches(city, "TORINO città"), "words in any order, any case");
@@ -691,134 +743,43 @@ static class TestProgram
         Check(Texts.Matches(new Entry(null, "perché"), "perche"), "a copied text has no name and still matches");
         Check(city.ToString().IndexOf("riga") < 0, "the list shows only the name of a saved text");
         Check(new Entry(null, " a\r\nb\tc ").ToString() == "a  b c", "a copied text is shown on one line");
+        Check(Texts.Within(@"a\b\c", "a") && Texts.Within("a", "A") && !Texts.Within("a 2", "a") && Texts.Parent("a") == null
+            && Texts.Parent(@"a\b\c") == @"a\b" && Texts.Leaf(@"a\b") == "b" && Texts.Depth(@"a\b") == 2 && Texts.Join(null, "a") == "a"
+            && Texts.Display(@"a\b") == "a › b" && Texts.CleanPath(@" a \\ b\ ") == @"a\b" && Texts.CleanPath(@" \ ") == null,
+            "paths of folders");
 
         // The exported file: what goes out comes back, also a text that looks like the file itself.
         List<Entry> sent = new List<Entry>();
         Entry sentFolder = new Entry("Lavoro", "", DateTime.MinValue);
-        sentFolder.IsGroup = true;
+        sentFolder.IsGroup = sentFolder.Saved = true;
+        Entry undated = new Entry("Senza data", "uno", DateTime.MinValue);
+        undated.Saved = true;
         Entry sentSaved = new Entry("Firma", "[Salvato]\r\nNome: finto\r\n\r\n\tcon tabulazione\r\nultima riga\r\n\r\n", new DateTime(2026, 3, 4, 5, 6, 7));
+        sentSaved.Saved = true;
         sentSaved.Group = "Lavoro";
         Entry sentCopied = new Entry(null, "copiato è", new DateTime(2026, 1, 2, 3, 4, 5));
         sentCopied.Pinned = true;
-        sent.AddRange(new Entry[] { new Entry("Senza data", "uno", DateTime.MinValue), sentFolder, sentSaved, sentCopied });
+        sent.AddRange(new Entry[] { undated, sentFolder, sentSaved, sentCopied });
         using (Bitmap picture = new Bitmap(4, 4)) sent.Add(new Entry(picture));
-        List<Entry> read = Backup.Parse(Backup.Lines(sent, true));
-        Check(read.Count == 4 && read[0].Name == "Senza data" && read[0].Text == "uno" && read[0].Time == DateTime.MinValue
+        List<Entry> read = Backup.Parse(Backup.Lines(sent));
+        Check(read.Count == 4 && read[0].Saved && read[0].Name == "Senza data" && read[0].Text == "uno" && read[0].Time == DateTime.MinValue
             && read[0].Group == null, "an exported text comes back, a picture is left out");
         Check(read[1].IsGroup && read[1].Name == "Lavoro", "a folder comes back");
-        Check(read[2].Name == "Firma" && read[2].Text == sentSaved.Text && read[2].Group == "Lavoro" && read[2].Time == sentSaved.Time,
+        Check(read[2].Saved && read[2].Name == "Firma" && read[2].Text == sentSaved.Text && read[2].Group == "Lavoro" && read[2].Time == sentSaved.Time,
             "a text that looks like the file comes back identical, with folder and day");
-        Check(read[3].Name == null && read[3].Text == "copiato è" && read[3].Pinned && read[3].Time == sentCopied.Time,
-            "a copied text comes back with its time and its star");
-        Check(Backup.Parse(Backup.Lines(sent, false)).Count == 3, "saved texts alone, when asked");
-        List<string> edited = Backup.Lines(sent, true);
+        Check(!read[3].Saved && read[3].Name == null && read[3].Text == "copiato è" && read[3].Pinned && read[3].Time == sentCopied.Time,
+            "a copied text comes back with its time and its arrow");
+        List<string> edited = Backup.Lines(sent);
         edited.Insert(edited.IndexOf("\tuno") + 1, "");
         edited.Add("righe senza senso");
         Check(Backup.Parse(edited).Count == 4 && Backup.Parse(edited)[0].Text == "uno", "a file changed by hand is still read");
+        Entry nameless = new Entry(null, "mail@second.example", DateTime.MinValue);
+        nameless.Saved = true;
+        List<Entry> back = Backup.Parse(Backup.Lines(new List<Entry>(new Entry[] { nameless })));
+        Check(back.Count == 1 && back[0].Saved && back[0].Name == null && back[0].Text == nameless.Text && back[0].Label == nameless.Text,
+            "a saved text without a name comes back as one, and shows its content");
+        Check(MainForm.NumberName(1) == "Ctrl+" + Strings.ShiftName + "+1", "the keys of a number: those held, and the digit");
 
-        // Round trip through the registry, under a name nobody would use; removed afterwards.
-        string name = "~test " + Guid.NewGuid();
-        string text = "pässwörd €\nseconda riga ~`";
-        string group = "~test folder " + Guid.NewGuid();
-        try
-        {
-            Texts.Save(name, text, null);
-            Entry saved = Texts.Load().Find(delegate(Entry e) { return e.Name == name; });
-            Check(saved != null && saved.Text == text, "a saved text comes back identical");
-            Check(saved != null && saved.Time.Date == DateTime.Today, "with the day it was saved");
-            using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(MainForm.SettingsKey + @"\Saved"))
-            {
-                byte[] raw = key.GetValue(name) as byte[];
-                Check(raw != null && Encoding.UTF8.GetString(raw).IndexOf("seconda") < 0
-                    && Encoding.Unicode.GetString(raw).IndexOf("seconda") < 0, "and is not readable in the registry");
-            }
-            // Folders: a text follows its own, through a new name too, and outlives it.
-            Texts.SetGroup(group, false);
-            Texts.Save(name, text, group);
-            List<Entry> listed = Texts.Load();
-            int at = listed.FindIndex(delegate(Entry e) { return e.IsGroup && e.Name == group; });
-            Check(at >= 0 && !listed[at].Open && listed[at + 1].Name == name && listed[at + 1].Group == group,
-                "a text in a folder is listed right after it");
-            Check(Texts.Matches(listed[at + 1], "~test folder"), "and is found by the name of its folder");
-            Texts.RenameGroup(group, group + " 2");
-            Check(Texts.Load().Exists(delegate(Entry e) { return e.Name == name && e.Group == group + " 2"; })
-                && !Texts.Groups().Contains(group), "a renamed folder takes its texts along");
-            Texts.RenameGroup(group + " 2", null);
-            Check(Texts.Load().Exists(delegate(Entry e) { return e.Name == name && e.Group == null; })
-                && !Texts.Groups().Contains(group + " 2"), "a deleted folder leaves its texts among the saved ones");
-
-            // Folders inside folders, all inside the test folder: each comes before what it holds, and takes it
-            // along wherever it goes.
-            string outer = Texts.Join(group, "a"), inner = Texts.Join(outer, "dentro"), deepest = Texts.Join(inner, "in fondo");
-            string renamed = Texts.Join(group, "b"), moved = Texts.Join(group, "dentro");
-            Texts.SetGroup(deepest, true);
-            Texts.Save(name, text, inner);
-            List<string> paths = Texts.Groups();
-            Check(paths.IndexOf(group) >= 0 && paths.IndexOf(group) + 1 == paths.IndexOf(outer) && paths.IndexOf(outer) + 1 == paths.IndexOf(inner)
-                && paths.IndexOf(inner) + 1 == paths.IndexOf(deepest), "the folders a folder is inside of are there too, each before those it holds");
-            listed = Texts.Load();
-            at = listed.FindIndex(delegate(Entry e) { return e.IsGroup && e.Name == inner; });
-            Check(at >= 0 && listed[at].Label == "dentro" && listed[at].Level == 2 && listed[at + 1].Name == name
-                && listed[at + 1].Level == 3 && listed[at + 2].Name == deepest, "a folder shows its own name, its texts come before the folders inside it");
-            Texts.RenameGroup(outer, renamed);
-            Check(Texts.Load().Exists(delegate(Entry e) { return e.Name == name && e.Group == Texts.Join(renamed, "dentro"); })
-                && Texts.Groups().Contains(Texts.Join(Texts.Join(renamed, "dentro"), "in fondo"))
-                && !Texts.Groups().Exists(delegate(string path) { return Texts.Within(path, outer); }),
-                "a renamed folder takes along the folders inside it and their texts");
-            Texts.RenameGroup(Texts.Join(renamed, "dentro"), moved);
-            Check(Texts.Load().Exists(delegate(Entry e) { return e.Name == name && e.Group == moved; })
-                && Texts.Groups().Contains(Texts.Join(moved, "in fondo")), "a folder moves out of the one it was in");
-            Texts.RenameGroup(moved, Texts.Join(renamed, "dentro"));
-            Texts.RenameGroup(renamed, null);
-            Check(Texts.Load().Exists(delegate(Entry e) { return e.Name == name && e.Group == moved; })
-                && Texts.Groups().Contains(Texts.Join(moved, "in fondo")) && !Texts.Groups().Contains(renamed),
-                "a deleted folder leaves what it holds one level up");
-            Check(Texts.Within(deepest, group) && Texts.Within(group, group) && !Texts.Within(group + " 2", group)
-                && Texts.Parent(group) == null && Texts.Parent(inner) == outer && Texts.Display(inner) == group + " › a › dentro"
-                && Texts.CleanPath(@" a \\ b\ ") == @"a\b" && Texts.CleanPath(@" \ ") == null, "paths of folders");
-            Texts.Save(name, text, null);
-            Texts.Save(name, "other", null);
-            Check(Texts.Load().FindAll(delegate(Entry e) { return e.Name == name; }).Count == 1, "saving again replaces");
-            Texts.Save(name.ToUpper(), "other", null);
-            Check(Texts.Load().FindAll(delegate(Entry e) { return string.Equals(e.Name, name, StringComparison.OrdinalIgnoreCase); })
-                .TrueForAll(delegate(Entry e) { return e.Name == name.ToUpper(); }), "saving with another letter case renames");
-
-            // Numbers: each chooses one entry, saved or copied, and moves when given to another.
-            Predicate<Entry> mine = delegate(Entry e) { return Texts.SameName(e.Name, name); };
-            Texts.Number(name, MainForm.MaxNumber);
-            Check(Texts.Load().Find(mine).Number == MainForm.MaxNumber, "a saved text keeps its number");
-            Entry copy = new Entry(null, "numbered copy");
-            Texts.Recent.Add(copy);
-            Texts.Number(copy, MainForm.MaxNumber);
-            Check(copy.Number == MainForm.MaxNumber && copy.Pinned && Texts.Load().Find(mine).Number == 0,
-                "given to a copied entry, the number moves there and the entry gets the star");
-            Texts.Number(Texts.Load().Find(mine), MainForm.MaxNumber);
-            Check(copy.Number == 0 && copy.Pinned && Texts.Load().Find(mine).Number == MainForm.MaxNumber, "and back, the star stays");
-            Texts.Recent.Remove(copy);
-            Texts.Number(name, 0);
-            Check(Texts.Load().Find(mine).Number == 0, "zero takes the number away");
-            Texts.Number(name, 1);
-            Texts.Delete(name);
-            Texts.Save(name, text, null);
-            Check(Texts.Load().Find(mine).Number == 0, "a deleted text takes its number along");
-            Check(MainForm.NumberName(1) == "Ctrl+" + Strings.ShiftName + "+1", "the keys of a number: those held, and the digit");
-        }
-        finally
-        {
-            Texts.Delete(name);
-            // From the innermost, so that nothing moves up out of the test folders.
-            foreach (string top in new string[] { group, group + " 2" })
-                for (string last; (last = Texts.Groups().FindLast(delegate(string other) { return Texts.Within(other, top); })) != null; )
-                    Texts.RenameGroup(last, null);
-        }
-        Check(!Texts.Load().Exists(delegate(Entry e) { return e.Name == name; }), "a deleted text is gone");
-        using (Microsoft.Win32.RegistryKey dates = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(MainForm.SettingsKey + @"\Saved\Dates"))
-            Check(dates != null && Array.IndexOf(dates.GetValueNames(), name.ToUpper()) < 0 && Array.IndexOf(dates.GetValueNames(), name) < 0,
-                "and so is its date");
-        List<Entry> all = Texts.Load();
-        int firstCopied = all.FindIndex(delegate(Entry e) { return e.Name == null; });
-        Check(firstCopied >= 0 && !all.GetRange(firstCopied, all.Count - firstCopied).Exists(delegate(Entry e) { return e.Name != null; }),
-            "saved texts come before the copied ones");
         // A font that is not there, or a size that is not offered, as a settings value written by hand: the defaults.
         string firstFont = Look.FontNames[0];
         float window = Look.TextFont.SizeInPoints;
@@ -850,8 +811,9 @@ static class TestProgram
         };
         int englishSubjects = subjects(Strings.Guide());
         Entry folder = new Entry("A", "", DateTime.MinValue);
-        folder.IsGroup = true;
+        folder.IsGroup = folder.Saved = true;
         Entry text = new Entry("B", "riga\r\n\tuna tabulazione", new DateTime(2026, 5, 6, 7, 8, 9));
+        text.Saved = true;
         text.Group = "A";
         Entry copied = new Entry(null, "copied", new DateTime(2026, 5, 6, 7, 8, 9));
         copied.Pinned = true;
@@ -870,7 +832,7 @@ static class TestProgram
             }
             Check(tooMany.Count == 0, code + ": every text fits the values it is given" + (tooMany.Count == 0 ? "" : ": " + string.Join(", ", tooMany.ToArray())));
             Check(subjects(Strings.Guide()) == englishSubjects, code + ": the guide has the " + englishSubjects + " subjects");
-            List<Entry> read = Backup.Parse(Backup.Lines(sent, true));
+            List<Entry> read = Backup.Parse(Backup.Lines(sent));
             Check(read.Count == 3 && read[0].IsGroup && read[1].Text == text.Text && read[1].Group == "A" && read[2].Pinned,
                 code + ": an exported file comes back");
             if (same.Count > 0) Console.WriteLine("       same as English: " + string.Join(", ", same.ToArray()));
@@ -885,135 +847,6 @@ static class TestProgram
         foreach (System.Text.RegularExpressions.Match match in System.Text.RegularExpressions.Regex.Matches(text ?? "", @"\{(\d+)\}"))
             highest = Math.Max(highest, int.Parse(match.Groups[1].Value));
         return highest;
-    }
-
-    // The history on disk, in a folder of its own instead of the user's.
-    static void HistoryTest()
-    {
-        string real = Texts.Folder, folder = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "SmartClip test " + Guid.NewGuid());
-        string today = System.IO.Path.Combine(folder, DateTime.Today.ToString("yyyy-MM-dd") + ".clips");
-        string old = System.IO.Path.Combine(folder, DateTime.Today.AddDays(-8).ToString("yyyy-MM-dd") + ".clips");
-        Texts.Folder = folder;
-        try
-        {
-            Texts.Clear();
-            Texts.Keep(7);
-            for (int i = 0; i < Texts.MaxRecent + 10; i++) Texts.Add("kept " + i);
-            Texts.Add("sécret wörd");
-            using (Bitmap picture = new Bitmap(40, 30))
-            {
-                picture.SetPixel(1, 1, Color.Red);
-                Texts.Add(picture);
-                Texts.Add(picture);
-            }
-            Texts.Add("last");
-            int count = Texts.MaxRecent + 13;
-            Check(Texts.Recent.Count == count && System.IO.Directory.GetFiles(folder).Length == 1 && System.IO.File.Exists(today),
-                "with days to keep nothing drops out, and it all goes to one file per day");
-            Check(Texts.Recent[1].Png == null, "a stored picture leaves the memory");
-
-            System.IO.File.WriteAllBytes(old, new byte[0]);
-            long length = new System.IO.FileInfo(today).Length;
-            using (System.IO.FileStream cut = new System.IO.FileStream(today, System.IO.FileMode.Append)) cut.Write(new byte[] { 1, 2, 3, 4, 5 }, 0, 5);
-            Texts.Recent.Clear();
-            Texts.Keep(7);
-            Texts.Read();
-            Check(Texts.Recent.Count == count && Texts.Recent[0].Text == "last" && Texts.Recent[count - 1].Text == "kept 0",
-                "the history comes back from disk, newest first");
-            Check(!System.IO.File.Exists(old), "an expired day is deleted");
-            Check(new System.IO.FileInfo(today).Length == length, "a record cut short is removed");
-            Entry stored = Texts.Recent[1];
-            using (Image back = Image.FromStream(new System.IO.MemoryStream(stored.LoadPng())))
-            using (Bitmap pixels = new Bitmap(back))
-                Check(stored.Picture && stored.Preview != null && stored.Text.IndexOf("40×30") > 0 && back.Width == 40
-                    && pixels.GetPixel(1, 1).ToArgb() == Color.Red.ToArgb(), "a picture comes back with its preview, and whole when asked");
-
-            Texts.Forget("sécret wörd");
-            Check(Encoding.UTF8.GetString(System.IO.File.ReadAllBytes(today)).IndexOf("sécret") < 0, "a forgotten text is wiped from the file");
-            Texts.Add("after");
-            Texts.Recent.Clear();
-            Texts.Read();
-            Check(Texts.Recent.Count == count && Texts.Recent[0].Text == "after"
-                && !Texts.Recent.Exists(delegate(Entry e) { return e.Text == "sécret wörd"; }), "and stays out when read again");
-
-            Texts.Keep(0);
-            Check(Texts.Recent.Count == Texts.MaxRecent && System.IO.Directory.GetFiles(folder).Length == 0,
-                "zero days: files deleted, memory keeps the last few");
-            Entry loose = Texts.Recent.Find(delegate(Entry e) { return e.Picture; });
-            Check(loose != null && loose.LoadPng().Length > 0, "and the picture is in memory again");
-            Texts.Keep(7);
-            Check(System.IO.File.Exists(today) && loose.Png == null, "days again: what is in memory is written");
-            Texts.Clear();
-            Check(Texts.Recent.Count == 0 && System.IO.Directory.GetFiles(folder).Length == 0, "clearing removes list and files");
-
-            // Pinned entries: first in the list, untouched by a new copy, and kept beyond their days.
-            DateTime past = DateTime.Now.AddDays(-20);
-            string pastFile = System.IO.Path.Combine(folder, past.ToString("yyyy-MM-dd") + ".clips");
-            Entry aged = new Entry(null, "aged text", past), star = new Entry(null, "star text", past);
-            Texts.Recent.Add(aged);
-            Texts.Recent.Add(star);
-            Texts.Keep(30);
-            Texts.Add("fresh");
-            Texts.Pin(star, true);
-            Check(Texts.Load().Find(delegate(Entry e) { return e.Name == null; }) == star, "a pinned entry comes first");
-            Texts.Add("star text");
-            Texts.Forget("star text");
-            Check(Texts.Recent.Count == 3 && Texts.Recent.Contains(star), "copied again or forgotten, it stays as it is");
-            Texts.Keep(7);
-            string left = Encoding.UTF8.GetString(System.IO.File.ReadAllBytes(pastFile));
-            Check(Texts.Recent.Count == 2 && Texts.Recent.Contains(star) && left.IndexOf("aged") < 0 && left.IndexOf("star") > 0,
-                "it outlives its days, while the others of its file are wiped");
-            Texts.Recent.Clear();
-            Texts.Read();
-            star =Texts.Recent.Find(delegate(Entry e) { return e.Text == "star text"; });
-            Check(Texts.Recent.Count == 2 && star != null && star.Pinned, "and comes back pinned from disk");
-            Texts.Number(star, MainForm.MaxNumber);
-            Texts.Recent.Clear();
-            Texts.Read();
-            star = Texts.Recent.Find(delegate(Entry e) { return e.Text == "star text"; });
-            Check(star != null && star.Pinned && star.Number == MainForm.MaxNumber && !star.Picture, "with its number too");
-            Texts.Pin(star, false);
-            Check(Texts.Recent.Count == 1 && !System.IO.File.Exists(pastFile) && star.Number == 0, "unpinned, it leaves with its day and its number");
-
-            // Cleaning on request: the last days are spared, and so is what is pinned.
-            Entry earlier = new Entry(null, "earlier", DateTime.Now.AddDays(-2));
-            Texts.Recent.Add(earlier);
-            Texts.Keep(7);
-            Texts.Clean(3);
-            Check(Texts.Recent.Count == 2, "cleaning spares the last days");
-            Texts.Clean(1);
-            Check(Texts.Recent.Count == 1 && Texts.Recent[0].Text == "fresh" && System.IO.Directory.GetFiles(folder).Length == 1,
-                "with one day only today stays");
-            Texts.Add("kept on top");
-            Texts.Pin(Texts.Recent[0], true);
-            Texts.Clean(0);
-            Check(Texts.Recent.Count == 1 && Texts.Recent[0].Pinned
-                && Encoding.UTF8.GetString(System.IO.File.ReadAllBytes(today)).IndexOf("fresh") < 0, "with none only the pinned ones stay");
-            // 13 bytes of header before the text of a record.
-            Check(new System.IO.FileInfo(today).Length == 13 + "kept on top".Length && System.IO.Directory.GetFiles(folder).Length == 1,
-                "and their file is shrunk to them, not filled with zeros");
-            Texts.Pin(Texts.Recent[0], false);
-            Texts.Recent.Clear();
-            Texts.Read();
-            Check(Texts.Recent.Count == 1 && Texts.Recent[0].Text == "kept on top" && !Texts.Recent[0].Pinned,
-                "a shrunk file is still written and read in the right place");
-            Texts.Clean(0);
-            Check(System.IO.Directory.GetFiles(folder).Length == 0, "with nothing pinned the files are deleted");
-
-            // Copied texts from an exported file: back at their time, unless the list has them.
-            Texts.Add("here\nalready");
-            List<Entry> restored = new List<Entry>();
-            restored.Add(new Entry(null, "here\r\nalready", DateTime.Now.AddDays(-1)));
-            restored.Add(new Entry(null, "from the file", DateTime.Now.AddDays(-1)));
-            Check(Texts.Restore(restored) == 1 && Texts.Recent.Count == 2 && Texts.Recent[1].Text == "from the file"
-                && System.IO.Directory.GetFiles(folder).Length == 2, "imported copies go to their own day, once");
-        }
-        finally
-        {
-            Texts.Clear();
-            Texts.Folder = real;
-            if (System.IO.Directory.Exists(folder)) System.IO.Directory.Delete(folder, true);
-        }
     }
 
     static string Show(char c)
@@ -1140,12 +973,13 @@ static class TestProgram
             MethodInfo fill = typeof(MainForm).GetMethod("ShowSaved", hidden);
             fill.Invoke(form, new object[] { menu });
             fill.Invoke(form, new object[] { menu });   // made anew, not added twice
-            ToolStripMenuItem workMenu = menu.Items[3] as ToolStripMenuItem;
+            // Folders side by side by name: in every language of the samples, Home comes before Work.
+            ToolStripMenuItem workMenu = menu.Items[4] as ToolStripMenuItem;
             ToolStripMenuItem serverMenu = workMenu == null ? null : workMenu.DropDownItems[1] as ToolStripMenuItem;
             Console.WriteLine("[{0}] the icon menu lists the saved texts by folder: {1} items", menu.Items.Count == 7
                 && menu.Items[1] is ToolStripSeparator && menu.Items[2].Text == s.Signature && workMenu != null && workMenu.Text == s.Work
                 && workMenu.DropDownItems[0].Text == s.Address && serverMenu != null && serverMenu.Text == s.Servers
-                && serverMenu.DropDownItems[0].Text == s.ServerPassword && menu.Items[4].Text == s.Home
+                && serverMenu.DropDownItems[0].Text == s.ServerPassword && menu.Items[3].Text == s.Home
                 && menu.Items[5] is ToolStripSeparator && menu.Items[6].Text == Strings.Exit ? "PASS" : "FAIL", menu.Items.Count);
             menu.Dispose();
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
@@ -1254,7 +1088,7 @@ static class TestProgram
                 form.ClientSize.Width, form.ClientSize.Height, form.Icon == null ? "none" : form.Icon.Size.ToString());
         }
 
-        using (ShotEdit edit = new ShotEdit(new Entry(Sample.Current.Signature, Sample.Current.SignatureText), Sample.Current.Work, new List<string>(new string[] { Sample.Current.Work, Sample.Current.Home })))
+        using (ShotEdit edit = new ShotEdit(SavedSample(), Sample.Current.Work, new List<string>(new string[] { Sample.Current.Work, Sample.Current.Home })))
         {
             edit.StartPosition = FormStartPosition.Manual;
             edit.Location = new Point(-30000, -30000);
@@ -1307,15 +1141,14 @@ static class TestProgram
                 && !(bool)typeof(MainForm).GetMethod("Cut", hidden).Invoke(form, new object[] { recent, new Entry(null, "ok"), recent.GetItemRectangle(0) })
                 ? "PASS" : "FAIL");
             // A long list, with the thin bar that scrolls it, moved a little way down.
-            List<Entry> many = (List<Entry>)typeof(MainForm).GetField("entries", hidden).GetValue(form);
-            for (int i = 0; i < 40; i++) many.Add(new Entry(null, Sample.Current.Long + " " + i, DateTime.Today.AddMinutes(i)));
+            for (int i = 0; i < 40; i++) ClipsOf(form).Import(Sample.Current.Long + " " + i, DateTime.Today.AddMinutes(i), false);
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
             recent.TopIndex = 10;
             Snap(form, path + "-real-scroll.png");
             FillSample(form, Wider);
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
             Snap(form, path + "-real-options.png");
-            using (ShotEdit edit = new ShotEdit(new Entry(Sample.Current.Signature, Sample.Current.SignatureText), Sample.Current.Work, new List<string>(new string[] { Sample.Current.Work, Sample.Current.Home })))
+            using (ShotEdit edit = new ShotEdit(SavedSample(), Sample.Current.Work, new List<string>(new string[] { Sample.Current.Work, Sample.Current.Home })))
             {
                 edit.TopMost = true;
                 edit.StartPosition = FormStartPosition.Manual;
@@ -1343,7 +1176,7 @@ static class TestProgram
                 Look.Style(menu);
                 typeof(MainForm).GetMethod("ShowSaved", hidden).Invoke(form, new object[] { menu });
                 menu.Show(new Point(form.Left + 60, form.Top + 120));
-                ToolStripMenuItem work = (ToolStripMenuItem)menu.Items[3];
+                ToolStripMenuItem work = (ToolStripMenuItem)menu.Items[4];
                 work.ShowDropDown();
                 work.DropDownItems[0].Select();
                 SnapArea(new Rectangle(form.Left + 40, form.Top + 100, 520, 300), path + "-real-menu.png");
@@ -1458,7 +1291,7 @@ static class TestProgram
                     Look.Style(menu);
                     typeof(MainForm).GetMethod("ShowSaved", hidden).Invoke(form, new object[] { menu });
                     menu.Show(new Point(area.Left + area.Width / 3, area.Top + Top * 3));
-                    ToolStripMenuItem work = (ToolStripMenuItem)menu.Items[3];
+                    ToolStripMenuItem work = (ToolStripMenuItem)menu.Items[4];
                     work.ShowDropDown();
                     ((ToolStripMenuItem)work.DropDownItems[1]).ShowDropDown();
                     SnapArea(area, System.IO.Path.Combine(pictures, "5-tray-menu.png"));
@@ -1555,39 +1388,45 @@ static class TestProgram
         FillSample(form, 0);
     }
 
+    // The saved text the window of a saved entry shows in the pictures.
+    static Entry SavedSample()
+    {
+        Entry signature = new Entry(Sample.Current.Signature, Sample.Current.SignatureText);
+        signature.Saved = true;
+        return signature;
+    }
+
+    // The database of a window of the checks: one of the sandbox, never the user's.
+    static Clips ClipsOf(MainForm form)
+    {
+        return (Clips)typeof(MainForm).GetField("clips", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(form);
+    }
+
     static void FillSample(MainForm form, int wider)
     {
         BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
         Sample s = Sample.Current;
-        List<Entry> entries = new List<Entry>();
-        Entry signature = new Entry(s.Signature, s.SignatureText);
-        signature.Number = 1;   // the keys that choose it, shown in its row
-        entries.Add(signature);
-        // Folders, one open with another inside it and one closed, each right before its texts.
-        string server = Texts.Join(s.Work, s.Servers);
-        foreach (string name in new string[] { s.Work, s.Address, server, s.ServerPassword, s.Home, s.Wifi })
-        {
-            bool folder = name == s.Work || name == server || name == s.Home;
-            Entry entry = new Entry(name, folder ? "" : "not shown", folder ? DateTime.MinValue : DateTime.Now);
-            entry.IsGroup = folder;
-            entry.Open = name != s.Home;
-            if (!entry.IsGroup) entry.Group = entries[entries.Count - 1].IsGroup ? entries[entries.Count - 1].Name : entries[entries.Count - 1].Group;
-            if (name == s.ServerPassword) entry.Number = 2;
-            entries.Add(entry);
-        }
+        Clips clips = ClipsOf(form);
+        clips.Data.Execute("DELETE FROM entries; DELETE FROM folders");
+        // Saved texts: one outside the folders with a number, then folders, one open with another inside it and one
+        // closed, each with its texts.
+        clips.Number(clips.AddSaved(s.Signature, s.SignatureText, 0, DateTime.Now), 1);   // the keys that choose it, shown in its row
+        long work = clips.AddFolder(0, s.Work), servers = clips.AddFolder(work, s.Servers), home = clips.AddFolder(0, s.Home);
+        clips.AddSaved(s.Address, "not shown", work, DateTime.Now);
+        clips.Number(clips.AddSaved(s.ServerPassword, "not shown", servers, DateTime.Now), 2);
+        clips.AddSaved(s.Wifi, "not shown", home, DateTime.Now);
+        clips.OpenFolder(home, false);
         // Copied this morning, whatever the time the pictures are taken.
         DateTime morning = DateTime.Today.AddHours(10).AddMinutes(24);
-        Entry pinned = new Entry(null, "ssh admin@srv-database-01", morning);
-        pinned.Pinned = true;
-        pinned.Number = 3;
-        entries.Add(pinned);
+        clips.Import("ssh admin@srv-database-01", morning, true);
+        clips.Number(clips.Copied(1, new string[0])[0].Id, 3);
         using (Bitmap picture = SamplePicture())
-            entries.Add(new Entry(new Bitmap(picture, 213, 120), picture.Width, picture.Height, morning.AddMinutes(-7)));
-        entries.Add(new Entry(null, s.Long, morning.AddMinutes(-19)));
-        entries.Add(new Entry(null, s.TwoLines, morning.AddMinutes(-33)));
-        entries.Add(new Entry(null, "https://github.com/giongy/SmartClip", morning.AddMinutes(-52)));
-        typeof(MainForm).GetField("entries", hidden).SetValue(form, entries);
-        typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
+        using (Bitmap preview = new Bitmap(picture, 213, 120))
+            clips.AdoptPicture(Entry.ToPng(picture), Entry.ToPng(preview), picture.Width, picture.Height, morning.AddMinutes(-7), false, 0);
+        clips.Import(s.Long, morning.AddMinutes(-19), false);
+        clips.Import(s.TwoLines, morning.AddMinutes(-33), false);
+        clips.Import("https://github.com/giongy/SmartClip", morning.AddMinutes(-52), false);
+        typeof(MainForm).GetMethod("Reload", hidden).Invoke(form, null);
         // The window and its columns as designed (or wider by the same amount), not as the user left them: every
         // picture the same.
         typeof(MainForm).GetField("savedSize", hidden).SetValue(form, wider == 0 ? Size.Empty

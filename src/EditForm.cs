@@ -9,12 +9,15 @@ class EditForm : Window
 {
     const int Edge = 12, FieldWidth = 420, ContentHeight = 190, Gap = 6;   // in pixels at 96 dpi
     const int LabelRow = 20, NameHeight = 26;      // a description above its box, and the box of a name
+    const int HintHeight = 34;                     // the line under the name that says what a name does: two at most
     const int MaxNameLength = 60;
+    const int HintNameLength = 30;                 // beyond this, the name is cut in that line
     const int MaxGroupLength = 24;                 // the name of a folder has to fit on the button that shows it
     const int ButtonPadding = 16;                  // left to the edges of that button, beyond its text
     readonly TextBox nameBox = new TextBox(), contentBox = new TextBox();
     readonly Button saveButton = new RoundButton(), cancelButton = new RoundButton();
     readonly Button groupButton = new RoundButton();
+    readonly Label hint = new Label();             // what the name does, said as it is written
     readonly bool nameOnly;
     readonly string within, outside;               // what the folder button says: before a folder, and with none
 
@@ -24,7 +27,7 @@ class EditForm : Window
     {
         within = Strings.FolderOf;
         outside = Strings.NoFolder;
-        Build(source == null ? Strings.NewTextTitle : source.Name == null ? Strings.SaveCopiedTitle : Strings.EditSavedTitle,
+        Build(source == null ? Strings.NewTextTitle : !source.Saved ? Strings.SaveCopiedTitle : Strings.EditSavedTitle,
             Strings.NameLabel, MaxNameLength, source == null ? "" : source.Name ?? "", groups);
         // The box breaks lines only at CR LF, while a copied text may hold bare LF.
         if (source != null) contentBox.Text = source.Text.Replace("\r\n", "\n").Replace("\n", "\r\n");
@@ -61,7 +64,12 @@ class EditForm : Window
         int buttonTop = nameFrame.Bottom + Edge;
         if (!nameOnly)
         {
-            Label contentLabel = NewLabel(Strings.ContentLabel, Edge, nameFrame.Bottom + Edge);
+            // The name of an entry is optional: under it, what having one or not means for the list.
+            hint.SetBounds(Edge, nameFrame.Bottom + Gap, FieldWidth, HintHeight);
+            hint.ForeColor = Look.Muted;
+            hint.UseMnemonic = false;
+            Controls.Add(hint);
+            Label contentLabel = NewLabel(Strings.ContentLabel, Edge, hint.Bottom + Gap);
             contentBox.Multiline = true;
             contentBox.AcceptsReturn = true;
             contentBox.ScrollBars = ScrollBars.Vertical;
@@ -103,8 +111,13 @@ class EditForm : Window
             Controls.Add(groupButton);
         }
 
-        // Nothing to save until all there is has been written.
-        EventHandler check = delegate { saveButton.Enabled = EntryName.Length > 0 && (nameOnly || Content.Trim().Length > 0); };
+        // Nothing to save until what is needed has been written: the name of a folder, the content of an entry.
+        EventHandler check = delegate
+        {
+            saveButton.Enabled = nameOnly ? EntryName.Length > 0 : Content.Trim().Length > 0;
+            string shown = EntryName.Length > HintNameLength ? EntryName.Substring(0, HintNameLength - 1) + "…" : EntryName;
+            hint.Text = EntryName.Length == 0 ? Strings.NameHintEmpty : string.Format(Strings.NameHintNamed, shown);
+        };
         nameBox.TextChanged += check;
         contentBox.TextChanged += check;
         check(this, EventArgs.Empty);

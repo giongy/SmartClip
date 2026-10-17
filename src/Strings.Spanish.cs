@@ -18,10 +18,11 @@ static partial class Strings
         PausedEmpty = "En pausa: lo que copias no se recuerda"; CopyHint = "Lo que copies aparecerá aquí";
         NoSaved = "Ningún texto guardado";
         NewTip = "Escribe un texto nuevo para conservar, con su nombre ({0}).";
-        SaveTip = "En una entrada copiada: la guarda con un nombre, y puedes retocar su contenido.\n"
+        SaveTip = "En una entrada copiada: la guarda para que no venza nunca, con nombre o sin él,\n"
+            + "y puedes retocar su contenido. Con nombre la lista muestra el nombre, no el contenido.\n"
             + "En una entrada guardada: cambia su nombre o su contenido ({0}).\n"
             + "En una carpeta: cambia su nombre o su lugar.\n"
-            + "Las imágenes solo se quedan en memoria y no se pueden guardar.";
+            + "Las imágenes no se pueden guardar.";
         HelpTip = "Abre la guía: todo lo que sabe hacer el programa ({0}).";
         DeleteTip = "Elimina el texto guardado, o quita de la lista la entrada copiada ({0}).\n"
             + "De una carpeta elimina solo la carpeta: lo que contiene sube un nivel.";
@@ -111,9 +112,9 @@ static partial class Strings
             + "tecleas con {1}. Con un clic la ventana sigue abierta, con {0} o un doble\n"
             + "clic vuelves a donde estabas. El clic derecho abre el menú de la entrada.\n"
             + "Si dejas el puntero sobre una entrada copiada, la ves entera.\n"
-            + "La estrella a la derecha de una entrada copiada ({2}) la mantiene arriba de la lista,\n"
-            + "incluso más allá de los días del historial, hasta que la quites.\n"
-            + "Los textos guardados se quedan en el registro de Windows, cifrados para tu usuario, y\n"
+            + "La flecha a la derecha de una entrada copiada ({2}) la mantiene un tiempo arriba de la lista:\n"
+            + "se va igualmente cuando vencen sus días. Lo que deba quedarse, guárdalo.\n"
+            + "Los textos guardados no vencen nunca, están cifrados para tu usuario, y\n"
             + "solo se ve su nombre. Se pueden reunir en carpetas: «Nueva carpeta» está en el\n"
             + "menú del clic derecho ({3}); un texto entra arrastrándolo, o con «Mover a».\n"
             + "Un clic en la carpeta la abre y la cierra.\n"
@@ -160,8 +161,8 @@ static partial class Strings
         PickOption = "Abrir la lista";
         QuickOption = "Pegar por número";
         HistoryOption = "Recordar textos e imágenes copiados";
-        KeepOption = "Días en disco (0: solo en memoria):";
-        FolderLink = "Abrir la carpeta del historial";
+        KeepOption = "Días que se guardan (0: solo hoy):";
+        FolderLink = "Abrir la carpeta de los datos";
         SpareOption = "Al limpiar, conservar los últimos días:";
         CleanButton = "Limpiar ahora…";
         DelayTip = "Cuántos segundos debe quedarse en primer plano la ventana de destino\n"
@@ -192,17 +193,17 @@ static partial class Strings
             + "Lo que los gestores de contraseñas marcan como privado no se recuerda.\n"
             + "Desactívala si copias contraseñas desde programas que no lo hacen: se leerían en\n"
             + "la lista. Al desactivarla también se borra el historial en disco.";
-        KeepTip = "Cuántos días se queda en el historial lo que copias, también tras cerrar.\n"
-            + "Se guarda en {0},\n"
-            + "un archivo por día, sin cifrar: los días vencidos se borran solos.\n"
-            + "Con 0 nada va al disco: quedan en memoria las últimas {1} cosas copiadas, de ellas\n"
-            + "como mucho {2} imágenes, y desaparecen al cerrar.\n"
-            + "La lista muestra las {3} más recientes: las demás se encuentran buscando.";
-        FolderTip = "Abre en el Explorador de archivos la carpeta con los archivos del historial, uno por día:\n{0}";
-        CleanTip = "Borra enseguida del historial, en memoria y en disco, lo que copiaste antes de\n"
-            + "los últimos días escritos arriba: con 1 solo queda hoy, con 0 no queda nada.\n"
-            + "Pide confirmación antes. Las entradas con estrella y los textos guardados no se\n"
-            + "tocan, ni el portapapeles. Los días en disco siguen como estaban.";
+        KeepTip = "Cuántos días se queda en el historial lo que copias, también tras cerrar,\n"
+            + "contando hoy como el primero: con 0 solo queda lo que copiaste hoy.\n"
+            + "También las entradas arriba se van cuando vencen sus días; los textos guardados nunca.\n"
+            + "El historial se guarda en disco sin cifrar. La lista muestra las {0} más recientes:\n"
+            + "las demás se encuentran buscando.";
+        FolderTip = "Abre en el Explorador de archivos la carpeta de la base de datos, que guarda lo que\n"
+            + "copiaste y guardaste, y del registro de errores:\n{0}";
+        CleanTip = "Borra enseguida del historial lo que copiaste antes de los últimos días\n"
+            + "escritos arriba: con 1 solo queda hoy, con 0 no queda nada.\n"
+            + "Pide confirmación antes. También se van las entradas arriba; los textos guardados\n"
+            + "no se tocan, ni el portapapeles. Los días que se guardan siguen como estaban.";
         TrayTip = "Activada: al cerrar o minimizar la ventana el programa sigue funcionando como\n"
             + "icono junto al reloj, y los atajos siguen funcionando.\n"
             + "Clic en el icono para volver a abrir la ventana; clic derecho y luego {0} para cerrar.\n"
@@ -234,13 +235,17 @@ static partial class Strings
         HistoryOffImport = " El historial está desactivado: lo copiado no se ha importado.";
         CleanEverything = "todo lo que has copiado"; CleanBeforeToday = "lo que copiaste antes de hoy";
         CleanBeforeDays = "lo que copiaste antes de los últimos {0} días (hoy incluido)";
-        AskClean = "¿Quieres eliminar {0}?\n\nLas entradas con estrella y los textos guardados se quedan.";
+        AskClean = "¿Quieres eliminar {0}?\n\nLos textos guardados se quedan; también se van las entradas arriba.";
         NothingToClean = "Nada que eliminar en el historial.";
         CleanedOne = "Eliminada 1 entrada del historial."; CleanedMany = "Eliminadas {0} entradas del historial.";
-        NoHistoryFolder = "La carpeta del historial todavía no existe: no hay nada en disco.";
+        NoHistoryFolder = "La carpeta de los datos todavía no existe: no hay nada en disco.";
+        DatabaseUnavailable = "La lista no se puede guardar en disco ({0}): lo que copies y guardes ahora se pierde al "
+            + "cerrar el programa.";
 
         NewTextTitle = "Nuevo texto"; SaveCopiedTitle = "Guardar el texto copiado"; EditSavedTitle = "Editar el texto guardado";
-        NameLabel = "Nombre (es lo que se ve en la lista):"; ContentLabel = "Contenido:";
+        NameLabel = "Nombre (opcional):"; ContentLabel = "Contenido:";
+        NameHintEmpty = "Sin nombre, la lista mostrará el contenido.";
+        NameHintNamed = "La lista mostrará «{0}»; el contenido queda oculto, ideal para una contraseña.";
         FolderOf = "Carpeta: "; NoFolder = "Sin carpeta"; Inside = "Dentro de: ";
         NewFolderTitle = "Nueva carpeta"; RenameFolderTitle = "Renombrar la carpeta"; FolderNameLabel = "Nombre de la carpeta:";
         Save = "Guardar";
@@ -283,16 +288,16 @@ static partial class Strings
             "- Si dejas el puntero sobre una entrada copiada que no cabe entera en su fila, al momento aparece "
                 + "completa en un recuadro: el texto con todas sus líneas, la imagen más grande. Desaparece en cuanto "
                 + "mueves el puntero.",
-            "- La estrella del extremo derecho de una entrada copiada (" + Key(Keys.Control | MainForm.PinKey) + ") la "
-                + "mantiene arriba de la columna: aparece atenuada al pasar por encima, y un clic la enciende o la "
-                + "apaga. Una entrada con estrella no caduca con los días del historial y se queda hasta que la "
-                + "quitas; copiar de nuevo el mismo texto no la mueve.",
+            "- La flecha del extremo derecho de una entrada copiada (" + Key(Keys.Control | MainForm.PinKey) + ") la "
+                + "mantiene un tiempo arriba de la columna: aparece atenuada al pasar por encima, y un clic la enciende "
+                + "o la apaga. La entrada se va igualmente cuando vencen los días del historial: lo que deba quedarse, "
+                + "guárdalo. Copiar de nuevo el mismo texto lo devuelve arriba con la hora nueva, flecha y número incluidos.",
             "- «" + NumberMenu + "», en el menú del clic derecho, da a un texto guardado o a una entrada copiada un "
                 + "número del 1 al " + MainForm.MaxNumber + ": luego, desde cualquier programa, " + MainForm.NumbersName
                 + " la pegan enseguida en la ventana en la que estás trabajando, sin abrir esta (la entrada va al "
                 + "portapapeles y Ctrl+V sigue solo). El número aparece en un pequeño recuadro a la derecha de la fila, "
-                + "y junto al texto guardado en el menú del icono; una entrada copiada que lo recibe también se lleva "
-                + "la estrella, que la conserva. Cada número es de una sola entrada: si se lo das a otra, pasa a ella.",
+                + "y junto al texto guardado en el menú del icono. Una entrada copiada conserva su número hasta que "
+                + "vencen sus días. Cada número es de una sola entrada: si se lo das a otra, pasa a ella.",
             "El signo de color de la izquierda dice qué es la entrada: un texto, una dirección web, un texto "
                 + "guardado. Las imágenes muestran una miniatura. Debajo de la entrada, en pequeño a la derecha, está la hora de la copia (el día, si "
                 + "no es de hoy) o el día en que se guardó.",
@@ -305,11 +310,12 @@ static partial class Strings
                 + "encuentran buscando.",
 
             "# Textos guardados",
-            "Son lo que quieres tener siempre a mano: una firma, una dirección, una contraseña. Cada uno tiene un "
-                + "nombre, y en la lista solo se ve el nombre.",
+            "Son lo que quieres tener siempre a mano: una firma, una dirección, una contraseña. No vencen nunca. El "
+                + "nombre es opcional: con nombre, la lista muestra solo el nombre y el contenido queda oculto, ideal "
+                + "para una contraseña; sin él, la lista muestra el contenido, como para una segunda dirección de correo.",
             "- «" + New + "» (" + Key(Keys.Control | MainForm.NewKey) + ") escribe un texto desde cero.",
-            "- «" + SaveDots + "» (" + Key(Keys.Control | MainForm.SaveKey) + "), en una entrada copiada, la conserva "
-                + "con un nombre; antes de guardar puedes retocar su contenido.",
+            "- «" + SaveDots + "» (" + Key(Keys.Control | MainForm.SaveKey) + "), en una entrada copiada, la conserva, "
+                + "con nombre o sin él; antes de guardar puedes retocar su contenido.",
             "- «" + EditDots + "» (" + Key(Keys.Control | MainForm.SaveKey) + "), en una entrada guardada, cambia su "
                 + "nombre o su contenido.",
             "- «" + Delete + "» (" + Key(Keys.Control | MainForm.DeleteKey) + ") borra el texto guardado, o quita de la "
@@ -318,8 +324,8 @@ static partial class Strings
                 + "unos segundos: la lista solo muestra su nombre, y pasar el puntero por encima no basta.",
             "- Los textos guardados también están en el menú del icono junto al reloj: elegir uno lo devuelve al "
                 + "portapapeles sin abrir la ventana.",
-            "Los textos guardados están en el registro de Windows, cifrados para tu usuario: otro usuario del mismo "
-                + "PC no puede leerlos. Cuando devuelves uno al portapapeles se marca como privado, para que el "
+            "Los textos guardados no vencen nunca. Están en la base de datos del programa, cifrados para tu usuario: "
+                + "otro usuario del mismo PC no puede leerlos. Cuando devuelves uno al portapapeles se marca como privado, para que el "
                 + "historial de Windows (Win+V) y los demás gestores del portapapeles lo ignoren. Las imágenes no se "
                 + "pueden guardar.",
 
@@ -387,15 +393,15 @@ static partial class Strings
             "# El historial",
             "Lo que copias se queda en la lista el número de días que decidas (" + Texts.DefaultKeepDays
                 + " si no lo cambias), también después de cerrar el programa o apagar el PC.",
-            "- Se guarda en " + Texts.Folder + ", un archivo por día, sin cifrar. Los días vencidos se borran solos.",
-            "- Con 0 días nada va al disco: quedan en memoria las últimas " + Texts.MaxRecent + " cosas copiadas, de "
-                + "ellas como mucho " + Texts.MaxPictures + " imágenes, y desaparecen al cerrar.",
+            "- Se guarda sin cifrar en " + Clips.DefaultFile + ", junto a los textos guardados, que en cambio están "
+                + "cifrados. Los días vencidos se borran solos.",
+            "- Con 0 días solo queda lo que copiaste hoy.",
             "- Lo que los gestores de contraseñas marcan como privado no se recuerda.",
-            "- Las entradas con estrella se quedan también más allá de esos días.",
+            "- También las entradas arriba se van cuando vencen sus días: lo que deba quedarse, guárdalo.",
             "- En las opciones, «" + CleanButton + "» borra enseguida lo que copiaste antes de los últimos días que "
-                + "escribes al lado: con 1 solo queda hoy, con 0 no queda nada. Pide confirmación, y no toca las "
-                + "entradas con estrella ni los textos guardados.",
-            "- Al desactivar el historial en las opciones se vacían la lista y los archivos en disco, estrellas incluidas.",
+                + "escribes al lado: con 1 solo queda hoy, con 0 no queda nada. Pide confirmación; también se van las "
+                + "entradas arriba, los textos guardados no se tocan nunca.",
+            "- Al desactivar el historial en las opciones se vacía la lista y se borra del disco lo que copiaste.",
 
             "# Las opciones",
             "El botón «" + Options + "» las muestra en lugar de la lista, y «" + List + "» vuelve atrás. Si dejas el "
@@ -406,8 +412,8 @@ static partial class Strings
                 + "vaciar el portapapeles después, el tecleo lento y los símbolos compuestos con códigos Alt.",
             "- " + HotkeysTitle + ": activa y desactiva " + type + ", " + pick + " y " + MainForm.NumbersName
                 + ", y les da otras teclas.",
-            "- " + HistoryTitle + ": si recordar lo que copias, durante cuántos días, el enlace a la carpeta de los "
-                + "archivos y el botón que la limpia enseguida.",
+            "- " + HistoryTitle + ": si recordar lo que copias, durante cuántos días, el enlace a la carpeta de la "
+                + "base de datos y el botón que limpia enseguida el historial.",
             "- " + ProgramTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño de la interfaz (botones, opciones, esta guía: en píxeles, reinician el programa) y los de las entradas (cambian enseguida), si seguir en el área de notificación y ocultarse al cambiar a otro "
                 + "programa, si iniciarse con Windows, y los botones para exportar e importar.",
 
@@ -416,7 +422,7 @@ static partial class Strings
                 + "como copia de seguridad o para pasarlos a otro PC. Cada uno pregunta si quieres solo los textos "
                 + "guardados o todo, es decir también lo copiado.",
             "- «" + ExportButton + "» escribe un archivo de texto que se abre con el Bloc de notas: los textos "
-                + "guardados con sus carpetas y, si lo pides, lo copiado con su hora y su estrella. Las imágenes no "
+                + "guardados con sus carpetas y, si lo pides, lo copiado con su hora y su flecha. Las imágenes no "
                 + "se incluyen.",
             "- En el archivo los textos van sin cifrar, contraseñas incluidas: guárdalo en un lugar seguro.",
             "- «" + ImportButton + "» lee un archivo así y añade lo que contiene a lo que ya hay. Si un texto guardado "
