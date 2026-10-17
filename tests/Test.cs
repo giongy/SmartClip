@@ -1037,7 +1037,7 @@ static class TestProgram
             "without a header the fragment is found by its markers");
 
         // A signature as a web mail copies it: inline styles, fonts, entities, a style sheet and a hidden part.
-        string signature = "<div style=\"font-family:Rockwell,serif\"><b><span style=\"font-size:20pt\">Sai&nbsp;Chavan</span></b></div>\r\n"
+        string signature = "<div style=\"font-family:'No Such Face',serif\"><b><span style=\"font-size:20pt\">Sai&nbsp;Chavan</span></b></div>\r\n"
             + "<div style='font-family: \"Georgia\"; font-size:12px'>Owner,\r\n   Munson&#8217;s   Pickles</div>"
             + "<style>div { color: red }</style><span style=\"display:none\">hidden</span><!-- a comment -->"
             + "<div><font face=\"Arial\" color=\"#808080\" size=\"2\">(872) 555-0179<br>sai@munsons.example</font></div>"
@@ -1048,7 +1048,7 @@ static class TestProgram
             "the text of HTML is what a browser shows: blocks on lines of their own, spaces as one, nothing hidden");
         // The run that starts with a text.
         Func<string, Run> at = delegate(string text) { return runs.Find(delegate(Run run) { return run.Text.TrimStart().StartsWith(text); }); };
-        Check(at("Sai").Font == "Rockwell" && at("Sai").Size == 20 && at("Sai").Style == FontStyle.Bold
+        Check(at("Sai").Font == "No Such Face" && at("Sai").Size == 20 && at("Sai").Style == FontStyle.Bold
             && at("Owner").Font == "Georgia" && at("Owner").Size == 9 && at("Owner").Style == FontStyle.Regular,
             "fonts, sizes in points or pixels, bold");
         Check(at("(872)").Font == "Arial" && at("(872)").Size == 10 && at("(872)").Color.ToArgb() == Color.FromArgb(128, 128, 128).ToArgb()

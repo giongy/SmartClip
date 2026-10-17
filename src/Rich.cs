@@ -243,8 +243,25 @@ static class Rich
             box.Text = "x";
             copy.Rtf = box.Rtf;
             copy.Select(0, 1);
-            using (Font shown = copy.SelectionFont) return shown == null ? Half(font.SizeInPoints) : Half(shown.SizeInPoints);
+            return Half(FormatOf(copy).yHeight / 20f);
         }
+    }
+
+    // The formatting of the selection as the box keeps it: also the name of a font this PC does not have, which
+    // SelectionFont would give as the font Windows puts in its place.
+    static Native.CHARFORMAT2 FormatOf(RichTextBox box)
+    {
+        Native.CHARFORMAT2 format = NewFormat();
+        Native.SendMessage(box.Handle, Native.EM_GETCHARFORMAT, (IntPtr)Native.SCF_SELECTION, ref format);
+        return format;
+    }
+
+    public static Native.CHARFORMAT2 NewFormat()
+    {
+        Native.CHARFORMAT2 format = new Native.CHARFORMAT2();
+        format.cbSize = Marshal.SizeOf(typeof(Native.CHARFORMAT2));
+        format.szFaceName = "";
+        return format;
     }
 
     // Character by character: a rich edit box tells the formatting only of what is selected.
@@ -263,20 +280,17 @@ static class Rich
                 continue;
             }
             box.Select(i, 1);
+            Native.CHARFORMAT2 shown = FormatOf(box);
             Run look = new Run();
-            using (Font shown = box.SelectionFont)
-            {
-                if (shown != null)
-                {
-                    float size = Half(shown.SizeInPoints);
-                    bool own = font != null && string.Equals(shown.Name, font.Name, StringComparison.OrdinalIgnoreCase);
-                    look.Font = own ? null : shown.Name;
-                    look.Size = size == ownSize ? 0 : size;
-                    look.Style = shown.Style & (FontStyle.Bold | FontStyle.Italic | FontStyle.Underline | FontStyle.Strikeout);
-                }
-            }
-            Color seen = box.SelectionColor;
-            look.Color = seen.ToArgb() == colour.ToArgb() ? Color.Empty : Color.FromArgb(seen.R, seen.G, seen.B);
+            float size = Half(shown.yHeight / 20f);   // in twentieths of a point
+            bool own = font != null && string.Equals(shown.szFaceName, font.Name, StringComparison.OrdinalIgnoreCase);
+            look.Font = own || string.IsNullOrEmpty(shown.szFaceName) ? null : shown.szFaceName;
+            look.Size = size == ownSize ? 0 : size;
+            look.Style = (FontStyle)(shown.dwEffects & (Native.CFE_BOLD | Native.CFE_ITALIC | Native.CFE_UNDERLINE | Native.CFE_STRIKEOUT));
+            // Without a colour of its own, text has that of Windows: the default too.
+            Color seen = ColorTranslator.FromWin32(shown.crTextColor);
+            bool automatic = (shown.dwEffects & Native.CFE_AUTOCOLOR) != 0;
+            look.Color = automatic || seen.ToArgb() == colour.ToArgb() ? Color.Empty : Color.FromArgb(seen.R, seen.G, seen.B);
             if (last == null || !last.Looks(look))
             {
                 if (last != null) last.Text = written.ToString();
@@ -859,9 +873,9 @@ class RichBox : RichTextBox
     public void Toggle(FontStyle style)
     {
         uint mask = (uint)style;   // the bits of FontStyle are those of the effects of the box
-        Native.CHARFORMAT2 now = Format();
+        Native.CHARFORMAT2 now = Rich.NewFormat();
         SendMessage(Native.EM_GETCHARFORMAT, ref now);
-        Native.CHARFORMAT2 change = Format();
+        Native.CHARFORMAT2 change = Rich.NewFormat();
         change.dwMask = mask;
         change.dwEffects = (now.dwMask & mask) != 0 && (now.dwEffects & mask) != 0 ? 0 : mask;
         Apply(change);
@@ -870,7 +884,7 @@ class RichBox : RichTextBox
     // The font of the selection; null: that of the box, which is the default.
     public void Face(string name)
     {
-        Native.CHARFORMAT2 change = name == null ? Own() : Format();
+        Native.CHARFORMAT2 change = name == null ? Own() : Rich.NewFormat();
         change.dwMask = Native.CFM_FACE;
         if (name != null) change.szFaceName = name;
         Apply(change);
@@ -879,7 +893,7 @@ class RichBox : RichTextBox
     // The size of the selection in points; 0: that of the box, which is the default.
     public void Points(float points)
     {
-        Native.CHARFORMAT2 change = points > 0 ? Format() : Own();
+        Native.CHARFORMAT2 change = points > 0 ? Rich.NewFormat() : Own();
         change.dwMask = Native.CFM_SIZE;
         if (points > 0) change.yHeight = (int)Math.Round(points * 20);   // in twentieths of a point
         Apply(change);
@@ -900,18 +914,11 @@ class RichBox : RichTextBox
         Select(start, length);
     }
 
-    static Native.CHARFORMAT2 Format()
-    {
-        Native.CHARFORMAT2 format = new Native.CHARFORMAT2();
-        format.cbSize = Marshal.SizeOf(typeof(Native.CHARFORMAT2));
-        format.szFaceName = "";
-        return format;
-    }
 
     // The formatting of the box itself, which text without formatting has.
     Native.CHARFORMAT2 Own()
     {
-        Native.CHARFORMAT2 format = Format();
+        Native.CHARFORMAT2 format = Rich.NewFormat();
         Native.SendMessage(Handle, Native.EM_GETCHARFORMAT, (IntPtr)Native.SCF_DEFAULT, ref format);
         return format;
     }
