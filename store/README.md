@@ -149,13 +149,15 @@ paste blocked
 ### What's new in this version
 
 ```
-Saved texts can now be formatted. Copy a mail signature with its bold, italic, fonts and colours and save it: it keeps its formatting, and Ctrl+V in a mail pastes it as it was. Where formatting does not count, the plain text arrives, and SmartClip types the plain text.
+A faster, smoother SmartClip.
 
-In the window of a text, buttons above the content make the selection bold, italic or underlined, give it a font and a size, or take its formatting away. What you paste there keeps its formatting.
+The lists no longer flicker when the pointer moves over them: each row is drawn in one go.
 
-The saved entries no longer each carry a star: one by the title of their column is enough, and each row shows what it is, a text, a web address or a formatted text.
+Every copy costs less: the list is read again only when something new has arrived, and the pictures in the history are no longer decoded again at each copy, which also keeps the memory lower.
 
-Exported files carry the formatting of saved texts too.
+Pasting a long formatted text into the window of a saved text is now immediate, even with tens of thousands of characters.
+
+Small fixes: the folder of a saved text fits on its button at every display scale.
 ```
 
 ### Screenshot captions
@@ -247,13 +249,15 @@ digitare password
 ### Novità di questa versione
 
 ```
-I testi salvati ora possono essere formattati. Copia una firma di posta con i suoi grassetti, corsivi, caratteri e colori e salvala: tiene la sua formattazione, e Ctrl+V in una mail la incolla com'era. Dove la formattazione non conta arriva il testo semplice, e SmartClip digita il testo semplice.
+Uno SmartClip più veloce e più fluido.
 
-Nella finestra di un testo, i pulsanti sopra il contenuto mettono la selezione in grassetto, corsivo o sottolineato, le danno un carattere e una dimensione, o le tolgono la formattazione. Ciò che incolli lì tiene la sua formattazione.
+Gli elenchi non sfarfallano più quando ci passi sopra con il puntatore: ogni riga si disegna in un colpo solo.
 
-Le voci salvate non hanno più una stella ciascuna: ne basta una accanto al titolo della colonna, e ogni riga dice che cos'è, un testo, un indirizzo web o un testo formattato.
+Ogni copia costa meno: l'elenco si rilegge solo quando è arrivato qualcosa di nuovo, e le immagini della cronologia non vengono più decodificate di nuovo a ogni copia, così si usa anche meno memoria.
 
-I file esportati portano con sé anche la formattazione dei testi salvati.
+Incollare un testo formattato lungo nella finestra di un testo salvato ora è immediato, anche con decine di migliaia di caratteri.
+
+Piccole correzioni: la cartella di un testo salvato sta nel suo pulsante a ogni scala dello schermo.
 ```
 
 ### Didascalie delle schermate
@@ -345,13 +349,15 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Los textos guardados ahora pueden tener formato. Copia una firma de correo con sus negritas, cursivas, fuentes y colores y guárdala: conserva su formato, y Ctrl+V en un correo la pega tal como era. Donde el formato no cuenta llega el texto sin formato, y SmartClip escribe el texto sin formato.
+Un SmartClip más rápido y más fluido.
 
-En la ventana de un texto, los botones sobre el contenido ponen la selección en negrita, cursiva o subrayado, le dan una fuente y un tamaño, o le quitan el formato. Lo que pegas ahí conserva su formato.
+Las listas ya no parpadean cuando pasas el puntero por encima: cada fila se dibuja de una vez.
 
-Las entradas guardadas ya no llevan cada una una estrella: basta una junto al título de su columna, y cada fila dice qué es, un texto, una dirección web o un texto con formato.
+Cada copia cuesta menos: la lista se vuelve a leer solo cuando ha llegado algo nuevo, y las imágenes del historial ya no se decodifican de nuevo en cada copia, lo que además reduce la memoria usada.
 
-Los archivos exportados llevan también el formato de los textos guardados.
+Pegar un texto con formato largo en la ventana de un texto guardado ahora es inmediato, incluso con decenas de miles de caracteres.
+
+Pequeñas correcciones: la carpeta de un texto guardado cabe en su botón con cualquier escala de pantalla.
 ```
 
 ### Leyendas de las capturas
@@ -443,13 +449,15 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Les textes enregistrés peuvent maintenant être mis en forme. Copiez une signature de courriel avec son gras, son italique, ses polices et ses couleurs et enregistrez-la : elle garde sa mise en forme, et Ctrl+V dans un courriel la colle telle qu'elle était. Là où la mise en forme ne compte pas arrive le texte brut, et SmartClip tape le texte brut.
+Un SmartClip plus rapide et plus fluide.
 
-Dans la fenêtre d'un texte, les boutons au-dessus du contenu mettent la sélection en gras, en italique ou soulignée, lui donnent une police et une taille, ou lui ôtent sa mise en forme. Ce que vous y collez garde sa mise en forme.
+Les listes ne scintillent plus quand le pointeur passe dessus : chaque ligne est dessinée d'un seul coup.
 
-Les éléments enregistrés n'ont plus chacun une étoile : une seule à côté du titre de leur colonne suffit, et chaque ligne dit ce qu'elle est, un texte, une adresse web ou un texte mis en forme.
+Chaque copie coûte moins : la liste n'est relue que lorsque quelque chose de nouveau est arrivé, et les images de l'historique ne sont plus décodées à nouveau à chaque copie, ce qui réduit aussi la mémoire utilisée.
 
-Les fichiers exportés emportent aussi la mise en forme des textes enregistrés.
+Coller un long texte mis en forme dans la fenêtre d'un texte enregistré est maintenant immédiat, même avec des dizaines de milliers de caractères.
+
+Petites corrections : le dossier d'un texte enregistré tient sur son bouton à toutes les échelles d'affichage.
 ```
 
 ### Légendes des captures
