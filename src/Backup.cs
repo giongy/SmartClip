@@ -16,9 +16,10 @@ class BackupResult
 // of its fields.
 class BackupWords
 {
-    public readonly string Group, Saved, Copied, Name, Folder, Time, Text, Pinned;
+    public readonly string Group, Saved, Copied, Name, Folder, Time, Text, Pinned, Html;
 
-    public BackupWords(string group, string saved, string copied, string name, string folder, string time, string text, string pinned)
+    public BackupWords(string group, string saved, string copied, string name, string folder, string time, string text, string pinned,
+        string html)
     {
         Group = group;
         Saved = saved;
@@ -28,22 +29,24 @@ class BackupWords
         Time = time;
         Text = text;
         Pinned = pinned;
+        Html = html;
     }
 }
 
 // The saved texts, and on request what was copied, written as they are to a text file that Notepad shows,
 // and read back from it. Each entry is a mark on a line of its own, a few fields, then its text: one line of
-// the file per line of text, each after a tab, which is what tells it from the rest. The file is written in
+// the file per line of text, each after a tab, which is what tells it from the rest. A formatted text has its
+// HTML before its text, in the same way: a version that does not know the field passes over it. The file is written in
 // the language in use and read in any of them: a file can go to a PC set to another language, and those
 // written before there were languages are in Italian.
 static class Backup
 {
     static readonly Dictionary<string, BackupWords> Words = new Dictionary<string, BackupWords>
     {
-        { "en", new BackupWords("[Folder]", "[Saved]", "[Copied]", "Name: ", "Folder: ", "Date: ", "Text:", "Pinned: yes") },
-        { "es", new BackupWords("[Carpeta]", "[Guardado]", "[Copiado]", "Nombre: ", "Carpeta: ", "Fecha: ", "Texto:", "Arriba: sí") },
-        { "fr", new BackupWords("[Dossier]", "[Enregistré]", "[Copié]", "Nom : ", "Dossier : ", "Date : ", "Texte :", "En haut : oui") },
-        { "it", new BackupWords("[Cartella]", "[Salvato]", "[Copiato]", "Nome: ", "Cartella: ", "Data: ", "Testo:", "In alto: sì") }
+        { "en", new BackupWords("[Folder]", "[Saved]", "[Copied]", "Name: ", "Folder: ", "Date: ", "Text:", "Pinned: yes", "HTML:") },
+        { "es", new BackupWords("[Carpeta]", "[Guardado]", "[Copiado]", "Nombre: ", "Carpeta: ", "Fecha: ", "Texto:", "Arriba: sí", "HTML:") },
+        { "fr", new BackupWords("[Dossier]", "[Enregistré]", "[Copié]", "Nom : ", "Dossier : ", "Date : ", "Texte :", "En haut : oui", "HTML :") },
+        { "it", new BackupWords("[Cartella]", "[Salvato]", "[Copiato]", "Nome: ", "Cartella: ", "Data: ", "Testo:", "In alto: sì", "HTML:") }
     };
     const int NoMark = 0, GroupMark = 1, SavedMark = 2, CopiedMark = 3;   // what an entry of the file is
     const string Indent = "\t";
@@ -83,10 +86,20 @@ static class Backup
             if (entry.Time != DateTime.MinValue) lines.Add(words.Time + entry.Time.ToString(TimeFormat, CultureInfo.InvariantCulture));
             if (entry.Pinned) lines.Add(words.Pinned);
             if (entry.IsGroup) continue;
+            if (entry.Saved && entry.Html != null)
+            {
+                lines.Add(words.Html);
+                Indented(lines, entry.Html);
+            }
             lines.Add(words.Text);
-            foreach (string line in entry.Text.Replace("\r\n", "\n").Split('\n')) lines.Add(Indent + line);
+            Indented(lines, entry.Text);
         }
         return lines;
+    }
+
+    static void Indented(List<string> lines, string text)
+    {
+        foreach (string line in text.Replace("\r\n", "\n").Split('\n')) lines.Add(Indent + line);
     }
 
     // What a line opens, in any of the languages: an entry of the file, or none.
@@ -130,6 +143,8 @@ static class Backup
         DateTime time = DateTime.MinValue;
         bool pinned = false;
         List<string> text = null;   // the lines of the text, once its field is met
+        List<string> html = null;   // the same of the HTML of a formatted text, which comes before it
+        List<string> into = null;   // which of the two the lines after a tab go to
         int blanks = 0;             // empty lines met inside a text: they count only if more text follows
         Action close = delegate
         {
@@ -146,6 +161,7 @@ static class Backup
                 Entry saved = new Entry(name, content, time);
                 saved.Saved = true;
                 saved.Group = Texts.CleanPath(group);   // a folder inside another is its path, as the list writes it
+                if (html != null && string.Join("", html.ToArray()).Trim().Length > 0) saved.Html = string.Join("\r\n", html.ToArray());
                 entries.Add(saved);
             }
             else if (mark == CopiedMark && content.Trim().Length > 0)
@@ -158,18 +174,18 @@ static class Backup
             name = group = null;
             time = DateTime.MinValue;
             pinned = false;
-            text = null;
+            text = html = into = null;
             blanks = 0;
         };
         foreach (string line in lines)
         {
             string value;
-            if (text != null && line.StartsWith(Indent))
+            if (into != null && line.StartsWith(Indent))
             {
-                for (; blanks > 0; blanks--) text.Add("");
-                text.Add(line.Substring(Indent.Length));
+                for (; blanks > 0; blanks--) into.Add("");
+                into.Add(line.Substring(Indent.Length));
             }
-            else if (text != null && line.Length == 0) blanks++;
+            else if (into != null && line.Length == 0) blanks++;
             else if (MarkOf(line) != NoMark)
             {
                 close();
@@ -181,7 +197,12 @@ static class Backup
             else if ((value = Field(line, delegate(BackupWords words) { return words.Time; })) != null)
                 DateTime.TryParseExact(value, TimeFormat, CultureInfo.InvariantCulture, DateTimeStyles.None, out time);
             else if (Is(line, delegate(BackupWords words) { return words.Pinned; })) pinned = true;
-            else if (Is(line, delegate(BackupWords words) { return words.Text; })) text = new List<string>();
+            else if (Is(line, delegate(BackupWords words) { return words.Html; })) into = html = new List<string>();
+            else if (Is(line, delegate(BackupWords words) { return words.Text; }))
+            {
+                into = text = new List<string>();
+                blanks = 0;   // those after the HTML belong to neither
+            }
         }
         close();
         return entries;
@@ -218,8 +239,8 @@ static class Backup
                 if (same != 0 && !overwrite) result.Kept++;
                 else
                 {
-                    if (same != 0) clips.Change(same, entry.Name, entry.Text, folder);
-                    else clips.AddSaved(entry.Name, entry.Text, folder, entry.Time);
+                    if (same != 0) clips.Change(same, entry.Name, entry.Text, entry.Html, null, folder);
+                    else clips.AddSaved(entry.Name, entry.Text, entry.Html, null, folder, entry.Time);
                     result.Saved++;
                 }
             }

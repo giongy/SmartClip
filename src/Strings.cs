@@ -319,6 +319,9 @@ static partial class Strings
     public static string NameLabel = "Name (optional):", ContentLabel = "Content:";
     public static string NameHintEmpty = "Without a name, the list shows the content.";
     public static string NameHintNamed = "The list shows “{0}”; the content stays hidden, which suits a password.";
+    public static string BoldTip = "Bold (Ctrl+B)", ItalicTip = "Italic (Ctrl+I)", UnderlineTip = "Underline (Ctrl+U)";
+    public static string TypefaceTip = "Font", PointsTip = "Size", PlainTip = "Remove the formatting: of the selection, or of all the text";
+    public static string DefaultLook = "Default", Points = "{0} pt";   // in the menus of font and size
     public static string FolderOf = "Folder: ", NoFolder = "No folder", Inside = "Inside: ";
     public static string NewFolderTitle = "New folder", RenameFolderTitle = "Rename the folder", FolderNameLabel = "Folder name:";
     public static string Save = "Save";
@@ -398,6 +401,17 @@ static partial class Strings
                 + "user of the same PC cannot read them. When you put one back on the clipboard it is marked as private, so that Windows "
                 + "clipboard history (Win+V) and other clipboard managers ignore it. A copied picture can be saved too: it always shows its thumbnail, with "
                 + "its name beside it if it has one.",
+            "A saved text can be formatted, as a mail signature is: bold, italic, underlined, fonts and sizes.",
+            "- Copy the signature from a mail or a document and save it: it keeps its formatting. The history keeps "
+                + "plain text, so a copied entry still has it only while it is among the last " + Rich.KeptCopies
+                + " copies since the program started.",
+            "- In the window of a text, the buttons above the content make the selection bold (Ctrl+B), italic "
+                + "(Ctrl+I) or underlined (Ctrl+U), give it a font and a size, or take its formatting away (with nothing "
+                + "selected, from all the text). What you paste there keeps its formatting.",
+            "- Chosen, a formatted text goes on the clipboard both formatted and plain: Ctrl+V in a mail pastes it "
+                + "formatted, where formatting does not count the plain text arrives, and " + type + " types the plain text.",
+            "- As long as you do not change it, it stays exactly as it was copied, links and pictures included. Once "
+                + "changed, it keeps only what the buttons know: links, pictures, alignment and lists are lost.",
 
             "# Folders",
             "When the saved texts become many you can gather them in folders, and folders in other folders.",
@@ -495,7 +509,8 @@ static partial class Strings
                 + "them back, as a backup or to move them to another PC. Each asks whether you want the saved texts "
                 + "only or everything, that is the copied items too.",
             "- “" + ExportButton + "” writes a text file that Notepad opens: the saved texts with their folders "
-                + "and, if you ask, the copied items with their time and arrow. Pictures are left out.",
+                + "(formatted ones with their HTML before the text) and, if you ask, the copied items with their time "
+                + "and arrow. Pictures are left out.",
             "- In the file the texts are unencrypted, passwords included: keep it somewhere safe.",
             "- “" + ImportButton + "” reads such a file and adds what it holds to what is already here. If a saved "
                 + "text has the name of an existing one it asks which to keep; copied items the list already has "

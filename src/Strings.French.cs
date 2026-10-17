@@ -276,6 +276,9 @@ static partial class Strings
         NameLabel = "Nom (facultatif) :"; ContentLabel = "Contenu :";
         NameHintEmpty = "Sans nom, la liste montrera le contenu.";
         NameHintNamed = "La liste montrera « {0} » ; le contenu reste caché, ce qui convient à un mot de passe.";
+        BoldTip = "Gras (Ctrl+B)"; ItalicTip = "Italique (Ctrl+I)"; UnderlineTip = "Souligné (Ctrl+U)";
+        TypefaceTip = "Police"; PointsTip = "Taille"; PlainTip = "Supprimer la mise en forme : de la sélection, ou de tout le texte";
+        DefaultLook = "Par défaut";
         FolderOf = "Dossier : "; NoFolder = "Aucun dossier"; Inside = "Dans : ";
         NewFolderTitle = "Nouveau dossier"; RenameFolderTitle = "Renommer le dossier"; FolderNameLabel = "Nom du dossier :";
         Save = "Enregistrer";
@@ -362,6 +365,19 @@ static partial class Strings
                 + "est marqué comme privé, pour que l'historique de Windows (Win+V) et les autres gestionnaires de "
                 + "presse-papiers l'ignorent. Une image copiée peut aussi être enregistrée : elle montre "
                 + "toujours sa miniature, avec son nom à côté si elle en a un.",
+            "Un texte enregistré peut être mis en forme, comme une signature de courriel : gras, italique, souligné, polices et tailles.",
+            "- Copiez la signature depuis un courriel ou un document et enregistrez-la : elle garde sa mise en forme. "
+                + "L'historique garde le texte brut, donc un élément copié l'a encore seulement tant qu'il est parmi les "
+                + Rich.KeptCopies + " dernières copies depuis le démarrage du programme.",
+            "- Dans la fenêtre d'un texte, les boutons au-dessus du contenu mettent la sélection en gras (Ctrl+B), en "
+                + "italique (Ctrl+I) ou soulignée (Ctrl+U), lui donnent une police et une taille, ou lui ôtent sa mise en "
+                + "forme (sans sélection, à tout le texte). Ce que vous y collez garde sa mise en forme.",
+            "- Choisi, un texte mis en forme va dans le presse-papiers mis en forme et en texte brut : Ctrl+V dans un "
+                + "courriel le colle mis en forme, là où la mise en forme ne compte pas arrive le texte brut, et " + type
+                + " tape le texte brut.",
+            "- Tant que vous ne le modifiez pas, il reste exactement tel qu'il a été copié, liens et images compris. "
+                + "Une fois modifié, il garde seulement ce que les boutons connaissent : liens, images, alignement et "
+                + "listes sont perdus.",
 
             "# Les dossiers",
             "Quand les textes enregistrés deviennent nombreux, vous pouvez les regrouper en dossiers, et les dossiers "
@@ -464,7 +480,8 @@ static partial class Strings
                 + "reprennent, comme sauvegarde ou pour les passer à un autre PC. Chacun demande si vous voulez "
                 + "seulement les textes enregistrés ou tout, c'est-à-dire aussi les éléments copiés.",
             "- « " + ExportButton + " » écrit un fichier texte que le Bloc-notes ouvre : les textes enregistrés avec "
-                + "leurs dossiers et, si vous le demandez, les éléments copiés avec leur heure et leur flèche. Les "
+                + "leurs dossiers (ceux mis en forme avec leur HTML avant le texte) et, si vous le demandez, les "
+                + "éléments copiés avec leur heure et leur flèche. Les "
                 + "images n'y vont pas.",
             "- Dans le fichier, les textes sont en clair, mots de passe compris : gardez-le en lieu sûr.",
             "- « " + ImportButton + " » lit un tel fichier et ajoute son contenu à ce qui existe déjà. Si un texte "

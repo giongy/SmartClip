@@ -61,6 +61,10 @@ condiviso su GitHub).
   - `Texts.cs` — `Entry` (una voce dell'elenco, o la riga di una cartella) e `Texts`: la lettura degli appunti
     (`Remember`, che passa la copia a `Clips`), i formati riservati, la ricerca, i percorsi delle cartelle.
   - `Backup.cs` — esportazione e importazione in un file di testo (`Backup`, `BackupResult`).
+  - `Rich.cs` — i testi salvati formattati (vedi sotto): `Run` (un pezzo di testo tutto uguale; ciò che non
+    imposta è «predefinito»), `Rich` (HTML e RTF degli appunti, l'intestazione di «HTML Format» in byte UTF-8,
+    le ultime copie formattate in memoria, conversioni HTML/RTF/casella ↔ `Run`, con `HtmlReader` che legge
+    l'HTML come lo mostra un browser) e `RichBox`, la casella del contenuto di `EditForm`.
   - `Typer.cs` — mappa dei tasti e invio (`Typer`, `Stroke`, `TypeOptions`, `TypeResult`).
   - `Native.cs` — funzioni e costanti di Windows.
   - `Sqlite.cs` — lo strato sul SQLite incluso in Windows (`winsqlite3.dll`, `DllImport` con `StdCall`, provato
@@ -84,7 +88,9 @@ condiviso su GitHub).
     transazione). Versione 2 (17/10/2026): nelle righe di `entries` le colonne grandi stanno in fondo (`hash`,
     `folded`, `preview`, `content` ultimo), perché SQLite tiene un valore grande in una catena di pagine e la legge
     tutta per arrivare a qualunque colonna dopo di lui: con `content` al terzo posto ogni ricarica dell'elenco e ogni
-    ricerca leggevano le immagini intere. **Le colonne nuove vanno messe prima di `hash`**. Ore in UTC, millisecondi dal 1970. Copiare di nuovo
+    ricerca leggevano le immagini intere. **Le colonne nuove vanno messe prima di `hash`**. Versione 3: `rtf` e
+    `html` dei testi salvati formattati, cifrati (lo schema li vuole solo su un salvato di testo, l'RTF solo
+    accanto all'HTML); `Upgrade` rifà la tabella anche per questo, perché `ADD COLUMN` li metterebbe in fondo. Ore in UTC, millisecondi dal 1970. Copiare di nuovo
     aggiorna la stessa riga (`hash`). `Entry` ha in più `Id`, `Saved`, `FolderId`. Un database nuovo si riempie
     dentro la transazione che lo crea (`new Clips(path, fill)`): se il riempimento fallisce non resta niente, e al
     prossimo avvio è di nuovo nuovo (`Created`).
@@ -315,6 +321,25 @@ condiviso su GitHub).
   percorso accorciato da sinistra se non ci sta; la stessa finestra, senza contenuto, chiede nome e posto di
   una cartella. In una ricerca le cartelle compaiono solo se contengono risultati, anche da chiuse, insieme a
   quelle che le contengono.
+- Testi salvati formattati (voluti dall'utente il 17/10/2026, per le firme di posta: grassetto, corsivo, caratteri e
+  dimensioni diversi; scelte sue: **solo i salvati**, modifica semplificata, HTML nell'esportazione). Nel database
+  `html` (sempre, se formattato) e `rtf` (solo se è arrivato con uno), cifrati; `Entry.Text` resta il testo semplice,
+  per la ricerca, l'elenco e la digitazione. I copiati restano testo semplice: la formattazione delle ultime
+  `Rich.KeptCopies` copie della sessione sta **solo in memoria** (`Rich.Remember` da `Texts.Remember`, `Rich.Recent`),
+  così salvare una copia recente la salva formattata. `Use` mette negli appunti testo, «HTML Format» (con
+  l'intestazione in byte, `Rich.Document`) e RTF. In `EditForm` il contenuto è una `RichBox`: si mostra dai `Run`
+  (`Rich.ToRtf`, nei colori del tema: il nero o quasi si legge come predefinito, `DarkLimit`), i pulsanti sopra (B, I,
+  U, carattere e dimensione da un menu con «Predefinito», la gomma) usano `EM_SETCHARFORMAT` sulla selezione, Ctrl+B/I/U
+  pure, l'incolla tiene la formattazione (RTF prima, poi HTML) e i tasti di RichEdit per i paragrafi non fanno
+  niente. La formattazione vale solo se dice lo stesso testo del testo semplice (`Rich.Matches`, solo lettere e
+  cifre): copiando dalla barra degli indirizzi, Chrome ed Edge danno l'indirizzo come testo e come HTML un link con
+  il titolo della pagina, che salvando prendeva il posto dell'indirizzo (trovato dall'utente il 17/10/2026). Al salvataggio (`Conclude`): senza formattazione è testo semplice; **se l'RTF della casella è quello di
+  quando si è aperta** si tengono HTML e RTF arrivati (link, tabelle, immagini compresi); altrimenti l'HTML si riscrive
+  dai `Run` e l'RTF si lascia (scriverlo dai `Run` vorrebbe un carattere predefinito che non c'è). Ciò che non ha
+  carattere, dimensione o colore propri non ne ha neanche nell'HTML: prende quelli di dove si incolla. La dimensione
+  predefinita della casella si misura passando dal suo RTF (`SizeIn`: la casella arrotonda ai pixel, 11 pt diventava
+  11,5) e la gomma copia il formato predefinito della casella (`SCF_DEFAULT`). Esportati, l'HTML sta prima del testo
+  (`HTML:`), così le versioni vecchie lo saltano; l'importazione lo riprende, senza RTF.
 - I testi salvati stanno anche nel menu dell'icona del tray (voluto dall'utente: «prenderli senza aprire
   l'app»), dopo «Apri», ogni cartella un sottomenu, aperta o chiusa che sia: `ShowSaved`, rifatto a ogni
   apertura del menu da `entries`. La scelta passa da `Use` come nell'elenco: solo appunti, niente digitazione.
@@ -366,7 +391,7 @@ condiviso su GitHub).
   bianco): grigio caldo neutro con tocchi di colore nelle icone. I colori stanno tutti in cima a `Look`; i
   segni (`Sign`, le icone di Windows dal carattere Segoe Fluent Icons, o Segoe MDL2 Assets su Windows 10, in
   `Look.Glyph`; senza nessuno dei due disegnati a mano su una griglia di 16) dicono cos'è una voce — testo,
-  indirizzo, salvato — e stanno sui pulsanti (`RoundButton.Sign`). Barra del titolo e barre di scorrimento
+  indirizzo, testo formattato — e stanno sui pulsanti (`RoundButton.Sign`). Barra del titolo e barre di scorrimento
   seguono da sole la luminosità dello sfondo (`Look.Dark`).
 - Chiaro o scuro come Windows per le app (voluto dall'utente il 15/10/2026: «il più moderno possibile»
   restando in WinForms, rinunciando a WinUI per non perdere la compilazione senza installare nulla), dalla
@@ -409,7 +434,7 @@ condiviso su GitHub).
   selezionata è corta e arrotondata, come nella colonna di Impostazioni (`MarkShare`).
 - Aspetto (`Look`): barra del titolo nel colore della finestra
   (`DwmSetWindowAttribute`, solo Windows 11: altrove fallisce senza danni), pulsanti piatti con un solo
-  pulsante in colore d'accento, righe dell'elenco disegnate a mano (`DrawEntry`) con il segno ★/▣ in colonna.
+  pulsante in colore d'accento, righe dell'elenco disegnate a mano (`DrawEntry`) con il segno in colonna: testo, indirizzo, testo formattato (`SignOf`); i salvati non hanno più ciascuno la stella (voluto dall'utente il 17/10/2026: «se sono salvati si sa»), che sta una volta sola prima del titolo «Salvati» (`DrawStar`, spazio fatto con `Padding` in `OnLoad`, dopo la scala).
   I controlli che Windows non lascia scurire sono stati sostituiti: le caselle di testo stanno senza bordo
   dentro un pannello (`Look.Frame`), le spunte sono interruttori disegnati (`Toggle`, restano `CheckBox`; voluti
   dall'utente al posto dei quadratini), l'attesa è una casella di testo
@@ -602,14 +627,14 @@ cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
 - `tests.exe map` — stampa la mappa della tastiera attiva e confronta la tabella americana (solo lettere e
   cifre, se il layout USA non è installato).
 - `tests.exe texts` — la logica attorno all'elenco, senza aprirlo e senza toccare gli appunti: formati riservati,
-  ricerca, percorsi delle cartelle, file esportato, caratteri, lingue, il log.
+  ricerca, percorsi delle cartelle, file esportato, caratteri, testi formattati (`RichTest`), lingue, il log.
 - `tests.exe data` — il database, in file della cartella di prova: per ora lo strato SQLite (`SqliteTest`: testi
   e byte in andata e ritorno, NULL e byte vuoti, regole rifiutate, transazioni annidate, file liberato alla
   chiusura) e `Clips` (`ClipsTest`: copiati, freccia, immagini, numeri, regole dello schema provate scrivendo
   SQL a mano, salvati con e senza nome, giorni, cartelle) e la migrazione (`MigrationTest`: i dati vecchi li
   scrive il `Texts` di oggi nella chiave e nella cartella di prova, più i casi difficili scritti a mano; poi
   il confronto voce per voce, i dati vecchi intatti, una migrazione fallita a metà che al riavvio riparte) e
-  l'importazione di un file esportato (`BackupTest`) e lo spostamento del database in un'altra cartella
+  i testi salvati formattati (`FormattedTest`), l'importazione di un file esportato (`BackupTest`) e lo spostamento del database in un'altra cartella
   (`MoveTest`). Lo spostamento dalla finestra, la cartella scelta che all'avvio non c'è più e il giro completo
   «esporta dalla finestra, importa in un database vuoto» (come tra due PC: `Exported`) li prova `shot`.
 - `tests.exe type` — apre una finestrella e ci digita davvero: tutti i caratteri ASCII, accentate, simboli con
@@ -618,7 +643,7 @@ cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
 - `tests.exe shot <prefisso>` — non è in `test.cmd`: salva immagini PNG della finestra (elenco con voci
   finte, opzioni con ogni pagina in `-options-1`…`-4`, stati lunghi) per controllare l'aspetto senza mostrarla.
 - `tests.exe store <cartella> <lingua>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno
-  sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>` (in chiaro, tranne l'ultima, `8-dark`), e
+  sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>` (in scuro, che sullo Store fa più effetto, tranne l'ultima, `8-light`; lo sfondo si scurisce con il tema), e
   l'icona 300 × 300 in `<cartella>`. Mostra le finestre qualche secondo; a programma chiuso, come `real`, perché le
   scorciatoie non risultino occupate.
 - `shot`, `real` e `store` accettano la lingua come ultimo argomento (`en`, `es`, `fr`, `it`; senza, inglese) e
@@ -676,6 +701,11 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - I numeri delle voci dal vivo: Ctrl+Maiusc+cifra premuti davvero in un altro programma (anche in un desktop
   remoto), l'avviso dei tasti già usati, il clic su «Scorciatoia». Provati la logica (`texts`), la cattura dei
   tasti (`shot`), il menu aperto da `tests.exe real` e `Typer.Paste` in una finestrella (`type`).
+- I testi formattati dal vivo: la copia di una firma vera da Outlook, Gmail o Word e il suo salvataggio, l'incolla
+  formattato in Outlook, Gmail e Word, i pulsanti cliccati e Ctrl+B/I/U premuti davvero, i menu di carattere e
+  dimensione. Provati la logica (`texts`: HTML letto e riscritto, la casella con i pulsanti chiamati dal codice,
+  l'intestazione di «HTML Format»), il database e l'esportazione (`data`), la finestra con la firma di prova
+  (`real`). Mai cambiato il tema a finestra aperta: `ForeColor` di una `RichTextBox` ricolora tutto il testo.
 - Il tema dal vivo: il cambio da Impostazioni di Windows a programma aperto (provati solo `Look.Switch` da
   `shot` e le immagini di `real` in chiaro e in scuro), il menu delle caselle di testo scurito da
   `SetPreferredAppMode`, l'interruttore che scorre, l'anello del focus, `AskForm` aperta dal programma vero.

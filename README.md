@@ -93,6 +93,16 @@ always listens again.
 Three buttons under the lists manage the saved texts; each opens a small window with a name, optional, and a
 content box. Under the name a grey line says what the list will show.
 
+A saved text can be **formatted**, as a mail signature is: bold, italic, underlined, fonts, sizes and colours.
+Copy the signature from a mail or a document and save it, or paste it into the content box: it keeps its
+formatting. The history stores plain text only, so a copied entry is saved formatted while it is among the last
+10 copies since the program started. Above the content box, buttons make the selection bold (Ctrl+B), italic
+(Ctrl+I) or underlined (Ctrl+U), give it a font and a size from a menu, or remove the formatting (with nothing
+selected, from all the text). Chosen from the list, a formatted text goes on the clipboard as HTML, as RTF when
+it came with one, and as plain text: a mail pastes it formatted, a plain field gets the text, and Ctrl+Alt+V
+types the text. As long as it is not changed it stays exactly as it was copied, links and pictures included;
+once edited, it is written again from what the buttons know, and links, pictures, alignment and lists are lost.
+
 Saved texts can be gathered in folders, and folders in other folders. **New folder…** is in the right-click menu
 (Ctrl+Shift+N) and creates the folder inside the selected one; **Move to** moves a saved text or a whole folder, and the window of a text or a folder has the same choice beside its
 buttons. A click on a folder opens and closes it, and it is found as it was left. With a folder selected the
@@ -172,8 +182,9 @@ waits for the new keys, Esc keeps the current ones and Del goes back to the defa
 types symbols, avoid Ctrl+Alt with a letter that has one (E for the euro sign, for example): the hotkey would
 fire while you type it. The key names in this page are the defaults, as the English interface writes them.
 
-Under **Program**, the buttons **Export…** and **Import…** write the saved texts, with their folders, to a
-plain text file that Notepad opens, and read such a file back, on this PC or another. Each asks whether to take
+Under **Program**, the buttons **Export…** and **Import…** write the saved texts, with their folders (the
+formatted ones with their HTML too), to a plain text file that Notepad opens, and read such a file back, on this
+PC or another. Each asks whether to take
 only the saved texts or everything, that is also what was copied (pictures are left out). The file holds the
 texts **in clear**, passwords included. Importing adds to what is there: when a saved text has the name of an
 existing one it asks which to keep, and copied texts already in the list are not repeated. A file exported in one

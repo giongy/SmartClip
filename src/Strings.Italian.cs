@@ -267,6 +267,9 @@ static partial class Strings
         NameLabel = "Nome (facoltativo):"; ContentLabel = "Contenuto:";
         NameHintEmpty = "Senza nome, nell'elenco si vedrà il contenuto.";
         NameHintNamed = "Nell'elenco si vedrà «{0}»; il contenuto resta nascosto, adatto alle password.";
+        BoldTip = "Grassetto (Ctrl+B)"; ItalicTip = "Corsivo (Ctrl+I)"; UnderlineTip = "Sottolineato (Ctrl+U)";
+        TypefaceTip = "Carattere"; PointsTip = "Dimensione"; PlainTip = "Togli la formattazione: della selezione, o di tutto il testo";
+        DefaultLook = "Predefinito";
         FolderOf = "Cartella: "; NoFolder = "Nessuna cartella"; Inside = "Dentro: ";
         NewFolderTitle = "Nuova cartella"; RenameFolderTitle = "Rinomina la cartella"; FolderNameLabel = "Nome della cartella:";
         Save = "Salva";
@@ -346,6 +349,17 @@ static partial class Strings
                 + "utente dello stesso PC non li può leggere. Quando ne rimetti uno negli appunti viene segnato come riservato, perché la "
                 + "cronologia di Windows (Win+V) e gli altri gestori di appunti lo ignorino. Si può salvare anche un'immagine copiata: mostra sempre la "
                 + "sua miniatura, con accanto il nome se ne ha uno.",
+            "Un testo salvato può essere formattato, come una firma di posta: grassetto, corsivo, sottolineato, caratteri e dimensioni.",
+            "- Copia la firma da una mail o da un documento e salvala: tiene la sua formattazione. La cronologia tiene "
+                + "il testo semplice, quindi una voce copiata ce l'ha ancora solo finché è tra le ultime " + Rich.KeptCopies
+                + " copie da quando il programma è partito.",
+            "- Nella finestra di un testo, i pulsanti sopra il contenuto mettono la selezione in grassetto (Ctrl+B), "
+                + "corsivo (Ctrl+I) o sottolineato (Ctrl+U), le danno un carattere e una dimensione, o le tolgono la "
+                + "formattazione (senza selezione, a tutto il testo). Ciò che incolli lì tiene la sua formattazione.",
+            "- Scelto, un testo formattato va negli appunti sia formattato sia semplice: Ctrl+V in una mail lo incolla "
+                + "formattato, dove la formattazione non conta arriva il testo semplice, e " + type + " digita il testo semplice.",
+            "- Finché non lo cambi resta esattamente com'era stato copiato, link e immagini compresi. Una volta "
+                + "cambiato tiene solo ciò che i pulsanti conoscono: link, immagini, allineamento ed elenchi si perdono.",
 
             "# Le cartelle",
             "Quando i testi salvati diventano tanti puoi raccoglierli in cartelle, e le cartelle in altre cartelle.",
@@ -444,7 +458,8 @@ static partial class Strings
                 + "riprendono, per una copia di sicurezza o per passarli a un altro PC. Ognuno chiede se vuoi solo i "
                 + "testi salvati o tutto, cioè anche le cose copiate.",
             "- «" + ExportButton + "» scrive un file di testo che si apre con il Blocco note: i testi salvati con le "
-                + "loro cartelle e, se lo chiedi, le cose copiate con l'ora e la freccia. Le immagini non ci vanno.",
+                + "loro cartelle (quelli formattati con il loro HTML prima del testo) e, se lo chiedi, le cose copiate "
+                + "con l'ora e la freccia. Le immagini non ci vanno.",
             "- Nel file i testi sono in chiaro, password comprese: tienilo in un posto sicuro.",
             "- «" + ImportButton + "» legge un file così e aggiunge ciò che contiene a quello che c'è già. Se un testo "
                 + "salvato ha il nome di uno esistente chiede quale tenere; le cose copiate che l'elenco ha già non si "

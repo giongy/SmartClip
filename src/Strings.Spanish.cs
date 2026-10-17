@@ -269,6 +269,9 @@ static partial class Strings
         NameLabel = "Nombre (opcional):"; ContentLabel = "Contenido:";
         NameHintEmpty = "Sin nombre, la lista mostrará el contenido.";
         NameHintNamed = "La lista mostrará «{0}»; el contenido queda oculto, ideal para una contraseña.";
+        BoldTip = "Negrita (Ctrl+B)"; ItalicTip = "Cursiva (Ctrl+I)"; UnderlineTip = "Subrayado (Ctrl+U)";
+        TypefaceTip = "Fuente"; PointsTip = "Tamaño"; PlainTip = "Quitar el formato: de la selección, o de todo el texto";
+        DefaultLook = "Predeterminado";
         FolderOf = "Carpeta: "; NoFolder = "Sin carpeta"; Inside = "Dentro de: ";
         NewFolderTitle = "Nueva carpeta"; RenameFolderTitle = "Renombrar la carpeta"; FolderNameLabel = "Nombre de la carpeta:";
         Save = "Guardar";
@@ -351,6 +354,17 @@ static partial class Strings
                 + "otro usuario del mismo PC no puede leerlos. Cuando devuelves uno al portapapeles se marca como privado, para que el "
                 + "historial de Windows (Win+V) y los demás gestores del portapapeles lo ignoren. También se puede "
                 + "guardar una imagen copiada: siempre muestra su miniatura, con su nombre al lado si lo tiene.",
+            "Un texto guardado puede tener formato, como una firma de correo: negrita, cursiva, subrayado, fuentes y tamaños.",
+            "- Copia la firma de un correo o de un documento y guárdala: conserva su formato. El historial guarda "
+                + "texto sin formato, así que una entrada copiada lo tiene todavía solo mientras está entre las últimas "
+                + Rich.KeptCopies + " copias desde que se abrió el programa.",
+            "- En la ventana de un texto, los botones sobre el contenido ponen la selección en negrita (Ctrl+B), "
+                + "cursiva (Ctrl+I) o subrayado (Ctrl+U), le dan una fuente y un tamaño, o le quitan el formato (sin "
+                + "selección, a todo el texto). Lo que pegas ahí conserva su formato.",
+            "- Elegido, un texto con formato va al portapapeles con formato y sin él: Ctrl+V en un correo lo pega "
+                + "con formato, donde el formato no cuenta llega el texto sin formato, y " + type + " escribe el texto sin formato.",
+            "- Mientras no lo cambies queda exactamente como se copió, enlaces e imágenes incluidos. Una vez "
+                + "cambiado conserva solo lo que conocen los botones: enlaces, imágenes, alineación y listas se pierden.",
 
             "# Carpetas",
             "Cuando los textos guardados son muchos puedes reunirlos en carpetas, y las carpetas en otras carpetas.",
@@ -452,7 +466,8 @@ static partial class Strings
                 + "como copia de seguridad o para pasarlos a otro PC. Cada uno pregunta si quieres solo los textos "
                 + "guardados o todo, es decir también lo copiado.",
             "- «" + ExportButton + "» escribe un archivo de texto que se abre con el Bloc de notas: los textos "
-                + "guardados con sus carpetas y, si lo pides, lo copiado con su hora y su flecha. Las imágenes no "
+                + "guardados con sus carpetas (los que tienen formato, con su HTML antes del texto) y, si lo pides, "
+                + "lo copiado con su hora y su flecha. Las imágenes no "
                 + "se incluyen.",
             "- En el archivo los textos van sin cifrar, contraseñas incluidas: guárdalo en un lugar seguro.",
             "- «" + ImportButton + "» lee un archivo así y añade lo que contiene a lo que ya hay. Si un texto guardado "

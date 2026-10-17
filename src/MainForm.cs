@@ -266,6 +266,7 @@ partial class MainForm : Window
         recentTitle = NewLabel(Strings.RecentTitle, Edge, titleTop);
         savedTitle = NewLabel(Strings.SavedTitle, savedLeft, titleTop);
         recentTitle.Font = savedTitle.Font = Look.StrongFont;
+        savedTitle.Paint += DrawStar;   // room is made for it once the window has its scale (OnLoad)
         recentList.SetBounds(Edge, listTop, savedLeft - Edge - Edge, listHeight);
         savedList.SetBounds(savedLeft, listTop, SavedWidth, listHeight);
         recentCard = Look.Wrap(recentList, ListPadding);
@@ -606,6 +607,7 @@ partial class MainForm : Window
     {
         base.OnLoad(e);
         MinimumSize = Size;   // as designed, at the scale of this screen
+        savedTitle.Padding = new Padding(StarSide + StarSide / 3, 0, 0, 0);
         // The size the user left it at, never smaller than designed nor larger than the screen, which it stays on.
         if (savedSize.Width > 0 && savedSize.Height > 0)
         {

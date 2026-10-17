@@ -26,6 +26,9 @@ class Entry
     public long Id;
     public bool Saved;
     public long FolderId;
+    // Of a formatted saved text (Rich), the HTML it is pasted as, and the RTF if it was copied with one; null for
+    // the others. Text is its plain text, as it is typed and searched.
+    public string Html, Rtf;
     public readonly int Width, Height;   // of a picture
     public readonly Image Preview;       // null for a text
     public byte[] Png;                   // a picture just copied, as PNG
@@ -149,9 +152,10 @@ static class Texts
         {
             IDataObject data = Clipboard.GetDataObject();
             if (data == null || IsPrivate(data)) return;
-            // Programs that copy both (a spreadsheet, a word processor) mean the text.
+            // Programs that copy both (a spreadsheet, a word processor) mean the text. Its formatting, if it has
+            // some, stays in memory for a while, in case it is saved.
             string text = data.GetData(DataFormats.UnicodeText) as string;
-            if (text != null) clips.AddText(text);
+            if (text != null && clips.AddText(text)) Rich.Remember(text, data);
             else
             {
                 using (Image picture = data.GetData(DataFormats.Bitmap) as Image)

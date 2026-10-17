@@ -26,8 +26,8 @@ class Folder
 sealed class Clips : IDisposable
 {
     // In PRAGMA user_version: a newer file is refused, an older one brought up to date (Upgrade). 2: the large
-    // columns of the entries at the end of their rows.
-    public const int SchemaVersion = 2;
+    // columns of the entries at the end of their rows. 3: the formatting of saved texts.
+    public const int SchemaVersion = 3;
     const int TextKind = 1, PictureKind = 2;
     // The most the copied pictures take, previews included: beyond it the oldest go (TrimPictures). The checks
     // make it smaller.
@@ -55,6 +55,7 @@ sealed class Clips : IDisposable
         + " folder_id INTEGER REFERENCES folders (id),"
         + " pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)),"
         + " number INTEGER UNIQUE CHECK (number BETWEEN 1 AND " + MainForm.MaxNumber + "),"
+        + " rtf BLOB, html BLOB,"                    // of a formatted saved text (Rich), encrypted
         + " hash BLOB,"                              // of a copied entry, to know it when it is copied again
         + " folded TEXT,"                            // of a copied entry, as the search compares it (Texts.Fold)
         + " preview BLOB,"                           // of a picture, as PNG; encrypted if saved
@@ -63,16 +64,20 @@ sealed class Clips : IDisposable
         // Nothing of a saved entry stays readable: its search text and its hash would give its content away.
         + " CHECK (saved = 0 OR (pinned = 0 AND folded IS NULL AND hash IS NULL)),"
         + " CHECK ((name IS NULL) = (name_key IS NULL)),"
-        + " CHECK ((kind = " + PictureKind + ") = (preview IS NOT NULL)));"
+        + " CHECK ((kind = " + PictureKind + ") = (preview IS NOT NULL)),"
+        // Only saved texts are kept formatted, always with HTML, which every program that takes formatting reads.
+        + " CHECK (html IS NULL OR (saved = 1 AND kind = " + TextKind + ")),"
+        + " CHECK (rtf IS NULL OR html IS NOT NULL));"
         + "CREATE INDEX entries_recent ON entries (saved, pinned DESC, copied_at DESC);"
         + "CREATE INDEX entries_hash ON entries (hash) WHERE hash IS NOT NULL;";
-    const string EntryFields = "id, kind, width, height, copied_at, saved, saved_at, name, name_key, folder_id, pinned, number,"
+    // The columns of the entries in versions 1 and 2, which an upgrade copies into the table of today.
+    const string OldFields = "id, kind, width, height, copied_at, saved, saved_at, name, name_key, folder_id, pinned, number,"
         + " hash, folded, preview, content";
     static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     // The columns an entry is read from, in the order Read takes them. The content of a copied picture is left
     // out: it is read when it is chosen (Png).
     static readonly string EntryColumns ="id, kind, CASE WHEN kind = " + TextKind + " THEN content END, preview, width, height,"
-        + " copied_at, saved, saved_at, name, folder_id, pinned, number";
+        + " copied_at, saved, saved_at, name, folder_id, pinned, number, html, rtf";
 
     public const string Memory = ":memory:";   // a database that is not a file: when the file cannot be opened
     // Where the program keeps it; the checks use one of their own.
@@ -130,13 +135,14 @@ sealed class Clips : IDisposable
     {
         using (Transaction transaction = data.Begin())
         {
-            // 1 → 2: the same entries, the large columns at the end. The table is made anew under its name and
-            // filled from the old one.
-            if (version < 2)
+            // 1 → 2: the same entries, the large columns at the end. 2 → 3: the columns of the formatting, before
+            // the large ones, which ADD COLUMN would put after them. Either way the table is made anew under its
+            // name and filled from the old one.
+            if (version < 3)
             {
                 data.Execute("DROP INDEX entries_recent; DROP INDEX entries_hash; ALTER TABLE entries RENAME TO entries_old;");
                 data.Execute(EntriesSchema);
-                data.Execute("INSERT INTO entries (" + EntryFields + ") SELECT " + EntryFields + " FROM entries_old; DROP TABLE entries_old;");
+                data.Execute("INSERT INTO entries (" + OldFields + ") SELECT " + OldFields + " FROM entries_old; DROP TABLE entries_old;");
             }
             data.Execute("PRAGMA user_version = " + SchemaVersion);
             transaction.Commit();
@@ -518,23 +524,36 @@ sealed class Clips : IDisposable
     // knows when it was saved). Returns its id.
     public long AddSaved(string name, string text, long folder, DateTime time)
     {
+        return AddSaved(name, text, null, null, folder, time);
+    }
+
+    // The same, formatted if 'html' is not null; 'rtf' only beside it.
+    public long AddSaved(string name, string text, string html, string rtf, long folder, DateTime time)
+    {
         bool dated = time != DateTime.MinValue;
-        data.Execute("INSERT INTO entries (kind, content, copied_at, saved, saved_at, name, name_key, folder_id)"
-            + " VALUES (?1, ?2, ?3, 1, ?4, ?5, ?6, ?7)",
+        data.Execute("INSERT INTO entries (kind, content, copied_at, saved, saved_at, name, name_key, folder_id, html, rtf)"
+            + " VALUES (?1, ?2, ?3, 1, ?4, ?5, ?6, ?7, ?8, ?9)",
             TextKind, Protect(Encoding.UTF8.GetBytes(text)), Stamp(dated ? time : DateTime.Now), dated ? (object)Stamp(time) : null,
-            Name(name), Key(name), Place(folder));
+            Name(name), Key(name), Place(folder), Secret(html), Secret(rtf));
         return data.LastId;
     }
 
-    // Changes the name, the folder and, unless 'text' is null (a picture), the content of a saved entry.
+    // Changes the name, the folder and, unless 'text' is null (a picture), the content of a saved entry: plain.
     public void Change(long id, string name, string text, long folder)
+    {
+        Change(id, name, text, null, null, folder);
+    }
+
+    // The same, the content formatted if 'html' is not null.
+    public void Change(long id, string name, string text, string html, string rtf, long folder)
     {
         if (text == null)
             data.Execute("UPDATE entries SET name = ?2, name_key = ?3, folder_id = ?4 WHERE id = ?1 AND saved = 1",
                 id, Name(name), Key(name), Place(folder));
         else
-            data.Execute("UPDATE entries SET name = ?2, name_key = ?3, folder_id = ?4, content = ?5 WHERE id = ?1 AND saved = 1 AND kind = ?6",
-                id, Name(name), Key(name), Place(folder), Protect(Encoding.UTF8.GetBytes(text)), TextKind);
+            data.Execute("UPDATE entries SET name = ?2, name_key = ?3, folder_id = ?4, content = ?5, html = ?7, rtf = ?8"
+                + " WHERE id = ?1 AND saved = 1 AND kind = ?6",
+                id, Name(name), Key(name), Place(folder), Protect(Encoding.UTF8.GetBytes(text)), TextKind, Secret(html), Secret(rtf));
         if (data.Changes == 0) throw new InvalidOperationException("No saved entry " + id);
     }
 
@@ -764,6 +783,8 @@ sealed class Clips : IDisposable
         {
             byte[] content = row.Blob(2);
             entry = new Entry(name, Encoding.UTF8.GetString(saved ? Unprotect(content) : content), time);
+            entry.Html = Revealed(row.Blob(13));
+            entry.Rtf = Revealed(row.Blob(14));
         }
         long id = row.Long(0);
         if (entry.Picture) entry.PngSource = delegate { return Png(id); };
@@ -818,6 +839,17 @@ sealed class Clips : IDisposable
     static byte[] Unprotect(byte[] secret)
     {
         return ProtectedData.Unprotect(secret, null, DataProtectionScope.CurrentUser);
+    }
+
+    // A text that may be missing, as a saved entry keeps it: encrypted, or NULL.
+    static object Secret(string text)
+    {
+        return text == null ? null : Protect(Encoding.UTF8.GetBytes(text));
+    }
+
+    static string Revealed(byte[] secret)
+    {
+        return secret == null ? null : Encoding.UTF8.GetString(Unprotect(secret));
     }
 }
 

@@ -83,10 +83,13 @@ class Backdrop : Form
 
     protected override bool ShowWithoutActivation { get { return true; } }
 
+    // The teal of the icon: lighter behind light windows, deeper behind dark ones. Read as it paints, so it follows
+    // a change of theme.
     protected override void OnPaintBackground(PaintEventArgs e)
     {
-        using (System.Drawing.Drawing2D.LinearGradientBrush brush = new System.Drawing.Drawing2D.LinearGradientBrush(
-            ClientRectangle, Color.FromArgb(150, 196, 200), Color.FromArgb(208, 224, 214), 35f))   // the teal of the icon, lighter
+        using (System.Drawing.Drawing2D.LinearGradientBrush brush = Look.Dark
+            ? new System.Drawing.Drawing2D.LinearGradientBrush(ClientRectangle, Color.FromArgb(14, 52, 58), Color.FromArgb(34, 78, 74), 35f)
+            : new System.Drawing.Drawing2D.LinearGradientBrush(ClientRectangle, Color.FromArgb(150, 196, 200), Color.FromArgb(208, 224, 214), 35f))
         {
             e.Graphics.FillRectangle(brush, ClientRectangle);
         }
@@ -174,10 +177,47 @@ static class TestProgram
         ClipsTest();
         RoomTest();
         UpgradeTest();
+        FormattedTest();
         MigrationTest();
         BackupTest();
         MoveTest();
         return failed == 0 ? 0 : 1;
+    }
+
+    // A formatted saved text: its HTML and RTF kept encrypted beside its plain text, changed or taken away with it,
+    // and imported from an exported file; never on a copied entry.
+    static void FormattedTest()
+    {
+        string path = System.IO.Path.Combine(sandbox, "formatted test.db"), file = System.IO.Path.Combine(sandbox, "formatted test.txt");
+        using (Clips clips = new Clips(path))
+        {
+            long id = clips.AddSaved("Firma", "Sai Chavan", "<b>Sai Chavan</b>", @"{\rtf1 \b Sai Chavan}", 0, DateTime.Now);
+            Entry saved = clips.Saved()[0];
+            Check(saved.Html == "<b>Sai Chavan</b>" && saved.Rtf == @"{\rtf1 \b Sai Chavan}" && saved.Text == "Sai Chavan",
+                "a formatted text comes back with its HTML and RTF");
+            byte[] html = (byte[])clips.Data.Value("SELECT html FROM entries WHERE id = ?1", id);
+            byte[] rtf = (byte[])clips.Data.Value("SELECT rtf FROM entries WHERE id = ?1", id);
+            Check(Encoding.UTF8.GetString(html).IndexOf("Chavan") < 0 && Encoding.UTF8.GetString(rtf).IndexOf("Chavan") < 0, "both encrypted");
+            clips.Change(id, "Firma", "Sai", "<i>Sai</i>", null, 0);
+            saved = clips.Saved()[0];
+            Check(saved.Html == "<i>Sai</i>" && saved.Rtf == null && saved.Text == "Sai", "changed, it takes the new HTML, and no RTF");
+            clips.Change(id, "Firma", "Sai", 0);
+            Check(clips.Saved()[0].Html == null, "saved plain, it loses its formatting");
+            clips.AddText("copied");
+            Check(Refuses(clips, "UPDATE entries SET html = x'00' WHERE saved = 0"), "a copied entry is never formatted");
+            Check(Refuses(clips, "UPDATE entries SET rtf = x'00' WHERE saved = 1"), "RTF only beside HTML");
+            Check(clips.Copied(10, new string[0])[0].Html == null, "copied entries are read without formatting");
+
+            Entry formatted = new Entry("Formattata", "testo", DateTime.Now);
+            formatted.Saved = true;
+            formatted.Html = "<u>testo</u>";
+            System.IO.File.WriteAllLines(file, Backup.Lines(new List<Entry>(new Entry[] { formatted })).ToArray(), new UTF8Encoding(true));
+            Backup.Import(clips, file, false, delegate { return false; });
+            Entry imported = clips.Saved().Find(delegate(Entry e) { return e.Name == "Formattata"; });
+            Check(imported != null && imported.Html == "<u>testo</u>" && imported.Rtf == null && imported.Text == "testo",
+                "an exported formatted text comes back formatted");
+        }
+        System.IO.File.Delete(path);
     }
 
     // A picture of noise, which PNG cannot shrink: pictures of the same size take about the same room.
@@ -274,7 +314,8 @@ static class TestProgram
             using (Statement rows = clips.Data.Prepare("PRAGMA table_info(entries)"))
                 while (rows.Step()) columns.Add(rows.Text(1));
             Check(Equals(clips.Data.Value("PRAGMA user_version"), (long)Clips.SchemaVersion) && columns[columns.Count - 1] == "content"
-                && columns[columns.Count - 2] == "preview", "a database of version 1 is brought up to date, the large columns last");
+                && columns[columns.Count - 2] == "preview" && columns.IndexOf("html") >= 0 && columns.IndexOf("html") < columns.IndexOf("hash"),
+                "a database of version 1 is brought up to date, the large columns last, the formatting before them");
             Check(string.Join("|", after.ToArray()) == string.Join("|", before.ToArray()) && after.Count == 4
                 && System.Linq.Enumerable.SequenceEqual(clips.Png(pictureId), png), "with all its entries, as they were");
             Check(Equals(clips.Data.Value("SELECT count(*) FROM sqlite_master WHERE name IN ('entries_recent', 'entries_hash')"), 2L)
@@ -945,8 +986,138 @@ static class TestProgram
             && Math.Abs(Look.StrongEntryFont.SizeInPoints - Look.EntryFont.SizeInPoints) < 0.01f
             && Look.TextFont.SizeInPoints == window, "the entries take their font and size in pixels, the windows keep theirs");
         Look.UseEntryFont(null, Look.DefaultEntrySize);
+        RichTest();
         LanguagesTest();
         return failed == 0 ? 0 : 1;
+    }
+
+    static Run NewRun(string text, string font, float size, FontStyle style, Color colour)
+    {
+        Run run = new Run();
+        run.Text = text;
+        run.Font = font;
+        run.Size = size;
+        run.Style = style;
+        run.Color = colour;
+        return run;
+    }
+
+    // An edit box as the window of a saved text has it, in a font and a colour no run of the checks has.
+    static RichBox NewBox()
+    {
+        RichBox box = new RichBox();
+        GC.KeepAlive(box.Handle);
+        box.Font = new Font("Tahoma", 11);
+        box.Ink = Color.FromArgb(40, 40, 40);
+        box.ForeColor = box.Ink;
+        return box;
+    }
+
+    static string Describe(List<Run> runs)
+    {
+        StringBuilder all = new StringBuilder();
+        foreach (Run run in runs)
+            all.AppendFormat("[{0}|{1}|{2}|{3}|{4:X}]", run.Text.Replace("\n", "\\n"), run.Font, run.Size, run.Style,
+                run.Color.IsEmpty ? 0 : run.Color.ToArgb());
+        return all.ToString();
+    }
+
+    // Formatted text: HTML read as a browser shows it, written back, shown in an edit box and read from it, its
+    // formatting changed by the buttons; the HTML of the clipboard with its header.
+    static void RichTest()
+    {
+        string fragment = "<b>Città €</b> “x”";
+        string document = Rich.Document(fragment);
+        byte[] bytes = Encoding.UTF8.GetBytes(document);
+        int start = document.IndexOf("StartFragment:") + "StartFragment:".Length, end = document.IndexOf("EndFragment:") + "EndFragment:".Length;
+        Check(Rich.Fragment(document) == fragment && Encoding.UTF8.GetString(bytes, int.Parse(document.Substring(start, 10)),
+            int.Parse(document.Substring(end, 10)) - int.Parse(document.Substring(start, 10))) == fragment,
+            "the HTML of the clipboard says in bytes where its fragment is, and the fragment comes back");
+        Check(Rich.Fragment("<html><body><!--StartFragment--><i>a</i><!--EndFragment--></body></html>") == "<i>a</i>",
+            "without a header the fragment is found by its markers");
+
+        // A signature as a web mail copies it: inline styles, fonts, entities, a style sheet and a hidden part.
+        string signature = "<div style=\"font-family:Rockwell,serif\"><b><span style=\"font-size:20pt\">Sai&nbsp;Chavan</span></b></div>\r\n"
+            + "<div style='font-family: \"Georgia\"; font-size:12px'>Owner,\r\n   Munson&#8217;s   Pickles</div>"
+            + "<style>div { color: red }</style><span style=\"display:none\">hidden</span><!-- a comment -->"
+            + "<div><font face=\"Arial\" color=\"#808080\" size=\"2\">(872) 555-0179<br>sai@munsons.example</font></div>"
+            + "<p><i>a</i> &amp; <u>b</u> &lt;3 <a href=\"https://munsons.example\">link</a> <span style=\"color:#111\">black</span>"
+            + " <span style=\"color: rgb(0, 128, 0); font-weight: 700; text-decoration: line-through\">green</span></p>";
+        List<Run> runs = Rich.FromHtml(signature);
+        Check(Rich.TextOf(runs) == "Sai Chavan\nOwner, Munson’s Pickles\n(872) 555-0179\nsai@munsons.example\na & b <3 link black green",
+            "the text of HTML is what a browser shows: blocks on lines of their own, spaces as one, nothing hidden");
+        // The run that starts with a text.
+        Func<string, Run> at = delegate(string text) { return runs.Find(delegate(Run run) { return run.Text.TrimStart().StartsWith(text); }); };
+        Check(at("Sai").Font == "Rockwell" && at("Sai").Size == 20 && at("Sai").Style == FontStyle.Bold
+            && at("Owner").Font == "Georgia" && at("Owner").Size == 9 && at("Owner").Style == FontStyle.Regular,
+            "fonts, sizes in points or pixels, bold");
+        Check(at("(872)").Font == "Arial" && at("(872)").Size == 10 && at("(872)").Color.ToArgb() == Color.FromArgb(128, 128, 128).ToArgb()
+            && at("(872)").Text.Contains("sai@"), "the old <font> with its face, size and colour");
+        Check(at("a").Style == FontStyle.Italic && at("b").Style == FontStyle.Underline && at("link").Style == FontStyle.Underline
+            && !at("link").Color.IsEmpty && at("black").Color.IsEmpty && at("green").Color.ToArgb() == Color.FromArgb(0, 128, 0).ToArgb()
+            && at("green").Style == (FontStyle.Bold | FontStyle.Strikeout), "italic, underlined, links, colours; black is the default");
+
+        Check(Rich.Matches(runs, "Sai Chavan\r\nOwner, Munson’s Pickles\r\n\t(872) 555-0179 sai@munsons.example\r\na & b <3 link black green")
+            && !Rich.Matches(Rich.FromHtml("<a href=\"https://meteo.example/it/tempo\">Meteo Montorio - meteo</a>"), "https://meteo.example/it/tempo"),
+            "formatting goes with the text it formats, not with a link that names a page by its title");
+
+        // The window opened on a copied text, plain or formatted, can save it at once.
+        foreach (Entry each in new Entry[] { new Entry(null, "https://www.ilpost.it/"), SavedSample() })
+            using (EditForm edit = new EditForm(each, null, new List<string>()))
+            {
+                Button save = (Button)typeof(EditForm).GetField("saveButton", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(edit);
+                Check(save.Enabled && edit.Content.Replace("\r\n", "\n") == each.Text.Replace("\r\n", "\n"),
+                    "the window of a " + (each.Html == null ? "plain" : "formatted") + " text can save it as soon as it opens");
+            }
+
+        // Written as HTML and read again: the same.
+        List<Run> made = new List<Run>
+        {
+            NewRun("Title & <more>", "Georgia", 18, FontStyle.Bold, Color.Empty),
+            NewRun("\n  two spaces,\ta tab ", null, 0, FontStyle.Regular, Color.Empty),
+            NewRun("red", null, 9.5f, FontStyle.Italic | FontStyle.Underline, Color.FromArgb(200, 30, 30)),
+            NewRun(" end", "Courier New", 0, FontStyle.Strikeout, Color.Empty)
+        };
+        string html = Rich.ToHtml(made);
+        Check(html.Contains("Title &amp; &lt;more&gt;") && html.Contains("font-family:'Georgia'") && html.Contains("<br>")
+            && html.Contains("&nbsp;") && html.Contains("color:#c81e1e"), "HTML written with its entities, spans and kept spaces");
+        List<Run> again = Rich.FromHtml(html);
+        Check(Describe(again) == Describe(Rich.FromHtml(Rich.ToHtml(again))) && Rich.TextOf(again) == "Title & <more>\n  two spaces,    a tab red end"
+            && again[0].Font == "Georgia" && again[0].Size == 18 && again[again.Count - 1].Font == "Courier New",
+            "and read back the same, spaces kept, a tab as four");
+
+        // Shown in an edit box and read from it: what has the font and colour of the box has the default ones.
+        using (RichBox box = NewBox())
+        {
+            List<Run> shown = Rich.FromHtml(signature);
+            box.Rtf = Rich.ToRtf(shown, box.Font, box.Ink);
+            Check(Describe(Rich.FromBox(box, box.Font, box.Ink)) == Describe(shown) && box.Text == Rich.TextOf(shown),
+                "runs shown in an edit box are read back from it as they were");
+        }
+        using (RichBox box = NewBox())
+        {
+            box.Text = "hello world";
+            Check(Rich.Plain(Rich.FromBox(box, box.Font, box.Ink)), "plain text in the box is plain");
+            box.Select(0, 5);
+            box.Toggle(FontStyle.Bold);
+            box.Select(6, 5);
+            box.Face("Georgia");
+            box.Points(16);
+            List<Run> read = Rich.FromBox(box, box.Font, box.Ink);
+            Check(read.Count == 3 && read[0].Text == "hello" && read[0].Style == FontStyle.Bold && read[0].Font == null
+                && read[2].Text == "world" && read[2].Font == "Georgia" && read[2].Size == 16 && read[2].Style == FontStyle.Regular,
+                "the buttons make the selection bold, give it a font and a size");
+            box.Select(0, 3);
+            box.Toggle(FontStyle.Bold);
+            Check(Rich.FromBox(box, box.Font, box.Ink)[0].Text == "hel" && Rich.FromBox(box, box.Font, box.Ink)[0].Style == FontStyle.Regular,
+                "bold again takes it away");
+            box.Select(0, 0);
+            box.Plain();
+            Check(Rich.Plain(Rich.FromBox(box, box.Font, box.Ink)) && box.SelectionStart == 0, "the rubber with nothing selected clears all");
+        }
+        string rtf = Rich.ToRtf(made, new Font("Arial", 10), Color.Black);
+        Check(Rich.TextOf(Rich.FromRtf(rtf)) == Rich.TextOf(made) && Rich.FromRtf(rtf)[0].Font == "Georgia" && Rich.FromRtf("not rtf") == null,
+            "RTF is read as runs; what is not RTF is not");
     }
 
     // Every language: no text asks for more values than the program gives it (string.Format would throw), the
@@ -967,6 +1138,7 @@ static class TestProgram
         Entry text = new Entry("B", "riga\r\n\tuna tabulazione", new DateTime(2026, 5, 6, 7, 8, 9));
         text.Saved = true;
         text.Group = "A";
+        text.Html = "<b>riga</b><br>\r\n\r\n<i>\tuna tabulazione</i>";
         Entry copied = new Entry(null, "copied", new DateTime(2026, 5, 6, 7, 8, 9));
         copied.Pinned = true;
         List<Entry> sent = new List<Entry>(new Entry[] { folder, text, copied });
@@ -985,8 +1157,8 @@ static class TestProgram
             Check(tooMany.Count == 0, code + ": every text fits the values it is given" + (tooMany.Count == 0 ? "" : ": " + string.Join(", ", tooMany.ToArray())));
             Check(subjects(Strings.Guide()) == englishSubjects, code + ": the guide has the " + englishSubjects + " subjects");
             List<Entry> read = Backup.Parse(Backup.Lines(sent));
-            Check(read.Count == 3 && read[0].IsGroup && read[1].Text == text.Text && read[1].Group == "A" && read[2].Pinned,
-                code + ": an exported file comes back");
+            Check(read.Count == 3 && read[0].IsGroup && read[1].Text == text.Text && read[1].Group == "A" && read[1].Html == text.Html
+                && read[2].Pinned && read[2].Html == null, code + ": an exported file comes back, a formatted text with its HTML");
             if (same.Count > 0) Console.WriteLine("       same as English: " + string.Join(", ", same.ToArray()));
         }
         foreach (KeyValuePair<FieldInfo, object> pair in english) pair.Key.SetValue(null, pair.Value);
@@ -1499,7 +1671,7 @@ static class TestProgram
         string pictures = System.IO.Path.Combine(folder, Strings.Code);
         System.IO.Directory.CreateDirectory(pictures);
         BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
-        Look.Use(false);   // light, whatever Windows has: only the last picture is dark
+        Look.Use(true);   // dark, whatever Windows has, which stands out more in the Store: only the last picture is light
         SaveTile(System.IO.Path.Combine(folder, "tile-300.png"));
         using (ShotForm form = new ShotForm())
         {
@@ -1541,9 +1713,13 @@ static class TestProgram
                 SnapArea(area, System.IO.Path.Combine(pictures, "3-preview.png"));
                 typeof(MainForm).GetMethod("HidePeek", hidden).Invoke(form, null);
 
-                // A copied text being saved under a name, into a folder.
+                // A copied signature being saved under a name, into a folder, with its formatting: as just copied
+                // from a mail, which the program remembers.
                 Sample s = Sample.Current;
                 string servers = Texts.Join(s.Work, s.Servers);
+                DataObject copiedSignature = new DataObject();
+                copiedSignature.SetData(DataFormats.Html, Rich.Document(SavedSample().Html));
+                Rich.Remember(s.SignatureText, copiedSignature);
                 using (ShotEdit edit = new ShotEdit(new Entry(null, s.SignatureText), servers, new List<string>(new string[] { s.Work, servers, s.Home })))
                 {
                     edit.TopMost = true;
@@ -1591,10 +1767,10 @@ static class TestProgram
                     SnapArea(area, System.IO.Path.Combine(pictures, "7-guide.png"));
                 }
 
-                // The same list in the dark, as when Windows is set so for its apps.
-                Look.Switch(true);
-                SnapArea(area, System.IO.Path.Combine(pictures, "8-dark.png"));
+                // The same list in the light, as when Windows is set so for its apps.
                 Look.Switch(false);
+                SnapArea(area, System.IO.Path.Combine(pictures, "8-light.png"));
+                Look.Switch(true);
             }
         }
         Console.WriteLine("pictures in {0}", pictures);
@@ -1666,6 +1842,10 @@ static class TestProgram
     {
         Entry signature = new Entry(Sample.Current.Signature, Sample.Current.SignatureText);
         signature.Saved = true;
+        // Formatted, as a signature copied from a mail is: the greeting plain, the name standing out, the rest small.
+        string[] lines = Sample.Current.SignatureText.Split('\n');
+        signature.Html = lines[0] + "<br><span style=\"font-family:Georgia;font-size:15pt;font-weight:bold;color:#2e75b6\">" + lines[1]
+            + "</span><br><br><span style=\"font-size:9pt;color:#7f7f7f\"><i>" + lines[3] + "</i><br>" + lines[4] + "</span>";
         return signature;
     }
 
@@ -1683,7 +1863,7 @@ static class TestProgram
         clips.Data.Execute("DELETE FROM entries; DELETE FROM folders");
         // Saved texts: one outside the folders with a number, then folders, one open with another inside it and one
         // closed, each with its texts.
-        clips.Number(clips.AddSaved(s.Signature, s.SignatureText, 0, DateTime.Now), 1);   // the keys that choose it, shown in its row
+        clips.Number(clips.AddSaved(s.Signature, s.SignatureText, SavedSample().Html, null, 0, DateTime.Now), 1);   // the keys that choose it, shown in its row
         long work = clips.AddFolder(0, s.Work), servers = clips.AddFolder(work, s.Servers), home = clips.AddFolder(0, s.Home);
         clips.AddSaved(s.Address, "not shown", work, DateTime.Now);
         clips.Number(clips.AddSaved(s.ServerPassword, "not shown", servers, DateTime.Now), 2);

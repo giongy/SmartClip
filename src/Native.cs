@@ -30,6 +30,11 @@ static class Native
     // the documentation describes it but gives it no name.
     public const uint TOUNICODE_KEEP_STATE = 0x0004;
     public const int ASFW_ANY = -1;
+    // The formatting of the characters in a rich edit box: of the selection, and which of it is the same throughout.
+    public const int EM_GETCHARFORMAT = 0x043A, EM_SETCHARFORMAT = 0x0444, SCF_DEFAULT = 0x0000, SCF_SELECTION = 0x0001;
+    public const uint CFM_BOLD = 0x00000001, CFM_ITALIC = 0x00000002, CFM_UNDERLINE = 0x00000004, CFM_STRIKEOUT = 0x00000008,
+        CFM_FACE = 0x20000000, CFM_COLOR = 0x40000000, CFM_SIZE = 0x80000000;
+    public const uint CFE_BOLD = 0x0001, CFE_ITALIC = 0x0002, CFE_UNDERLINE = 0x0004, CFE_STRIKEOUT = 0x0008;
     public static readonly IntPtr HWND_BROADCAST = (IntPtr)0xFFFF;
 
     [StructLayout(LayoutKind.Sequential)]
@@ -70,6 +75,25 @@ static class Native
         public uint nPage;
         public int nPos, nTrackPos;
     }
+
+    [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+    public struct CHARFORMAT2
+    {
+        public int cbSize;
+        public uint dwMask, dwEffects;
+        public int yHeight, yOffset, crTextColor;
+        public byte bCharSet, bPitchAndFamily;
+        [MarshalAs(UnmanagedType.ByValTStr, SizeConst = 32)] public string szFaceName;
+        public ushort wWeight;
+        public short sSpacing;
+        public int crBackColor, lcid, dwReserved;
+        public short sStyle;
+        public ushort wKerning;
+        public byte bUnderlineType, bAnimation, bRevAuthor, bUnderlineColor;
+    }
+
+    [DllImport("user32.dll", CharSet = CharSet.Unicode)]
+    public static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, ref CHARFORMAT2 format);
 
     [DllImport("user32.dll")]
     public static extern bool GetScrollInfo(IntPtr window, int bar, ref SCROLLINFO info);

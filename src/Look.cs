@@ -238,7 +238,8 @@ class RoundButton : Button
 }
 
 // The small signs drawn beside entries, on buttons and beside the pages of the options: they are where the colour is.
-enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, Keys, Search, Help, Opened, Closed, Bolt, History, Up }
+enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, Keys, Search, Help, Opened, Closed, Bolt, History, Up,
+    Bold, Italic, Underline, Face, Size, Erase, Formatted }
 
 // The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
 enum Theme { System, Light, Dark }
@@ -317,7 +318,7 @@ static class Look
         return name == ModernFont ? name.Substring(0, name.LastIndexOf(' ')) : name;
     }
 
-    static bool Has(string name)
+    public static bool Has(string name)
     {
         Font font = Installed(name, 10);
         if (font != null) font.Dispose();
@@ -670,6 +671,12 @@ static class Look
             case Sign.Closed: return "";    // ChevronRight
             case Sign.Bolt: return "";      // LightningBolt
             case Sign.Up: return "";   // Up
+            case Sign.Bold: return "";      // Bold
+            case Sign.Italic: return "";    // Italic
+            case Sign.Underline: return ""; // Underline
+            case Sign.Face: case Sign.Formatted: return "";      // Font
+            case Sign.Size: return "";      // FontSize
+            case Sign.Erase: return "";     // EraseTool
             default: return "";             // History
         }
     }
@@ -681,8 +688,8 @@ static class Look
         float u = box.Width / 16f, x = box.Left, y = box.Top;
         Color own = sign == Sign.Text || sign == Sign.Search || sign == Sign.Keys || sign == Sign.Up ? Accent
             : sign == Sign.Link || sign == Sign.Opened || sign == Sign.Closed || sign == Sign.History ? Teal
-            : sign == Sign.Star || sign == Sign.Edit || sign == Sign.Bolt ? Amber : sign == Sign.Plus ? Green
-            : sign == Sign.Delete ? Red : Purple;
+            : sign == Sign.Star || sign == Sign.Edit || sign == Sign.Bolt || sign == Sign.Erase ? Amber : sign == Sign.Plus ? Green
+            : sign == Sign.Delete ? Red : Letter(sign) != null && sign != Sign.Formatted ? Ink : Purple;
         if (IconProbe != null)
         {
             Font icons;
@@ -779,14 +786,38 @@ static class Look
                     g.DrawLines(pen, new PointF[] { new PointF(x + 8 * u, y + 4.5f * u), new PointF(x + 8 * u, y + 8 * u),
                         new PointF(x + 10.5f * u, y + 9.5f * u) });
                     break;
+                case Sign.Erase:   // a rubber lying aslant
+                    g.DrawPolygon(pen, new PointF[] { new PointF(x + 2.5f * u, y + 10 * u), new PointF(x + 9 * u, y + 3.5f * u),
+                        new PointF(x + 13.5f * u, y + 8 * u), new PointF(x + 8 * u, y + 13.5f * u), new PointF(x + 6 * u, y + 13.5f * u) });
+                    break;
+                default:   // the formatting of text: its letter, written as it says
+                    using (Font letter = new Font(TextFont.FontFamily, box.Height * 0.8f, Letter(sign).Value, GraphicsUnit.Pixel))
+                        TextRenderer.DrawText(g, sign == Sign.Size ? "aA" : sign == Sign.Face || sign == Sign.Formatted ? "A" : sign.ToString().Substring(0, 1),
+                            letter, box, colour ?? own, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter
+                            | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding | TextFormatFlags.NoClipping);
+                    break;
             }
         }
         g.SmoothingMode = mode;
     }
 
+    // Of a sign of the formatting of text, the style its letter is drawn in where there is no font of icons;
+    // null for the other signs.
+    static FontStyle? Letter(Sign sign)
+    {
+        switch (sign)
+        {
+            case Sign.Bold: return FontStyle.Bold;
+            case Sign.Italic: return FontStyle.Italic;
+            case Sign.Underline: return FontStyle.Underline;
+            case Sign.Face: case Sign.Size: case Sign.Formatted: return FontStyle.Regular;
+            default: return null;
+        }
+    }
+
     // A text box as a flat area a shade off the window. The system border cannot be coloured, so the box goes
     // borderless inside a card that takes its place; the card is what gets added to the window.
-    public static Panel Frame(TextBox box)
+    public static Panel Frame(TextBoxBase box)
     {
         box.BorderStyle = BorderStyle.None;
         Field(box);

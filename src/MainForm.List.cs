@@ -502,11 +502,23 @@ partial class MainForm
         Look.Draw(e.Graphics, Sign.Search, new Rectangle(RowInset - 3, (frame.Height - side) / 2, side, side), null);
     }
 
-    // The sign that tells what an entry is: a saved text, an address, any other text. A picture shows itself.
+    // One star before the title of the saved texts says what the whole column is: its rows need none each.
+    void DrawStar(object sender, PaintEventArgs e)
+    {
+        Look.Draw(e.Graphics, Sign.Star, new Rectangle(0, (savedTitle.Height - StarSide) / 2, StarSide, StarSide), null);
+    }
+
+    int StarSide
+    {
+        get { return savedTitle.Font.Height * 4 / 5; }
+    }
+
+    // The sign that tells what an entry is: a formatted text, an address, any other text. That it is saved the
+    // column says, with the star of its title. A picture shows itself.
     static Sign SignOf(Entry entry)
     {
         if (entry.IsGroup) return entry.Open ? Sign.Opened : Sign.Closed;
-        if (entry.Saved) return Sign.Star;
+        if (entry.Html != null) return Sign.Formatted;
         string start = entry.Text.TrimStart();
         foreach (string prefix in new string[] { "http://", "https://", "www." })
             if (start.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return Sign.Link;
@@ -695,7 +707,9 @@ partial class MainForm
             if (entry.Saved) data.SetData(Texts.PrivateMarker, new MemoryStream(new byte[sizeof(int)]));
             if (!entry.Picture)
             {
+                // A formatted text is there as plain text too: what takes no formatting, and the typing, use that.
                 data.SetText(entry.Text);
+                Rich.Put(data, entry.Html, entry.Rtf);
                 Clipboard.SetDataObject(data, true);
             }
             else
@@ -775,12 +789,13 @@ partial class MainForm
                     {
                         if (taken) clips.Remove(other);
                         long folder = FolderAt(edit.Group);
-                        if (source == null) clips.AddSaved(name, edit.Content, folder, DateTime.Now);
+                        if (source == null) clips.AddSaved(name, edit.Content, edit.Html, edit.Rtf, folder, DateTime.Now);
                         else
                         {
                             // A copied entry becomes saved in its own row, number and all.
                             if (!source.Saved) clips.Save(source.Id, name, folder);
-                            clips.Change(source.Id, name, source.Picture ? null : edit.Content, folder);   // a picture keeps itself
+                            // A picture keeps itself.
+                            clips.Change(source.Id, name, source.Picture ? null : edit.Content, edit.Html, edit.Rtf, folder);
                         }
                         clips.Reveal(folder);   // or the text would not be seen
                         transaction.Commit();
