@@ -76,6 +76,7 @@ partial class MainForm : Window
     const string LanguageSetting = "Language";                 // read before the window exists: see SavedLanguage
     const string ThemeSetting = "Theme";                       // the same: see SavedTheme
     const string FaceSetting = "InterfaceFont", FaceSizeSetting = "InterfaceSize";   // and see UseSavedInterface
+    const string DataFolderSetting = "DataFolder";             // the same: the database is opened before the settings are read
     const int TrayTextLimit = 63;                              // the most a NotifyIcon accepts as its tooltip
 
     // Desktop, taskbar, Start menu and Alt+Tab switcher: never the intended target.
@@ -150,6 +151,10 @@ partial class MainForm : Window
     bool optionsShown;
     Clips clips;          // what the list keeps: copied and saved entries, folders
     string unavailable;   // why the database could not be opened: the status line says it whenever it is idle
+    string dataFolder = "";   // the folder the user chose for the database; empty: the default one
+    readonly Label folderPath = new Label();   // in the options, where the database is
+    readonly RoundButton changeFolderButton = new RoundButton(), defaultFolderButton = new RoundButton();
+    Control[] folderTipped;   // what the tooltip about that folder is on
     List<Entry> entries = new List<Entry>();   // the saved entries and the folders, as their column shows them
     // How many texts each folder holds, those of the folders inside it too: counted when the lists are filled,
     // drawn on its row.
@@ -321,6 +326,7 @@ partial class MainForm : Window
         OpenClips();
         UseEntryFont(Look.EntryFamily, Look.EntrySize);   // the default, until the settings say otherwise
         LoadSettings();
+        ShowFolder();
         NameHotkeys();
         ApplyHistory();
         historyBox.CheckedChanged += delegate
@@ -374,16 +380,30 @@ partial class MainForm : Window
         Finish();
     }
 
-    // Opens the database of the list. The first time, what the versions before kept in the registry and in the
-    // history files moves in; if that fails, nothing is left half done and the next start tries again. A database
-    // that cannot be opened (locked, damaged, written by a newer version) leaves the list working in memory, and
-    // the status line says so until the program closes.
+    // Opens the database of the list, in the folder the user chose or in the default one. Only there is a new one
+    // made, and the first time what the versions before kept in the registry and in the history files moves in; if
+    // that fails, nothing is left half done and the next start tries again. In a folder of the user's choosing the
+    // database must be there already: if it is not (a drive removed, a network away), no new and empty one takes
+    // its place unseen. A database that cannot be opened (missing, locked, damaged, written by a newer version)
+    // leaves the list working in memory, and the status line says so until it is solved.
     void OpenClips()
     {
+        dataFolder = EarlySetting(DataFolderSetting) as string ?? "";
         try
         {
-            clips = new Clips(Clips.DefaultFile, delegate(Clips fresh) { Migration.Run(fresh, SettingsKey, Migration.OldHistory); });
-            return;
+            if (dataFolder.Length > 0 && !File.Exists(DatabaseFile))
+            {
+                unavailable = string.Format(Strings.FolderUnavailable, dataFolder, Strings.HistoryTitle);
+                Log.Error(new FileNotFoundException(unavailable, DatabaseFile));
+            }
+            else
+            {
+                clips = dataFolder.Length > 0 ? new Clips(DatabaseFile)
+                    : new Clips(DatabaseFile, delegate(Clips fresh) { Migration.Run(fresh, SettingsKey, Migration.OldHistory); });
+                Log.FileName = Path.Combine(DataFolder, Program.AppName + ".log");
+                Migration.ForgetOldHistory();   // the database holds it now
+                return;
+            }
         }
         catch (Exception ex)
         {
@@ -391,6 +411,18 @@ partial class MainForm : Window
             unavailable = string.Format(Strings.DatabaseUnavailable, ex.Message);
         }
         clips = new Clips(Clips.Memory);
+    }
+
+    // The file of the database: in the folder the user chose, or the default one.
+    string DatabaseFile
+    {
+        get { return dataFolder.Length > 0 ? Path.Combine(dataFolder, Path.GetFileName(Clips.DefaultFile)) : Clips.DefaultFile; }
+    }
+
+    // Its folder, where the log is too.
+    string DataFolder
+    {
+        get { return Path.GetDirectoryName(DatabaseFile); }
     }
 
     // Opens the guide, or brings it forward if it is already open. It is not a dialog: it can stay beside

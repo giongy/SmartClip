@@ -84,8 +84,10 @@ condiviso su GitHub).
     (passo 3 del piano): i salvati dal registro, ancora cifrati così com'erano (anche quelli che qui non si
     leggono), con giorno, numero e cartella (i percorsi diventano l'albero); i copiati dai file `.clips`, con
     stellina (che diventa la freccia) e numero, senza i record eliminati e fino a un record troncato. **Legge
-    soltanto**: registro e file restano intatti (lo controlla un test byte per byte), per una versione precedente
-    che li cerchi ancora; li cancellerà una versione futura (passo 8 del piano). Nessuna scadenza durante la
+    soltanto** (lo controlla un test byte per byte): se fallisce, al prossimo avvio i dati vecchi ci sono ancora.
+    Dopo, appena un database è aperto, `OpenClips` chiama `Migration.ForgetOldHistory`, che **cancella la cartella
+    `History`** (voluto dall'utente il 17/10/2026: «nessun History»), anche agli avvii successivi se c'è ancora. La
+    chiave `Saved` del registro invece resta, per ora (passo 8 del piano). Nessuna scadenza durante la
     migrazione. Un numero conteso va alla prima voce, un nome già preso prende « (2)», un file illeggibile si salta e
     va nel log. È l'unico a conoscere il formato vecchio (la cartella è `Migration.OldHistory`). Provata il
     17/10/2026 in sola lettura sui dati veri dell'utente (4 salvati, 16 copiati, 2 immagini: tutto, dati vecchi
@@ -206,10 +208,21 @@ condiviso su GitHub).
   nascosta. Un clic singolo no (voluto dall'utente: la finestra spariva e la voce non si poteva più salvare).
 - Copiati e salvati stanno in un solo database SQLite (dalla 4.0, `docs\piano-sqlite.md`; prima i salvati
   nel registro e la cronologia in un file al giorno): `Clips.DefaultFile`, cioè `SmartClip.db` nella cartella
-  dei dati (`Program.DataFolder`), accanto al log. `MainForm` lo apre in `OpenClips`; la prima volta vi porta i
+  dei dati (`Program.DataFolder`), o nella cartella scelta dall'utente (vedi sotto), sempre con il log accanto. `MainForm` lo apre in `OpenClips`; la prima volta vi porta i
   dati vecchi (`Migration`, vedi sopra). Se non si apre (bloccato, rovinato, scritto da una versione più nuova,
   migrazione fallita) l'elenco lavora su un database in memoria (`Clips.Memory`) e la riga di stato lo dice
   sempre (`unavailable`, che `ShowIdle` rimette); il log ha il perché, e al prossimo avvio si riprova.
+- La cartella del database si sceglie (voluto dall'utente, passo 6 del piano): impostazione `DataFolder` (vuota
+  = predefinita), letta da `OpenClips` prima delle altre (`EarlySetting`) e scritta subito quando cambia
+  (`SaveSettings` in `MoveDataFolder`). Nella pagina Cronologia la riga «Cartella delle voci copiate e salvate»
+  (`folderPath`, `ShowFolder`) con «Cambia…» (`ChangeDataFolder`, `FolderBrowserDialog`) e «Predefinita».
+  Dove non c'è un database, quello in uso ci si sposta (`Clips.Move`: chiude, copia, apre la copia e la controlla
+  con `quick_check`, solo allora cancella il vecchio; se qualcosa fallisce `ClipsMoveException` riporta indietro
+  il vecchio, intatto); dove c'è già, chiede se usare quello e lascia il proprio com'è (la terza scelta del piano,
+  «sostituiscilo», non c'è: troppo facile perdere dati). Una cartella in rete o sincronizzata (OneDrive, Dropbox,
+  Google Drive, iCloud: `Synced`) chiede prima. **Solo nella cartella predefinita nasce un database nuovo** (e solo
+  lì la migrazione): se una cartella scelta non ha più il suo file all'avvio, l'elenco lavora in memoria e lo dice
+  (`FolderUnavailable`), così non si ritrova un elenco vuoto senza saperlo.
 - La cronologia dei copiati resta per i giorni dell'opzione (`Clips.Keep`, 30 di default), contando oggi: **0 vuol
   dire solo le cose di oggi** (deciso con l'utente il 17/10/2026; prima era «solo in memoria», che non esiste
   più). È **in chiaro** (l'utente non vuole cifratura: «sono cose mie sul mio PC»). La scadenza (`Prune`)
@@ -529,6 +542,12 @@ condiviso su GitHub).
   cartelle lo schema ha una colonna `name_key` scritta dal C# (`Clips.Key`, `ToUpperInvariant`).
 - Un testo di C# legato a SQLite senza la sua lunghezza si ferma al carattere zero, e dei byte vuoti diventano
   NULL: `Statement.Bind` passa sempre la lunghezza e usa `zeroblob` per i vuoti.
+- In un file `.cmd` `if errorlevel 1` vale per i codici da 1 in su: un programma che va in crash esce con un
+  codice negativo e passerebbe per riuscito. `test.cmd` usa `if %errorlevel% neq 0` (trovato il 17/10/2026, quando
+  un test andato in crash ha scritto «TUTTI I CONTROLLI SUPERATI»).
+- I file `.cmd` con fine riga LF fanno perdere a `cmd.exe` le etichette dei `goto` («The system cannot find the
+  batch label specified»): `.gitattributes` li vuole CRLF (`*.cmd text eol=crlf`), anche su GitHub. Scrivendoli
+  con strumenti che salvano LF, riconvertirli.
 - `using System.IO` e una proprietà `Path` nella stessa classe si nascondono a vicenda: in `Clips` il percorso
   del file è `FileName`, e `System.IO.Path` si scrive per intero.
 - `Control.Visible` risponde falso se la finestra è nascosta: quale vista è attiva lo dice `optionsShown`.
@@ -562,7 +581,9 @@ cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
   SQL a mano, salvati con e senza nome, giorni, cartelle) e la migrazione (`MigrationTest`: i dati vecchi li
   scrive il `Texts` di oggi nella chiave e nella cartella di prova, più i casi difficili scritti a mano; poi
   il confronto voce per voce, i dati vecchi intatti, una migrazione fallita a metà che al riavvio riparte) e
-  l'importazione di un file esportato (`BackupTest`).
+  l'importazione di un file esportato (`BackupTest`) e lo spostamento del database in un'altra cartella
+  (`MoveTest`). Lo spostamento dalla finestra, la cartella scelta che all'avvio non c'è più e il giro completo
+  «esporta dalla finestra, importa in un database vuoto» (come tra due PC: `Exported`) li prova `shot`.
 - `tests.exe type` — apre una finestrella e ci digita davvero: tutti i caratteri ASCII, accentate, simboli con
   AltGr, Unicode, Alt+codice, Tab, Invio; poi verifica che finestra sbagliata e annullamento blocchino tutto.
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.

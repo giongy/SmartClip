@@ -269,10 +269,14 @@ Ogni passo si chiude con i test che passano e lascia il programma funzionante.
    4.0, chiesti dall'utente mentre la provava. Le immagini salvabili subito dopo la 4.0.0: un'immagine salvata
    mostra sempre la miniatura, con accanto il nome se c'è (decisione dell'utente).
 6. **La cartella del database**: impostazione, pagina «Dati», spostamento, avvertenze, cartella irraggiungibile.
+   — Fatto il 17/10/2026, nella pagina «Cronologia» (il nome è rimasto). Dove c'è già un database si chiede solo se
+   usarlo: «Sostituiscilo con il mio» non c'è, perché butterebbe via un elenco. Il log segue il database. Un
+   database nuovo nasce solo nella cartella predefinita.
 7. **Documentazione**: guida e README nelle quattro lingue, `PRIVACY.md` (dove stanno i dati), scheda dello Store
    se cita la cronologia, `CLAUDE.md` (sezioni su cronologia, salvati, cartelle, stellina, numeri, trappole).
 8. **Una o due versioni dopo**: cancellazione dei dati vecchi (registro `Saved`, cartella `History`) e delle
-   impostazioni rimaste orfane (`Font`, `TextSize`).
+   impostazioni rimaste orfane (`Font`, `TextSize`). — La cartella `History` si cancella già, appena il database è
+   aperto (voluto dall'utente il 17/10/2026). Restano la chiave `Saved` e le impostazioni orfane.
 
 ## Test da aggiungere
 

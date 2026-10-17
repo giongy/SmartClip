@@ -31,6 +31,21 @@ static class Migration
     // Where the history files were, one per day; the checks use a folder of their own.
     public static string OldHistory = Path.Combine(Program.DataFolder, "History");
 
+    // Deletes the folder of the history files once a database holds what they held: after the migration, which
+    // only reads them, and at any later start if the folder is still there (the user wants no copy of it left).
+    // Not before: a migration that fails reads them again at the next start. If they cannot go, the log says why.
+    public static void ForgetOldHistory()
+    {
+        try
+        {
+            if (Directory.Exists(OldHistory)) Directory.Delete(OldHistory, true);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex);
+        }
+    }
+
     public static MigrationResult Run(Clips clips, string settingsKey, string historyFolder)
     {
         MigrationResult result = new MigrationResult();

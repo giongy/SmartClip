@@ -132,6 +132,62 @@ sealed class Clips : IDisposable
         data.Dispose();
     }
 
+    // Whether SQLite finds the file sound, page by page.
+    public bool Healthy()
+    {
+        return Equals(data.Value("PRAGMA quick_check"), "ok");
+    }
+
+    // Moves the database to 'target', where there is none yet: 'from' is closed, its file copied there, the copy
+    // opened and checked, and only then is the old file deleted. If anything fails the copy goes, the old file is
+    // opened again as it was, and the error is thrown on. Returns the database at its new place.
+    public static Clips Move(Clips from, string target)
+    {
+        string source = from.FileName;
+        int days = from.KeepDays;
+        if (File.Exists(target)) throw new IOException("A database is there already: " + target);
+        from.Dispose();
+        Clips moved = null;
+        try
+        {
+            Directory.CreateDirectory(System.IO.Path.GetDirectoryName(target));
+            File.Copy(source, target);
+            moved = new Clips(target);
+            if (!moved.Healthy()) throw new InvalidDataException("The copy is damaged: " + target);
+        }
+        catch (Exception ex)
+        {
+            if (moved != null) moved.Dispose();
+            try
+            {
+                if (File.Exists(target)) File.Delete(target);
+            }
+            catch (Exception)
+            {
+                // A copy that cannot even be removed is left there: the old file is what counts.
+            }
+            Clips back = new Clips(source);
+            back.KeepDays = days;
+            throw new ClipsMoveException(back, ex);
+        }
+        moved.KeepDays = days;
+        // What was copied there must not stay behind, unencrypted, in the old place. If the old file cannot go (a
+        // sync tool holding it), the move is done all the same, and the log says so.
+        try
+        {
+            File.Delete(source);
+        }
+        catch (IOException ex)
+        {
+            Log.Error(ex);
+        }
+        catch (UnauthorizedAccessException ex)
+        {
+            Log.Error(ex);
+        }
+        return moved;
+    }
+
     // Several changes that must happen together, or not at all: see Database.Begin.
     public Transaction Begin()
     {
@@ -674,5 +730,16 @@ sealed class Clips : IDisposable
     static byte[] Unprotect(byte[] secret)
     {
         return ProtectedData.Unprotect(secret, null, DataProtectionScope.CurrentUser);
+    }
+}
+
+// A move of the database that did not happen (Clips.Move): the reason, and the database back at its old place.
+class ClipsMoveException : Exception
+{
+    public readonly Clips Back;
+
+    public ClipsMoveException(Clips back, Exception reason) : base(reason.Message, reason)
+    {
+        Back = back;
     }
 }

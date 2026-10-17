@@ -153,6 +153,7 @@ on an option shows its full explanation.
 | Paste by number, with a button showing **Ctrl+Shift+1…9** | Enable the keys that paste the numbered entries. Only the keys of the numbers in use are taken from other programs. The button takes the keys to hold: press them with any digit; it says which of the nine another program already uses. Del goes back to Ctrl+Shift. |
 | Remember copied texts and pictures | Keep the copied texts and pictures in the list. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. Turning it off also deletes the history on disk. |
 | Days kept (0: today only) | For how many days, 0 to 365, what you copy stays in the history, also after the program closes, today being the first: with 0 only what was copied today stays. Entries kept at the top go too when their days are over; saved texts never do. |
+| Folder of the copied and saved entries, with the buttons **Change…** and **Default** | Where the database is kept, with the error log (by default `%LOCALAPPDATA%\SmartClip`). **Change…** moves it to the folder you choose, checking the copy before deleting the old file, or uses the database already there; **Default** brings it back. A folder synchronised online or on the network asks first. It is not a way to share the list between PCs: saved texts can be read only by this Windows user on this PC. If the folder chosen cannot be reached at the start, no empty list is made in its place: the list works in memory and says so. |
 | Keep the last days when cleaning (0: none), with the button **Clean now…** | Deletes at once what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Entries kept at the top go too; saved texts are not touched. |
 | Language | English, Español, Français or Italiano. Changing it restarts SmartClip, which opens again at once on the options. |
 | Theme | Same as Windows (the mode it sets for apps, followed also when it changes), Light or Dark. Changes at once. |
@@ -203,7 +204,8 @@ Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key t
   search uses. Of those with a name only the name is shown, until you ask for the content from the right-click
   menu.
 - Versions before 4.0 kept saved texts in the registry and the history in one file per day. The first start of
-  4.0 copies them into the database, all at once or not at all, and leaves the old ones as they were.
+  4.0 copies them into the database, all at once or not at all; then the folder of the history files is deleted,
+  while the saved texts stay in the registry, still encrypted, for now.
 - A saved text put back on the clipboard is marked as private, so that Windows clipboard history (Win+V) and other
   clipboard managers skip it.
 - When something goes wrong, what failed and where is written to `SmartClip.log` beside the database, to

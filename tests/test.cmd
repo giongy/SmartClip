@@ -2,7 +2,8 @@
 rem Builds and runs the automated checks. During the typing test a small window appears for a couple
 rem of seconds and the program types into it by itself: do not touch keyboard or mouse.
 rem "test.cmd ci", as GitHub runs it before a release: without the typing test, which needs a desktop to
-rem type into, and without the pauses.
+rem type into, and without the pauses. A check that crashes ends with a negative code, which "if errorlevel 1"
+rem would take for success: hence "neq 0".
 setlocal
 set HERE=%~dp0
 set CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe
@@ -14,28 +15,28 @@ set WINRT=/r:"%WINDIR%\System32\WinMetadata\Windows.ApplicationModel.winmd" /r:"
 echo Compilo i controlli...
 "%CSC%" /nologo /codepage:65001 /target:exe /main:TestProgram /out:"%HERE%tests.exe" ^
   /r:System.Windows.Forms.dll /r:System.Drawing.dll %WINRT% "%HERE%..\src\*.cs" "%HERE%Test.cs"
-if errorlevel 1 goto failed
+if %errorlevel% neq 0 goto failed
 
 echo.
 echo Controllo la mappa dei tasti...
 "%HERE%tests.exe" map
-if errorlevel 1 goto failed
+if %errorlevel% neq 0 goto failed
 
 echo.
 echo Controllo l'elenco dei testi...
 "%HERE%tests.exe" texts
-if errorlevel 1 goto failed
+if %errorlevel% neq 0 goto failed
 
 echo.
 echo Controllo il database...
 "%HERE%tests.exe" data
-if errorlevel 1 goto failed
+if %errorlevel% neq 0 goto failed
 if /i "%~1"=="ci" goto passed
 
 echo.
 echo Controllo la digitazione...
 "%HERE%tests.exe" type
-if errorlevel 1 goto failed
+if %errorlevel% neq 0 goto failed
 
 :passed
 echo.

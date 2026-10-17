@@ -13,7 +13,7 @@ Tutto resta sul tuo PC, nel tuo profilo utente di Windows:
 
 - **Le cose che copi** (testi e immagini), se la cronologia è attiva: per il numero di giorni scelto nelle
   opzioni (30 se non lo cambi; con 0 solo quelle di oggi), nel file `SmartClip.db` di una cartella del tuo
-  profilo, **in chiaro**. Le copie che i gestori di password segnano come riservate non vengono conservate, e la
+  profilo, o di quella che scegli nelle opzioni, **in chiaro**. Le copie che i gestori di password segnano come riservate non vengono conservate, e la
   cattura si può sospendere in qualsiasi momento.
 - **I testi che salvi**: nello stesso file, **cifrati** per il tuo utente (Windows Data Protection): un altro
   utente dello stesso PC non li può leggere.
@@ -55,7 +55,8 @@ accounts, ads or usage statistics, and sends nothing to anyone**, not even to it
 Everything stays on your PC, in your Windows user profile:
 
 - **What you copy** (texts and pictures), if the history is on: for the number of days set in the options (30 by
-  default; with 0 only today's), in the file `SmartClip.db` in a folder of your profile, **unencrypted**. Copies
+  default; with 0 only today's), in the file `SmartClip.db` in a folder of your profile, or the one you choose in
+  the options, **unencrypted**. Copies
   that password managers mark as private are not kept, and capturing can be paused at any time.
 - **The texts you save**: in the same file, **encrypted** for your user (Windows Data Protection): another user of
   the same PC cannot read them.

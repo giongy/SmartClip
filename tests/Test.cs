@@ -174,7 +174,48 @@ static class TestProgram
         ClipsTest();
         MigrationTest();
         BackupTest();
+        MoveTest();
         return failed == 0 ? 0 : 1;
+    }
+
+    // The database moved to another folder: all of it, the old file gone; never over another database; and when the
+    // move fails halfway, the old one back as it was.
+    static void MoveTest()
+    {
+        string first = System.IO.Path.Combine(sandbox, @"move\one\SmartClip.db"), second = System.IO.Path.Combine(sandbox, @"move\two\SmartClip.db");
+        Clips clips = new Clips(first);
+        try
+        {
+            clips.Keep(9);
+            clips.AddText("copiato");
+            long kept = clips.AddSaved("Banca", "segreta", clips.AddFolder(0, "Cartella"), DateTime.Now);
+            Check(clips.Healthy(), "a sound database says so");
+            clips = Clips.Move(clips, second);
+            Check(clips.FileName == second && !System.IO.File.Exists(first) && clips.KeepDays == 9 && clips.CopiedCount() == 1
+                && clips.Saved().Find(delegate(Entry e) { return e.Id == kept; }).Text == "segreta" && clips.Folders().Count == 1,
+                "a database moves with all it holds, its days too, and leaves no copy behind");
+            using (Clips other = new Clips(first)) other.AddText("un altro");
+            Clips current = clips;
+            Check(Throws<System.IO.IOException>(delegate { Clips.Move(current, first); }) && clips.CopiedCount() == 1,
+                "it never goes over another database, and stays open where it is");
+            System.IO.File.Delete(first);
+            ClipsMoveException failure = null;
+            try
+            {
+                Clips.Move(clips, sandbox + @"\move\no|such\SmartClip.db");   // a character no folder can have
+            }
+            catch (ClipsMoveException ex)
+            {
+                failure = ex;
+            }
+            if (failure != null) clips = failure.Back;
+            Check(failure != null && clips.FileName == second && clips.CopiedCount() == 1 && clips.Healthy(),
+                "a move that fails leaves the database where it was, as it was, and open");
+        }
+        finally
+        {
+            clips.Dispose();
+        }
     }
 
     // An exported file taken back into a database: folders made as the file names them, the names already taken asked
@@ -1098,9 +1139,73 @@ static class TestProgram
                 && MainForm.NumbersName == quickBefore && quickBefore == "Ctrl+" + Strings.ShiftName + "+1…" + MainForm.MaxNumber
                 ? "PASS" : "FAIL", quickBefore, noDigit, shiftOnly, quickTaken, refusedNumber, MainForm.NumbersName);
 
+            // From one PC to another: what the window exports, imported into a new, empty database, comes back whole,
+            // but for pictures, which a text file cannot hold.
+            string exported = System.IO.Path.Combine(sandbox, "to another pc.txt");
+            ClipsOf(form).Save(ClipsOf(form).Copied(10, Texts.Words("github"))[0].Id, null, 0);   // a saved text without a name too
+            typeof(MainForm).GetMethod("Reload", hidden).Invoke(form, null);
+            List<Entry> sent = (List<Entry>)typeof(MainForm).GetMethod("Exported", hidden).Invoke(form, new object[] { true });
+            BackupResult wrote = Backup.Export(exported, sent);
+            using (Clips other = new Clips(System.IO.Path.Combine(sandbox, "other pc.db")))
+            {
+                BackupResult read = Backup.Import(other, exported, true, delegate { return false; });
+                List<Entry> here = ClipsOf(form).Saved(), imported = other.Saved();
+                bool same = here.Count == imported.Count;
+                foreach (Entry each in here)
+                {
+                    // The file writes the line ends of Windows: a text with bare LF comes back with CR LF.
+                    Entry match = imported.Find(delegate(Entry e)
+                    {
+                        return e.Name == each.Name && e.Text.Replace("\r\n", "\n") == each.Text.Replace("\r\n", "\n");
+                    });
+                    same &= match != null && match.FolderId != 0 == (each.FolderId != 0);
+                }
+                List<Folder> folders = other.Folders();
+                Console.WriteLine("[{0}] exported and imported into another database: {1} saved, {2} copied, {3} pictures left out",
+                    same && wrote.Saved == read.Saved && read.Copied == ClipsOf(form).CopiedCount() - wrote.Pictures
+                    && wrote.Pictures == 1 && folders.Count == 3 && folders.Exists(delegate(Folder f) { return f.Name == s.Servers && f.Level == 1; })
+                    ? "PASS" : "FAIL", read.Saved, read.Copied, wrote.Pictures);
+            }
+            FillSample(form);
+
+            // The folder of the database: moved elsewhere and back, the list going along; the setting saved at once.
+            MethodInfo move = typeof(MainForm).GetMethod("MoveDataFolder", hidden);
+            string elsewhere = System.IO.Path.Combine(sandbox, "elsewhere");
+            int savedRows = saved.Items.Count;
+            move.Invoke(form, new object[] { elsewhere });
+            string written;
+            using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(TestKey))
+                written = key == null ? null : key.GetValue("DataFolder") as string;
+            bool there = ClipsOf(form).FileName.StartsWith(elsewhere) && !System.IO.File.Exists(Clips.DefaultFile)
+                && saved.Items.Count == savedRows && written == elsewhere;
+            move.Invoke(form, new object[] { "" });
+            Console.WriteLine("[{0}] the database moves to another folder with the list, saying so at once, and back",
+                there && ClipsOf(form).FileName == Clips.DefaultFile && saved.Items.Count == savedRows
+                && !System.IO.File.Exists(System.IO.Path.Combine(elsewhere, System.IO.Path.GetFileName(Clips.DefaultFile))) ? "PASS" : "FAIL");
+
             Console.WriteLine("form {0}x{1}, client {2}x{3}, icon {4}", form.Width, form.Height,
                 form.ClientSize.Width, form.ClientSize.Height, form.Icon == null ? "none" : form.Icon.Size.ToString());
         }
+
+        // The first start after a version before 4.0: the history files go into a new database, and their folder goes.
+        System.IO.File.Delete(Clips.DefaultFile);
+        OldRecord(Migration.OldHistory, DateTime.Now.AddMinutes(-5), 1, false, 0, Encoding.UTF8.GetBytes("dalla versione 3"));
+        using (ShotForm form = new ShotForm())
+            Console.WriteLine("[{0}] after the migration the folder of the old history files is gone, what it held is in the database",
+                !System.IO.Directory.Exists(Migration.OldHistory)
+                && ClipsOf(form).Copied(10, Texts.Words("versione")).Count == 1 ? "PASS" : "FAIL");
+
+        // A folder chosen for the database that is no longer there: no new, empty list in its place, but the list in
+        // memory and the status line saying why.
+        string gone = System.IO.Path.Combine(sandbox, "gone away");
+        using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(TestKey)) key.SetValue("DataFolder", gone);
+        using (ShotForm form = new ShotForm())
+        {
+            Label status = (Label)typeof(MainForm).GetField("status", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(form);
+            Console.WriteLine("[{0}] a chosen folder that is gone is not made again: the list works in memory and says so",
+                ClipsOf(form).FileName == Clips.Memory && !System.IO.Directory.Exists(gone) && status.Text.IndexOf(gone) >= 0 ? "PASS" : "FAIL");
+        }
+        using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(TestKey)) key.DeleteValue("DataFolder", false);
 
         using (ShotEdit edit = new ShotEdit(SavedSample(), Sample.Current.Work, new List<string>(new string[] { Sample.Current.Work, Sample.Current.Home })))
         {

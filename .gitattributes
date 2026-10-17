@@ -1,0 +1,4 @@
+# Batch files keep the line ends of Windows wherever they are checked out: with bare LF, cmd.exe can miss the
+# labels of goto (test.cmd once could not find ":failed").
+*.cmd text eol=crlf
+*.bat text eol=crlf

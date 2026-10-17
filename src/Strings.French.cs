@@ -169,6 +169,16 @@ static partial class Strings
         HistoryOption = "Mémoriser les textes et images copiés";
         KeepOption = "Jours gardés (0 : aujourd'hui seul) :";
         FolderLink = "Ouvrir le dossier des données";
+        DataFolderOption = "Dossier des éléments copiés et enregistrés :";
+        ChangeFolderButton = "Changer…"; DefaultFolderButton = "Par défaut";
+        ChooseDataFolder = "Le dossier où {0} garde ce que vous copiez et enregistrez.";
+        AskUseExisting = "{0} contient déjà une liste de {1}.\n\nUtiliser celle-ci ? La vôtre reste où elle est, telle quelle.";
+        AskSyncedFolder = "{0} semble être un dossier synchronisé en ligne ou sur le réseau.\n\nLa synchronisation peut "
+            + "bloquer ou abîmer la base de données, et les textes enregistrés ne se lisent pas sur un autre PC. L'utiliser quand même ?";
+        ListMovedTo = "La liste est maintenant dans {0}.";
+        ListMoveFailed = "La liste n'a pas pu être déplacée et reste où elle était : {0}";
+        FolderUnavailable = "Le dossier de la liste, {0}, est inaccessible : ce que vous copiez et enregistrez maintenant "
+            + "sera perdu à la fermeture du programme. Dans les options, sous {1}, choisissez un autre dossier ou celui par défaut.";
         SpareOption = "Au nettoyage, garder les derniers jours :";
         CleanButton = "Nettoyer…";
         DelayTip = "Combien de secondes la fenêtre cible doit rester au premier plan avant que\n"
@@ -204,8 +214,11 @@ static partial class Strings
             + "Les éléments en haut partent aussi quand leurs jours expirent ; les textes enregistrés jamais.\n"
             + "L'historique est gardé sur disque en clair. La liste montre les {0} plus récents :\n"
             + "la recherche trouve les autres.";
-        FolderTip = "Ouvre dans l'Explorateur de fichiers le dossier de la base de données, qui garde ce que\n"
-            + "vous avez copié et enregistré, et du journal des erreurs :\n{0}";
+        DataFolderTip = "Où se trouve la base de données avec ce que vous copiez et enregistrez, avec le journal des erreurs :\n{0}\n"
+            + "Le dossier par défaut est {1}. « Changer… » déplace la base de données dans le dossier choisi,\n"
+            + "ou utilise celle qui s'y trouve déjà. Ce n'est pas un moyen de partager la liste entre PC : les\n"
+            + "textes enregistrés ne sont lisibles que par cet utilisateur Windows sur ce PC, et deux programmes\n"
+            + "utilisant le même fichier en même temps peuvent l'abîmer.";
         CleanTip = "Efface aussitôt de l'historique ce que vous avez copié avant les derniers jours\n"
             + "indiqués ci-dessus : avec 1, seul aujourd'hui reste ; avec 0, rien.\n"
             + "Une confirmation est demandée. Les éléments en haut partent aussi ; les textes enregistrés\n"
@@ -407,8 +420,12 @@ static partial class Strings
             "# L'historique",
             "Ce que vous copiez reste dans la liste pendant un nombre de jours que vous choisissez ("
                 + Texts.DefaultKeepDays + " si vous ne le changez pas), même après avoir fermé le programme ou éteint le PC.",
-            "- Il est gardé en clair dans " + Clips.DefaultFile + ", avec les textes enregistrés, qui eux sont "
-                + "chiffrés. Les jours expirés s'effacent tout seuls.",
+            "- Il est gardé en clair dans une base de données, par défaut " + Clips.DefaultFile + ", avec les textes "
+                + "enregistrés, qui eux sont chiffrés. Les jours expirés s'effacent tout seuls.",
+            "- Dans les options, « " + ChangeFolderButton + " » emmène la base de données dans un autre dossier, ou "
+                + "utilise celle qui s'y trouve déjà ; « " + DefaultFolderButton + " » la ramène. Ce n'est pas un moyen "
+                + "de partager la liste entre PC : les textes enregistrés ne se lisent que sur ce PC. Si le dossier "
+                + "choisi est inaccessible au démarrage, la liste travaille en mémoire et le dit.",
             "- Avec 0 jour, seul ce que vous avez copié aujourd'hui reste.",
             "- Ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé.",
             "- Les éléments en haut partent aussi quand leurs jours expirent : ce qui doit rester, enregistrez-le.",
@@ -426,8 +443,8 @@ static partial class Strings
                 + "s'il faut vider le presse-papiers ensuite, la saisie lente et les symboles composés avec des codes Alt.",
             "- " + HotkeysTitle + " : active et désactive " + type + ", " + pick + " et " + MainForm.NumbersName
                 + ", et leur donne d'autres touches.",
-            "- " + HistoryTitle + " : s'il faut mémoriser ce que vous copiez, pendant combien de jours, le lien vers le "
-                + "dossier de la base de données et le bouton qui nettoie aussitôt l'historique.",
+            "- " + HistoryTitle + " : s'il faut mémoriser ce que vous copiez, pendant combien de jours, le dossier de la base de données "
+                + "(qu'on peut changer) avec le lien qui l'ouvre, et le bouton qui nettoie aussitôt l'historique.",
             "- " + ProgramTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la taille de l'interface (boutons, options, ce guide : en pixels, elles redémarrent le programme) et celles des éléments (elles changent aussitôt), s'il faut rester dans la zone de notification et se masquer en passant "
                 + "à un autre programme, s'il faut démarrer avec Windows, et les boutons pour exporter et importer.",
 

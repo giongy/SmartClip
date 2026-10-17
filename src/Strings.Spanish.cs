@@ -163,6 +163,16 @@ static partial class Strings
         HistoryOption = "Recordar textos e imágenes copiados";
         KeepOption = "Días que se guardan (0: solo hoy):";
         FolderLink = "Abrir la carpeta de los datos";
+        DataFolderOption = "Carpeta de las entradas copiadas y guardadas:";
+        ChangeFolderButton = "Cambiar…"; DefaultFolderButton = "Predeterminada";
+        ChooseDataFolder = "La carpeta en la que {0} guarda lo que copias y guardas.";
+        AskUseExisting = "En {0} ya hay una lista de {1}.\n\n¿Quieres usar esa? La tuya se queda donde está, tal como está.";
+        AskSyncedFolder = "{0} parece una carpeta sincronizada en línea o en red.\n\nLa sincronización puede bloquear o "
+            + "estropear la base de datos, y los textos guardados no se leen en otro PC. ¿Quieres usarla igualmente?";
+        ListMovedTo = "Ahora la lista está en {0}.";
+        ListMoveFailed = "No se ha podido mover la lista, que se queda donde estaba: {0}";
+        FolderUnavailable = "No se puede acceder a la carpeta de la lista, {0}: lo que copies y guardes ahora se pierde al "
+            + "cerrar el programa. En las opciones, en {1}, elige otra carpeta o la predeterminada.";
         SpareOption = "Al limpiar, conservar los últimos días:";
         CleanButton = "Limpiar ahora…";
         DelayTip = "Cuántos segundos debe quedarse en primer plano la ventana de destino\n"
@@ -198,8 +208,11 @@ static partial class Strings
             + "También las entradas arriba se van cuando vencen sus días; los textos guardados nunca.\n"
             + "El historial se guarda en disco sin cifrar. La lista muestra las {0} más recientes:\n"
             + "las demás se encuentran buscando.";
-        FolderTip = "Abre en el Explorador de archivos la carpeta de la base de datos, que guarda lo que\n"
-            + "copiaste y guardaste, y del registro de errores:\n{0}";
+        DataFolderTip = "Dónde está la base de datos con lo que copias y guardas, junto al registro de errores:\n{0}\n"
+            + "La carpeta predeterminada es {1}. «Cambiar…» mueve la base de datos a la carpeta que elijas,\n"
+            + "o usa la que ya está allí. No sirve para compartir la lista entre PC: los textos guardados\n"
+            + "solo los lee este usuario de Windows en este PC, y dos programas que usan el mismo\n"
+            + "archivo a la vez pueden estropearlo.";
         CleanTip = "Borra enseguida del historial lo que copiaste antes de los últimos días\n"
             + "escritos arriba: con 1 solo queda hoy, con 0 no queda nada.\n"
             + "Pide confirmación antes. También se van las entradas arriba; los textos guardados\n"
@@ -396,8 +409,12 @@ static partial class Strings
             "# El historial",
             "Lo que copias se queda en la lista el número de días que decidas (" + Texts.DefaultKeepDays
                 + " si no lo cambias), también después de cerrar el programa o apagar el PC.",
-            "- Se guarda sin cifrar en " + Clips.DefaultFile + ", junto a los textos guardados, que en cambio están "
-                + "cifrados. Los días vencidos se borran solos.",
+            "- Se guarda sin cifrar en una base de datos, por defecto " + Clips.DefaultFile + ", junto a los textos "
+                + "guardados, que en cambio están cifrados. Los días vencidos se borran solos.",
+            "- En las opciones, «" + ChangeFolderButton + "» lleva la base de datos a otra carpeta, o usa la que ya "
+                + "está allí; «" + DefaultFolderButton + "» la devuelve. No sirve para compartir la lista entre PC: los "
+                + "textos guardados solo se leen en este PC. Si al iniciar no se puede acceder a la carpeta elegida, la "
+                + "lista trabaja en memoria y lo dice.",
             "- Con 0 días solo queda lo que copiaste hoy.",
             "- Lo que los gestores de contraseñas marcan como privado no se recuerda.",
             "- También las entradas arriba se van cuando vencen sus días: lo que deba quedarse, guárdalo.",
@@ -415,8 +432,8 @@ static partial class Strings
                 + "vaciar el portapapeles después, el tecleo lento y los símbolos compuestos con códigos Alt.",
             "- " + HotkeysTitle + ": activa y desactiva " + type + ", " + pick + " y " + MainForm.NumbersName
                 + ", y les da otras teclas.",
-            "- " + HistoryTitle + ": si recordar lo que copias, durante cuántos días, el enlace a la carpeta de la "
-                + "base de datos y el botón que limpia enseguida el historial.",
+            "- " + HistoryTitle + ": si recordar lo que copias, durante cuántos días, la carpeta de la base de datos "
+                + "(que se puede cambiar) con el enlace que la abre, y el botón que limpia enseguida el historial.",
             "- " + ProgramTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño de la interfaz (botones, opciones, esta guía: en píxeles, reinician el programa) y los de las entradas (cambian enseguida), si seguir en el área de notificación y ocultarse al cambiar a otro "
                 + "programa, si iniciarse con Windows, y los botones para exportar e importar.",
 

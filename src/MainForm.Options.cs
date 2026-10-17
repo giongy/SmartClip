@@ -55,7 +55,21 @@ partial class MainForm
         Label keepLabel = PlaceNumber(keepBox, Strings.KeepOption, Texts.MaxKeepDays,
             delegate { Retention = Retention; ApplyHistory(); Reload(); }, ref top);
         Retention = Texts.DefaultKeepDays;
+        // Where the database is, and the buttons that take it elsewhere or back to the default folder.
+        Label folderLabel = NewLabel(Strings.DataFolderOption, 0, top);
+        page.Controls.Add(folderLabel);
+        top += RowHeight;
+        folderPath.SetBounds(0, top, PaneWidth, RowHeight);
+        folderPath.AutoEllipsis = true;
+        folderPath.UseMnemonic = false;
+        folderPath.ForeColor = Look.Muted;
+        page.Controls.Add(folderPath);
+        top += RowHeight;
+        PlaceButton(changeFolderButton, Strings.ChangeFolderButton, ChangeDataFolder, 0, ref top);
+        top -= NumberRow;
+        PlaceButton(defaultFolderButton, Strings.DefaultFolderButton, delegate { MoveDataFolder(""); }, OptionButtonWidth + Gap, ref top);
         LinkLabel folderLink = PlaceLink(Strings.FolderLink, OpenFolder, ref top);
+        folderTipped = new Control[] { folderLabel, folderPath, changeFolderButton, defaultFolderButton, folderLink };
         // Not a setting: what to spare when the button below is pressed.
         Label cleanLabel = PlaceNumber(cleanBox, Strings.SpareOption, Texts.MaxKeepDays, delegate { Spared = Spared; }, ref top);
         Spared = 0;
@@ -113,7 +127,6 @@ partial class MainForm
         Tip(string.Format(Strings.SizeTip, PixelsName(Look.DefaultEntrySize)), sizeLabel, sizeButton);
         Tip(Strings.HistoryTip, historyBox);
         Tip(string.Format(Strings.KeepTip, MaxShown), keepLabel, keepBox);
-        Tip(string.Format(Strings.FolderTip, DataFolder), folderLink);
         Tip(Strings.CleanTip, cleanLabel, cleanBox, cleanButton);
         Tip(string.Format(Strings.TrayTip, Strings.Exit), trayBox);
         Tip(string.Format(Strings.StartTip, Program.AppName), startBox);
@@ -222,12 +235,6 @@ partial class MainForm
         });
     }
 
-    // The folder of the database, where the log is too.
-    static string DataFolder
-    {
-        get { return Path.GetDirectoryName(Clips.DefaultFile); }
-    }
-
     // A row with a number to write: its description on the left, its box at the right edge of the page.
     // Returns the description, for its tooltip.
     Label PlaceNumber(TextBox box, string text, int max, Action confirm, ref int top)
@@ -311,18 +318,21 @@ partial class MainForm
             dialog.FileName = Program.AppName + " " + DateTime.Today.ToString(Texts.DayFormat) + Backup.Extension;
             if (dialog.ShowDialog(this) != DialogResult.OK) return;
             BackupResult result = null;
-            if (!Change(delegate
-            {
-                // The saved ones as their column has them, folders included; the copied ones all, not only those listed.
-                List<Entry> chosen = new List<Entry>(entries);
-                if (all) chosen.AddRange(clips.Copied(int.MaxValue, new string[0]));
-                result = Backup.Export(dialog.FileName, chosen);
-            })) return;
+            if (!Change(delegate { result = Backup.Export(dialog.FileName, Exported(all)); })) return;
             string saved = Count(result.Saved, Strings.SavedOne, Strings.SavedMany);
             Say((all ? string.Format(Strings.ExportedAll, saved, Count(result.Copied, Strings.CopiedOne, Strings.CopiedMany))
                 : string.Format(Strings.Exported, saved))
                 + (result.Pictures > 0 ? string.Format(Strings.PicturesLeftOut, result.Pictures) : ""));
         }
+    }
+
+    // What goes into an exported file: the saved ones as their column has them, folders included, and with 'all' the
+    // copied ones, all of them, not only those listed.
+    List<Entry> Exported(bool all)
+    {
+        List<Entry> chosen = new List<Entry>(entries);
+        if (all) chosen.AddRange(clips.Copied(int.MaxValue, new string[0]));
+        return chosen;
     }
 
     // Takes in a file written by Export. With 'all' the copied texts too, if the history is on.
@@ -379,6 +389,98 @@ partial class MainForm
     {
         if (Directory.Exists(DataFolder)) Change(delegate { Process.Start(DataFolder); });
         else Say(Strings.NoHistoryFolder);
+    }
+
+    // Writes where the database is, in the options and in their tooltips; the default folder cannot be chosen again.
+    void ShowFolder()
+    {
+        folderPath.Text = DataFolder;
+        defaultFolderButton.Enabled = dataFolder.Length > 0;
+        Tip(string.Format(Strings.DataFolderTip, DataFolder, Path.GetDirectoryName(Clips.DefaultFile)), folderTipped);
+    }
+
+    // Lets the user choose another folder for the database, and takes it there.
+    void ChangeDataFolder()
+    {
+        using (FolderBrowserDialog dialog = new FolderBrowserDialog())
+        {
+            dialog.Description = string.Format(Strings.ChooseDataFolder, Program.AppName);
+            dialog.SelectedPath = DataFolder;
+            if (dialog.ShowDialog(this) == DialogResult.OK) MoveDataFolder(dialog.SelectedPath);
+        }
+    }
+
+    // Takes the list to another folder, "" being the default one. Where there is no database yet, this one moves
+    // there; where there is one, after asking, that one is used and this one stays as it is. A folder synchronised
+    // online or on the network asks first. The new place is saved at once: the next start must find it.
+    void MoveDataFolder(string folder)
+    {
+        string home = Path.GetDirectoryName(Clips.DefaultFile);
+        if (folder.Length > 0 && SameFolder(folder, home)) folder = "";   // the default, even when chosen by hand
+        string target = folder.Length > 0 ? Path.Combine(folder, Path.GetFileName(Clips.DefaultFile)) : Clips.DefaultFile;
+        bool inMemory = clips.FileName == Clips.Memory;
+        if (!inMemory && SameFolder(Path.GetDirectoryName(target), Path.GetDirectoryName(clips.FileName))) return;
+        string where = Path.GetDirectoryName(target);
+        if (folder.Length > 0 && Synced(folder) && !AskForm.Ask(this, string.Format(Strings.AskSyncedFolder, folder), true)) return;
+        try
+        {
+            if (File.Exists(target))
+            {
+                if (!Ask(string.Format(Strings.AskUseExisting, where, Program.AppName))) return;
+                Clips there = new Clips(target);   // first: if it cannot be opened, the list stays where it is
+                clips.Dispose();
+                clips = there;
+            }
+            else if (inMemory)
+            {
+                Clips there = new Clips(target);   // nothing on disk to take along: a list begins there
+                clips.Dispose();
+                clips = there;
+            }
+            else clips = Clips.Move(clips, target);
+        }
+        catch (ClipsMoveException ex)
+        {
+            clips = ex.Back;
+            Log.Error(ex);
+            status.Text = string.Format(Strings.ListMoveFailed, ex.Message);
+            return;
+        }
+        catch (Exception ex)
+        {
+            ShowError(ex);
+            return;
+        }
+        dataFolder = folder;
+        unavailable = null;
+        Log.FileName = Path.Combine(DataFolder, Program.AppName + ".log");
+        SaveSettings();
+        ApplyHistory();   // the days kept apply to the list found there too
+        Reload();
+        ShowFolder();
+        Say(string.Format(Strings.ListMovedTo, DataFolder));
+    }
+
+    static bool SameFolder(string one, string other)
+    {
+        return string.Equals(Path.GetFullPath(one).TrimEnd('\\'), Path.GetFullPath(other).TrimEnd('\\'), StringComparison.OrdinalIgnoreCase);
+    }
+
+    // A folder on the network, or one a program keeps in step with the cloud: there a database can be locked or
+    // damaged while it is copied, and saved texts cannot be read on another PC anyway.
+    static bool Synced(string folder)
+    {
+        string full = Path.GetFullPath(folder);
+        if (full.StartsWith(@"\\")) return true;
+        foreach (string name in new string[] { "OneDrive", "OneDriveConsumer", "OneDriveCommercial" })
+        {
+            string cloud = Environment.GetEnvironmentVariable(name);
+            if (!string.IsNullOrEmpty(cloud) && (SameFolder(full, cloud)
+                || full.StartsWith(cloud.TrimEnd('\\') + @"\", StringComparison.OrdinalIgnoreCase))) return true;
+        }
+        foreach (string mark in new string[] { @"\Dropbox", @"\Google Drive", @"\iCloudDrive" })
+            if (full.IndexOf(mark, StringComparison.OrdinalIgnoreCase) >= 0) return true;
+        return false;
     }
 
     void PlaceOption(CheckBox box, string text, ref int top)
@@ -476,6 +578,7 @@ partial class MainForm
         Transfer(key, save, ThemeSetting, (int)Look.Chosen);         // read by SavedTheme, before the window
         face = Transfer(key, save, FaceSetting, face);                // read by UseSavedInterface, before the window
         faceSize = Transfer(key, save, FaceSizeSetting, faceSize);
+        dataFolder = Transfer(key, save, DataFolderSetting, dataFolder);   // read by OpenClips, before the window
         string entryFamily = Transfer(key, save, "EntryFont", Look.EntryFamily);
         int entrySize = Transfer(key, save, "EntrySize", Look.EntrySize);
         if (!save) UseEntryFont(entryFamily, entrySize);

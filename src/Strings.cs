@@ -204,6 +204,16 @@ static partial class Strings
     public static string HistoryOption = "Remember copied texts and pictures";
     public static string KeepOption = "Days kept (0: today only):";
     public static string FolderLink = "Open the data folder";
+    public static string DataFolderOption = "Folder of the copied and saved entries:";
+    public static string ChangeFolderButton = "Change…", DefaultFolderButton = "Default";
+    public static string ChooseDataFolder = "The folder where {0} keeps what you copy and save.";
+    public static string AskUseExisting = "{0} already holds a list of {1}.\n\nUse that one? Yours stays where it is, as it is.";
+    public static string AskSyncedFolder = "{0} looks like a folder synchronised online or on the network.\n\nThe "
+        + "synchronisation can lock or damage the database, and the saved texts cannot be read on another PC. Use it all the same?";
+    public static string ListMovedTo = "The list is now kept in {0}.";
+    public static string ListMoveFailed = "The list could not be moved, and stays where it was: {0}";
+    public static string FolderUnavailable = "The folder of the list, {0}, cannot be reached: what you copy and save now is "
+        + "lost when the program closes. In the options, under {1}, choose another folder or the default one.";
     public static string SpareOption = "Keep the last days when cleaning (0: none):";
     public static string CleanButton = "Clean now…";
     public static string DelayTip = "How many seconds the target window must stay in the foreground\n"
@@ -239,8 +249,11 @@ static partial class Strings
         + "Entries kept at the top go when their days are over too; saved texts never do.\n"
         + "The history is kept on disk unencrypted. The list shows the {0} most recent:\n"
         + "search finds the others.";
-    public static string FolderTip = "Opens in File Explorer the folder of the database, which holds what you copied\n"
-        + "and saved, and of the error log:\n{0}";
+    public static string DataFolderTip = "Where the database with what you copy and save is kept, with the error log:\n{0}\n"
+        + "The default is {1}. “Change…” moves the database to the folder you choose,\n"
+        + "or uses the one already there. It is not a way to share the list between PCs:\n"
+        + "saved texts can be read only by this Windows user on this PC, and two programs\n"
+        + "using one file at once can damage it.";
     public static string CleanTip = "Deletes at once from the history what you copied before the last days\n"
         + "written above: with 1 only today stays, with 0 nothing does.\n"
         + "It asks first. Entries kept at the top go too; saved texts are not touched,\n"
@@ -431,8 +444,12 @@ static partial class Strings
             "# History",
             "What you copy stays in the list for a number of days you decide (" + Texts.DefaultKeepDays
                 + " unless you change it), also after closing the program or turning off the PC.",
-            "- It is kept unencrypted in " + Clips.DefaultFile + ", together with the saved texts, which are "
-                + "encrypted. Expired days are deleted by themselves.",
+            "- It is kept unencrypted in a database, by default " + Clips.DefaultFile + ", together with the saved "
+                + "texts, which are encrypted. Expired days are deleted by themselves.",
+            "- In the options, “" + ChangeFolderButton + "” takes the database to another folder, or uses the one "
+                + "already there; “" + DefaultFolderButton + "” brings it back. It is not a way to share the list "
+                + "between PCs: saved texts can be read only on this PC. If the folder chosen cannot be reached at the "
+                + "start, the list works in memory and says so.",
             "- With 0 days only what you copied today stays.",
             "- What password managers mark as private is not remembered.",
             "- Entries kept at the top go when their days are over too: what is to stay, save it.",
@@ -450,8 +467,8 @@ static partial class Strings
                 + "whether to clear the clipboard afterwards, slow typing and symbols composed with Alt codes.",
             "- " + HotkeysTitle + ": turns " + type + ", " + pick + " and " + MainForm.NumbersName + " on and off, and "
                 + "gives them other keys.",
-            "- " + HistoryTitle + ": whether to remember what you copy, for how many days, the link to the folder of "
-                + "the database and the button that cleans the history at once.",
+            "- " + HistoryTitle + ": whether to remember what you copy, for how many days, the folder of the database "
+                + "(which can be changed) with the link that opens it, and the button that cleans the history at once.",
             "- " + ProgramTitle + ": the language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of the interface (buttons, options, this guide: in pixels, they restart the program) and those of the entries (they change at once), whether to stay in the notification area and hide when you switch "
                 + "to another program, whether to start with Windows, and the buttons to export and import.",
 

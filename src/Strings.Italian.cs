@@ -163,6 +163,16 @@ static partial class Strings
         HistoryOption = "Ricorda i testi e le immagini copiati";
         KeepOption = "Giorni da tenere (0: solo oggi):";
         FolderLink = "Apri la cartella dei dati";
+        DataFolderOption = "Cartella delle voci copiate e salvate:";
+        ChangeFolderButton = "Cambia…"; DefaultFolderButton = "Predefinita";
+        ChooseDataFolder = "La cartella in cui {0} tiene ciò che copi e salvi.";
+        AskUseExisting = "In {0} c'è già un elenco di {1}.\n\nVuoi usare quello? Il tuo resta dov'è, così com'è.";
+        AskSyncedFolder = "{0} sembra una cartella sincronizzata online o in rete.\n\nLa sincronizzazione può bloccare o "
+            + "rovinare il database, e i testi salvati non si leggono su un altro PC. Vuoi usarla lo stesso?";
+        ListMovedTo = "Ora l'elenco sta in {0}.";
+        ListMoveFailed = "Non è stato possibile spostare l'elenco, che resta dov'era: {0}";
+        FolderUnavailable = "La cartella dell'elenco, {0}, non è raggiungibile: ciò che copi e salvi ora si perde alla "
+            + "chiusura del programma. Nelle opzioni, sotto {1}, scegli un'altra cartella o quella predefinita.";
         SpareOption = "Pulendo, tieni gli ultimi giorni (0: niente):";
         CleanButton = "Pulisci ora…";
         DelayTip = "Per quanti secondi la finestra di destinazione deve restare in primo piano\n"
@@ -198,8 +208,11 @@ static partial class Strings
             + "Anche le voci in alto se ne vanno quando scadono i loro giorni; i testi salvati mai.\n"
             + "La cronologia sta su disco in chiaro. L'elenco mostra le {0} più recenti:\n"
             + "le altre si trovano con la ricerca.";
-        FolderTip = "Apre in Esplora file la cartella del database, che contiene ciò che hai copiato\n"
-            + "e salvato, e del registro degli errori:\n{0}";
+        DataFolderTip = "Dove sta il database con ciò che copi e salvi, insieme al registro degli errori:\n{0}\n"
+            + "La cartella predefinita è {1}. «Cambia…» sposta il database nella cartella che scegli,\n"
+            + "o usa quello che c'è già lì. Non serve a condividere l'elenco tra PC: i testi salvati\n"
+            + "li legge solo questo utente di Windows su questo PC, e due programmi che usano\n"
+            + "lo stesso file insieme possono rovinarlo.";
         CleanTip = "Elimina subito dalla cronologia quello che hai copiato prima degli ultimi giorni\n"
             + "scritti qui sopra: con 1 resta solo oggi, con 0 non resta niente.\n"
             + "Prima chiede conferma. Vanno anche le voci in alto; i testi salvati non vengono\n"
@@ -388,8 +401,12 @@ static partial class Strings
             "# La cronologia",
             "Quello che copi resta nell'elenco per un numero di giorni che decidi tu (" + Texts.DefaultKeepDays
                 + " se non lo cambi), anche dopo aver chiuso il programma o spento il PC.",
-            "- Sta in chiaro in " + Clips.DefaultFile + ", insieme ai testi salvati, che invece sono cifrati. I "
-                + "giorni scaduti si eliminano da soli.",
+            "- Sta in chiaro in un database, di solito " + Clips.DefaultFile + ", insieme ai testi salvati, che invece "
+                + "sono cifrati. I giorni scaduti si eliminano da soli.",
+            "- Nelle opzioni, «" + ChangeFolderButton + "» porta il database in un'altra cartella, o usa quello che c'è "
+                + "già lì; «" + DefaultFolderButton + "» lo riporta indietro. Non serve a condividere l'elenco tra PC: i "
+                + "testi salvati si leggono solo su questo PC. Se all'avvio la cartella scelta non è raggiungibile, "
+                + "l'elenco lavora in memoria e lo dice.",
             "- Con 0 giorni resta solo quello che hai copiato oggi.",
             "- Quello che i gestori di password segnano come riservato non viene ricordato.",
             "- Anche le voci in alto se ne vanno quando scadono i loro giorni: ciò che deve restare, salvalo.",
@@ -407,8 +424,8 @@ static partial class Strings
                 + "svuotare gli appunti dopo, la digitazione lenta e i simboli composti con Alt+codice.",
             "- " + HotkeysTitle + ": accende e spegne " + type + ", " + pick + " e " + MainForm.NumbersName
                 + ", e dà loro altri tasti.",
-            "- " + HistoryTitle + ": se ricordare ciò che copi, per quanti giorni, il collegamento alla cartella del "
-                + "database e il pulsante che pulisce subito la cronologia.",
+            "- " + HistoryTitle + ": se ricordare ciò che copi, per quanti giorni, la cartella del database "
+                + "(che si può cambiare) con il collegamento che la apre, e il pulsante che pulisce subito la cronologia.",
             "- " + ProgramTitle + ": la lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), il carattere e la dimensione dell'interfaccia (pulsanti, opzioni, questa guida: in pixel, riavviano il programma) e quelli delle voci (cambiano subito), se restare attivo nell'area di notifica e nascondersi passando a un "
                 + "altro programma, se partire insieme a Windows, e i pulsanti per esportare e importare.",
 
