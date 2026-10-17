@@ -54,7 +54,7 @@ static partial class Strings
         + "and you can touch up its content. With a name the list shows the name, not the content.\n"
         + "On a saved entry: changes its name or content ({0}).\n"
         + "On a folder: renames it or moves it.\n"
-        + "Pictures cannot be saved.";
+        + "A picture can be saved too: it keeps showing itself, with its name beside it.";
     public static string HelpTip = "Opens the guide: everything the program can do ({0}).";
     public static string DeleteTip = "Deletes the saved text, or drops the copied entry from the list ({0}).\n"
         + "Of a folder it deletes only the folder: what it holds moves up one level.";
@@ -284,6 +284,9 @@ static partial class Strings
 
     // --- The window of a saved text or a folder ---
     public static string NewTextTitle = "New text", SaveCopiedTitle = "Save the copied text", EditSavedTitle = "Edit the saved text";
+    public static string SavePictureTitle = "Save the copied picture", EditPictureTitle = "Edit the saved picture";
+    public static string PictureHintEmpty = "Without a name, the list shows the picture alone.";
+    public static string PictureHintNamed = "The list shows the picture with “{0}” beside it.";
     public static string NameLabel = "Name (optional):", ContentLabel = "Content:";
     public static string NameHintEmpty = "Without a name, the list shows the content.";
     public static string NameHintNamed = "The list shows “{0}”; the content stays hidden, which suits a password.";
@@ -364,7 +367,8 @@ static partial class Strings
                 + "clipboard without opening the window.",
             "Saved texts never expire. They are kept in the program's database, encrypted for your user: another "
                 + "user of the same PC cannot read them. When you put one back on the clipboard it is marked as private, so that Windows "
-                + "clipboard history (Win+V) and other clipboard managers ignore it. Pictures cannot be saved.",
+                + "clipboard history (Win+V) and other clipboard managers ignore it. A copied picture can be saved too: it always shows its thumbnail, with "
+                + "its name beside it if it has one.",
 
             "# Folders",
             "When the saved texts become many you can gather them in folders, and folders in other folders.",

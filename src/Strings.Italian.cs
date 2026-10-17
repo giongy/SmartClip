@@ -22,7 +22,7 @@ static partial class Strings
             + "e puoi ritoccarne il contenuto. Con il nome l'elenco mostra il nome, non il contenuto.\n"
             + "Su una voce salvata: ne cambia il nome o il contenuto ({0}).\n"
             + "Su una cartella: le cambia il nome o il posto.\n"
-            + "Le immagini non si salvano.";
+            + "Si salva anche un'immagine: continua a vedersi, con accanto il suo nome.";
         HelpTip = "Apre la guida: tutto quello che il programma sa fare ({0}).";
         DeleteTip = "Elimina il testo salvato, o toglie dall'elenco la voce copiata ({0}).\n"
             + "Di una cartella elimina solo la cartella: quello che contiene sale di un livello.";
@@ -241,6 +241,9 @@ static partial class Strings
             + "chiusura del programma.";
 
         NewTextTitle = "Nuovo testo"; SaveCopiedTitle = "Salva il testo copiato"; EditSavedTitle = "Modifica il testo salvato";
+        SavePictureTitle = "Salva l'immagine copiata"; EditPictureTitle = "Modifica l'immagine salvata";
+        PictureHintEmpty = "Senza nome, nell'elenco si vedrà solo l'immagine.";
+        PictureHintNamed = "Nell'elenco si vedrà l'immagine con accanto «{0}».";
         NameLabel = "Nome (facoltativo):"; ContentLabel = "Contenuto:";
         NameHintEmpty = "Senza nome, nell'elenco si vedrà il contenuto.";
         NameHintNamed = "Nell'elenco si vedrà «{0}»; il contenuto resta nascosto, adatto alle password.";
@@ -321,7 +324,8 @@ static partial class Strings
                 + "appunti senza aprire la finestra.",
             "I testi salvati non scadono mai. Stanno nel database del programma, cifrati per il tuo utente: un altro "
                 + "utente dello stesso PC non li può leggere. Quando ne rimetti uno negli appunti viene segnato come riservato, perché la "
-                + "cronologia di Windows (Win+V) e gli altri gestori di appunti lo ignorino. Le immagini non si possono salvare.",
+                + "cronologia di Windows (Win+V) e gli altri gestori di appunti lo ignorino. Si può salvare anche un'immagine copiata: mostra sempre la "
+                + "sua miniatura, con accanto il nome se ne ha uno.",
 
             "# Le cartelle",
             "Quando i testi salvati diventano tanti puoi raccoglierli in cartelle, e le cartelle in altre cartelle.",

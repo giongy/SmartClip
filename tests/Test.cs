@@ -982,6 +982,20 @@ static class TestProgram
                 && serverMenu.DropDownItems[0].Text == s.ServerPassword && menu.Items[3].Text == s.Home
                 && menu.Items[5] is ToolStripSeparator && menu.Items[6].Text == Strings.Exit ? "PASS" : "FAIL", menu.Items.Count);
             menu.Dispose();
+
+            // A copied picture saved under a name: among the saved ones, with its preview and its name.
+            Clips sampleClips = ClipsOf(form);
+            long pictureId = sampleClips.Copied(10, new string[0]).Find(delegate(Entry e) { return e.Picture; }).Id;
+            sampleClips.Save(pictureId, s.Remote, 0);
+            typeof(MainForm).GetMethod("Reload", hidden).Invoke(form, null);
+            Application.DoEvents();
+            Save(form, path + "-saved-picture.png");
+            Entry savedPicture = null;
+            foreach (Entry each in saved.Items) if (each.Picture) savedPicture = each;
+            Console.WriteLine("[{0}] a saved picture shows its preview and its name", savedPicture != null && savedPicture.Preview != null
+                && savedPicture.Label == s.Remote && recent.Items.Count == 4 ? "PASS" : "FAIL");
+            FillSample(form);
+
             typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
             Application.DoEvents();
             Save(form, path + "-options.png");
@@ -1095,6 +1109,16 @@ static class TestProgram
             edit.Show();
             Application.DoEvents();
             Save(edit, path + "-edit.png");
+        }
+        // The same window for a copied picture: the picture in place of the content.
+        using (Bitmap picture = SamplePicture())
+        using (ShotEdit edit = new ShotEdit(new Entry(picture), null, new List<string>()))
+        {
+            edit.StartPosition = FormStartPosition.Manual;
+            edit.Location = new Point(-30000, -30000);
+            edit.Show();
+            Application.DoEvents();
+            Save(edit, path + "-edit-picture.png");
         }
 
         // The small window that shows an entry whole: a text of several lines, then a picture.

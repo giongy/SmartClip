@@ -256,7 +256,10 @@ condiviso su GitHub).
   descrizione che si vede, e la ricerca le trova per misura. Se negli appunti c'è anche testo vince il testo.
   In memoria resta solo la miniatura: il PNG si legge quando serve (`Entry.LoadPng` → `PngSource` → `Clips.Png`).
   La stessa copia annunciata più volte da Windows è la stessa riga (impronta del PNG).
-  Nell'elenco occupano tre righe, con la miniatura (`Entry.Preview`).
+  Nell'elenco occupano tre righe, con la miniatura (`Entry.Preview`). **Si salvano** come i testi (dopo la 4.0.0):
+  `EditForm` mostra l'immagine al posto del contenuto e chiede solo nome e cartella; un'immagine salvata mostra
+  **sempre** la miniatura, con accanto il nome se c'è (decisione dell'utente: per le immagini il nome non nasconde
+  niente, `PictureHintEmpty`/`PictureHintNamed`), e l'anteprima compare passandoci sopra. Non si esportano.
 - I testi salvati (`Entry.Saved`) stanno nello stesso database, contenuto e miniatura cifrati con DPAPI per
   l'utente (`ProtectedData`, in `System.Security.dll` che `csc` riferisce già da solo); non hanno testo per la
   ricerca né impronta, che li tradirebbero. Non scadono mai. L'elenco li tiene in memoria decifrati (`entries`,

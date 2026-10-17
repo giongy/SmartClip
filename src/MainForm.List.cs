@@ -45,7 +45,7 @@ partial class MainForm
             changeItem.Text = saveButton.Text;
             changeItem.Enabled = saveButton.Enabled;
             changeItem.Visible = deleteItem.Visible = entry != null;
-            showItem.Visible = entry != null && entry.Saved && !entry.IsGroup && entry.Name != null;
+            showItem.Visible = entry != null && entry.Saved && !entry.IsGroup && entry.Name != null && !entry.Picture;
             pinItem.Visible = entry != null && !entry.Saved;
             pinItem.Text = entry != null && entry.Pinned ? Strings.Unpin : Strings.Pin;
             ListNumbers(numberItem, entry);
@@ -367,9 +367,11 @@ partial class MainForm
         list.Cursor = index >= 0 ? Cursors.Hand : Cursors.Default;
         list.Glow.Set(index);   // the row lights up gradually, the one left fades
         // What was in view belonged to the row the pointer left; an entry whose content the list shows (a copied one,
-        // a saved one without a name) is shown whole if it rests there. One with a name only when asked.
+        // a saved one without a name, a picture) is shown whole if it rests there. A text with a name only when asked.
         if (!peekAsked || index < 0) HidePeek();
-        if (index < 0 || list != recentList && ((Entry)list.Items[index]).Name != null) return;
+        if (index < 0) return;
+        Entry entry = (Entry)list.Items[index];
+        if (list != recentList && entry.Name != null && !entry.Picture) return;
         resting = list;
         rest.Interval = RestMs;
         rest.Start();
@@ -531,7 +533,7 @@ partial class MainForm
         bool saved = entry != null && entry.Saved;
         saveButton.Text = saved && entry.IsGroup ? Strings.RenameDots : saved ? Strings.EditDots : Strings.SaveDots;
         saveButton.Sign = saved ? Sign.Edit : Sign.Star;
-        saveButton.Enabled = entry != null && !entry.Picture;
+        saveButton.Enabled = entry != null;
         deleteButton.Enabled = entry != null;
     }
 
@@ -740,11 +742,10 @@ partial class MainForm
         if (wasHidden) Hide();
     }
 
-    // Opens the window with name and content: for a new text ('source' is null), to keep a copied one,
+    // Opens the window with name and content: for a new text ('source' is null), to keep a copied text or picture,
     // or to change a saved one.
     void Edit(Entry source)
     {
-        if (source != null && source.Picture) return;
         if (source != null && source.IsGroup)
         {
             EditGroup(source.Name);
@@ -774,13 +775,14 @@ partial class MainForm
                         {
                             // A copied entry becomes saved in its own row, number and all.
                             if (!source.Saved) clips.Save(source.Id, name, folder);
-                            clips.Change(source.Id, name, edit.Content, folder);
+                            clips.Change(source.Id, name, source.Picture ? null : edit.Content, folder);   // a picture keeps itself
                         }
                         clips.Reveal(folder);   // or the text would not be seen
                         transaction.Commit();
                     }
                 })) continue;
-                Say(string.Format(Strings.SavedSay, Shorten(name.Length > 0 ? name : new Entry(null, edit.Content).Label)));
+                Say(string.Format(Strings.SavedSay, Shorten(name.Length > 0 ? name
+                    : source != null && source.Picture ? source.Label : new Entry(null, edit.Content).Label)));
                 break;
             }
         }

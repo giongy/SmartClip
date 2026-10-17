@@ -266,7 +266,8 @@ Ogni passo si chiude con i test che passano e lascia il programma funzionante.
    quattro lingue, la guida, README, PRIVACY e la scheda dello Store parlano già di freccia e database.
 5. **Le funzioni nuove**: salvati senza nome, immagini salvabili, righe e anteprima dei salvati senza nome,
    esportazione aggiornata. — I salvati senza nome (finestra, righe, anteprima, esportazione) sono entrati nella
-   4.0, chiesti dall'utente mentre la provava. Restano le immagini salvabili.
+   4.0, chiesti dall'utente mentre la provava. Le immagini salvabili subito dopo la 4.0.0: un'immagine salvata
+   mostra sempre la miniatura, con accanto il nome se c'è (decisione dell'utente).
 6. **La cartella del database**: impostazione, pagina «Dati», spostamento, avvertenze, cartella irraggiungibile.
 7. **Documentazione**: guida e README nelle quattro lingue, `PRIVACY.md` (dove stanno i dati), scheda dello Store
    se cita la cronologia, `CLAUDE.md` (sezioni su cronologia, salvati, cartelle, stellina, numeri, trappole).

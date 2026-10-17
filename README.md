@@ -110,7 +110,8 @@ on the clipboard without opening the window. Only the names are shown there, as 
 | Delete | Ctrl+E | Delete the selected saved text, or drop a copied entry from the list |
 
 Once an entry is back on the clipboard, paste it with Ctrl+V as usual or type it with **Ctrl+Alt+V** where paste
-does not work. Pictures can only be pasted, and cannot be saved.
+does not work. Pictures can only be pasted, not typed; they can be saved like texts, and a saved picture always
+shows its thumbnail, with its name beside it if it has one.
 
 Press **Ctrl+D** in any program to bring the window up with the cursor in the search box. After you choose an
 entry the focus returns to the program you were in, and the window hides again if it was hidden. Esc goes back

@@ -22,7 +22,7 @@ static partial class Strings
             + "et vous pouvez retoucher son contenu. Avec un nom, la liste montre le nom, pas le contenu.\n"
             + "Sur un élément enregistré : change son nom ou son contenu ({0}).\n"
             + "Sur un dossier : change son nom ou sa place.\n"
-            + "Les images ne s'enregistrent pas.";
+            + "Une image s'enregistre aussi : elle reste visible, avec son nom à côté.";
         HelpTip = "Ouvre le guide : tout ce que sait faire le programme ({0}).";
         DeleteTip = "Supprime le texte enregistré, ou retire l'élément copié de la liste ({0}).\n"
             + "D'un dossier, il supprime seulement le dossier : son contenu remonte d'un niveau.";
@@ -249,6 +249,9 @@ static partial class Strings
             + "maintenant sera perdu à la fermeture du programme.";
 
         NewTextTitle = "Nouveau texte"; SaveCopiedTitle = "Enregistrer le texte copié"; EditSavedTitle = "Modifier le texte enregistré";
+        SavePictureTitle = "Enregistrer l'image copiée"; EditPictureTitle = "Modifier l'image enregistrée";
+        PictureHintEmpty = "Sans nom, la liste montrera seulement l'image.";
+        PictureHintNamed = "La liste montrera l'image avec « {0} » à côté.";
         NameLabel = "Nom (facultatif) :"; ContentLabel = "Contenu :";
         NameHintEmpty = "Sans nom, la liste montrera le contenu.";
         NameHintNamed = "La liste montrera « {0} » ; le contenu reste caché, ce qui convient à un mot de passe.";
@@ -336,7 +339,8 @@ static partial class Strings
             "Les textes enregistrés n'expirent jamais. Ils sont dans la base de données du programme, chiffrés pour "
                 + "votre utilisateur : un autre utilisateur du même PC ne peut pas les lire. Quand vous en remettez un dans le presse-papiers, il "
                 + "est marqué comme privé, pour que l'historique de Windows (Win+V) et les autres gestionnaires de "
-                + "presse-papiers l'ignorent. Les images ne peuvent pas être enregistrées.",
+                + "presse-papiers l'ignorent. Une image copiée peut aussi être enregistrée : elle montre "
+                + "toujours sa miniature, avec son nom à côté si elle en a un.",
 
             "# Les dossiers",
             "Quand les textes enregistrés deviennent nombreux, vous pouvez les regrouper en dossiers, et les dossiers "

@@ -22,7 +22,7 @@ static partial class Strings
             + "y puedes retocar su contenido. Con nombre la lista muestra el nombre, no el contenido.\n"
             + "En una entrada guardada: cambia su nombre o su contenido ({0}).\n"
             + "En una carpeta: cambia su nombre o su lugar.\n"
-            + "Las imágenes no se pueden guardar.";
+            + "También se guarda una imagen: se sigue viendo, con su nombre al lado.";
         HelpTip = "Abre la guía: todo lo que sabe hacer el programa ({0}).";
         DeleteTip = "Elimina el texto guardado, o quita de la lista la entrada copiada ({0}).\n"
             + "De una carpeta elimina solo la carpeta: lo que contiene sube un nivel.";
@@ -243,6 +243,9 @@ static partial class Strings
             + "cerrar el programa.";
 
         NewTextTitle = "Nuevo texto"; SaveCopiedTitle = "Guardar el texto copiado"; EditSavedTitle = "Editar el texto guardado";
+        SavePictureTitle = "Guardar la imagen copiada"; EditPictureTitle = "Editar la imagen guardada";
+        PictureHintEmpty = "Sin nombre, la lista mostrará solo la imagen.";
+        PictureHintNamed = "La lista mostrará la imagen con «{0}» al lado.";
         NameLabel = "Nombre (opcional):"; ContentLabel = "Contenido:";
         NameHintEmpty = "Sin nombre, la lista mostrará el contenido.";
         NameHintNamed = "La lista mostrará «{0}»; el contenido queda oculto, ideal para una contraseña.";
@@ -326,8 +329,8 @@ static partial class Strings
                 + "portapapeles sin abrir la ventana.",
             "Los textos guardados no vencen nunca. Están en la base de datos del programa, cifrados para tu usuario: "
                 + "otro usuario del mismo PC no puede leerlos. Cuando devuelves uno al portapapeles se marca como privado, para que el "
-                + "historial de Windows (Win+V) y los demás gestores del portapapeles lo ignoren. Las imágenes no se "
-                + "pueden guardar.",
+                + "historial de Windows (Win+V) y los demás gestores del portapapeles lo ignoren. También se puede "
+                + "guardar una imagen copiada: siempre muestra su miniatura, con su nombre al lado si lo tiene.",
 
             "# Carpetas",
             "Cuando los textos guardados son muchos puedes reunirlos en carpetas, y las carpetas en otras carpetas.",

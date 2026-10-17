@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
-// The window where a saved text gets its name, its content and its folder. The same window, without the
-// content, asks what a folder is called and which folder it is in.
+// The window where a saved text gets its name, its content and its folder; a saved picture its name and its
+// folder, with the picture in place of the content. The same window, without the content, asks what a folder is
+// called and which folder it is in.
 class EditForm : Window
 {
     const int Edge = 12, FieldWidth = 420, ContentHeight = 190, Gap = 6;   // in pixels at 96 dpi
+    const int PictureHeight = 150;                 // the picture shown in place of the content
     const int LabelRow = 20, NameHeight = 26;      // a description above its box, and the box of a name
     const int HintHeight = 34;                     // the line under the name that says what a name does: two at most
     const int MaxNameLength = 60;
@@ -19,18 +21,22 @@ class EditForm : Window
     readonly Button groupButton = new RoundButton();
     readonly Label hint = new Label();             // what the name does, said as it is written
     readonly bool nameOnly;
+    readonly Image picture;                        // of a picture to save, its preview; null for a text
     readonly string within, outside;               // what the folder button says: before a folder, and with none
 
-    // For a new text ('source' is null), a copied one to keep or a saved one to change. 'group' is the folder
-    // proposed for it, 'groups' those it can go into.
+    // For a new text ('source' is null), a copied entry to keep or a saved one to change, a text or a picture.
+    // 'group' is the folder proposed for it, 'groups' those it can go into.
     public EditForm(Entry source, string group, List<string> groups)
     {
         within = Strings.FolderOf;
         outside = Strings.NoFolder;
-        Build(source == null ? Strings.NewTextTitle : !source.Saved ? Strings.SaveCopiedTitle : Strings.EditSavedTitle,
-            Strings.NameLabel, MaxNameLength, source == null ? "" : source.Name ?? "", groups);
+        if (source != null && source.Picture) picture = source.Preview;
+        string title = source == null ? Strings.NewTextTitle
+            : !source.Saved ? (picture != null ? Strings.SavePictureTitle : Strings.SaveCopiedTitle)
+            : picture != null ? Strings.EditPictureTitle : Strings.EditSavedTitle;
+        Build(title, Strings.NameLabel, MaxNameLength, source == null ? "" : source.Name ?? "", groups);
         // The box breaks lines only at CR LF, while a copied text may hold bare LF.
-        if (source != null) contentBox.Text = source.Text.Replace("\r\n", "\n").Replace("\n", "\r\n");
+        if (source != null && picture == null) contentBox.Text = source.Text.Replace("\r\n", "\n").Replace("\n", "\r\n");
         Choose(group);
     }
 
@@ -69,6 +75,19 @@ class EditForm : Window
             hint.ForeColor = Look.Muted;
             hint.UseMnemonic = false;
             Controls.Add(hint);
+        }
+        if (picture != null)
+        {
+            // A picture is saved as it is: in place of its content, the picture itself.
+            PictureBox shown = new PictureBox();
+            shown.Image = picture;
+            shown.SizeMode = PictureBoxSizeMode.Zoom;
+            shown.SetBounds(Edge, hint.Bottom + Gap, FieldWidth, PictureHeight);
+            Controls.Add(shown);
+            buttonTop = shown.Bottom + Edge;
+        }
+        else if (!nameOnly)
+        {
             Label contentLabel = NewLabel(Strings.ContentLabel, Edge, hint.Bottom + Gap);
             contentBox.Multiline = true;
             contentBox.AcceptsReturn = true;
@@ -114,9 +133,11 @@ class EditForm : Window
         // Nothing to save until what is needed has been written: the name of a folder, the content of an entry.
         EventHandler check = delegate
         {
-            saveButton.Enabled = nameOnly ? EntryName.Length > 0 : Content.Trim().Length > 0;
+            saveButton.Enabled = nameOnly ? EntryName.Length > 0 : picture != null || Content.Trim().Length > 0;
             string shown = EntryName.Length > HintNameLength ? EntryName.Substring(0, HintNameLength - 1) + "…" : EntryName;
-            hint.Text = EntryName.Length == 0 ? Strings.NameHintEmpty : string.Format(Strings.NameHintNamed, shown);
+            // A picture shows itself either way, with its name beside it: the name hides nothing.
+            hint.Text = EntryName.Length == 0 ? (picture != null ? Strings.PictureHintEmpty : Strings.NameHintEmpty)
+                : string.Format(picture != null ? Strings.PictureHintNamed : Strings.NameHintNamed, shown);
         };
         nameBox.TextChanged += check;
         contentBox.TextChanged += check;
