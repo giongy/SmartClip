@@ -665,7 +665,7 @@ static class TestProgram
     static void SqliteTest()
     {
         Console.WriteLine("SQLite " + Database.Version);
-        Check(Database.VersionNumber >= 3008000, "Windows has a SQLite recent enough");
+        Check(Database.VersionNumber >= Database.MinimumVersion, "Windows has a SQLite recent enough");
         string path = System.IO.Path.Combine(sandbox, "sqlite test.db");
         System.IO.Directory.CreateDirectory(sandbox);
         using (Database db = new Database(path))
@@ -1037,19 +1037,35 @@ static class TestProgram
                 && savedPicture.Label == s.Remote && recent.Items.Count == 4 ? "PASS" : "FAIL");
             FillSample(form);
 
-            typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
-            Application.DoEvents();
-            Save(form, path + "-options.png");
-            // Every page of the options, each in a picture of its own: -options-1 and on.
+            // The window of the options, never shown yet, follows a change of theme all the same.
+            Form options = (Form)typeof(MainForm).GetField("options", hidden).GetValue(form);
             ListBox pages = (ListBox)typeof(MainForm).GetField("pageList", hidden).GetValue(form);
+            Look.Switch(!Look.Dark);
+            bool followed = options.BackColor == Look.Back && pages.BackColor == Look.Well;
+            Look.Switch(!Look.Dark);
+            Console.WriteLine("[{0}] the window of the options follows the theme before it first shows", followed
+                && options.BackColor == Look.Back && pages.BackColor == Look.Well ? "PASS" : "FAIL");
+            options.Location = new Point(-30000, -30000);
+            options.Show();
+            Application.DoEvents();
+            Save(options, path + "-options.png");
+            // Every page of the options, each in a picture of its own: -options-1 and on.
             for (int i = 0; i < pages.Items.Count; i++)
             {
                 pages.SelectedIndex = i;
                 Application.DoEvents();
-                Save(form, path + "-options-" + (i + 1) + ".png");
+                Save(options, path + "-options-" + (i + 1) + ".png");
             }
             pages.SelectedIndex = 0;
-            typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { false });
+            // What the status line says, the window of the options says too; closed, it is only hidden.
+            Label status = (Label)typeof(MainForm).GetField("status", hidden).GetValue(form);
+            status.Text = Strings.ResumedSay;
+            Label note = (Label)options.GetType().GetField("note", hidden).GetValue(options);
+            bool told = note.Text == Strings.ResumedSay;
+            status.Text = "";
+            options.Close();
+            Console.WriteLine("[{0}] the window of the options says what the status line says, and closing it only hides it",
+                told && note.Text == "" && !options.Visible && !options.IsDisposed ? "PASS" : "FAIL");
 
             // Windows going dark or light with the window open: every colour given to a control follows.
             Look.Switch(!Look.Dark);
@@ -1076,7 +1092,7 @@ static class TestProgram
             Look.Choose(Theme.System);
             Look.Switch(wasDark);   // as the pictures were asked for
 
-            Label status = (Label)typeof(MainForm).GetField("status", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(form);
+            // The status line with the longest message: two lines, and the lists give it room.
             status.Text = string.Format(Strings.DoneMany, 24) + string.Format(Strings.UnicodeMany, 2) + Strings.UnicodeHint;
             Application.DoEvents();
             Save(form, path + "-long.png");
@@ -1275,8 +1291,10 @@ static class TestProgram
             recent.TopIndex = 10;
             Snap(form, path + "-real-scroll.png");
             FillSample(form, Wider);
-            typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
-            Snap(form, path + "-real-options.png");
+            typeof(MainForm).GetMethod("OpenOptions", hidden).Invoke(form, null);
+            Form options = (Form)typeof(MainForm).GetField("options", hidden).GetValue(form);
+            Snap(options, path + "-real-options.png");
+            options.Hide();
             using (ShotEdit edit = new ShotEdit(SavedSample(), Sample.Current.Work, new List<string>(new string[] { Sample.Current.Work, Sample.Current.Home })))
             {
                 edit.TopMost = true;
@@ -1296,7 +1314,6 @@ static class TestProgram
                 Snap(ask, path + "-real-ask.png");
             }
             // The menu of the icon with a folder open, and a tooltip, over the window.
-            typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { false });
             using (ContextMenuStrip menu = new ContextMenuStrip())
             {
                 menu.Items.Add(Strings.Open);
@@ -1314,7 +1331,9 @@ static class TestProgram
             // The menu of a saved text with the numbers it can take, each beside the entry that has it.
             ListBox saved = (ListBox)typeof(MainForm).GetField("savedList", hidden).GetValue(form);
             ContextMenuStrip listMenu = (ContextMenuStrip)typeof(MainForm).GetField("listMenu", hidden).GetValue(form);
-            saved.SelectedIndex = 2;
+            // A text without a number, not a folder, which has no numbers to take.
+            for (int i = 0; i < saved.Items.Count; i++)
+                if (((Entry)saved.Items[i]).Label == Sample.Current.Address) saved.SelectedIndex = i;
             listMenu.Show(saved, new Point(40, 60));
             foreach (ToolStripItem item in listMenu.Items)
             {
@@ -1432,9 +1451,9 @@ static class TestProgram
                 // The options at the page of the hotkeys, where the numbers are pasted from.
                 ListBox pages = (ListBox)typeof(MainForm).GetField("pageList", hidden).GetValue(form);
                 pages.SelectedIndex = 1;
-                typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { true });
+                typeof(MainForm).GetMethod("OpenOptions", hidden).Invoke(form, null);
                 SnapArea(area, System.IO.Path.Combine(pictures, "6-options.png"));
-                typeof(MainForm).GetMethod("ShowView", hidden).Invoke(form, new object[] { false });
+                ((Form)typeof(MainForm).GetField("options", hidden).GetValue(form)).Hide();
                 pages.SelectedIndex = 0;
 
                 // The guide, open at how a password is typed: the fifth subject in every language.

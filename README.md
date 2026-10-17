@@ -134,7 +134,8 @@ together with any digit; the button says right away which of them another progra
 
 ## Options
 
-The **Options** button switches the lower part of the window from the list to the options; **List** switches back.
+The **Options** button opens the options in a window of their own, like the guide, which can stay open beside the
+list; **Close** or Esc puts it away.
 The options are in four pages, **Typing**, **Hotkeys**, **History** and **Program**, chosen from a column on the left as in the Windows 11 Settings; each page slides into place. Resting the pointer
 on an option shows its full explanation.
 

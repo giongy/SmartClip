@@ -238,7 +238,7 @@ class RoundButton : Button
 }
 
 // The small signs drawn beside entries, on buttons and beside the pages of the options: they are where the colour is.
-enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, List, Keys, Search, Help, Opened, Closed, Bolt, History, Up }
+enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, Keys, Search, Help, Opened, Closed, Bolt, History, Up }
 
 // The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
 enum Theme { System, Light, Dark }
@@ -251,6 +251,7 @@ static class Look
     const int FramePadding = 6;   // between the edge of a framed text box and its text
     const int Radius = 6;         // of the rounded corners
     const float MarkShare = 0.45f;   // how much of the height of a selected row its mark takes
+    const float StripeShare = 0.5f; // how far every other row of the copied entries goes towards Soft
     const string ModernFont = "Segoe UI Variable Text";   // what Windows 11 writes its own windows in
     // Its heavier face, for what stands out in a list, and the one of the titles, larger: Windows writes the name
     // of that one cut at 31 letters. Where they are missing (Windows 10), the semibold face of the family.
@@ -395,6 +396,8 @@ static class Look
     public static bool Dark { get; private set; }   // what Windows draws (title bar, scroll bars, menus) follows
     public static Theme Chosen { get; private set; }   // in the options; until then, as Windows
     public static event EventHandler Changed;       // after the colours changed with those of Windows
+    // Windows made to be shown later (the options): Windows Forms counts as open only those shown once.
+    static readonly List<Form> kept = new List<Form>();
 
     static Look()
     {
@@ -487,6 +490,13 @@ static class Look
         if (Chosen == Theme.System) Switch(WindowsDark());
     }
 
+    // A window that changes with the theme even while it has never been shown, until it is disposed.
+    public static void Keep(Form form)
+    {
+        kept.Add(form);
+        form.Disposed += delegate { kept.Remove(form); };
+    }
+
     // The open windows take the light or the dark colours at once. A colour given to a control is one of the
     // palette, so the old one says which new one it becomes; what is drawn by hand reads the palette as it
     // paints. Those with their own needs listen to Changed. The checks call it directly, whatever Windows says.
@@ -496,7 +506,10 @@ static class Look
         Color[] before = Palette;
         Use(dark);
         Color[] after = Palette;
+        List<Form> forms = new List<Form>(kept);
         foreach (Form form in Application.OpenForms)
+            if (!forms.Contains(form)) forms.Add(form);
+        foreach (Form form in forms)
         {
             Recolor(form, before, after);
             if (form.IsHandleCreated)
@@ -585,6 +598,13 @@ static class Look
             g.FillPath(accent, mark);
     }
 
+    // Every other row of a long list, a shade apart, so the eye keeps to one row across it. Worked out while drawing,
+    // not a colour of the palette: in the dark it is a shade lighter.
+    public static Color Stripe(Color back)
+    {
+        return Blend(back, Soft, StripeShare);
+    }
+
     // A subject in a column of subjects (the guide, the pages of the options): its sign if it has one, then
     // its name, on a row drawn as DrawRow does. 'inset' is where the sign or the name starts.
     public static void DrawTopic(DrawItemEventArgs e, RowList list, string name, Sign? sign, int inset)
@@ -643,7 +663,6 @@ static class Look
             case Sign.Edit: return "";      // Edit
             case Sign.Delete: return "";    // Delete
             case Sign.Options: return "";   // Settings
-            case Sign.List: return "";      // BulletedList
             case Sign.Keys: return "";      // KeyboardClassic
             case Sign.Search: return "";    // Search
             case Sign.Help: return "";      // Help
@@ -684,10 +703,9 @@ static class Look
             switch (sign)
             {
                 case Sign.Text:
-                case Sign.List:
                     g.DrawLine(pen, x + 2.5f * u, y + 4 * u, x + 13.5f * u, y + 4 * u);
                     g.DrawLine(pen, x + 2.5f * u, y + 8 * u, x + 13.5f * u, y + 8 * u);
-                    g.DrawLine(pen, x + 2.5f * u, y + 12 * u, x + (sign == Sign.Text ? 9 : 13.5f) * u, y + 12 * u);
+                    g.DrawLine(pen, x + 2.5f * u, y + 12 * u, x + 9 * u, y + 12 * u);
                     break;
                 case Sign.Link:
                     g.DrawLine(pen, x + 4 * u, y + 12 * u, x + 12 * u, y + 4 * u);

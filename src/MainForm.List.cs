@@ -546,7 +546,9 @@ partial class MainForm
         bool selected = (e.State & DrawItemState.Selected) != 0;
         // How lit by the pointer it is; fully, the folder a dragged text would be dropped into.
         float glow = entry.IsGroup && dropGroup != null && Texts.SameName(entry.Name, dropGroup) ? 1 : list.Glow.Of(e.Index);
-        Look.DrawRow(e.Graphics, e.Bounds, list.BackColor, selected, glow);
+        // The copied entries, many and alike, every other row a shade apart.
+        Color back = list == recentList && e.Index % 2 == 1 ? Look.Stripe(list.BackColor) : list.BackColor;
+        Look.DrawRow(e.Graphics, e.Bounds, back, selected, glow);
         Rectangle label = Content(list, entry, e.Bounds), line = Line(entry, e.Bounds);
         string when = When(entry);
         if (when != null) TextRenderer.DrawText(e.Graphics, when, Look.CaptionFont, Caption(e.Bounds), Look.Muted, RightFlags);
@@ -570,7 +572,7 @@ partial class MainForm
             Rectangle arrow = PinArea(line);
             if (entry.Pinned) Look.Draw(e.Graphics, Sign.Up, arrow, null);
             else if (selected || glow > 0)
-                Look.Draw(e.Graphics, Sign.Up, arrow, Look.Blend(list.BackColor, Look.Blend(Look.Muted, list.BackColor, 0.4f), selected ? 1 : glow));
+                Look.Draw(e.Graphics, Sign.Up, arrow, Look.Blend(back, Look.Blend(Look.Muted, back, 0.4f), selected ? 1 : glow));
         }
         if (entry.IsGroup)
         {
@@ -726,7 +728,7 @@ partial class MainForm
             wasHidden = !Visible;
         }
         search.Clear();
-        ShowView(false);
+        options.Hide();   // above the list, it would cover it
         RestoreWindow();
         search.Focus();
     }
@@ -901,12 +903,12 @@ partial class MainForm
     {
         HidePeek();
         if (capturing != null) return TakeKeys(keyData);
-        if (keyData == HelpKey)   // from the options too
+        if (keyData == HelpKey)
         {
             ShowHelp();
             return true;
         }
-        if (optionsShown || !(search.Focused || recentList.Focused || savedList.Focused)) return base.ProcessCmdKey(ref msg, keyData);
+        if (!(search.Focused || recentList.Focused || savedList.Focused)) return base.ProcessCmdKey(ref msg, keyData);
         switch (keyData)
         {
             case Keys.Escape:

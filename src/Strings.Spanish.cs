@@ -12,7 +12,7 @@ static partial class Strings
         TypeButton = "Teclear portapapeles";
         RecentTitle = "Copiado recientemente"; SavedTitle = "Guardados"; PausedSuffix = " (en pausa)";
         New = "Nuevo…"; SaveDots = "Guardar…"; EditDots = "Editar…"; RenameDots = "Renombrar…"; Delete = "Eliminar";
-        Options = "Opciones"; List = "Lista"; SearchCue = "Buscar…";
+        Options = "Opciones"; SearchCue = "Buscar…";
         CountOf = "{0} de {1}";
         NoResults = "Sin resultados"; HistoryOffEmpty = "El historial está desactivado";
         PausedEmpty = "En pausa: lo que copias no se recuerda"; CopyHint = "Lo que copies aparecerá aquí";
@@ -30,6 +30,10 @@ static partial class Strings
         Error = "Error: {0}";
         NewerDatabase = "{0} fue escrito por una versión más reciente de {1}: actualiza el programa para abrirlo.";
         UnexpectedError ="Algo ha ido mal: {0}\n\nEl programa continúa. Los detalles están en {1}.";
+        SqliteMissing = "{0} no puede iniciarse: guarda lo que copias y guardas con SQLite, que forma parte de Windows 10 "
+            + "y 11 (winsqlite3.dll), y este Windows no lo tiene.";
+        SqliteTooOld = "{0} no puede iniciarse: necesita SQLite {1} o posterior, que forma parte de Windows 10 y 11, "
+            + "y este Windows tiene la versión {2}. Actualizar Windows lo soluciona.";
 
         Open = "Abrir"; Exit = "Salir"; Pause = "Pausar la captura"; Resume = "Reanudar la captura";
         ShowContent = "Mostrar el contenido"; MoveTo = "Mover a"; NewFolder = "Nueva carpeta…";
@@ -275,7 +279,7 @@ static partial class Strings
         ExportEditNote = "El texto de cada entrada está en las líneas que empiezan con una tabulación: si modificas el "
             + "archivo, déjala en su sitio.";
 
-        HelpTitle = "Guía de {0}"; Close = "Cerrar";
+        HelpTitle = "Guía de {0}"; OptionsTitle = "Opciones de {0}"; Close = "Cerrar";
         Guide = SpanishGuide;
     }
 
@@ -424,7 +428,7 @@ static partial class Strings
             "- Al desactivar el historial en las opciones se vacía la lista y se borra del disco lo que copiaste.",
 
             "# Las opciones",
-            "El botón «" + Options + "» las muestra en lugar de la lista, y «" + List + "» vuelve atrás. Si dejas el "
+            "El botón «" + Options + "» las abre en una ventana aparte, que puede quedarse abierta junto a la lista. Si dejas el "
                 + "puntero sobre una opción aparece su explicación completa. Están en cuatro páginas, que se eligen en la "
                 + "columna de la izquierda como los temas de esta guía:",
             "- " + TypingTitle + ": cuántos segundos esperar antes de teclear (de " + MainForm.MinDelay + " a "

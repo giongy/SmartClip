@@ -12,7 +12,7 @@ static partial class Strings
         TypeButton = "Digita gli appunti";
         RecentTitle = "Copiati di recente"; SavedTitle = "Salvati"; PausedSuffix = " (in pausa)";
         New = "Nuovo…"; SaveDots = "Salva…"; EditDots = "Modifica…"; RenameDots = "Rinomina…"; Delete = "Elimina";
-        Options = "Opzioni"; List = "Elenco"; SearchCue = "Cerca…";
+        Options = "Opzioni"; SearchCue = "Cerca…";
         CountOf = "{0} di {1}";
         NoResults = "Nessun risultato"; HistoryOffEmpty = "La cronologia è spenta";
         PausedEmpty = "In pausa: quello che copi non viene ricordato"; CopyHint = "Quello che copi comparirà qui";
@@ -30,6 +30,10 @@ static partial class Strings
         Error = "Errore: {0}";
         NewerDatabase = "{0} è stato scritto da una versione più nuova di {1}: aggiorna il programma per aprirlo.";
         UnexpectedError ="Qualcosa è andato storto: {0}\n\nIl programma continua. I dettagli sono in {1}.";
+        SqliteMissing = "{0} non può partire: tiene ciò che copi e salvi con SQLite, che fa parte di Windows 10 e 11 "
+            + "(winsqlite3.dll), e questo Windows non ce l'ha.";
+        SqliteTooOld = "{0} non può partire: gli serve SQLite {1} o più recente, che fa parte di Windows 10 e 11, "
+            + "e questo Windows ha la versione {2}. Aggiornare Windows risolve.";
 
         Open = "Apri"; Exit = "Esci"; Pause = "Sospendi la cattura"; Resume = "Riprendi la cattura";
         ShowContent = "Mostra il contenuto"; MoveTo = "Sposta in"; NewFolder = "Nuova cartella…";
@@ -273,7 +277,7 @@ static partial class Strings
         ExportEditNote = "Il testo di ogni voce sta nelle righe che iniziano con una tabulazione: se modifichi il file, "
             + "lasciala al suo posto.";
 
-        HelpTitle = "Guida di {0}"; Close = "Chiudi";
+        HelpTitle = "Guida di {0}"; OptionsTitle = "Opzioni di {0}"; Close = "Chiudi";
         Guide = ItalianGuide;
     }
 
@@ -416,7 +420,7 @@ static partial class Strings
             "- Spegnendo la cronologia nelle opzioni si svuota l'elenco e si elimina dal disco ciò che hai copiato.",
 
             "# Le opzioni",
-            "Il pulsante «" + Options + "» le mostra al posto dell'elenco, e «" + List + "» torna indietro. Fermando il "
+            "Il pulsante «" + Options + "» le apre in una finestra a parte, che può restare aperta accanto all'elenco. Fermando il "
                 + "puntatore su un'opzione ne compare la spiegazione completa. Stanno in quattro pagine, che si scelgono dalla "
                 + "colonna a sinistra come gli argomenti di questa guida:",
             "- " + TypingTitle + ": quanti secondi aspettare prima di digitare (da " + MainForm.MinDelay + " a "

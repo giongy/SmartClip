@@ -44,7 +44,7 @@ static partial class Strings
     public static string TypeButton = "Type clipboard";
     public static string RecentTitle = "Recently copied", SavedTitle = "Saved", PausedSuffix = " (paused)";
     public static string New = "New…", SaveDots = "Save…", EditDots = "Edit…", RenameDots = "Rename…", Delete = "Delete";
-    public static string Options = "Options", List = "List", SearchCue = "Search…";
+    public static string Options = "Options", SearchCue = "Search…";
     public static string CountOf = "{0} of {1}";
     public static string NoResults = "No results", HistoryOffEmpty = "The history is off",
         PausedEmpty = "Paused: what you copy is not remembered", CopyHint = "What you copy will appear here",
@@ -62,6 +62,10 @@ static partial class Strings
     public static string Error = "Error: {0}";
     public static string NewerDatabase = "{0} was written by a newer version of {1}: update the program to open it.";
     public static string UnexpectedError ="Something went wrong: {0}\n\nThe program goes on. The details are in {1}.";
+    public static string SqliteMissing = "{0} cannot start: it keeps what you copy and save with SQLite, which is part of "
+        + "Windows 10 and 11 (winsqlite3.dll), and this Windows does not have it.";
+    public static string SqliteTooOld = "{0} cannot start: it needs SQLite {1} or later, which is part of Windows 10 and 11, "
+        + "and this Windows has version {2}. Updating Windows solves it.";
 
     // --- Menus ---
     public static string Open = "Open", Exit = "Exit", Pause = "Pause capture", Resume = "Resume capture";
@@ -319,7 +323,7 @@ static partial class Strings
         + "file, leave it in place.";
 
     // --- The guide ---
-    public static string HelpTitle = "{0} guide", Close = "Close";
+    public static string HelpTitle = "{0} guide", OptionsTitle = "{0} options", Close = "Close";
     public static Func<string[]> Guide = EnglishGuide;
 
     // A line starting with "# " begins a subject and names it, one starting with "- " is a point of a list, one
@@ -459,7 +463,7 @@ static partial class Strings
             "- Turning the history off in the options empties the list and deletes from disk what you copied.",
 
             "# Options",
-            "The “" + Options + "” button shows them in place of the list, and “" + List + "” goes back. Resting the "
+            "The “" + Options + "” button opens them in a window of their own, which can stay open beside the list. Resting the "
                 + "pointer on an option shows its full explanation. They are in four pages, chosen from the column on the left as "
                 + "the subjects of this guide are:",
             "- " + TypingTitle + ": how many seconds to wait before typing (" + MainForm.MinDelay + " to "

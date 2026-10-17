@@ -10,10 +10,11 @@ using Microsoft.Win32;
 partial class MainForm
 {
     // The options, a page per category, chosen from a column on the left as the subjects of the guide are; the
-    // page comes in as those of Windows 11 do. Adding an option takes a single line under its page.
-    void PlaceOptions(int bottom)
+    // page comes in as those of Windows 11 do. Adding an option takes a single line under its page. Placed here,
+    // shown in a window of their own (OptionsWindow).
+    void PlaceOptions()
     {
-        pageList.SetBounds(Edge, Edge, NavWidth, bottom - Edge);
+        pageList.SetBounds(Edge, Edge, NavWidth, AreaHeight);
         Look.Field(pageList);
         pageList.BorderStyle = BorderStyle.None;
         pageList.IntegralHeight = false;
@@ -27,9 +28,8 @@ partial class MainForm
         };
         pageList.SelectedIndexChanged += delegate { ShowPage(); };
         pageList.LightUnderPointer();
-        optionControls.Add(Look.Wrap(pageList, ListPadding));
-        pagePane.SetBounds(Edge + NavWidth + NavGap, Edge, PaneWidth, bottom - Edge);
-        optionControls.Add(pagePane);
+        Look.Wrap(pageList, ListPadding);   // the window of the options takes the card it is in
+        pagePane.SetBounds(Edge + NavWidth + NavGap, Edge, PaneWidth, AreaHeight);
 
         int top = Page(Strings.TypingTitle, Sign.Keys);
         // Confirming a number brings what was written back within its limits.
@@ -316,7 +316,7 @@ partial class MainForm
         {
             dialog.Filter = BackupFilter;
             dialog.FileName = Program.AppName + " " + DateTime.Today.ToString(Texts.DayFormat) + Backup.Extension;
-            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            if (dialog.ShowDialog(Front) != DialogResult.OK) return;
             BackupResult result = null;
             if (!Change(delegate { result = Backup.Export(dialog.FileName, Exported(all)); })) return;
             string saved = Count(result.Saved, Strings.SavedOne, Strings.SavedMany);
@@ -341,7 +341,7 @@ partial class MainForm
         using (OpenFileDialog dialog = new OpenFileDialog())
         {
             dialog.Filter = BackupFilter;
-            if (dialog.ShowDialog(this) != DialogResult.OK) return;
+            if (dialog.ShowDialog(Front) != DialogResult.OK) return;
             bool copied = all && historyBox.Checked;
             BackupResult result = null;
             if (!Change(delegate
@@ -406,7 +406,7 @@ partial class MainForm
         {
             dialog.Description = string.Format(Strings.ChooseDataFolder, Program.AppName);
             dialog.SelectedPath = DataFolder;
-            if (dialog.ShowDialog(this) == DialogResult.OK) MoveDataFolder(dialog.SelectedPath);
+            if (dialog.ShowDialog(Front) == DialogResult.OK) MoveDataFolder(dialog.SelectedPath);
         }
     }
 
@@ -421,7 +421,7 @@ partial class MainForm
         bool inMemory = clips.FileName == Clips.Memory;
         if (!inMemory && SameFolder(Path.GetDirectoryName(target), Path.GetDirectoryName(clips.FileName))) return;
         string where = Path.GetDirectoryName(target);
-        if (folder.Length > 0 && Synced(folder) && !AskForm.Ask(this, string.Format(Strings.AskSyncedFolder, folder), true)) return;
+        if (folder.Length > 0 && Synced(folder) && !AskForm.Ask(Front, string.Format(Strings.AskSyncedFolder, folder), true)) return;
         try
         {
             if (File.Exists(target))
@@ -726,10 +726,93 @@ partial class MainForm
         Close();
     }
 
-    // Started again after a change of language or of the font of the interface: back where the user was.
+    // Started again after a change of language or of the font of the interface: back where the user was, as soon
+    // as the window shows.
     public void ShowOptions()
     {
         pageList.SelectedItem = programPage;
-        ShowView(true);
+        optionsAtStart = true;
+    }
+
+    // The window of the options, as the guide has one: the column of the pages, the page chosen, and under them what
+    // the status line says, so that what an option did can be read here too. The options themselves belong to the
+    // main window (its fields, read and written with the settings): this window is made once and only hides when
+    // closed. Like the guide it is not a dialog, and stays above the main window, which owns it.
+    sealed class OptionsWindow : Window
+    {
+        readonly MainForm main;
+        readonly Label note = new Label();
+        readonly RoundButton closeButton = new RoundButton();
+
+        public OptionsWindow(MainForm main)
+        {
+            this.main = main;
+            Text = string.Format(Strings.OptionsTitle, Program.AppName);
+            FormBorderStyle = FormBorderStyle.FixedSingle;   // the pages have the room they need
+            MaximizeBox = false;
+            MinimizeBox = false;
+            ShowInTaskbar = false;
+            ShowIcon = false;
+            StartPosition = FormStartPosition.Manual;   // placed over the main window each time it opens
+
+            int bottom = main.pagePane.Bottom + Edge;
+            closeButton.Text = Strings.Close;
+            closeButton.SetBounds(main.pagePane.Right - ButtonWidth, bottom + (StatusHeight - ButtonHeight) / 2, ButtonWidth, ButtonHeight);
+            closeButton.Click += delegate { Close(); };
+            Look.Style(closeButton, true);
+            CancelButton = closeButton;   // Esc too. No AcceptButton: Enter in a box confirms its number.
+            note.SetBounds(Edge, bottom, closeButton.Left - Gap - Edge, StatusHeight);
+            note.UseMnemonic = false;
+            note.AutoEllipsis = true;
+            note.TextAlign = ContentAlignment.MiddleLeft;
+            note.ForeColor = Look.Muted;
+            ClientSize = new Size(main.pagePane.Right + Edge, bottom + StatusHeight + Edge);
+            Controls.AddRange(new Control[] { main.pageList.Parent, main.pagePane, note, closeButton });
+            ActiveControl = main.pageList;
+            Finish();
+            Look.Keep(this);   // a change of theme recolours it even before it first shows
+        }
+
+        // What the status line of the main window says.
+        public string Note
+        {
+            set { note.Text = value; }
+        }
+
+        // Shows it over its owner, as the guide opens, without leaving the screen; the page comes in.
+        public void Open(Form owner)
+        {
+            PlaceOnScreen(new Point(owner.Left + (owner.Width - Width) / 2, owner.Top + (owner.Height - Height) / 2),
+                Screen.FromControl(owner));
+            Show(owner);
+            main.ShowPage();
+        }
+
+        // Closed by the user, it only hides: the options stay as they are, for the next time.
+        protected override void OnFormClosing(FormClosingEventArgs e)
+        {
+            base.OnFormClosing(e);
+            if (e.CloseReason != CloseReason.UserClosing) return;   // the program is ending
+            e.Cancel = true;
+            Hide();
+        }
+
+        // The keys of a hotkey being changed are taken here, as in the main window; F1 opens the guide.
+        protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
+        {
+            if (main.capturing != null) return main.TakeKeys(keyData);
+            if (keyData == HelpKey)
+            {
+                main.ShowHelp();
+                return true;
+            }
+            return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        protected override void OnDeactivate(EventArgs e)
+        {
+            base.OnDeactivate(e);
+            main.EndCapture();   // keys pressed elsewhere are not for us
+        }
     }
 }

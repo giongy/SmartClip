@@ -32,7 +32,7 @@ partial class MainForm : Window
     public const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
     const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
-    const int AreaHeight = 437;                        // of the lists, or of the options in their place: the window follows
+    const int AreaHeight = 437;                        // of the lists, and of the pages of the options in their window
     // The options are in pages, one per category, chosen from a column on the left as the subjects of the guide.
     const int NavWidth = 170, NavGap = 20, PaneWidth = ContentWidth - NavWidth - NavGap;
     const int NavInset = 12, NavPadding = 20;          // where a row of that column starts its sign; added to the text height for the row
@@ -89,8 +89,10 @@ partial class MainForm : Window
     static readonly Point OffScreen = new Point(int.MinValue, int.MinValue);
 
     readonly RoundButton typeButton = new RoundButton();
-    readonly RoundButton viewButton = new RoundButton(), helpButton = new RoundButton();
+    readonly RoundButton optionsButton = new RoundButton(), helpButton = new RoundButton();
     HelpForm help;      // the guide, while it is open
+    readonly OptionsWindow options;   // the window of the options: made once, hidden when closed
+    bool optionsAtStart;              // it opens as soon as this window shows
     readonly Label recentCount = new Label(), savedCount = new Label();   // how many entries each column lists
     readonly Label recentEmpty = new Label(), savedEmpty = new Label();   // what a column says while it has none
     readonly Label status = new Label();
@@ -117,13 +119,11 @@ partial class MainForm : Window
     int dragFrom, dragWidth;                      // where the pointer and the border were when a drag started
     bool shown;                                   // the window has its final scale: the columns can be placed
     readonly RoundButton newButton = new RoundButton(), saveButton = new RoundButton(), deleteButton = new RoundButton();
-    // The two views that take turns in the lower part of the window. The options add themselves as they are placed.
-    readonly List<Control> optionControls = new List<Control>();
+    // The options, which belong to this window although they are shown in their own (see OptionsWindow).
     readonly RowList pageList = new RowList();   // the categories of the options: each item is the page of one
     readonly Panel pagePane = new Panel();       // where the pages take turns
     Panel page;                                  // the page being filled, while the options are placed
     Panel programPage;                           // where the language is: the options reopen there after changing it
-    readonly Control[] listControls;
     readonly TextBox delayBox = new TextBox(), keepBox = new TextBox(), cleanBox = new TextBox();
     readonly RoundButton cleanButton = new RoundButton(), exportButton = new RoundButton(), importButton = new RoundButton();
     readonly RoundButton typeKeysButton = new RoundButton(), pickKeysButton = new RoundButton();   // show the keys of a hotkey, and take new ones
@@ -148,7 +148,6 @@ partial class MainForm : Window
     bool exiting;         // the user chose Esci (Exit) in the icon menu: the close is real, not a "hide"
     bool trayHintShown;   // the balloon explaining where the window went is shown only once
     volatile bool cancel;
-    bool optionsShown;
     Clips clips;          // what the list keeps: copied and saved entries, folders
     string unavailable;   // why the database could not be opened: the status line says it whenever it is idle
     string dataFolder = "";   // the folder the user chose for the database; empty: the default one
@@ -196,19 +195,23 @@ partial class MainForm : Window
 
         typeButton.Text = Strings.TypeButton;
         typeButton.Click += delegate { if (busy) cancel = true; else Run(Delay); };
-        viewButton.Click += delegate { ShowView(!optionsShown); };
+        optionsButton.Text = Strings.Options;
+        optionsButton.Sign = Sign.Options;
+        optionsButton.Click += delegate { OpenOptions(); };
         helpButton.Click += delegate { ShowHelp(); };
         Look.Style(typeButton, true);
-        foreach (Button button in new Button[] { viewButton, helpButton, newButton, saveButton, deleteButton }) Look.Style(button, false);
+        foreach (Button button in new Button[] { optionsButton, helpButton, newButton, saveButton, deleteButton }) Look.Style(button, false);
 
         status.UseMnemonic = false;
         status.ForeColor = Look.Muted;
         // The status line takes the room of what it says. A message written with Say leaves after a while;
-        // anything else stays until the next one.
+        // anything else stays until the next one. The window of the options says it too: what an option did must
+        // not end up under it.
         status.TextChanged += delegate
         {
             fade.Stop();
             FitStatus();
+            if (options != null) options.Note = status.Text;
         };
         fade.Interval = FadeMs;
         fade.Tick += delegate
@@ -217,10 +220,11 @@ partial class MainForm : Window
             if (!busy) ShowIdle();
         };
 
-        // The lists, or the options in their place; under them the status line, then one row of small buttons.
-        // On the left those that act on the selected entry, on the right typing and the switch between the views.
+        // The lists; under them the status line, then one row of small buttons. On the left those that act on the
+        // selected entry, on the right typing, the options and the guide.
         int areaBottom = Edge + AreaHeight, statusTop = areaBottom + Gap, actionTop = statusTop + StatusHeight + Gap;
-        PlaceOptions(areaBottom);
+        PlaceOptions();
+        options = new OptionsWindow(this);
         ClientSize = new Size(Edge + ContentWidth + Edge, actionTop + ActionHeight + Edge);
         status.SetBounds(Edge, statusTop, ContentWidth, StatusHeight);
         newButton.Text = Strings.New;
@@ -233,10 +237,10 @@ partial class MainForm : Window
         deleteButton.SetBounds(saveButton.Right + Gap, actionTop, ActionWidth, ActionHeight);
         helpButton.Sign = Sign.Help;
         helpButton.SetBounds(Edge + ContentWidth - ActionHeight, actionTop, ActionHeight, ActionHeight);   // a square
-        viewButton.SetBounds(helpButton.Left - Gap - ActionWidth, actionTop, ActionWidth, ActionHeight);
-        typeButton.SetBounds(viewButton.Left - Gap - TypeWidth, actionTop, TypeWidth, ActionHeight);
+        optionsButton.SetBounds(helpButton.Left - Gap - ActionWidth, actionTop, ActionWidth, ActionHeight);
+        typeButton.SetBounds(optionsButton.Left - Gap - TypeWidth, actionTop, TypeWidth, ActionHeight);
 
-        // The lists take the same area as the options, with the search box on top.
+        // The search box on top of the lists.
         search.SetBounds(Edge, Edge, ContentWidth, SearchHeight);
         Panel searchFrame = Look.Frame(search);
         // A magnifying glass on the left of the box, which makes room for it.
@@ -305,7 +309,7 @@ partial class MainForm : Window
         recentEmpty.Anchor = savedEmpty.Anchor = toTop | toBottom | toLeft | toRight;
         status.Anchor = toBottom | toLeft | toRight;
         newButton.Anchor = saveButton.Anchor = deleteButton.Anchor = toBottom | toLeft;
-        viewButton.Anchor = typeButton.Anchor = helpButton.Anchor = toBottom | toRight;
+        optionsButton.Anchor = typeButton.Anchor = helpButton.Anchor = toBottom | toRight;
 
         WireLists();
 
@@ -316,12 +320,9 @@ partial class MainForm : Window
         Tip(string.Format(Strings.HelpTip, NameOf(HelpKey)), helpButton);
         Tip(string.Format(Strings.DeleteTip, NameOf(DeleteKeys)), deleteButton);
         Tip(Strings.DividerTip, divider);
-        listControls = new Control[] { searchFrame, recentTitle, savedTitle, recentCount, savedCount, recentCard, savedCard, divider,
-            newButton, saveButton, deleteButton };
-        Controls.AddRange(new Control[] { typeButton, viewButton, helpButton, status });
-        Controls.AddRange(listControls);
-        Controls.AddRange(optionControls.ToArray());
-        // No AcceptButton: Enter among the options would start typing the clipboard.
+        Controls.AddRange(new Control[] { typeButton, optionsButton, helpButton, status, searchFrame, recentTitle, savedTitle,
+            recentCount, savedCount, recentCard, savedCard, divider, newButton, saveButton, deleteButton });
+        // No AcceptButton: Enter chooses an entry, and in the search box it must not start typing the clipboard.
 
         OpenClips();
         UseEntryFont(Look.EntryFamily, Look.EntrySize);   // the default, until the settings say otherwise
@@ -335,7 +336,6 @@ partial class MainForm : Window
             Reload();
         };
         Reload();
-        ShowView(false);
         ActiveControl = search;
 
         ContextMenuStrip trayMenu = new ContextMenuStrip();
@@ -437,18 +437,21 @@ partial class MainForm : Window
         else help.Activate();
     }
 
-    // The lower part of the window shows either the list or the options.
-    void ShowView(bool options)
+    // Opens the window of the options over this one, or brings it forward if it is already open. Like the guide it
+    // is not a dialog: it can stay open beside the list.
+    void OpenOptions()
     {
-        EndCapture();
         HidePeek();
-        optionsShown = options;
-        foreach (Control control in optionControls) control.Visible = options;
-        foreach (Control control in listControls) control.Visible = !options;
-        viewButton.Text = options ? Strings.List : Strings.Options;
-        viewButton.Sign = options ? Sign.List : Sign.Options;
-        if (!options) search.Focus();
-        else ShowPage();   // it comes in as a page does
+        if (options.Visible) options.Activate();
+        else options.Open(this);
+    }
+
+    // The guide and the options go with this window when it hides: with no taskbar button of their own, they
+    // would be left alone on the screen.
+    void PutAwayOthers()
+    {
+        if (help != null && !help.IsDisposed) help.Close();
+        options.Hide();
     }
 
     // Runs something that touches the saved texts; if the registry refuses it, says why and returns false.
@@ -475,7 +478,14 @@ partial class MainForm : Window
 
     bool Ask(string question)
     {
-        return AskForm.Ask(this, question, false);
+        return AskForm.Ask(Front, question, false);
+    }
+
+    // What a question or the choice of a file belongs to: the window of the options while the user is in it, so
+    // that the answer brings the user back there.
+    IWin32Window Front
+    {
+        get { return options.Visible && ActiveForm == options ? (IWin32Window)options : this; }
     }
 
     // Stops remembering what is copied, or starts again. Not a setting: the next start always listens.
@@ -558,6 +568,13 @@ partial class MainForm : Window
         shown = true;
         PlaceColumns((int)(savedColumn * Zoom));
         FitStatus();
+    }
+
+    protected override void OnShown(EventArgs e)
+    {
+        base.OnShown(e);
+        if (optionsAtStart) OpenOptions();   // started again from there
+        optionsAtStart = false;
     }
 
     // How much larger than designed this screen draws the window.
@@ -652,7 +669,7 @@ partial class MainForm : Window
             if (leaveBox.Checked && trayBox.Checked && Visible && !busy && Native.IsWindowEnabled(Handle)
                 && WindowState != FormWindowState.Minimized)
             {
-                if (help != null && !help.IsDisposed) help.Close();   // with no taskbar button, it would be lost
+                PutAwayOthers();
                 Hide();
             }
         }
@@ -681,6 +698,7 @@ partial class MainForm : Window
 
     void HideToTray()
     {
+        PutAwayOthers();
         Hide();
         if (trayHintShown) return;
         trayHintShown = true;
@@ -752,6 +770,7 @@ partial class MainForm : Window
         if (disposing)
         {
             tray.Dispose();   // otherwise the icon would stay in the notification area after exit
+            options.Dispose();
             peek.Dispose();
             rest.Dispose();
             fade.Dispose();

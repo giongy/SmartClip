@@ -27,7 +27,8 @@ condiviso su GitHub).
     - `MainForm.List.cs` — le due colonne: `WireLists` (menu, mouse, trascinamento), riempimento e disegno
       delle righe, anteprima, scelta, modifica, cartelle, tasti dell'elenco, larghezza delle colonne.
     - `MainForm.Options.cs` — `PlaceOptions` (le opzioni e i loro suggerimenti), i `Place…`, esportazione,
-      importazione, pulizia, `TransferSettings` e `AdoptOldSettings`.
+      importazione, pulizia, `TransferSettings` e `AdoptOldSettings`, e `OptionsWindow`, la finestra delle
+      opzioni (classe annidata in `MainForm`, così usa i suoi campi).
     - `MainForm.Hotkeys.cs` — le scorciatoie globali: nomi, cambio dei tasti, registrazione, e l'incolla delle voci numerate (`PasteNumber`).
     - `MainForm.Typing.cs` — la digitazione: `Run`, `WaitForTarget`, esito.
   - `EditForm.cs` — la finestra «Nuovo/Modifica».
@@ -69,7 +70,10 @@ condiviso su GitHub).
     mai scritti nel testo dell'istruzione, e i messaggi d'errore riportano l'istruzione ma non i valori. Testi
     legati con la loro lunghezza (il carattere zero non li taglia), byte vuoti con `zeroblob` (altrimenti
     diventerebbero NULL). Chiudere il database finalizza le istruzioni rimaste aperte, così il file si libera.
-    Lo usa `Clips`.
+    Lo usa `Clips`. Senza la DLL, o con una più vecchia di `Database.MinimumVersion` (3.8.0, gli indici
+    parziali), `Main` lo dice con `Strings.SqliteMissing`/`SqliteTooOld` e non parte (`Program.SqliteProblem`):
+    nemmeno il ripiego in memoria funzionerebbe. Portarsene una propria non serve (ogni Windows 10 e 11 ce l'ha, e
+    Windows Update la tiene aggiornata).
   - `Clips.cs` — i dati dell'elenco in un file SQLite (dalla 4.0; `docs\piano-sqlite.md`). Una tabella `entries` per copiati e salvati (`saved` 0/1; un salvato può non
     avere nome, è cifrato con DPAPI, contenuto e miniatura, e non scade mai; un copiato scade anche se in alto) e
     una `folders` ad albero (`parent_id`, 0 = fuori da tutte). Le regole le fa rispettare lo schema stesso
@@ -173,7 +177,8 @@ condiviso su GitHub).
   impostazione `HideOnLeave`, accesa di default, scelta dell'utente) nasconde la finestra nel tray a
   `WM_ACTIVATEAPP`, solo con il tray attivo, mai durante la digitazione né con la finestra disabilitata da
   una finestra modale nostra (`IsWindowEnabled`: «Modifica», domande, scelta del file), così intanto si può
-  copiare altrove. La guida si chiude con lei: senza pulsante sulla barra resterebbe persa.
+  copiare altrove. La guida si chiude e le opzioni si nascondono con lei (`PutAwayOthers`, anche nascondendola nel
+  tray): senza pulsante sulla barra resterebbero perse.
 
 - Avvio con Windows (`Startup`, in `Program.cs`): un valore nella chiave `Run` dell'utente, con l'argomento
   `/tray`. Non è tra le impostazioni (`TransferSettings`): la spunta mostra ciò che dice Windows, così non
@@ -195,8 +200,8 @@ condiviso su GitHub).
   testo di ogni voce si prepara una volta sola senza accenti e in minuscolo (`Texts.Fold`, `Entry.Folded`) e poi si
   confronta ordinalmente: dieci volte più veloce del confronto culturale con `IgnoreNonSpace` (misurato: 45 → 4,6 ms
   su 5000 voci), che però trovava anche «ae» in «æ». Il
-  pulsante «Opzioni»/«Elenco» alterna nella stessa area le due viste (`ShowView`, `listControls` e
-  `optionControls`). Le idee vengono dal progetto vicino `..\pastepad` (WinUI 3, .NET 10), riscritte qui in
+  pulsante «Opzioni» apre le opzioni in una finestra a parte (voluto dall'utente il 17/10/2026, «come la guida»;
+  prima prendevano il posto dell'elenco, con un pulsante «Elenco» per tornare): vedi sotto. Le idee vengono dal progetto vicino `..\pastepad` (WinUI 3, .NET 10), riscritte qui in
   piccolo: niente modelli, formato, temi.
 - Scegliere una voce (Invio o clic, `Use`) la rimette soltanto negli appunti: poi l'utente incolla con Ctrl+V o
   digita con Ctrl+Alt+V. Non si digita né si incolla da soli (provato e scartato dall'utente; l'eccezione voluta
@@ -320,6 +325,9 @@ condiviso su GitHub).
   seconda linea dà già aria. Le righe che non dicono quando (cartelle, salvati senza data) sono alte uguali con
   tutto al centro; le immagini hanno il testo al centro della miniatura e l'ora in basso. Le righe a due livelli
   di prima, con sotto anche caratteri e righe, erano state scartate dall'utente: il numero di caratteri non gli serve.
+  Nella colonna dei copiati una riga sì e una no è appena più scura (più chiara nello scuro): `Look.Stripe`,
+  `StripeShare` verso `Soft`, calcolata mentre si disegna e quindi fuori dalla tavolozza (voluta dall'utente il
+  17/10/2026, «un'alternanza delicata»). I salvati no.
 - Anteprima (voluta dall'utente «con il mouse che resta sopra un po'»): il puntatore fermo `RestMs` su una voce
   copiata che la riga taglia (`Cut`) la mostra per intero in `Peek`, sotto la riga (`ShowPeek`, timer `rest`
   avviato da `Hover`). `Peek` non prende il primo piano e lascia passare il puntatore (`HTTRANSPARENT`), così
@@ -433,8 +441,8 @@ condiviso su GitHub).
   La descrizione sotto il pulsante deve stare in due righe: è il motivo della larghezza (`ContentWidth`).
 
 - Disposizione (voluta dall'utente: «Digita gli appunti» in cima era troppo ingombrante): in alto la ricerca,
-  poi le colonne (o le opzioni), sotto la riga di stato e un'unica fila di pulsanti piccoli: a sinistra quelli
-  della voce selezionata, a destra «Digita gli appunti», «Opzioni»/«Elenco» e il quadratino «?» della guida
+  poi le colonne, sotto la riga di stato e un'unica fila di pulsanti piccoli: a sinistra quelli
+  della voce selezionata, a destra «Digita gli appunti», «Opzioni» e il quadratino «?» della guida
   (una scritta «Guida» nella fila non ci sta).
   La riga di stato occupa solo lo spazio di ciò che dice (`FitStatus`: nessuna, una o due righe; il resto va
   alle colonne) e a riposo tace (`ShowIdle`): come si digita una password sta nel suggerimento del pulsante.
@@ -475,9 +483,16 @@ condiviso su GitHub).
   l'icona di ciascuna), a destra la pagina scelta (`pagePane`, `ShowPage`), con il nome in grande in cima
   (`PageTop`) e le opzioni in una colonna larga `PaneWidth`. Ordine: Digitazione, Scorciatoie, Cronologia,
   Programma. Una pagina è un `Panel` con `Text` (il nome) e `Tag` (il segno), ed è lei l'elemento della colonna.
-  Il colore d'accento resta a ciò che si clicca (il link `PlaceLink` alla cartella della cronologia). L'altezza
-  della finestra è fissa (`AreaHeight`, quella di prima: l'utente non la voleva più alta), e le pagine ci stanno
-  con spazio avanzato.
+  Il colore d'accento resta a ciò che si clicca (il link `PlaceLink` alla cartella della cronologia). Le pagine
+  sono alte `AreaHeight` (come l'elenco), e ci stanno con spazio avanzato.
+  Stanno in una finestra loro (`OptionsWindow`, dal 17/10/2026, voluta dall'utente «come la guida»): non modale,
+  sopra la finestra principale che ne è proprietaria, centrata su di lei a ogni apertura (`OpenOptions`), Chiudi
+  ed Esc. Le opzioni restano campi di `MainForm` (le leggono `TransferSettings`, la digitazione, il tray): la
+  finestra nasce una volta sola nel costruttore, si prende la colonna e le pagine fatte da `PlaceOptions`, e
+  chiusa dall'utente si nasconde soltanto. Sotto le pagine ripete ciò che dice la riga di stato (`Note`), perché
+  l'esito di un'opzione (esporta, sposta la cartella, avvio con Windows) non finisca sotto di lei; domande e
+  scelte di file aperte da lì le appartengono (`Front`). Prende i tasti delle scorciatoie da cambiare e F1 come
+  la principale (`ProcessCmdKey`). Ctrl+D la nasconde: starebbe sopra l'elenco.
 
 ## Lingua
 
@@ -550,9 +565,11 @@ condiviso su GitHub).
   con strumenti che salvano LF, riconvertirli.
 - `using System.IO` e una proprietà `Path` nella stessa classe si nascondono a vicenda: in `Clips` il percorso
   del file è `FileName`, e `System.IO.Path` si scrive per intero.
-- `Control.Visible` risponde falso se la finestra è nascosta: quale vista è attiva lo dice `optionsShown`.
-  Lo stesso vale per le voci di un menu mentre si sta aprendo (`Opening`): «Sposta in» restava vuoto perché
+- `Control.Visible` risponde falso se la finestra è nascosta. Lo stesso vale per le voci di un menu mentre si sta aprendo (`Opening`): «Sposta in» restava vuoto perché
   il codice rileggeva `moveItem.Visible` appena assegnato.
+- Una finestra mai mostrata non è in `Application.OpenForms`, nemmeno con l'handle già creato: `Look.Switch` non
+  la ricolorerebbe. Per questo la finestra delle opzioni si iscrive con `Look.Keep` (trovato il 17/10/2026 dal
+  controllo di `shot` che cambia tema prima di aprirla).
 - Mentre il gestore di `Application.ThreadException` è in corso, WinForms scarta in silenzio ogni altro errore,
   senza nemmeno chiamare il gestore: per questo `Report` scrive nel log e torna subito, e la finestra si apre dopo
   (`SynchronizationContext.Post`). Provato dal vivo il 17/10/2026 con due errori provocati: prima il secondo
@@ -618,6 +635,7 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - Che il formato «riservato» messo sui testi salvati tenga davvero fuori la cronologia di Windows (Win+V).
 - I formati riservati sugli appunti veri (provati solo su oggetti in memoria) e la cattura a ogni copia.
 - Le immagini dal vivo: cattura di una schermata vera e ritorno negli appunti.
+- L'avviso di SQLite mancante o troppo vecchio: nessun Windows a portata di mano ne è privo.
 - Il database con migliaia di voci (la ricerca, la scadenza, il file che si restringe): provato solo con le
   poche dei test. E dal pacchetto dello Store, dove sta in `LocalState`.
 

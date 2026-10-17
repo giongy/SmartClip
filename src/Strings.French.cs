@@ -12,7 +12,7 @@ static partial class Strings
         TypeButton = "Saisir le presse-papiers";
         RecentTitle = "Copiés récemment"; SavedTitle = "Enregistrés"; PausedSuffix = " (en pause)";
         New = "Nouveau…"; SaveDots = "Garder…"; EditDots = "Modifier…"; RenameDots = "Renommer…"; Delete = "Supprimer";
-        Options = "Options"; List = "Liste"; SearchCue = "Rechercher…";
+        Options = "Options"; SearchCue = "Rechercher…";
         CountOf = "{0} sur {1}";
         NoResults = "Aucun résultat"; HistoryOffEmpty = "L'historique est désactivé";
         PausedEmpty = "En pause : ce que vous copiez n'est pas mémorisé"; CopyHint = "Ce que vous copiez apparaîtra ici";
@@ -31,6 +31,10 @@ static partial class Strings
         Error = "Erreur : {0}";
         NewerDatabase = "{0} a été écrit par une version plus récente de {1} : mettez le programme à jour pour l'ouvrir.";
         UnexpectedError ="Une erreur s'est produite : {0}\n\nLe programme continue. Les détails sont dans {1}.";
+        SqliteMissing = "{0} ne peut pas démarrer : il conserve ce que vous copiez et enregistrez avec SQLite, qui fait "
+            + "partie de Windows 10 et 11 (winsqlite3.dll), et ce Windows ne l'a pas.";
+        SqliteTooOld = "{0} ne peut pas démarrer : il a besoin de SQLite {1} ou plus récent, qui fait partie de Windows 10 "
+            + "et 11, et ce Windows a la version {2}. Mettre Windows à jour résout le problème.";
 
         Open = "Ouvrir"; Exit = "Quitter"; Pause = "Suspendre la capture"; Resume = "Reprendre la capture";
         ShowContent = "Afficher le contenu"; MoveTo = "Déplacer vers"; NewFolder = "Nouveau dossier…";
@@ -281,7 +285,7 @@ static partial class Strings
         ExportEditNote = "Le texte de chaque élément est dans les lignes qui commencent par une tabulation : si vous "
             + "modifiez le fichier, laissez-la en place.";
 
-        HelpTitle = "Guide de {0}"; Close = "Fermer";
+        HelpTitle = "Guide de {0}"; OptionsTitle = "Options de {0}"; Close = "Fermer";
         Guide = FrenchGuide;
     }
 
@@ -435,7 +439,7 @@ static partial class Strings
             "- Désactiver l'historique dans les options vide la liste et efface du disque ce que vous avez copié.",
 
             "# Les options",
-            "Le bouton « " + Options + " » les affiche à la place de la liste, et « " + List + " » revient en arrière. En "
+            "Le bouton « " + Options + " » les ouvre dans une fenêtre à part, qui peut rester ouverte à côté de la liste. En "
                 + "laissant le pointeur sur une option, son explication complète apparaît. Elles sont réparties en quatre pages, "
                 + "choisies dans la colonne de gauche comme les sujets de ce guide :",
             "- " + TypingTitle + " : combien de secondes attendre avant la saisie (de " + MainForm.MinDelay + " à "

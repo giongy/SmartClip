@@ -35,6 +35,15 @@ sealed class Database : IDisposable
         get { return Sqlite.sqlite3_libversion_number(); }
     }
 
+    // The oldest SQLite the program works with: 3.8.0 brought the partial index of the schema. Every Windows 10 has a
+    // newer one.
+    public const int MinimumVersion = 3008000;
+
+    public static string MinimumName
+    {
+        get { return MinimumVersion / 1000000 + "." + MinimumVersion / 1000 % 1000 + "." + MinimumVersion % 1000; }
+    }
+
     public static string Version
     {
         get { return Marshal.PtrToStringAnsi(Sqlite.sqlite3_libversion()); }

@@ -77,10 +77,35 @@ static class Program
             MainForm.UseSavedInterface();         // and for the font of the interface
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            string missing = SqliteProblem();
+            if (missing != null)
+            {
+                AskForm.Tell(null, missing);
+                return;
+            }
             Startup.Follow();
             MainForm form = new MainForm(hidden);
             if (restarting) form.ShowOptions();   // the language was changed there
             Application.Run(form);
+        }
+    }
+
+    // SQLite comes with Windows 10 and 11, and the list cannot work without it, not even in memory: if it is missing
+    // or too old, what the program says before giving up, written to the log too. Null when it is there.
+    static string SqliteProblem()
+    {
+        try
+        {
+            if (Database.VersionNumber >= Database.MinimumVersion) return null;
+            Log.Error(new NotSupportedException("SQLite " + Database.Version + " is older than " + Database.MinimumName));
+            return string.Format(Strings.SqliteTooOld, AppName, Database.MinimumName, Database.Version);
+        }
+        catch (Exception ex)
+        {
+            // The library is not there, lacks the function, or is not for this kind of process.
+            if (!(ex is DllNotFoundException || ex is EntryPointNotFoundException || ex is BadImageFormatException)) throw;
+            Log.Error(ex);
+            return string.Format(Strings.SqliteMissing, AppName);
         }
     }
 
