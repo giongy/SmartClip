@@ -23,6 +23,10 @@ class Entry
     public int Number;               // after the list hotkey, the digit that chooses it: 0 for none
     public string Group;             // the folder a saved text is in, or null
     public bool IsGroup, Open;       // not a text but a folder of saved texts, named by Name; and whether it shows them
+    // In the database (Clips): its row, whether it is saved (a saved entry may have no name), and its folder (0: none).
+    public long Id;
+    public bool Saved;
+    public long FolderId;
     public readonly int Width, Height;   // of a picture
     public readonly Image Preview;       // null for a text
     public byte[] Png;                   // a picture while it is only in memory: null once the history file holds it
@@ -53,8 +57,14 @@ class Entry
     }
 
     // A picture as the history file gives it back: the preview only, the rest is read when it is chosen.
-    public Entry(Image preview, int width, int height, DateTime time)
+    public Entry(Image preview, int width, int height, DateTime time) : this(preview, width, height, time, null)
     {
+    }
+
+    // The same, saved under a name, or with 'name' null.
+    public Entry(Image preview, int width, int height, DateTime time, string name)
+    {
+        Name = name;
         Picture = true;
         Preview = preview;
         Width = width;
@@ -135,7 +145,7 @@ static class Texts
 {
     public const int MaxRecent = 30, MaxPictures = 5;   // while only in memory, where pictures are heavy
     public const int MaxKeepDays = 365, DefaultKeepDays = 30;
-    const int MaxLength = 100000;   // a longer text is more likely a whole document than something to use again
+    public const int MaxLength = 100000;   // a longer text is more likely a whole document than something to use again
     // A record of a history file: kind, time of the copy and length, then that many bytes. Of a text, the
     // text itself; of a picture its width, height and the length of the preview, then preview and picture as PNG.
     const byte DeletedKind = 0, TextKind = 1, PictureKind = 2;

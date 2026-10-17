@@ -27,7 +27,8 @@ static partial class Strings
             + "De una carpeta elimina solo la carpeta: lo que contiene sube un nivel.";
         DividerTip = "Arrastra para dar más o menos espacio a los textos guardados.\nDoble clic: el ancho inicial.";
         Error = "Error: {0}";
-        UnexpectedError = "Algo ha ido mal: {0}\n\nEl programa continúa. Los detalles están en {1}.";
+        NewerDatabase = "{0} fue escrito por una versión más reciente de {1}: actualiza el programa para abrirlo.";
+        UnexpectedError ="Algo ha ido mal: {0}\n\nEl programa continúa. Los detalles están en {1}.";
 
         Open = "Abrir"; Exit = "Salir"; Pause = "Pausar la captura"; Resume = "Reanudar la captura";
         ShowContent = "Mostrar el contenido"; MoveTo = "Mover a"; NewFolder = "Nueva carpeta…";

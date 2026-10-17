@@ -27,7 +27,8 @@ static partial class Strings
             + "Di una cartella elimina solo la cartella: quello che contiene sale di un livello.";
         DividerTip = "Trascina per dare più o meno spazio ai testi salvati.\nDoppio clic: la larghezza di partenza.";
         Error = "Errore: {0}";
-        UnexpectedError = "Qualcosa è andato storto: {0}\n\nIl programma continua. I dettagli sono in {1}.";
+        NewerDatabase = "{0} è stato scritto da una versione più nuova di {1}: aggiorna il programma per aprirlo.";
+        UnexpectedError ="Qualcosa è andato storto: {0}\n\nIl programma continua. I dettagli sono in {1}.";
 
         Open = "Apri"; Exit = "Esci"; Pause = "Sospendi la cattura"; Resume = "Riprendi la cattura";
         ShowContent = "Mostra il contenuto"; MoveTo = "Sposta in"; NewFolder = "Nuova cartella…";

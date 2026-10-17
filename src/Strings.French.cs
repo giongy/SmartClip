@@ -28,7 +28,8 @@ static partial class Strings
         DividerTip = "Faites glisser pour donner plus ou moins de place aux textes enregistrés.\n"
             + "Double-clic : la largeur de départ.";
         Error = "Erreur : {0}";
-        UnexpectedError = "Une erreur s'est produite : {0}\n\nLe programme continue. Les détails sont dans {1}.";
+        NewerDatabase = "{0} a été écrit par une version plus récente de {1} : mettez le programme à jour pour l'ouvrir.";
+        UnexpectedError ="Une erreur s'est produite : {0}\n\nLe programme continue. Les détails sont dans {1}.";
 
         Open = "Ouvrir"; Exit = "Quitter"; Pause = "Suspendre la capture"; Resume = "Reprendre la capture";
         ShowContent = "Afficher le contenu"; MoveTo = "Déplacer vers"; NewFolder = "Nouveau dossier…";

@@ -170,7 +170,212 @@ static class TestProgram
     static int DataTest()
     {
         SqliteTest();
+        ClipsTest();
         return failed == 0 ? 0 : 1;
+    }
+
+    // Whether the database refuses a statement written by hand: a rule of the schema at work.
+    static bool Refuses(Clips clips, string sql)
+    {
+        try
+        {
+            clips.Data.Execute(sql);
+            return false;
+        }
+        catch (SqliteException ex)
+        {
+            return ex.IsConstraint;
+        }
+    }
+
+    // What the list keeps, in a database of the sandbox: the rules agreed for copied and saved entries.
+    static void ClipsTest()
+    {
+        string path = System.IO.Path.Combine(sandbox, "clips test.db");
+        using (Clips clips = new Clips(path))
+        {
+            Check(Equals(clips.Data.Value("PRAGMA user_version"), (long)Clips.SchemaVersion), "a new database gets the schema");
+
+            // Copied texts.
+            Check(clips.AddText("one") && clips.AddText("two"), "copied texts are remembered");
+            Check(!clips.AddText(null) && !clips.AddText(" \r\n ") && !clips.AddText(new string('x', Texts.MaxLength + 1)),
+                "nothing, blanks and huge texts are not");
+            System.Threading.Thread.Sleep(5);
+            clips.AddText("one");
+            List<Entry> copied = clips.Copied(MainForm.MaxShown, new string[0]);
+            Check(copied.Count == 2 && copied[0].Text == "one" && copied[1].Text == "two" && clips.CopiedCount() == 2,
+                "copied again, it is the same entry, back at the top");
+            Check(copied[0].Id > 0 && !copied[0].Saved && copied[0].Name == null && copied[0].Time.Date == DateTime.Today,
+                "with its row, not saved, copied today");
+            clips.AddText("Città di Torino\nseconda riga");
+            Check(clips.Copied(10, Texts.Words("TORINO citta")).Count == 1 && clips.Copied(10, Texts.Words("torino milano")).Count == 0,
+                "the search: words in any order, without case or accents, every one");
+            Check(clips.Copied(1, new string[0]).Count == 1, "at most as many as asked");
+
+            // At the top: first, and still temporary.
+            long two = clips.Copied(10, Texts.Words("two"))[0].Id;
+            clips.Pin(two, true);
+            copied = clips.Copied(10, new string[0]);
+            Check(copied[0].Id == two && copied[0].Pinned, "an entry kept at the top comes first");
+            clips.AddText("two");
+            Check(clips.CopiedCount() == 3 && clips.Copied(10, new string[0])[0].Pinned, "copied again, it keeps its star");
+
+            // Pictures.
+            using (Bitmap picture = new Bitmap(40, 30))
+            {
+                picture.SetPixel(1, 1, Color.Red);
+                clips.AddPicture(picture);
+                clips.AddPicture(picture);
+            }
+            Entry shot = clips.Copied(10, Texts.Words("picture 40")).Find(delegate(Entry e) { return e.Picture; });
+            Check(shot != null && clips.CopiedCount() == 4 && shot.Preview != null && shot.Width == 40 && shot.Height == 30,
+                "a picture announced twice is one entry, with its preview, found by its size");
+            using (Image back = Image.FromStream(new System.IO.MemoryStream(clips.Png(shot.Id))))
+            using (Bitmap pixels = new Bitmap(back))
+                Check(back.Width == 40 && pixels.GetPixel(1, 1).ToArgb() == Color.Red.ToArgb(), "and comes back whole when chosen");
+
+            // Numbers: one entry each, of either kind; a temporary one stays temporary.
+            long one = clips.Copied(10, Texts.Words("one"))[0].Id;
+            clips.Number(one, 3);
+            Check(clips.Numbered(3) != null && clips.Numbered(3).Id == one && !clips.Numbered(3).Pinned,
+                "a number chooses a copied entry, which does not get the star for it");
+            clips.Number(two, 3);
+            Check(clips.Numbered(3).Id == two && clips.Copied(10, Texts.Words("one"))[0].Number == 0, "given to another, it moves");
+            clips.Number(two, 0);
+            Check(clips.Numbered(3) == null, "zero takes it away");
+            clips.Number(one, 4);
+            clips.Forget("one");
+            Check(clips.Copied(10, Texts.Words("one")).Count == 1, "a typed password is not forgotten if it has a number");
+            clips.AddText("password");
+            clips.Forget("password");
+            Check(clips.Copied(10, Texts.Words("password")).Count == 0, "otherwise it is");
+
+            // The rules of the schema, written around Clips: the database itself says no.
+            Check(Refuses(clips, "INSERT INTO entries (kind, content, copied_at, name, name_key) VALUES (1, x'00', 0, 'n', 'N')"),
+                "a copied entry cannot have a name");
+            Check(Refuses(clips, "INSERT INTO entries (kind, content, copied_at, saved, pinned) VALUES (1, x'00', 0, 1, 1)"),
+                "a saved one cannot be at the top");
+            Check(Refuses(clips, "INSERT INTO entries (kind, content, copied_at, number) VALUES (1, x'00', 0, 10)"),
+                "a number goes from 1 to " + MainForm.MaxNumber);
+            Check(Refuses(clips, "INSERT INTO entries (kind, content, copied_at, number) VALUES (1, x'00', 0, 4)"), "and chooses one entry only");
+            Check(Refuses(clips, "INSERT INTO entries (kind, content, copied_at, saved, folder_id) VALUES (1, x'00', 0, 1, 999)"),
+                "an entry cannot be in a folder that is not there");
+            Check(Refuses(clips, "INSERT INTO entries (kind, content, copied_at) VALUES (2, x'00', 0)"), "a picture has a preview");
+
+            // Saved entries: never going by themselves, encrypted, with a name or without.
+            const string secret = "pässwörd € ~` segreta";
+            long bank = clips.AddSaved("Banca", secret, 0, DateTime.MinValue);
+            clips.AddText("mail@second.example");
+            long mail = clips.Copied(10, Texts.Words("mail@second"))[0].Id;
+            clips.Save(mail, null, 0);
+            List<Entry> saved = clips.Saved();
+            Entry banked = saved.Find(delegate(Entry e) { return e.Id == bank; }), mailed = saved.Find(delegate(Entry e) { return e.Id == mail; });
+            Check(banked != null && banked.Saved && banked.Name == "Banca" && banked.Text == secret && banked.Time == DateTime.MinValue,
+                "a saved text comes back with its name, and without a day if nobody knows it");
+            Check(mailed != null && mailed.Saved && mailed.Name == null && mailed.Label == "mail@second.example" && mailed.Time.Date == DateTime.Today,
+                "a copied entry saved without a name shows its content");
+            Check(clips.Copied(10, Texts.Words("mail@second")).Count == 0, "and is no longer among the copied ones");
+            clips.AddText("x@second.example");
+            clips.Save(clips.Copied(10, Texts.Words("x@second"))[0].Id, "", 0);
+            Check(clips.Saved().FindAll(delegate(Entry e) { return e.Name == null; }).Count == 2, "more saved entries can be without a name");
+            byte[] raw = (byte[])clips.Data.Value("SELECT content FROM entries WHERE id = ?1", bank);
+            Check(Encoding.UTF8.GetString(raw).IndexOf("segreta") < 0 && Encoding.Unicode.GetString(raw).IndexOf("segreta") < 0
+                && clips.Data.Value("SELECT folded FROM entries WHERE id = ?1", mail) == null
+                && clips.Data.Value("SELECT hash FROM entries WHERE id = ?1", mail) == null,
+                "nothing of a saved entry is readable in the file: content, search text, hash");
+            Check(clips.Named("BANCA") == bank && clips.Named("other") == 0, "a name is found whatever its letter case");
+            SqliteException taken = null;
+            try
+            {
+                clips.AddSaved("banca", "x", 0, DateTime.Now);
+            }
+            catch (SqliteException ex)
+            {
+                taken = ex;
+            }
+            Check(taken != null && taken.IsConstraint, "a name taken, also in another letter case, is refused");
+            clips.Number(bank, 5);
+            clips.Change(bank, "Banca 2", "nuova", 0);
+            Entry changed = clips.Saved().Find(delegate(Entry e) { return e.Id == bank; });
+            Check(changed.Name == "Banca 2" && changed.Text == "nuova" && changed.Number == 5, "a saved text changes name and content, its number stays");
+            clips.Change(bank, null, "nuova", 0);
+            Check(clips.Saved().Find(delegate(Entry e) { return e.Id == bank; }).Name == null, "and can lose its name");
+
+            using (Bitmap picture = new Bitmap(20, 10))
+            {
+                picture.SetPixel(2, 2, Color.Blue);
+                clips.AddPicture(picture);
+            }
+            long kept = clips.Copied(10, new string[0]).Find(delegate(Entry e) { return e.Picture && e.Width == 20; }).Id;
+            clips.Save(kept, "Schema", 0);
+            Entry framed = clips.Saved().Find(delegate(Entry e) { return e.Id == kept; });
+            using (Image back = Image.FromStream(new System.IO.MemoryStream(clips.Png(kept))))
+            using (Bitmap pixels = new Bitmap(back))
+                Check(framed.Picture && framed.Name == "Schema" && framed.Preview != null && pixels.GetPixel(2, 2).ToArgb() == Color.Blue.ToArgb(),
+                    "a picture can be saved too, and comes back whole");
+
+            // Days: the copied entries go when their days are over, also those at the top; the saved ones never.
+            clips.Import("eight days ago", DateTime.Now.AddDays(-8), true);
+            clips.Import("yesterday", DateTime.Today.AddHours(-1), false);
+            long old = clips.AddSaved("old", "saved long ago", 0, DateTime.Now.AddYears(-3));
+            clips.AddText("first\nsecond");
+            Check(!clips.Import("yesterday", DateTime.Now.AddDays(-5), false) && !clips.Import("first\r\nsecond", DateTime.Now, false),
+                "an imported text already there is left out, whatever its line ends");
+            clips.Keep(7);
+            Check(clips.Copied(10, Texts.Words("eight")).Count == 0 && clips.Copied(10, Texts.Words("yesterday")).Count == 1,
+                "seven days: an older one goes, even at the top");
+            clips.Number(clips.Copied(10, Texts.Words("yesterday"))[0].Id, 6);
+            clips.Keep(0);
+            Check(clips.Copied(10, Texts.Words("yesterday")).Count == 0 && clips.Numbered(6) == null && clips.Copied(10, Texts.Words("one")).Count == 1,
+                "zero days: only today's stay, and a number goes with its entry");
+            Check(clips.Saved().Exists(delegate(Entry e) { return e.Id == old; }), "a saved entry outlives every day");
+            clips.Clean(0);
+            Check(clips.CopiedCount() == 0 && clips.Saved().Count == 5, "cleaning everything leaves the saved ones");
+
+            // Folders: a tree, each before those inside it.
+            long work = clips.AddFolder(0, "Lavoro"), servers = clips.AddFolder(work, "Server"), home = clips.AddFolder(0, "Casa");
+            long deep = clips.AddFolder(servers, "Dentro");
+            List<Folder> folders = clips.Folders();
+            Check(folders.Count == 4 && folders[0].Id == home && folders[1].Id == work && folders[2].Id == servers && folders[2].Level == 1
+                && folders[3].Id == deep && folders[3].Level == 2 && folders[0].Open, "folders come in order, each before those inside it");
+            Check(Refuses(clips, "INSERT INTO folders (parent_id, name, name_key) VALUES (" + work + ", 'server', 'SERVER')"),
+                "two folders side by side cannot have one name");
+            clips.AddFolder(home, "Server");
+            Check(true, "the same name in another folder is fine");
+            clips.Move(bank, deep);
+            Check(clips.Saved().Find(delegate(Entry e) { return e.Id == bank; }).FolderId == deep, "a saved entry goes into a folder");
+            Check(Throws<ArgumentException>(delegate { clips.MoveFolder(work, deep); }), "a folder never goes inside one it holds");
+            clips.OpenFolder(work, false);
+            clips.Reveal(deep);
+            Check(clips.Folders().Find(delegate(Folder f) { return f.Id == work; }).Open, "revealing a folder opens those around it");
+            clips.RenameFolder(servers, "Server remoti");
+            clips.MoveFolder(servers, home);
+            folders = clips.Folders();
+            Check(folders.Find(delegate(Folder f) { return f.Id == servers; }).ParentId == home
+                && folders.Find(delegate(Folder f) { return f.Id == deep; }).Level == 2, "a folder moves with what it holds");
+            // Deleted, a folder leaves what it holds one level up; one of the same name there takes it in.
+            long inner = clips.AddFolder(servers, "Server");   // inside Casa › Server remoti, next to Dentro
+            clips.Move(old, inner);
+            clips.DeleteFolder(servers);
+            folders = clips.Folders();
+            Check(folders.Find(delegate(Folder f) { return f.Id == servers; }) == null
+                && folders.Find(delegate(Folder f) { return f.Id == deep; }).ParentId == home
+                && folders.FindAll(delegate(Folder f) { return f.ParentId == home && f.Name == "Server"; }).Count == 1,
+                "a deleted folder's folders move up, and join one of the same name");
+            Check(clips.Saved().Find(delegate(Entry e) { return e.Id == old; }).FolderId != inner
+                && clips.Saved().Find(delegate(Entry e) { return e.Id == bank; }).FolderId == deep,
+                "and what they hold goes along");
+            clips.DeleteFolder(home);
+            Check(clips.Saved().Count == 5 && clips.Folders().TrueForAll(delegate(Folder f) { return f.ParentId != home; }),
+                "deleting folders never deletes a saved entry");
+        }
+        using (Clips clips = new Clips(path))
+            Check(clips.Saved().Count == 5, "what was saved is there when the file is opened again");
+        System.IO.File.Delete(path);
+        Check(!System.IO.File.Exists(path), "a closed file is free");
+        using (Database db = new Database(path)) db.Execute("PRAGMA user_version = " + (Clips.SchemaVersion + 1));
+        Check(Throws<System.IO.InvalidDataException>(delegate { new Clips(path).Dispose(); }), "a file of a newer version is refused");
+        System.IO.File.Delete(path);
     }
 
     // Whether a call throws the exception it should.

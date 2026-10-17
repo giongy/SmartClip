@@ -69,6 +69,15 @@ condiviso su GitHub).
     legati con la loro lunghezza (il carattere zero non li taglia), byte vuoti con `zeroblob` (altrimenti
     diventerebbero NULL). Chiudere il database finalizza le istruzioni rimaste aperte, così il file si libera.
     È il passo 1 di `docs\piano-sqlite.md`: per ora non lo usa nessuno tranne i test.
+  - `Clips.cs` — i dati dell'elenco in un file SQLite (passo 2 del piano, non ancora collegato alla finestra:
+    `Texts` resta quello in uso). Una tabella `entries` per copiati e salvati (`saved` 0/1; un salvato può non
+    avere nome, è cifrato con DPAPI, contenuto e miniatura, e non scade mai; un copiato scade anche se in alto) e
+    una `folders` ad albero (`parent_id`, 0 = fuori da tutte). Le regole le fa rispettare lo schema stesso
+    (`Clips.Schema`: CHECK, UNIQUE, chiave esterna): nome e cartella solo sui salvati, niente freccia, testo per
+    la ricerca né impronta sui salvati, numeri 1–`MaxNumber` unici, nomi unici senza maiuscole (`Key`, perché
+    NOCASE di SQLite conosce solo le lettere inglesi). Versione in `PRAGMA user_version` (`SchemaVersion`): un
+    file più nuovo si rifiuta (`Strings.NewerDatabase`). Ore in UTC, millisecondi dal 1970. Copiare di nuovo
+    aggiorna la stessa riga (`hash`). `Entry` ha in più `Id`, `Saved`, `FolderId`.
   - `Packaged.cs` — quando il programma gira dal pacchetto del Microsoft Store (`Packaged.Family` non nullo):
     avvio con Windows con la `StartupTask` del pacchetto invece della chiave `Run` (`Startup` lo chiama), avvio
     all'accesso riconosciuto dall'attivazione invece che da `/tray`, cronologia in `LocalState` del pacchetto
@@ -515,7 +524,8 @@ impostazioni di default.
   testi copiati, cronologia su disco (in una cartella temporanea, non in quella dell'utente), ricerca, andata e ritorno cifrata di un testo salvato (nella chiave di prova), il log.
 - `tests.exe data` — il database, in file della cartella di prova: per ora lo strato SQLite (`SqliteTest`: testi
   e byte in andata e ritorno, NULL e byte vuoti, regole rifiutate, transazioni annidate, file liberato alla
-  chiusura). Vi andranno anche schema, dati e migrazione.
+  chiusura) e `Clips` (`ClipsTest`: copiati, freccia, immagini, numeri, regole dello schema provate scrivendo
+  SQL a mano, salvati con e senza nome, giorni, cartelle). Vi andrà anche la migrazione.
 - `tests.exe type` — apre una finestrella e ci digita davvero: tutti i caratteri ASCII, accentate, simboli con
   AltGr, Unicode, Alt+codice, Tab, Invio; poi verifica che finestra sbagliata e annullamento blocchino tutto.
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.
