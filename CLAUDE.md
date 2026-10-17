@@ -80,7 +80,11 @@ condiviso su GitHub).
     (`Clips.Schema`: CHECK, UNIQUE, chiave esterna): nome e cartella solo sui salvati, niente freccia, testo per
     la ricerca né impronta sui salvati, numeri 1–`MaxNumber` unici, nomi unici senza maiuscole (`Key`, perché
     NOCASE di SQLite conosce solo le lettere inglesi). Versione in `PRAGMA user_version` (`SchemaVersion`): un
-    file più nuovo si rifiuta (`Strings.NewerDatabase`). Ore in UTC, millisecondi dal 1970. Copiare di nuovo
+    file più nuovo si rifiuta (`Strings.NewerDatabase`), uno più vecchio si aggiorna all'apertura (`Upgrade`, in una
+    transazione). Versione 2 (17/10/2026): nelle righe di `entries` le colonne grandi stanno in fondo (`hash`,
+    `folded`, `preview`, `content` ultimo), perché SQLite tiene un valore grande in una catena di pagine e la legge
+    tutta per arrivare a qualunque colonna dopo di lui: con `content` al terzo posto ogni ricarica dell'elenco e ogni
+    ricerca leggevano le immagini intere. **Le colonne nuove vanno messe prima di `hash`**. Ore in UTC, millisecondi dal 1970. Copiare di nuovo
     aggiorna la stessa riga (`hash`). `Entry` ha in più `Id`, `Saved`, `FolderId`. Un database nuovo si riempie
     dentro la transazione che lo crea (`new Clips(path, fill)`): se il riempimento fallisce non resta niente, e al
     prossimo avvio è di nuovo nuovo (`Created`).
@@ -220,7 +224,8 @@ condiviso su GitHub).
 - La cartella del database si sceglie (voluto dall'utente, passo 6 del piano): impostazione `DataFolder` (vuota
   = predefinita), letta da `OpenClips` prima delle altre (`EarlySetting`) e scritta subito quando cambia
   (`SaveSettings` in `MoveDataFolder`). Nella pagina Cronologia la riga «Cartella delle voci copiate e salvate»
-  (`folderPath`, `ShowFolder`) con «Cambia…» (`ChangeDataFolder`, `FolderBrowserDialog`) e «Predefinita».
+  (`folderPath`, `ShowFolder`), sotto quanto occupa il file e quanto le immagini copiate (`databaseSize`,
+  `ShowSize`, `Clips.Size`, `Strings.Size`), con «Cambia…» (`ChangeDataFolder`, `FolderBrowserDialog`) e «Predefinita».
   Dove non c'è un database, quello in uso ci si sposta (`Clips.Move`: chiude, copia, apre la copia e la controlla
   con `quick_check`, solo allora cancella il vecchio; se qualcosa fallisce `ClipsMoveException` riporta indietro
   il vecchio, intatto); dove c'è già, chiede se usare quello e lascia il proprio com'è (la terza scelta del piano,
@@ -274,6 +279,12 @@ condiviso su GitHub).
   descrizione che si vede, e la ricerca le trova per misura. Se negli appunti c'è anche testo vince il testo.
   In memoria resta solo la miniatura: il PNG si legge quando serve (`Entry.LoadPng` → `PngSource` → `Clips.Png`).
   La stessa copia annunciata più volte da Windows è la stessa riga (impronta del PNG).
+  Le immagini copiate hanno un tetto (voluto dall'utente il 17/10/2026, «non più di 200 MB»): `Clips.PictureSpace`,
+  PNG e miniature contati con `length()` senza leggerli (`PictureBytes`). Oltre il tetto `TrimPictures` toglie le
+  più vecchie, anche con freccia o numero, dopo ogni immagine copiata e a ogni `Prune`; le salvate non contano.
+  Nessuna domanda né avviso: finché un'altra immagine grande come la più grande non ci starebbe (`PicturesFull`),
+  sotto le colonne compare una barra rossa (`banner`, disegnata a mano in `DrawBanner`, messa a posto da
+  `FitStatus`, accesa da `ShowPictureRoom` a ogni `Filter`).
   Nell'elenco occupano tre righe, con la miniatura (`Entry.Preview`). **Si salvano** come i testi (dopo la 4.0.0):
   `EditForm` mostra l'immagine al posto del contenuto e chiede solo nome e cartella; un'immagine salvata mostra
   **sempre** la miniatura, con accanto il nome se c'è (decisione dell'utente: per le immagini il nome non nasconde

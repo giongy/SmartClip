@@ -34,6 +34,8 @@ static partial class Strings
             + "(winsqlite3.dll), e questo Windows non ce l'ha.";
         SqliteTooOld = "{0} non può partire: gli serve SQLite {1} o più recente, che fa parte di Windows 10 e 11, "
             + "e questo Windows ha la versione {2}. Aggiornare Windows risolve.";
+        PicturesFull = "Lo spazio per le immagini copiate ({0}) è pieno: le più vecchie vengono cancellate, una alla volta, "
+            + "man mano che ne copi di nuove.";
 
         Open = "Apri"; Exit = "Esci"; Pause = "Sospendi la cattura"; Resume = "Riprendi la cattura";
         ShowContent = "Mostra il contenuto"; MoveTo = "Sposta in"; NewFolder = "Nuova cartella…";
@@ -169,6 +171,7 @@ static partial class Strings
         FolderLink = "Apri la cartella dei dati";
         DataFolderOption = "Cartella delle voci copiate e salvate:";
         ChangeFolderButton = "Cambia…"; DefaultFolderButton = "Predefinita";
+        DatabaseSize = "Occupa {0}; immagini copiate: {1} su {2}.";
         ChooseDataFolder = "La cartella in cui {0} tiene ciò che copi e salvi.";
         AskUseExisting = "In {0} c'è già un elenco di {1}.\n\nVuoi usare quello? Il tuo resta dov'è, così com'è.";
         AskSyncedFolder = "{0} sembra una cartella sincronizzata online o in rete.\n\nLa sincronizzazione può bloccare o "
@@ -412,6 +415,9 @@ static partial class Strings
                 + "testi salvati si leggono solo su questo PC. Se all'avvio la cartella scelta non è raggiungibile, "
                 + "l'elenco lavora in memoria e lo dice.",
             "- Con 0 giorni resta solo quello che hai copiato oggi.",
+            "- Le immagini copiate occupano al massimo " + Size(Clips.PictureSpace) + ": oltre, le più vecchie se ne vanno "
+                + "anche prima che scadano i loro giorni, e una barra rossa sotto l'elenco lo dice. Le immagini salvate non "
+                + "contano.",
             "- Quello che i gestori di password segnano come riservato non viene ricordato.",
             "- Anche le voci in alto se ne vanno quando scadono i loro giorni: ciò che deve restare, salvalo.",
             "- Nelle opzioni, «" + CleanButton + "» elimina subito quello che hai copiato prima degli ultimi giorni che "

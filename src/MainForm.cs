@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Windows.Forms;
@@ -31,7 +32,7 @@ partial class MainForm : Window
     const int KeyDelayMs = 15, SlowKeyDelayMs = 60;    // pause after each key press or release
     public const int UnusualLength = 100;                     // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
-    const int Edge = 12, ContentWidth = 620;           // margin and usable width of the window, in pixels at 96 dpi
+    const int Edge = 8, ContentWidth = 620;         // margin and usable width of the window, in pixels at 96 dpi
     const int AreaHeight = 437;                        // of the lists, and of the pages of the options in their window
     // The options are in pages, one per category, chosen from a column on the left as the subjects of the guide.
     const int NavWidth = 170, NavGap = 20, PaneWidth = ContentWidth - NavWidth - NavGap;
@@ -49,12 +50,14 @@ partial class MainForm : Window
     const int OptionButtonWidth = 130;                 // a button among the options
     public const int MaxShown = 200;                          // copied entries listed at once
     const int SearchHeight = 30, GlyphWidth = 20;      // the search box, and the magnifying glass on its left
-    const int ListPadding = 4;                         // between the rounded edge of a column and its list
+    const int ListPadding = 3;                        // between the rounded edge of a column and its list
     const int CountWidth = 120;                        // room for the number of entries, right of a column title
     const int GroupIndent = 14;                        // of a saved text under its folder
     const int RowInset = 12, TimeGap = 8;             // of the text in a row, and around the time on its right
     const int NumberPadding = 2;                       // added to the text height for the width of the frame of a number
-    const int Gap = 6;                                 // between neighbouring controls
+    const int Gap = 5;                                // between neighbouring controls
+    const int BannerPadding = 8;                       // around the text of the red bar under the lists
+    const float BannerTint = 0.18f;                    // how far its background goes from the window's towards red
     const int ActionHeight = ButtonHeight, ActionWidth = 92;   // the buttons in the bottom row
     const int TypeWidth = 160;                        // the button that types the clipboard, in the same row
     const int StatusHeight = 34;                       // two lines of text: the most the status line takes
@@ -67,6 +70,7 @@ partial class MainForm : Window
     // What the list itself answers to: a global hotkey on the same keys would take them away from it.
     static readonly Keys[] ListKeys = { NewKeys, GroupKeys, SaveKeys, DeleteKeys, PinKeys };
     const TextFormatFlags LineFlags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;   // one line of a row
+    const TextFormatFlags BannerFlags = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.VerticalCenter;   // the red bar
     // What a row says at its right end: when it was copied, how many texts a folder holds.
     const TextFormatFlags RightFlags = TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.SingleLine
         | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
@@ -96,6 +100,8 @@ partial class MainForm : Window
     readonly Label recentCount = new Label(), savedCount = new Label();   // how many entries each column lists
     readonly Label recentEmpty = new Label(), savedEmpty = new Label();   // what a column says while it has none
     readonly Label status = new Label();
+    readonly Panel banner = new Panel();   // red, under the lists: the room for copied pictures is full
+    bool bannerShown;                      // asked back, Visible would answer false while the window is hidden
     readonly TextBox search = new TextBox();
     readonly RowList recentList = new RowList(), savedList = new RowList();   // what was copied, and what was saved
     ListBox active;     // the one of the two that holds the selected entry
@@ -152,6 +158,7 @@ partial class MainForm : Window
     string unavailable;   // why the database could not be opened: the status line says it whenever it is idle
     string dataFolder = "";   // the folder the user chose for the database; empty: the default one
     readonly Label folderPath = new Label();   // in the options, where the database is
+    readonly Label databaseSize = new Label(); // and how much it takes
     readonly RoundButton changeFolderButton = new RoundButton(), defaultFolderButton = new RoundButton();
     Control[] folderTipped;   // what the tooltip about that folder is on
     List<Entry> entries = new List<Entry>();   // the saved entries and the folders, as their column shows them
@@ -219,6 +226,10 @@ partial class MainForm : Window
             fade.Stop();
             if (!busy) ShowIdle();
         };
+        // The red bar, placed with the status line (FitStatus) and drawn by hand, in the colours of the moment.
+        banner.Visible = false;
+        banner.Text = string.Format(Strings.PicturesFull, Strings.Size(Clips.PictureSpace));
+        banner.Paint += DrawBanner;
 
         // The lists; under them the status line, then one row of small buttons. On the left those that act on the
         // selected entry, on the right typing, the options and the guide.
@@ -307,7 +318,7 @@ partial class MainForm : Window
         savedTitle.Anchor = recentCount.Anchor = savedCount.Anchor = toTop | toRight;
         divider.Anchor = toTop | toBottom | toRight;
         recentEmpty.Anchor = savedEmpty.Anchor = toTop | toBottom | toLeft | toRight;
-        status.Anchor = toBottom | toLeft | toRight;
+        status.Anchor = banner.Anchor = toBottom | toLeft | toRight;
         newButton.Anchor = saveButton.Anchor = deleteButton.Anchor = toBottom | toLeft;
         optionsButton.Anchor = typeButton.Anchor = helpButton.Anchor = toBottom | toRight;
 
@@ -320,7 +331,7 @@ partial class MainForm : Window
         Tip(string.Format(Strings.HelpTip, NameOf(HelpKey)), helpButton);
         Tip(string.Format(Strings.DeleteTip, NameOf(DeleteKeys)), deleteButton);
         Tip(Strings.DividerTip, divider);
-        Controls.AddRange(new Control[] { typeButton, optionsButton, helpButton, status, searchFrame, recentTitle, savedTitle,
+        Controls.AddRange(new Control[] { typeButton, optionsButton, helpButton, status, banner, searchFrame, recentTitle, savedTitle,
             recentCount, savedCount, recentCard, savedCard, divider, newButton, saveButton, deleteButton });
         // No AcceptButton: Enter chooses an entry, and in the search box it must not start typing the clipboard.
 
@@ -442,6 +453,7 @@ partial class MainForm : Window
     void OpenOptions()
     {
         HidePeek();
+        ShowSize();   // what the file takes now
         if (options.Visible) options.Activate();
         else options.Open(this);
     }
@@ -512,8 +524,8 @@ partial class MainForm : Window
         fade.Start();
     }
 
-    // Gives the status line the room of what it says, one line or two, and none while it is silent; the
-    // lists take what is left above it.
+    // Gives the status line the room of what it says, one line or two, and none while it is silent; above it the
+    // red bar, while it has something to say, as tall as its text; the lists take what is left.
     void FitStatus()
     {
         // Minimised, the window has no room and its controls are squeezed to nothing: placing them now would
@@ -523,8 +535,45 @@ partial class MainForm : Window
         int height = status.Text.Length == 0 ? 0 : TextRenderer.MeasureText(status.Text, status.Font, new Size(status.Width, 0),
             TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height > status.Font.Height * 3 / 2 ? full : full / 2;
         status.SetBounds(status.Left, bottom - height, status.Width, height);
-        foreach (Control column in new Control[] { recentCard, savedCard, divider }) column.Height = status.Top - gap - column.Top;
+        int end = status.Top - gap;   // where the lists end
+        if (bannerShown)
+        {
+            int padding = (int)(BannerPadding * Zoom);
+            int tall = TextRenderer.MeasureText(banner.Text, Font, new Size(status.Width - 2 * padding, 0), BannerFlags).Height + 2 * padding;
+            banner.SetBounds(status.Left, end - tall, status.Width, tall);
+            end = banner.Top - gap;
+        }
+        foreach (Control column in new Control[] { recentCard, savedCard, divider }) column.Height = end - column.Top;
         divider.Invalidate();   // its mark stays in the middle
+    }
+
+    // Shows the red bar while the copied pictures fill their room, and only while the history is on.
+    void ShowPictureRoom()
+    {
+        bool full = false;
+        if (historyBox.Checked) Change(delegate { full = clips.PicturesFull; });
+        if (full == bannerShown) return;
+        bannerShown = full;
+        banner.Visible = full;
+        FitStatus();
+    }
+
+    // The red bar: a rounded shape in a soft red with a red edge, the text in the colour of any other.
+    void DrawBanner(object sender, PaintEventArgs e)
+    {
+        Graphics g = e.Graphics;
+        g.Clear(Look.Back);   // around the rounded corners
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        Rectangle area = new Rectangle(0, 0, banner.Width - 1, banner.Height - 1);
+        using (GraphicsPath shape = Look.Rounded(area))
+        using (Brush fill = new SolidBrush(Look.Blend(Look.Back, Look.Red, BannerTint)))
+        using (Pen edge = new Pen(Look.Red))
+        {
+            g.FillPath(fill, shape);
+            g.DrawPath(edge, shape);
+        }
+        int padding = (int)(BannerPadding * Zoom);
+        TextRenderer.DrawText(g, banner.Text, Font, Rectangle.Inflate(area, -padding, 0), Look.Ink, BannerFlags);
     }
 
     void Tip(string text, params Control[] controls)

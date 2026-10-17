@@ -172,10 +172,121 @@ static class TestProgram
     {
         SqliteTest();
         ClipsTest();
+        RoomTest();
+        UpgradeTest();
         MigrationTest();
         BackupTest();
         MoveTest();
         return failed == 0 ? 0 : 1;
+    }
+
+    // A picture of noise, which PNG cannot shrink: pictures of the same size take about the same room.
+    static Bitmap Noise(int width, int seed)
+    {
+        Random random = new Random(seed);
+        Bitmap picture = new Bitmap(width, 40);
+        for (int x = 0; x < picture.Width; x++)
+            for (int y = 0; y < picture.Height; y++)
+                picture.SetPixel(x, y, Color.FromArgb(random.Next(256), random.Next(256), random.Next(256)));
+        return picture;
+    }
+
+    // The room of the copied pictures: beyond it the oldest go, the saved ones are neither counted nor touched, and
+    // the list is told when it is full.
+    static void RoomTest()
+    {
+        string path = System.IO.Path.Combine(sandbox, "room test.db");
+        long space = Clips.PictureSpace;
+        try
+        {
+            using (Clips clips = new Clips(path))
+            {
+                using (Bitmap picture = Noise(60, 60)) clips.AddPicture(picture);
+                long kept = clips.Copied(10, new string[0])[0].Id;
+                long one = clips.PictureBytes();
+                clips.Save(kept, "kept", 0);
+                Check(clips.PictureBytes() == 0 && !clips.PicturesFull, "a saved picture takes none of the room of the copied ones");
+                Clips.PictureSpace = one * 7 / 2;   // room for three
+                List<long> added = new List<long>();
+                for (int i = 0; i < 5; i++)
+                {
+                    using (Bitmap picture = Noise(60, i)) clips.AddPicture(picture);
+                    added.Add(clips.Copied(1, new string[0])[0].Id);
+                    System.Threading.Thread.Sleep(5);   // one after the other, also by the clock
+                }
+                List<Entry> left = clips.Copied(10, new string[0]);
+                Check(left.Count == 3 && left[0].Id == added[4] && left[2].Id == added[2] && clips.PictureBytes() <= Clips.PictureSpace,
+                    "beyond their room the oldest copied pictures go, the newest stay");
+                Check(clips.Saved().Exists(delegate(Entry e) { return e.Id == kept && e.Picture; }), "the saved picture stays");
+                Check(clips.PicturesFull, "and the list is told the room is full");
+                clips.Clean(0);
+                Check(clips.PictureBytes() == 0 && !clips.PicturesFull && clips.Size > 0, "emptied, it is not full any more");
+            }
+        }
+        finally
+        {
+            Clips.PictureSpace = space;
+            System.IO.File.Delete(path);
+        }
+    }
+
+    // A database of version 1, with the large columns in the middle of the rows, is brought up to date when it is
+    // opened: the same entries, the large columns at the end.
+    static void UpgradeTest()
+    {
+        string path = System.IO.Path.Combine(sandbox, "upgrade test.db");
+        List<string> before = new List<string>();
+        byte[] png;
+        long pictureId;
+        using (Clips clips = new Clips(path))
+        {
+            clips.AddText("copied text");
+            using (Bitmap picture = Noise(30, 7)) clips.AddPicture(picture);
+            pictureId = clips.Copied(10, new string[0])[0].Id;
+            clips.Pin(pictureId, true);
+            clips.Number(pictureId, 3);
+            png = clips.Png(pictureId);
+            clips.AddSaved("Bank", "secret", clips.MakeFolder("Work"), DateTime.Now);
+            clips.AddSaved(null, "without a name", 0, DateTime.Now);
+            foreach (Entry e in clips.Copied(10, new string[0])) before.Add(Describe(e));
+            foreach (Entry e in clips.Saved()) before.Add(Describe(e));
+            // Back to the layout of version 1.
+            clips.Data.Execute("DROP INDEX entries_recent; DROP INDEX entries_hash; ALTER TABLE entries RENAME TO entries_new;"
+                + "CREATE TABLE entries (id INTEGER PRIMARY KEY, kind INTEGER NOT NULL CHECK (kind IN (1, 2)),"
+                + " content BLOB NOT NULL, preview BLOB, width INTEGER, height INTEGER, folded TEXT, hash BLOB,"
+                + " copied_at INTEGER NOT NULL, saved INTEGER NOT NULL DEFAULT 0 CHECK (saved IN (0, 1)), saved_at INTEGER,"
+                + " name TEXT, name_key TEXT UNIQUE, folder_id INTEGER REFERENCES folders (id),"
+                + " pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)), number INTEGER UNIQUE CHECK (number BETWEEN 1 AND 9),"
+                + " CHECK (saved = 1 OR (name IS NULL AND folder_id IS NULL AND saved_at IS NULL)),"
+                + " CHECK (saved = 0 OR (pinned = 0 AND folded IS NULL AND hash IS NULL)),"
+                + " CHECK ((name IS NULL) = (name_key IS NULL)), CHECK ((kind = 2) = (preview IS NOT NULL)));"
+                + "INSERT INTO entries SELECT id, kind, content, preview, width, height, folded, hash, copied_at, saved, saved_at,"
+                + " name, name_key, folder_id, pinned, number FROM entries_new; DROP TABLE entries_new;"
+                + "CREATE INDEX entries_recent ON entries (saved, pinned DESC, copied_at DESC);"
+                + "CREATE INDEX entries_hash ON entries (hash) WHERE hash IS NOT NULL; PRAGMA user_version = 1;");
+        }
+        using (Clips clips = new Clips(path))
+        {
+            List<string> after = new List<string>();
+            foreach (Entry e in clips.Copied(10, new string[0])) after.Add(Describe(e));
+            foreach (Entry e in clips.Saved()) after.Add(Describe(e));
+            List<string> columns = new List<string>();
+            using (Statement rows = clips.Data.Prepare("PRAGMA table_info(entries)"))
+                while (rows.Step()) columns.Add(rows.Text(1));
+            Check(Equals(clips.Data.Value("PRAGMA user_version"), (long)Clips.SchemaVersion) && columns[columns.Count - 1] == "content"
+                && columns[columns.Count - 2] == "preview", "a database of version 1 is brought up to date, the large columns last");
+            Check(string.Join("|", after.ToArray()) == string.Join("|", before.ToArray()) && after.Count == 4
+                && System.Linq.Enumerable.SequenceEqual(clips.Png(pictureId), png), "with all its entries, as they were");
+            Check(Equals(clips.Data.Value("SELECT count(*) FROM sqlite_master WHERE name IN ('entries_recent', 'entries_hash')"), 2L)
+                && clips.Healthy(), "its indexes, and sound");
+        }
+        System.IO.File.Delete(path);
+    }
+
+    static string Describe(Entry e)
+    {
+        return e.Id + "," + e.Picture + "," + e.Text + "," + e.Name + "," + e.Saved + "," + e.FolderId + "," + e.Pinned + ","
+            + e.Number + "," + e.Width + "," + e.Time.Ticks;
     }
 
     // The database moved to another folder: all of it, the old file gone; never over another database; and when the
@@ -1046,6 +1157,7 @@ static class TestProgram
             Console.WriteLine("[{0}] the window of the options follows the theme before it first shows", followed
                 && options.BackColor == Look.Back && pages.BackColor == Look.Well ? "PASS" : "FAIL");
             options.Location = new Point(-30000, -30000);
+            typeof(MainForm).GetMethod("ShowSize", hidden).Invoke(form, null);   // as opening them does
             options.Show();
             Application.DoEvents();
             Save(options, path + "-options.png");
@@ -1096,6 +1208,19 @@ static class TestProgram
             status.Text = string.Format(Strings.DoneMany, 24) + string.Format(Strings.UnicodeMany, 2) + Strings.UnicodeHint;
             Application.DoEvents();
             Save(form, path + "-long.png");
+
+            // The red bar over the status line, when the copied pictures fill their room: as if it were tiny.
+            long space = Clips.PictureSpace;
+            Clips.PictureSpace = 1;
+            typeof(MainForm).GetMethod("ShowPictureRoom", hidden).Invoke(form, null);
+            Application.DoEvents();
+            Save(form, path + "-full.png");
+            Panel banner = (Panel)typeof(MainForm).GetField("banner", hidden).GetValue(form);
+            bool barred = banner.Visible && banner.Bottom <= status.Top && recent.Parent.Bottom <= banner.Top;
+            Clips.PictureSpace = space;
+            typeof(MainForm).GetMethod("ShowPictureRoom", hidden).Invoke(form, null);
+            Console.WriteLine("[{0}] a red bar between the lists and the status line says the room of the pictures is full, and goes",
+                barred && !banner.Visible ? "PASS" : "FAIL");
 
             status.Text = string.Format(Strings.Countdown, 3, string.Format(Strings.Quote, s.Remote));
             Application.DoEvents();

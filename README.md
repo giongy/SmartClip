@@ -62,7 +62,8 @@ window. A remote desktop client running full screen usually captures every short
 The main window has two columns. On the left, **Recently copied**: the things you copied while the program
 was running, texts and pictures (screenshots, for example), each picture with a small preview. They stay for the
 number of days set in the options, also across restarts; the column lists the 200 most recent, and the search
-reaches the rest. On the right, **Saved**: the texts you saved, which stay until you delete them. A name is
+reaches the rest. Copied pictures take at most 200 MB: beyond that the oldest go, even before their days are over,
+and a red bar under the list says the room is full. Saved pictures do not count. On the right, **Saved**: the texts you saved, which stay until you delete them. A name is
 optional: with one, the list shows only the name and the content stays hidden, which suits a password; without,
 the list shows the content.
 
@@ -154,7 +155,7 @@ on an option shows its full explanation.
 | Paste by number, with a button showing **Ctrl+Shift+1…9** | Enable the keys that paste the numbered entries. Only the keys of the numbers in use are taken from other programs. The button takes the keys to hold: press them with any digit; it says which of the nine another program already uses. Del goes back to Ctrl+Shift. |
 | Remember copied texts and pictures | Keep the copied texts and pictures in the list. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. Turning it off also deletes the history on disk. |
 | Days kept (0: today only) | For how many days, 0 to 365, what you copy stays in the history, also after the program closes, today being the first: with 0 only what was copied today stays. Entries kept at the top go too when their days are over; saved texts never do. |
-| Folder of the copied and saved entries, with the buttons **Change…** and **Default** | Where the database is kept, with the error log (by default `%LOCALAPPDATA%\SmartClip`). **Change…** moves it to the folder you choose, checking the copy before deleting the old file, or uses the database already there; **Default** brings it back. A folder synchronised online or on the network asks first. It is not a way to share the list between PCs: saved texts can be read only by this Windows user on this PC. If the folder chosen cannot be reached at the start, no empty list is made in its place: the list works in memory and says so. |
+| Folder of the copied and saved entries, with the buttons **Change…** and **Default** | Where the database is kept, with the error log (by default `%LOCALAPPDATA%\SmartClip`), and how much it takes, the copied pictures apart. **Change…** moves it to the folder you choose, checking the copy before deleting the old file, or uses the database already there; **Default** brings it back. A folder synchronised online or on the network asks first. It is not a way to share the list between PCs: saved texts can be read only by this Windows user on this PC. If the folder chosen cannot be reached at the start, no empty list is made in its place: the list works in memory and says so. |
 | Keep the last days when cleaning (0: none), with the button **Clean now…** | Deletes at once what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Entries kept at the top go too; saved texts are not touched. |
 | Language | English, Español, Français or Italiano. Changing it restarts SmartClip, which opens again at once on the options. |
 | Theme | Same as Windows (the mode it sets for apps, followed also when it changes), Light or Dark. Changes at once. |

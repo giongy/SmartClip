@@ -6,8 +6,8 @@ using System.Windows.Forms;
 // left. It stays open beside the main window, so that it can be read while trying things out.
 class HelpForm : Window
 {
-    const int Edge = 12, TextWidth = 520, TextHeight = 470;   // in pixels at 96 dpi
-    const int TopicsWidth = 190, Gap = 10;     // the column of the subjects, and the room between it and the text
+    const int Edge = 8, TextWidth = 520, TextHeight = 470;   // in pixels at 96 dpi; the margin as in the main window
+    const int TopicsWidth = 190, Gap = 8;      // the column of the subjects, and the room between it and the text
     const int TopicPadding = 14, TopicInset = 12;   // added to the text height to get a subject's row; text from its left
     const int TextPadding = 10;              // between the rounded edge and the text
     const int BulletIndent = 14, KeyColumn = 120;   // where the text of a point starts, and that of a key

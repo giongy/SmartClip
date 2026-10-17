@@ -20,29 +20,34 @@ class Folder
 // top of its column (pinned), and it is stored as it is, unencrypted. A saved entry never goes by itself, can be
 // in a folder and can have a name (the list then shows the name and hides the content); it is encrypted for the
 // Windows user (DPAPI), content and preview. A number from 1 to MainForm.MaxNumber chooses one entry of either
-// kind from anywhere. The database itself refuses what breaks these rules (the CHECKs of Schema).
+// kind from anywhere. The database itself refuses what breaks these rules (the CHECKs of EntriesSchema).
 //
 // Times are kept in UTC, in milliseconds since 1970; days are counted in local time. Used from one thread.
 sealed class Clips : IDisposable
 {
-    public const int SchemaVersion = 1;   // in PRAGMA user_version: a newer file is refused, an older one brought up to date
+    // In PRAGMA user_version: a newer file is refused, an older one brought up to date (Upgrade). 2: the large
+    // columns of the entries at the end of their rows.
+    public const int SchemaVersion = 2;
     const int TextKind = 1, PictureKind = 2;
-    static readonly string Schema =
+    // The most the copied pictures take, previews included: beyond it the oldest go (TrimPictures). The checks
+    // make it smaller.
+    public static long PictureSpace = 200L * 1024 * 1024;
+    const string FoldersSchema =
         "CREATE TABLE folders ("
         + " id INTEGER PRIMARY KEY,"
         + " parent_id INTEGER NOT NULL DEFAULT 0,"   // 0: outside them all, which is why it has no foreign key
         + " name TEXT NOT NULL,"
         + " name_key TEXT NOT NULL,"                 // the name as compared: see Key
         + " open INTEGER NOT NULL DEFAULT 1,"
-        + " UNIQUE (parent_id, name_key));"
-        + "CREATE TABLE entries ("
+        + " UNIQUE (parent_id, name_key));";
+    // The small columns first, the large ones last: SQLite keeps a large value in a chain of pages of its own, and
+    // reads through all of it to get to any column after it. So the list and the search read times, names and
+    // search texts without touching the pictures.
+    static readonly string EntriesSchema =
+        "CREATE TABLE entries ("
         + " id INTEGER PRIMARY KEY,"
         + " kind INTEGER NOT NULL CHECK (kind IN (" + TextKind + ", " + PictureKind + ")),"
-        + " content BLOB NOT NULL,"                  // the text in UTF-8, or the picture as PNG; encrypted if saved
-        + " preview BLOB,"                           // of a picture, as PNG; encrypted if saved
         + " width INTEGER, height INTEGER,"          // of a picture
-        + " folded TEXT,"                            // of a copied entry, as the search compares it (Texts.Fold)
-        + " hash BLOB,"                              // of a copied entry, to know it when it is copied again
         + " copied_at INTEGER NOT NULL,"
         + " saved INTEGER NOT NULL DEFAULT 0 CHECK (saved IN (0, 1)),"
         + " saved_at INTEGER,"                       // null if nobody knows (saved before the days were kept)
@@ -50,6 +55,10 @@ sealed class Clips : IDisposable
         + " folder_id INTEGER REFERENCES folders (id),"
         + " pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)),"
         + " number INTEGER UNIQUE CHECK (number BETWEEN 1 AND " + MainForm.MaxNumber + "),"
+        + " hash BLOB,"                              // of a copied entry, to know it when it is copied again
+        + " folded TEXT,"                            // of a copied entry, as the search compares it (Texts.Fold)
+        + " preview BLOB,"                           // of a picture, as PNG; encrypted if saved
+        + " content BLOB NOT NULL,"                  // the text in UTF-8, or the picture as PNG; encrypted if saved
         + " CHECK (saved = 1 OR (name IS NULL AND folder_id IS NULL AND saved_at IS NULL)),"
         // Nothing of a saved entry stays readable: its search text and its hash would give its content away.
         + " CHECK (saved = 0 OR (pinned = 0 AND folded IS NULL AND hash IS NULL)),"
@@ -57,6 +66,8 @@ sealed class Clips : IDisposable
         + " CHECK ((kind = " + PictureKind + ") = (preview IS NOT NULL)));"
         + "CREATE INDEX entries_recent ON entries (saved, pinned DESC, copied_at DESC);"
         + "CREATE INDEX entries_hash ON entries (hash) WHERE hash IS NOT NULL;";
+    const string EntryFields = "id, kind, width, height, copied_at, saved, saved_at, name, name_key, folder_id, pinned, number,"
+        + " hash, folded, preview, content";
     static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     // The columns an entry is read from, in the order Read takes them. The content of a copied picture is left
     // out: it is read when it is chosen (Png).
@@ -91,6 +102,7 @@ sealed class Clips : IDisposable
             if (version > SchemaVersion)
                 throw new InvalidDataException(string.Format(Strings.NewerDatabase, path, Program.AppName));
             if (version == 0) Create(fill);
+            else if (version < SchemaVersion) Upgrade(version);
         }
         catch (Exception)
         {
@@ -105,12 +117,31 @@ sealed class Clips : IDisposable
         data.Execute("PRAGMA auto_vacuum = INCREMENTAL");   // only before the first table: see Compact
         using (Transaction transaction = data.Begin())
         {
-            data.Execute(Schema);
+            data.Execute(FoldersSchema + EntriesSchema);
             data.Execute("PRAGMA user_version = " + SchemaVersion);
             if (fill != null) fill(this);
             transaction.Commit();
         }
         Created = true;
+    }
+
+    // A database written by an older version, brought up to date at once, all of it or nothing.
+    void Upgrade(long version)
+    {
+        using (Transaction transaction = data.Begin())
+        {
+            // 1 → 2: the same entries, the large columns at the end. The table is made anew under its name and
+            // filled from the old one.
+            if (version < 2)
+            {
+                data.Execute("DROP INDEX entries_recent; DROP INDEX entries_hash; ALTER TABLE entries RENAME TO entries_old;");
+                data.Execute(EntriesSchema);
+                data.Execute("INSERT INTO entries (" + EntryFields + ") SELECT " + EntryFields + " FROM entries_old; DROP TABLE entries_old;");
+            }
+            data.Execute("PRAGMA user_version = " + SchemaVersion);
+            transaction.Commit();
+        }
+        Compact();   // the room of the old table back to the disk
     }
 
     // The database did not exist and was made now.
@@ -210,6 +241,62 @@ sealed class Clips : IDisposable
     {
         pruned = DateTime.Today;
         Drop(DateTime.Today.AddDays(-KeepDays));
+        TrimPictures();   // the room may have been made smaller, or the pictures come from an older version
+    }
+
+    // --- Room ---
+
+    // How many bytes the copied pictures take, previews included. Their lengths are written at the start of
+    // each row: the pictures themselves are not read.
+    public long PictureBytes()
+    {
+        return (long)data.Value("SELECT coalesce(sum(length(content) + length(preview)), 0) FROM entries"
+            + " WHERE saved = 0 AND kind = ?1", PictureKind);
+    }
+
+    // The copied pictures fill their room: one more as large as the largest of them would not fit, so the oldest
+    // go as new ones come.
+    public bool PicturesFull
+    {
+        get
+        {
+            using (Statement total = data.Prepare("SELECT coalesce(sum(size), 0), coalesce(max(size), 0) FROM (SELECT"
+                + " length(content) + length(preview) AS size FROM entries WHERE saved = 0 AND kind = ?1)", PictureKind))
+            {
+                total.Step();
+                return total.Long(1) > 0 && total.Long(0) + total.Long(1) > PictureSpace;
+            }
+        }
+    }
+
+    // Removes the oldest copied pictures until those left fit in PictureSpace, pinned or numbered as they may
+    // be, as their days would. The saved ones are never counted nor touched.
+    void TrimPictures()
+    {
+        long over = PictureBytes() - PictureSpace;
+        if (over <= 0) return;
+        List<long> oldest = new List<long>();
+        using (Statement rows = data.Prepare("SELECT id, length(content) + length(preview) FROM entries"
+            + " WHERE saved = 0 AND kind = ?1 ORDER BY copied_at, id", PictureKind))
+        {
+            while (over > 0 && rows.Step())
+            {
+                oldest.Add(rows.Long(0));
+                over -= rows.Long(1);
+            }
+        }
+        using (Transaction transaction = data.Begin())
+        {
+            foreach (long id in oldest) data.Execute("DELETE FROM entries WHERE id = ?1", id);
+            transaction.Commit();
+        }
+        Compact();
+    }
+
+    // How large the file of the database is, as SQLite counts it.
+    public long Size
+    {
+        get { return (long)data.Value("PRAGMA page_count") * (long)data.Value("PRAGMA page_size"); }
     }
 
     // Asked by the user: removes at once what was copied before the last 'days' days, today being the first;
@@ -265,6 +352,7 @@ sealed class Clips : IDisposable
         using (entry.Preview)
             Insert(PictureKind, entry.Png, Entry.ToPng(entry.Preview), entry.Width, entry.Height, PictureWords(entry.Width, entry.Height),
                 Hash(entry.Png), DateTime.Now, false);
+        TrimPictures();
     }
 
     // What the search finds a picture by: its size, as the list writes it.

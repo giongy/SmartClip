@@ -34,6 +34,8 @@ static partial class Strings
             + "y 11 (winsqlite3.dll), y este Windows no lo tiene.";
         SqliteTooOld = "{0} no puede iniciarse: necesita SQLite {1} o posterior, que forma parte de Windows 10 y 11, "
             + "y este Windows tiene la versión {2}. Actualizar Windows lo soluciona.";
+        PicturesFull = "El espacio para las imágenes copiadas ({0}) está lleno: las más antiguas se borran, una a una, a "
+            + "medida que copias otras nuevas.";
 
         Open = "Abrir"; Exit = "Salir"; Pause = "Pausar la captura"; Resume = "Reanudar la captura";
         ShowContent = "Mostrar el contenido"; MoveTo = "Mover a"; NewFolder = "Nueva carpeta…";
@@ -169,6 +171,7 @@ static partial class Strings
         FolderLink = "Abrir la carpeta de los datos";
         DataFolderOption = "Carpeta de las entradas copiadas y guardadas:";
         ChangeFolderButton = "Cambiar…"; DefaultFolderButton = "Predeterminada";
+        DatabaseSize = "Ocupa {0}; imágenes copiadas: {1} de {2}.";
         ChooseDataFolder = "La carpeta en la que {0} guarda lo que copias y guardas.";
         AskUseExisting = "En {0} ya hay una lista de {1}.\n\n¿Quieres usar esa? La tuya se queda donde está, tal como está.";
         AskSyncedFolder = "{0} parece una carpeta sincronizada en línea o en red.\n\nLa sincronización puede bloquear o "
@@ -420,6 +423,9 @@ static partial class Strings
                 + "textos guardados solo se leen en este PC. Si al iniciar no se puede acceder a la carpeta elegida, la "
                 + "lista trabaja en memoria y lo dice.",
             "- Con 0 días solo queda lo que copiaste hoy.",
+            "- Las imágenes copiadas ocupan como máximo " + Size(Clips.PictureSpace) + ": por encima, las más antiguas se "
+                + "van aunque no hayan vencido sus días, y una barra roja bajo la lista lo dice. Las imágenes guardadas no "
+                + "cuentan.",
             "- Lo que los gestores de contraseñas marcan como privado no se recuerda.",
             "- También las entradas arriba se van cuando vencen sus días: lo que deba quedarse, guárdalo.",
             "- En las opciones, «" + CleanButton + "» borra enseguida lo que copiaste antes de los últimos días que "

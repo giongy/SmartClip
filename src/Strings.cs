@@ -36,9 +36,18 @@ static partial class Strings
     // --- Keys, as the keyboards of each language label them ---
     public static string ShiftName = "Shift", DeleteKeyName = "Del", EnterKeyName = "Enter", ArrowsName = "Up / Down";
 
-    // --- Dates and quotes ---
+    // --- Dates, quotes and sizes ---
     public static string DayFormat = "d MMM", YearDayFormat = "d MMM yy";   // a day in a row of the list
     public static string Quote = "“{0}”";
+    public static string Megabytes = "{0} MB", Kilobytes = "{0} KB";
+
+    // A size on disk as this language writes it: "12.4 MB", "830 KB".
+    public static string Size(long bytes)
+    {
+        const double Kilo = 1024, Mega = Kilo * Kilo;
+        return bytes >= Mega ? string.Format(Megabytes, (bytes / Mega).ToString("0.#", Culture))
+            : string.Format(Kilobytes, Math.Ceiling(bytes / Kilo).ToString(Culture));
+    }
 
     // --- Main window ---
     public static string TypeButton = "Type clipboard";
@@ -66,6 +75,8 @@ static partial class Strings
         + "Windows 10 and 11 (winsqlite3.dll), and this Windows does not have it.";
     public static string SqliteTooOld = "{0} cannot start: it needs SQLite {1} or later, which is part of Windows 10 and 11, "
         + "and this Windows has version {2}. Updating Windows solves it.";
+    public static string PicturesFull = "The room for copied pictures ({0}) is full: the oldest are deleted, one at a time, "
+        + "as you copy new ones.";
 
     // --- Menus ---
     public static string Open = "Open", Exit = "Exit", Pause = "Pause capture", Resume = "Resume capture";
@@ -210,6 +221,7 @@ static partial class Strings
     public static string FolderLink = "Open the data folder";
     public static string DataFolderOption = "Folder of the copied and saved entries:";
     public static string ChangeFolderButton = "Change…", DefaultFolderButton = "Default";
+    public static string DatabaseSize = "Takes {0}; copied pictures: {1} of {2}.";
     public static string ChooseDataFolder = "The folder where {0} keeps what you copy and save.";
     public static string AskUseExisting = "{0} already holds a list of {1}.\n\nUse that one? Yours stays where it is, as it is.";
     public static string AskSyncedFolder = "{0} looks like a folder synchronised online or on the network.\n\nThe "
@@ -455,6 +467,8 @@ static partial class Strings
                 + "between PCs: saved texts can be read only on this PC. If the folder chosen cannot be reached at the "
                 + "start, the list works in memory and says so.",
             "- With 0 days only what you copied today stays.",
+            "- Copied pictures take at most " + Size(Clips.PictureSpace) + ": beyond that the oldest go, even before their "
+                + "days are over, and a red bar under the list says so. Saved pictures do not count.",
             "- What password managers mark as private is not remembered.",
             "- Entries kept at the top go when their days are over too: what is to stay, save it.",
             "- In the options, “" + CleanButton + "” deletes at once what you copied before the last days written "

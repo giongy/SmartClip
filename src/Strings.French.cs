@@ -8,6 +8,7 @@ static partial class Strings
         ShiftName = "Maj"; DeleteKeyName = "Suppr"; EnterKeyName = "Entrée"; ArrowsName = "Haut / Bas";
         DayFormat = "dd/MM"; YearDayFormat = "dd/MM/yy";
         Quote = "« {0} »";
+        Megabytes = "{0} Mo"; Kilobytes = "{0} Ko";
 
         TypeButton = "Saisir le presse-papiers";
         RecentTitle = "Copiés récemment"; SavedTitle = "Enregistrés"; PausedSuffix = " (en pause)";
@@ -35,6 +36,8 @@ static partial class Strings
             + "partie de Windows 10 et 11 (winsqlite3.dll), et ce Windows ne l'a pas.";
         SqliteTooOld = "{0} ne peut pas démarrer : il a besoin de SQLite {1} ou plus récent, qui fait partie de Windows 10 "
             + "et 11, et ce Windows a la version {2}. Mettre Windows à jour résout le problème.";
+        PicturesFull = "L'espace des images copiées ({0}) est plein : les plus anciennes sont supprimées, une à une, au fur "
+            + "et à mesure que vous en copiez de nouvelles.";
 
         Open = "Ouvrir"; Exit = "Quitter"; Pause = "Suspendre la capture"; Resume = "Reprendre la capture";
         ShowContent = "Afficher le contenu"; MoveTo = "Déplacer vers"; NewFolder = "Nouveau dossier…";
@@ -175,6 +178,7 @@ static partial class Strings
         FolderLink = "Ouvrir le dossier des données";
         DataFolderOption = "Dossier des éléments copiés et enregistrés :";
         ChangeFolderButton = "Changer…"; DefaultFolderButton = "Par défaut";
+        DatabaseSize = "Occupe {0} ; images copiées : {1} sur {2}.";
         ChooseDataFolder = "Le dossier où {0} garde ce que vous copiez et enregistrez.";
         AskUseExisting = "{0} contient déjà une liste de {1}.\n\nUtiliser celle-ci ? La vôtre reste où elle est, telle quelle.";
         AskSyncedFolder = "{0} semble être un dossier synchronisé en ligne ou sur le réseau.\n\nLa synchronisation peut "
@@ -431,6 +435,9 @@ static partial class Strings
                 + "de partager la liste entre PC : les textes enregistrés ne se lisent que sur ce PC. Si le dossier "
                 + "choisi est inaccessible au démarrage, la liste travaille en mémoire et le dit.",
             "- Avec 0 jour, seul ce que vous avez copié aujourd'hui reste.",
+            "- Les images copiées occupent au maximum " + Size(Clips.PictureSpace) + " : au-delà, les plus anciennes "
+                + "partent même avant la fin de leurs jours, et une barre rouge sous la liste le signale. Les images "
+                + "enregistrées ne comptent pas.",
             "- Ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé.",
             "- Les éléments en haut partent aussi quand leurs jours expirent : ce qui doit rester, enregistrez-le.",
             "- Dans les options, « " + CleanButton + " » efface aussitôt ce que vous avez copié avant les derniers jours "

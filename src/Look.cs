@@ -251,7 +251,7 @@ static class Look
     const int FramePadding = 6;   // between the edge of a framed text box and its text
     const int Radius = 6;         // of the rounded corners
     const float MarkShare = 0.45f;   // how much of the height of a selected row its mark takes
-    const float StripeShare = 0.5f; // how far every other row of the copied entries goes towards Soft
+    const float StripeShare = 0.9f; // how far every other row of the copied entries goes towards Soft
     const string ModernFont = "Segoe UI Variable Text";   // what Windows 11 writes its own windows in
     // Its heavier face, for what stands out in a list, and the one of the titles, larger: Windows writes the name
     // of that one cut at 31 letters. Where they are missing (Windows 10), the semibold face of the family.

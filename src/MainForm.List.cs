@@ -317,6 +317,9 @@ partial class MainForm
 
         recentCount.Text = recentList.Items.Count == copied ? copied.ToString()
             : string.Format(Strings.CountOf, recentList.Items.Count, copied);
+        // What the copied pictures take may have changed: in the red bar, and in the options if they are open.
+        ShowPictureRoom();
+        if (options.Visible) ShowSize();
         int found = 0;
         foreach (Entry entry in savedList.Items) if (!entry.IsGroup) found++;
         savedCount.Text = searching && found != saved ? string.Format(Strings.CountOf, found, saved) : saved.ToString();

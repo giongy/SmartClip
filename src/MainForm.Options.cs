@@ -65,11 +65,16 @@ partial class MainForm
         folderPath.ForeColor = Look.Muted;
         page.Controls.Add(folderPath);
         top += RowHeight;
+        databaseSize.SetBounds(0, top, PaneWidth, RowHeight);
+        databaseSize.AutoEllipsis = true;
+        databaseSize.ForeColor = Look.Muted;
+        page.Controls.Add(databaseSize);
+        top += RowHeight;
         PlaceButton(changeFolderButton, Strings.ChangeFolderButton, ChangeDataFolder, 0, ref top);
         top -= NumberRow;
         PlaceButton(defaultFolderButton, Strings.DefaultFolderButton, delegate { MoveDataFolder(""); }, OptionButtonWidth + Gap, ref top);
         LinkLabel folderLink = PlaceLink(Strings.FolderLink, OpenFolder, ref top);
-        folderTipped = new Control[] { folderLabel, folderPath, changeFolderButton, defaultFolderButton, folderLink };
+        folderTipped = new Control[] { folderLabel, folderPath, databaseSize, changeFolderButton, defaultFolderButton, folderLink };
         // Not a setting: what to spare when the button below is pressed.
         Label cleanLabel = PlaceNumber(cleanBox, Strings.SpareOption, Texts.MaxKeepDays, delegate { Spared = Spared; }, ref top);
         Spared = 0;
@@ -397,6 +402,17 @@ partial class MainForm
         folderPath.Text = DataFolder;
         defaultFolderButton.Enabled = dataFolder.Length > 0;
         Tip(string.Format(Strings.DataFolderTip, DataFolder, Path.GetDirectoryName(Clips.DefaultFile)), folderTipped);
+        ShowSize();
+    }
+
+    // Writes how much the database takes, and how much of it the copied pictures, beside their room.
+    void ShowSize()
+    {
+        Change(delegate
+        {
+            databaseSize.Text = string.Format(Strings.DatabaseSize, Strings.Size(clips.Size), Strings.Size(clips.PictureBytes()),
+                Strings.Size(Clips.PictureSpace));
+        });
     }
 
     // Lets the user choose another folder for the database, and takes it there.
