@@ -133,6 +133,25 @@ class RowList : ListBox
             g.FillRectangle(back, 0, top, ClientSize.Width, ClientSize.Height - top);
     }
 
+    // Each row is drawn out of sight and then put on the screen at once. Drawn there directly, it would show its
+    // background alone for an instant before the rest, at every step of the light under the pointer: a flicker.
+    // Out of sight the row starts at the corner: the text of TextRenderer would not follow a moved origin.
+    protected override void OnDrawItem(DrawItemEventArgs e)
+    {
+        if (e.Index < 0 || e.Bounds.Width <= 0 || e.Bounds.Height <= 0)
+        {
+            base.OnDrawItem(e);
+            return;
+        }
+        using (BufferedGraphics buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, e.Bounds))
+        {
+            buffer.Graphics.ResetTransform();
+            base.OnDrawItem(new DrawItemEventArgs(buffer.Graphics, e.Font, new Rectangle(Point.Empty, e.Bounds.Size), e.Index,
+                e.State, e.ForeColor, e.BackColor));
+            buffer.Render(e.Graphics);
+        }
+    }
+
     // The row at a point, or -1: IndexFromPoint answers with the nearest one, also below the last.
     public int RowAt(Point where)
     {

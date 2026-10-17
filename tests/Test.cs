@@ -1094,6 +1094,21 @@ static class TestProgram
             Check(Describe(Rich.FromBox(box, box.Font, box.Ink)) == Describe(shown) && box.Text == Rich.TextOf(shown),
                 "runs shown in an edit box are read back from it as they were");
         }
+        // A long text is read a piece at a time, not a character at a time: the same runs, at once.
+        using (RichBox box = NewBox())
+        {
+            List<Run> pieces = new List<Run>();
+            for (int i = 0; i < 40; i++)
+            {
+                pieces.Add(NewRun(new string('a', 500) + "\n" + new string('b', 300), null, 0, FontStyle.Regular, Color.Empty));
+                pieces.Add(NewRun("word" + i, i % 2 == 0 ? "Georgia" : null, i % 3 == 0 ? 16 : 0, FontStyle.Bold, Color.Empty));
+            }
+            box.Rtf = Rich.ToRtf(pieces, box.Font, box.Ink);
+            System.Diagnostics.Stopwatch clock = System.Diagnostics.Stopwatch.StartNew();
+            List<Run> read = Rich.FromBox(box, box.Font, box.Ink);
+            Check(Describe(read) == Describe(pieces) && clock.ElapsedMilliseconds < 2000,
+                "a long formatted text is read back as it was, in " + clock.ElapsedMilliseconds + " ms");
+        }
         using (RichBox box = NewBox())
         {
             box.Text = "hello world";

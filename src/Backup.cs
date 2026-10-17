@@ -120,7 +120,7 @@ static class Backup
         foreach (BackupWords words in Words.Values)
         {
             string field = name(words);
-            if (line.StartsWith(field)) return line.Substring(field.Length).Trim();
+            if (line.StartsWith(field, StringComparison.Ordinal)) return line.Substring(field.Length).Trim();
         }
         return null;
     }
@@ -161,7 +161,7 @@ static class Backup
                 Entry saved = new Entry(name, content, time);
                 saved.Saved = true;
                 saved.Group = Texts.CleanPath(group);   // a folder inside another is its path, as the list writes it
-                if (html != null && string.Join("", html.ToArray()).Trim().Length > 0) saved.Html = string.Join("\r\n", html.ToArray());
+                if (html != null && string.Concat(html).Trim().Length > 0) saved.Html = string.Join("\r\n", html);
                 entries.Add(saved);
             }
             else if (mark == CopiedMark && content.Trim().Length > 0)
@@ -180,16 +180,17 @@ static class Backup
         foreach (string line in lines)
         {
             string value;
-            if (into != null && line.StartsWith(Indent))
+            int opens;
+            if (into != null && line.StartsWith(Indent, StringComparison.Ordinal))
             {
                 for (; blanks > 0; blanks--) into.Add("");
                 into.Add(line.Substring(Indent.Length));
             }
             else if (into != null && line.Length == 0) blanks++;
-            else if (MarkOf(line) != NoMark)
+            else if ((opens = MarkOf(line)) != NoMark)
             {
                 close();
-                mark = MarkOf(line);
+                mark = opens;
             }
             else if (mark == NoMark || text != null) continue;   // the heading of the file, or something after a text
             else if ((value = Field(line, delegate(BackupWords words) { return words.Name; })) != null) name = value;

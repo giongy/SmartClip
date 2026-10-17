@@ -248,7 +248,8 @@ condiviso su GitHub).
   numero. Si scartano le copie che i gestori di password segnano come riservate (`Texts.IsPrivate`). L'opzione
   spenta cancella tutti i copiati (`ClearCopied`). L'elenco ne chiede al database solo `MaxShown`, già filtrati
   dalla ricerca (`Clips.Copied`, con `instr` sul testo per la ricerca `folded`): a ogni copia si rileggono solo i
-  copiati (`ReloadCopied`), mai i salvati.
+  copiati (`ReloadCopied`), mai i salvati, e solo se la copia è entrata (`Texts.Remember` dice se qualcosa è
+  cambiato: non con la cronologia spenta o in pausa, né per una copia riservata o fatta dall'elenco).
 - Una voce copiata si può tenere in cima alla colonna **per un po'** (`Entry.Pinned`, la freccia, voluta
   dall'utente al posto della stellina il 17/10/2026): freccia all'estremità destra della riga (`PinArea`, `OnPin`:
   lì il clic non sceglie la voce, `Sign.Up`), menu del tasto destro e Ctrl+P, tutti in `TogglePin`. **Scade come
@@ -262,7 +263,8 @@ condiviso su GitHub).
   finestra (`PasteNumber`, `Typer.Paste`, che aspetta il rilascio dei tasti e manda Ctrl più il V della tastiera
   di quella finestra come scancode). Voluto dall'utente: la prima versione, Ctrl+D tenendo Ctrl e poi la cifra
   nell'elenco, apriva la finestra e non incollava, ed è stata scartata. È l'unico caso in cui il programma
-  incolla da solo. Si registrano solo i numeri che qualche voce ha (`HookNumbers`, rifatto a ogni `Reload` e da
+  incolla da solo. Si registrano solo i numeri che qualche voce ha (`HookNumbers`, con una sola domanda al database,
+  `Clips.Numbers`, perché passa a ogni copia; rifatto a ogni `Reload` e da
   `UpdateHotkeys`; id `NumberId` + numero), così gli altri restano agli altri programmi; quelli che un altro
   programma ha già si dicono nella riga di stato una volta (`numbersTaken`, azzerato quando l'utente assegna un
   numero). I tasti si cambiano come le altre scorciatoie (`AwaitKeys` con `quickBox`, `TakeQuickKeys`): si
@@ -284,6 +286,9 @@ condiviso su GitHub).
 - Anche le immagini copiate entrano nel database, compresse in PNG, con una miniatura; il loro `Text` è la
   descrizione che si vede, e la ricerca le trova per misura. Se negli appunti c'è anche testo vince il testo.
   In memoria resta solo la miniatura: il PNG si legge quando serve (`Entry.LoadPng` → `PngSource` → `Clips.Png`).
+  Le miniature dei copiati elencati restano decodificate da una ricarica all'altra (`Clips.previews`, per id: senza,
+  ogni copia ridecodificava fino a 200 PNG e lasciava le bitmap vecchie alla memoria nativa); `Insert` toglie l'id
+  della riga nuova, perché SQLite può riusare quello dell'ultima cancellata.
   La stessa copia annunciata più volte da Windows è la stessa riga (impronta del PNG).
   Le immagini copiate hanno un tetto (voluto dall'utente il 17/10/2026, «non più di 200 MB»): `Clips.PictureSpace`,
   PNG e miniature contati con `length()` senza leggerli (`PictureBytes`). Oltre il tetto `TrimPictures` toglie le
@@ -338,7 +343,10 @@ condiviso su GitHub).
   dai `Run` e l'RTF si lascia (scriverlo dai `Run` vorrebbe un carattere predefinito che non c'è). Ciò che non ha
   carattere, dimensione o colore propri non ne ha neanche nell'HTML: prende quelli di dove si incolla. La dimensione
   predefinita della casella si misura passando dal suo RTF (`SizeIn`: la casella arrotonda ai pixel, 11 pt diventava
-  11,5) e la gomma copia il formato predefinito della casella (`SCF_DEFAULT`). Esportati, l'HTML sta prima del testo
+  11,5) e la gomma copia il formato predefinito della casella (`SCF_DEFAULT`). La casella si legge a pezzi (`Walk`,
+  `Stretch`): di una selezione `EM_GETCHARFORMAT` dice ciò che è uguale in tutta, quindi ogni pezzo si allunga
+  raddoppiando e poi dimezzando (letto un carattere alla volta, un testo di 32.000 caratteri prendeva mezzo
+  secondo, ora 25 ms: il controllo è in `RichTest`). Esportati, l'HTML sta prima del testo
   (`HTML:`), così le versioni vecchie lo saltano; l'importazione lo riprende, senza RTF.
 - I testi salvati stanno anche nel menu dell'icona del tray (voluto dall'utente: «prenderli senza aprire
   l'app»), dopo «Apri», ogni cartella un sottomenu, aperta o chiusa che sia: `ShowSaved`, rifatto a ogni
@@ -577,6 +585,11 @@ condiviso su GitHub).
   si riscrivono in `NameHotkeys`. Impostazioni `HotkeyKeys` e `PickKeys`.
 - `TextRenderer.MeasureText` con `EndEllipsis` e nessuna larghezza proposta risponde la larghezza dei soli
   puntini: per sapere se un testo sta nella riga (`Cut`) si misura senza.
+- Le righe degli elenchi disegnate direttamente sullo schermo sfarfallavano a ogni passo della luce sotto il
+  puntatore (prima lo sfondo, poi il resto; notato dall'utente sulle cartelle dei salvati il 17/10/2026): `RowList`
+  le disegna in un `BufferedGraphics` e le copia in un colpo (`OnDrawItem`). Il buffer sposta l'origine con una
+  trasformazione che `TextRenderer` (GDI) ignora: senza `ResetTransform` e la riga passata con l'origine a zero, testo
+  e icone finivano fuori dal buffer. Per questo chi disegna una riga deve misurare tutto da `e.Bounds`.
 - `ListBox.IndexFromPoint` risponde la riga più vicina anche sotto l'ultima: per sapere su quale riga è il
   puntatore c'è `RowAt` (prima un clic nel vuoto sceglieva di nuovo la voce selezionata).
 - Nell'elenco Invio agisce al rilascio (`OnKeyUp`, con `enterDown`): alla pressione il tasto tenuto giù

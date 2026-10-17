@@ -287,16 +287,17 @@ class EditForm : Window
     void Choose(string group)
     {
         Group = group;
-        if (group == null)
+        if (group == null || groupButton.Parent == null)   // or there are no folders, and no button
         {
             groupButton.Text = outside;
             return;
         }
         string shown = Texts.Display(group);
+        int padding = (int)(ButtonPadding * Look.Zoom);   // the button has its scale already, the constant not
         for (string inner = group; ; )
         {
             groupButton.Text = within + shown;
-            if (TextRenderer.MeasureText(groupButton.Text, Font).Width + ButtonPadding <= groupButton.Width) return;
+            if (TextRenderer.MeasureText(groupButton.Text, Font).Width + padding <= groupButton.Width) return;
             int at = inner.IndexOf(Texts.Separator);
             if (at < 0) return;   // only its own name is left, and that is short enough by itself
             inner = inner.Substring(at + 1);

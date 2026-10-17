@@ -36,7 +36,7 @@ class HelpForm : Window
         topics.IntegralHeight = false;
         topics.DrawMode = DrawMode.OwnerDrawFixed;
         for (int i = 0; i < Lines.Length; i++)
-            if (Lines[i].StartsWith(Heading)) topics.Items.Add(i);
+            if (Is(Lines[i], Heading)) topics.Items.Add(i);
         topics.SetBounds(Edge, Edge, TopicsWidth, TextHeight);
         Look.Field(topics);
         Panel topicsCard = Look.Wrap(topics, TextPadding / 2);
@@ -107,19 +107,20 @@ class HelpForm : Window
         {
             Font strong = Look.StrongFont;
             Add(Lines[start].Substring(Heading.Length), Look.TitleFont, 0, 0);
-            for (int i = start + 1; i < Lines.Length && !Lines[i].StartsWith(Heading); i++)
+            for (int i = start + 1; i < Lines.Length && !Is(Lines[i], Heading); i++)
             {
                 string line = Lines[i];
+                bool point = Is(line, Bullet);
+                int end = line.IndexOf(KeyEnd);   // of the key, in a line that explains one
                 // Some air under the heading and before a paragraph; a list stays with the paragraph that opens it.
-                if (i == start + 1 || !line.StartsWith(Bullet) && line.IndexOf(KeyEnd) < 0) Add("", air, 0, 0);
-                if (line.StartsWith(Bullet))
+                if (i == start + 1 || !point && end < 0) Add("", air, 0, 0);
+                if (point)
                 {
                     Add("•\t" + line.Substring(Bullet.Length), Font, bullet, bullet);
                 }
-                else if (line.IndexOf(KeyEnd) >= 0)
+                else if (end >= 0)
                 {
                     // The key in bold, what it does in a column of its own.
-                    int end = line.IndexOf(KeyEnd);
                     Add(line.Substring(0, end + 1), strong, key, key, false);
                     Add(line.Substring(end + 1), Font, key, key);
                 }
@@ -130,6 +131,12 @@ class HelpForm : Window
             }
         }
         text.Select(0, 0);
+    }
+
+    // Whether a line of the guide is of the kind its start says.
+    static bool Is(string line, string kind)
+    {
+        return line.StartsWith(kind, StringComparison.Ordinal);
     }
 
     void Add(string words, Font font, int tab, int hanging)

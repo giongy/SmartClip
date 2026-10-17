@@ -150,7 +150,7 @@ partial class MainForm
         savedList.MouseDown += delegate(object sender, MouseEventArgs e)
         {
             int index = savedList.RowAt(e.Location);
-            grabbed =e.Button == MouseButtons.Left && index >= 0 ? (Entry)savedList.Items[index] : null;
+            grabbed = e.Button == MouseButtons.Left && index >= 0 ? (Entry)savedList.Items[index] : null;
             grabbedAt = e.Location;
         };
         savedList.MouseUp += delegate { grabbed = null; };
@@ -241,8 +241,8 @@ partial class MainForm
 
     void Filter()
     {
-        // The lists are refilled at every clipboard change, also the one caused by choosing an entry:
-        // the selection must stay on the same entry, not jump back to the first.
+        // The lists are refilled at every copy remembered, and after anything done to an entry: the selection
+        // must stay on the same entry, not jump back to the first.
         Entry selected = Selected;
         HidePeek();   // the row it belongs to may be about to move
         string[] words = Texts.Words(search.Text);   // taken from the box once, not for each entry

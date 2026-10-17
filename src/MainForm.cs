@@ -25,14 +25,14 @@ partial class MainForm : Window
     static Keys quickKeys = DefaultQuickKeys;
     const int NumberId = 10;   // the hotkey of each number is this plus the number
 
-    public const int MinDelay = 1, MaxDelay = 30;             // limits, in seconds, of the wait before typing
+    public const int MinDelay = 1, MaxDelay = 30;      // limits, in seconds, of the wait before typing
     const int DefaultDelay = 1;                        // wait proposed until the user picks another one
-    public const int ArmedSeconds = 15;                       // time allowed to bring the target window to the foreground
+    public const int ArmedSeconds = 15;                // time allowed to bring the target window to the foreground
     const int PollMs = 100;                            // how often the foreground window is checked again
     const int KeyDelayMs = 15, SlowKeyDelayMs = 60;    // pause after each key press or release
-    public const int UnusualLength = 100;                     // a longer text is unlikely to be a password
+    public const int UnusualLength = 100;              // a longer text is unlikely to be a password
     const int MaxTitleLength = 45;                     // beyond this, a window title or a list entry is truncated in the status
-    const int Edge = 8, ContentWidth = 620;         // margin and usable width of the window, in pixels at 96 dpi
+    const int Edge = 8, ContentWidth = 620;            // margin and usable width of the window, in pixels at 96 dpi
     const int AreaHeight = 437;                        // of the lists, and of the pages of the options in their window
     // The options are in pages, one per category, chosen from a column on the left as the subjects of the guide.
     const int NavWidth = 170, NavGap = 20, PaneWidth = ContentWidth - NavWidth - NavGap;
@@ -48,18 +48,18 @@ partial class MainForm : Window
     const int NumberWidth = 56, NumberHeight = 26;     // the box of an option that is a number
     const int NumberRow = 37;                          // distance between such an option and the next one
     const int OptionButtonWidth = 130;                 // a button among the options
-    public const int MaxShown = 200;                          // copied entries listed at once
+    public const int MaxShown = 200;                   // copied entries listed at once
     const int SearchHeight = 30, GlyphWidth = 20;      // the search box, and the magnifying glass on its left
-    const int ListPadding = 3;                        // between the rounded edge of a column and its list
+    const int ListPadding = 3;                         // between the rounded edge of a column and its list
     const int CountWidth = 120;                        // room for the number of entries, right of a column title
     const int GroupIndent = 14;                        // of a saved text under its folder
-    const int RowInset = 12, TimeGap = 8;             // of the text in a row, and around the time on its right
+    const int RowInset = 12, TimeGap = 8;              // of the text in a row, and around the time on its right
     const int NumberPadding = 2;                       // added to the text height for the width of the frame of a number
-    const int Gap = 5;                                // between neighbouring controls
+    const int Gap = 5;                                 // between neighbouring controls
     const int BannerPadding = 8;                       // around the text of the red bar under the lists
     const float BannerTint = 0.18f;                    // how far its background goes from the window's towards red
     const int ActionHeight = ButtonHeight, ActionWidth = 92;   // the buttons in the bottom row
-    const int TypeWidth = 160;                        // the button that types the clipboard, in the same row
+    const int TypeWidth = 160;                         // the button that types the clipboard, in the same row
     const int StatusHeight = 34;                       // two lines of text: the most the status line takes
     const int FadeMs = 6000;                           // how long a passing message stays in the status line
     const int RestMs = 600;                            // how long the pointer rests on a row before it is shown whole
@@ -467,7 +467,7 @@ partial class MainForm : Window
         options.Hide();
     }
 
-    // Runs something that touches the saved texts; if the registry refuses it, says why and returns false.
+    // Runs something that may fail (the database, the registry, the clipboard): if it does, says why and returns false.
     bool Change(Action change)
     {
         try
@@ -732,9 +732,10 @@ partial class MainForm : Window
         else if (m.Msg == Native.WM_CLIPBOARDUPDATE)
         {
             ShowClipboardState();
-            // Only the copied entries can have changed: the saved ones are not read again.
-            if (historyBox.Checked && !paused && Native.GetClipboardSequenceNumber() != ownCopy) Texts.Remember(clips);
-            ReloadCopied();
+            // Only the copied entries can have changed, and only if something was remembered: the saved ones are
+            // not read again, nor the copied ones after a copy that is left out (paused, private, chosen in the list).
+            if (historyBox.Checked && !paused && Native.GetClipboardSequenceNumber() != ownCopy && Texts.Remember(clips))
+                ReloadCopied();
         }
         base.WndProc(ref m);
     }

@@ -19,9 +19,9 @@ class MigrationResult
 static class Migration
 {
     // Under the settings key: the saved texts by name, and beside them, by the same name, the day each was saved,
-    // its number, the folder it is in; the folders by path, each 1 if open.
+    // its number, the folder it is in; the folders by path, each 1 if open. A path is written as the list writes it
+    // today (Texts.Separator).
     const string SavedKey = "Saved", DatesKey = "Dates", NumbersKey = "Numbers", PlacesKey = "Places", FoldersKey = "Folders";
-    const char Separator = '\\';   // between the names of a folder path
     // A record of a history file: kind, time of the copy (DateTime ticks, local) and length, then that many bytes. Of
     // a text, the text in UTF-8; of a picture its width, height and the length of the preview, then preview and
     // picture as PNG. The kind holds the star in its high bit and the number in the bits under it.
@@ -85,7 +85,7 @@ static class Migration
                     ? new DateTime((long)ticks) : DateTime.MinValue;   // saved before the days were kept
                 object number = numbers == null ? null : numbers.GetValue(name);
                 // A text whose folder is gone is simply in none, as the list had it.
-                string place = Clean(places == null ? null : places.GetValue(name) as string);
+                string place = Texts.CleanPath(places == null ? null : places.GetValue(name) as string);
                 long folder;
                 if (place == null || !made.TryGetValue(place, out folder)) folder = 0;
                 clips.AdoptSaved(name, secret, folder, time, number is int ? (int)number : 0);
@@ -103,41 +103,24 @@ static class Migration
         Dictionary<string, bool> open = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
         foreach (string value in folders.GetValueNames())
         {
-            string path = Clean(value);
+            string path = Texts.CleanPath(value);
             if (path != null) open[path] = !Equals(folders.GetValue(value), 0);
         }
-        List<string> paths = new List<string>();
+        HashSet<string> named = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
         foreach (string path in open.Keys)
-            for (string each = path; each != null; each = Parent(each))
-                if (!paths.Exists(delegate(string other) { return string.Equals(other, each, StringComparison.OrdinalIgnoreCase); }))
-                    paths.Add(each);
-        paths.Sort(delegate(string a, string b) { return a.Split(Separator).Length.CompareTo(b.Split(Separator).Length); });   // the outer ones first
+            for (string each = path; each != null; each = Texts.Parent(each)) named.Add(each);
+        List<string> paths = new List<string>(named);
+        paths.Sort(delegate(string a, string b) { return Texts.Depth(a).CompareTo(Texts.Depth(b)); });   // the outer ones first
         foreach (string path in paths)
         {
-            string parent = Parent(path);
-            long id = clips.AddFolder(parent == null ? 0 : made[parent], path.Substring(path.LastIndexOf(Separator) + 1));
+            string parent = Texts.Parent(path);
+            long id = clips.AddFolder(parent == null ? 0 : made[parent], Texts.Leaf(path));
             bool opened;
             if (open.TryGetValue(path, out opened) && !opened) clips.OpenFolder(id, false);
             made[path] = id;
             result.Folders++;
         }
         return made;
-    }
-
-    // A path without empty names or spaces around them, or null if nothing is left.
-    static string Clean(string path)
-    {
-        if (path == null) return null;
-        List<string> names = new List<string>();
-        foreach (string name in path.Split(Separator))
-            if (name.Trim().Length > 0) names.Add(name.Trim());
-        return names.Count == 0 ? null : string.Join(Separator.ToString(), names);
-    }
-
-    static string Parent(string path)
-    {
-        int at = path.LastIndexOf(Separator);
-        return at < 0 ? null : path.Substring(0, at);
     }
 
     // The records of a history file, up to one cut short by a crash: the deleted ones are left out.

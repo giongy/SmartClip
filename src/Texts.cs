@@ -12,10 +12,10 @@ using System.Windows.Forms;
 // Also the row of a folder of saved entries (IsGroup), named by its path. Where they are kept: Clips.
 class Entry
 {
-    const int MaxPreview = 120;   // beyond this, the text of a copied entry is truncated in the list
+    const int MaxPreview = 120;      // beyond this, the text of a copied entry is truncated in the list
+    const int PreviewHeight = 120;   // of the small copy of a picture shown in the list: enough for a sharp row at any scale
     public readonly string Name, Text;
     public readonly DateTime Time;   // when it was copied, or saved: DateTime.MinValue if nobody knows
-    const int PreviewHeight = 120;   // of the small copy shown in the list: enough for a sharp row at any scale
     public readonly bool Picture;
     public bool Pinned;              // a copied entry kept at the top of its column for a while: it goes with its days
     public int Number;               // the digit that pastes it from anywhere: 0 for none
@@ -146,33 +146,39 @@ static class Texts
     static readonly string[] PrivateIfZero = { "CanIncludeInClipboardHistory", "CanUploadToCloudClipboard" };
 
     // Called at every clipboard change: what it holds goes to the copied entries, unless it is marked private.
-    public static void Remember(Clips clips)
+    // Returns whether the copied entries may have changed, and the list has to be read again.
+    public static bool Remember(Clips clips)
     {
         try
         {
             IDataObject data = Clipboard.GetDataObject();
-            if (data == null || IsPrivate(data)) return;
+            if (data == null || IsPrivate(data)) return false;
             // Programs that copy both (a spreadsheet, a word processor) mean the text. Its formatting, if it has
             // some, stays in memory for a while, in case it is saved.
             string text = data.GetData(DataFormats.UnicodeText) as string;
-            if (text != null && clips.AddText(text)) Rich.Remember(text, data);
-            else
+            if (text != null && clips.AddText(text))
             {
-                using (Image picture = data.GetData(DataFormats.Bitmap) as Image)
-                {
-                    if (picture != null) clips.AddPicture(picture);
-                }
+                Rich.Remember(text, data);
+                return true;
+            }
+            using (Image picture = data.GetData(DataFormats.Bitmap) as Image)
+            {
+                if (picture == null) return false;
+                clips.AddPicture(picture);
+                return true;
             }
         }
         catch (ExternalException)
         {
             // The clipboard held by another program: this copy is not remembered, and that is all.
+            return false;
         }
         catch (Exception ex)
         {
             // A picture that cannot be read, a database that refuses: written down, never in the way of the copy
-            // just made in another program.
+            // just made in another program. Something may have been written all the same.
             Log.Error(ex);
+            return true;
         }
     }
 

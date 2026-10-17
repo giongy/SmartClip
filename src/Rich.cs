@@ -60,6 +60,9 @@ static class Rich
     public static readonly string[] Fonts = Array.FindAll(new string[] { "Arial", "Aptos", "Calibri", "Cambria",
         "Courier New", "Georgia", "Segoe UI", "Tahoma", "Times New Roman", "Trebuchet MS", "Verdana" }, Look.Has);
     public static readonly float[] Sizes = { 8, 9, 10, 11, 12, 14, 16, 18, 20, 24 };
+    // What of the formatting of an edit box is kept: what a selection has to have the same throughout to be one run.
+    public const uint Formatting = Native.CFM_FACE | Native.CFM_SIZE | Native.CFM_COLOR | Native.CFM_BOLD | Native.CFM_ITALIC
+        | Native.CFM_UNDERLINE | Native.CFM_STRIKEOUT;
 
     // --- The clipboard ---
 
@@ -264,7 +267,9 @@ static class Rich
         return format;
     }
 
-    // Character by character: a rich edit box tells the formatting only of what is selected.
+    // A piece at a time: a rich edit box tells the formatting only of what is selected, and of a longer selection
+    // only what is the same all through it. Each piece goes as far as the formatting of its first character, found
+    // by doubling and then halving: a long text pasted is read in a few steps, not one per character.
     static List<Run> Walk(RichTextBox box, Font font, Color colour)
     {
         float ownSize = font == null ? 0 : SizeIn(font);
@@ -272,8 +277,9 @@ static class Rich
         string text = box.Text;
         Run last = null;
         StringBuilder written = new StringBuilder();
-        for (int i = 0; i < text.Length; i++)
+        for (int i = 0, length; i < text.Length; i += length)
         {
+            length = 1;
             if (text[i] == '\n' && last != null)
             {
                 written.Append('\n');   // a line end takes the look of what it ends
@@ -281,6 +287,7 @@ static class Rich
             }
             box.Select(i, 1);
             Native.CHARFORMAT2 shown = FormatOf(box);
+            length = Stretch(box, i, text.Length - i);
             Run look = new Run();
             float size = Half(shown.yHeight / 20f);   // in twentieths of a point
             bool own = font != null && string.Equals(shown.szFaceName, font.Name, StringComparison.OrdinalIgnoreCase);
@@ -297,10 +304,40 @@ static class Rich
                 written.Length = 0;
                 runs.Add(last = look);
             }
-            written.Append(text[i]);
+            written.Append(text, i, length);
         }
         if (last != null) last.Text = written.ToString();
         return Tidy(runs);
+    }
+
+    // How many characters from 'start', at most 'most', are formatted as the first: what a selection that long
+    // keeps the same throughout. Any shorter one does too, which is what lets the length be halved towards it.
+    static int Stretch(RichTextBox box, int start, int most)
+    {
+        int alike = 1, unlike = most + 1;
+        for (int step = 1; alike < most; step *= 2)
+        {
+            int tried = Math.Min(most, alike + step);
+            if (!Uniform(box, start, tried))
+            {
+                unlike = tried;
+                break;
+            }
+            alike = tried;
+        }
+        while (unlike - alike > 1)
+        {
+            int tried = (alike + unlike) / 2;
+            if (Uniform(box, start, tried)) alike = tried;
+            else unlike = tried;
+        }
+        return alike;
+    }
+
+    static bool Uniform(RichTextBox box, int start, int length)
+    {
+        box.Select(start, length);
+        return (FormatOf(box).dwMask & Formatting) == Formatting;
     }
 
     static float Half(float points)
@@ -650,7 +687,7 @@ static class Rich
         {
             int size;
             if (!int.TryParse(value, NumberStyles.AllowLeadingSign, CultureInfo.InvariantCulture, out size)) return 0;
-            if (value.StartsWith("+") || value.StartsWith("-")) size += 3;
+            if (value.Length > 0 && (value[0] == '+' || value[0] == '-')) size += 3;
             return FontSizes[Math.Max(1, Math.Min(FontSizes.Length, size)) - 1];
         }
 
@@ -681,14 +718,14 @@ static class Rich
                         look.Style = bold ? look.Style | FontStyle.Bold : look.Style & ~FontStyle.Bold;
                         break;
                     case "font-style":
-                        bool italic = lower.StartsWith("italic") || lower.StartsWith("oblique");
+                        bool italic = Begins(lower, "italic") || Begins(lower, "oblique");
                         look.Style = italic ? look.Style | FontStyle.Italic : look.Style & ~FontStyle.Italic;
                         break;
                     case "text-decoration":
                     case "text-decoration-line":
                         if (lower.Contains("underline")) look.Style |= FontStyle.Underline;
                         if (lower.Contains("line-through")) look.Style |= FontStyle.Strikeout;
-                        if (lower.StartsWith("none")) look.Style &= ~(FontStyle.Underline | FontStyle.Strikeout);
+                        if (Begins(lower, "none")) look.Style &= ~(FontStyle.Underline | FontStyle.Strikeout);
                         break;
                     case "color":
                         Colour(lower, look);
@@ -766,7 +803,7 @@ static class Rich
         {
             value = value.Trim().ToLowerInvariant();
             int r, g, b;
-            if (value.StartsWith("#"))
+            if (Begins(value, "#"))
             {
                 string hex = value.Substring(1);
                 if (hex.Length == 3 || hex.Length == 4) hex = new string(new char[] { hex[0], hex[0], hex[1], hex[1], hex[2], hex[2] });
@@ -774,7 +811,7 @@ static class Rich
                 if (hex.Length < 6 || !int.TryParse(hex.Substring(0, 6), NumberStyles.HexNumber, CultureInfo.InvariantCulture, out rgb)) return;
                 look.Color = Color.FromArgb(rgb >> 16, (rgb >> 8) & 0xFF, rgb & 0xFF);
             }
-            else if (value.StartsWith("rgb"))
+            else if (Begins(value, "rgb"))
             {
                 int open = value.IndexOf('('), close = value.IndexOf(')');
                 if (open < 0 || close < open) return;
@@ -789,10 +826,16 @@ static class Rich
             }
         }
 
+        // CSS is compared as written, letter by letter: not as the language of Windows would.
+        static bool Begins(string value, string start)
+        {
+            return value.StartsWith(start, StringComparison.Ordinal);
+        }
+
         static bool Channel(string part, out int value)
         {
             float number;
-            bool percent = part.EndsWith("%");
+            bool percent = part.EndsWith("%", StringComparison.Ordinal);
             value = 0;
             if (!float.TryParse(percent ? part.TrimEnd('%') : part, NumberStyles.Float, CultureInfo.InvariantCulture, out number)) return false;
             value = Math.Max(0, Math.Min(255, (int)Math.Round(percent ? number * 2.55f : number)));
@@ -906,14 +949,12 @@ class RichBox : RichTextBox
         int start = SelectionStart, length = SelectionLength;
         if (length == 0) SelectAll();
         Native.CHARFORMAT2 change = Own();
-        change.dwMask = Native.CFM_FACE | Native.CFM_SIZE | Native.CFM_COLOR | Native.CFM_BOLD | Native.CFM_ITALIC
-            | Native.CFM_UNDERLINE | Native.CFM_STRIKEOUT;
+        change.dwMask = Rich.Formatting;
         change.dwEffects = 0;
         change.crTextColor = ColorTranslator.ToWin32(Ink);
         Apply(change);
         Select(start, length);
     }
-
 
     // The formatting of the box itself, which text without formatting has.
     Native.CHARFORMAT2 Own()

@@ -203,7 +203,7 @@ partial class MainForm
         set { delayBox.Text = Clamp(value, MinDelay, MaxDelay).ToString(); }
     }
 
-    // For how many days what is copied stays on disk; zero keeps it only in memory.
+    // For how many days what is copied stays, today being the first: zero keeps today's only.
     int Retention
     {
         get { return Number(keepBox, 0, Texts.MaxKeepDays, Texts.DefaultKeepDays); }
@@ -371,7 +371,8 @@ partial class MainForm
         return number + " " + (number == 1 ? one : many);
     }
 
-    // Removes at once what was copied before the days to spare; with zero, everything. Pinned entries stay.
+    // Removes at once what was copied before the days to spare; with zero, everything, the entries kept at the top
+    // too. The saved ones stay.
     void CleanHistory()
     {
         int days = Spared;
@@ -440,16 +441,12 @@ partial class MainForm
         if (folder.Length > 0 && Synced(folder) && !AskForm.Ask(Front, string.Format(Strings.AskSyncedFolder, folder), true)) return;
         try
         {
-            if (File.Exists(target))
+            bool found = File.Exists(target);
+            if (found && !Ask(string.Format(Strings.AskUseExisting, where, Program.AppName))) return;
+            // The one found there, or, with nothing on disk to take along, a list that begins there.
+            if (found || inMemory)
             {
-                if (!Ask(string.Format(Strings.AskUseExisting, where, Program.AppName))) return;
                 Clips there = new Clips(target);   // first: if it cannot be opened, the list stays where it is
-                clips.Dispose();
-                clips = there;
-            }
-            else if (inMemory)
-            {
-                Clips there = new Clips(target);   // nothing on disk to take along: a list begins there
                 clips.Dispose();
                 clips = there;
             }
@@ -487,7 +484,7 @@ partial class MainForm
     static bool Synced(string folder)
     {
         string full = Path.GetFullPath(folder);
-        if (full.StartsWith(@"\\")) return true;
+        if (full.StartsWith(@"\\", StringComparison.Ordinal)) return true;
         foreach (string name in new string[] { "OneDrive", "OneDriveConsumer", "OneDriveCommercial" })
         {
             string cloud = Environment.GetEnvironmentVariable(name);

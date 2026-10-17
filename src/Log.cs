@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using System.Text;
 
@@ -26,7 +27,8 @@ static class Log
                     File.Delete(FileName + OldSuffix);
                     File.Move(FileName, FileName + OldSuffix);
                 }
-                File.AppendAllText(FileName, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + Program.AppName + " "
+                // The time as written everywhere: in some languages of Windows ':' would become another sign.
+                File.AppendAllText(FileName, DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture) + "  " + Program.AppName + " "
                     + Program.Version + Environment.NewLine + ex + Environment.NewLine + Environment.NewLine, Encoding.UTF8);
             }
         }

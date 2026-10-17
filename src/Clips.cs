@@ -86,6 +86,9 @@ sealed class Clips : IDisposable
     readonly Database data;
     readonly string path;
     DateTime pruned;   // the day the expired entries were last removed
+    // The previews of the copied pictures listed last, by row. The list is read again at every copy, and a picture
+    // never changes: decoded anew each time, they would cost time and fill the memory with copies of themselves.
+    Dictionary<long, Image> previews = new Dictionary<long, Image>();
 
     // Opens the file at 'path', creating it if it is not there.
     public Clips(string path) : this(path, null)
@@ -292,8 +295,9 @@ sealed class Clips : IDisposable
             }
         }
         using (Transaction transaction = data.Begin())
+        using (Statement delete = data.Prepare("DELETE FROM entries WHERE id = ?1"))
         {
-            foreach (long id in oldest) data.Execute("DELETE FROM entries WHERE id = ?1", id);
+            foreach (long id in oldest) delete.Run(id);
             transaction.Commit();
         }
         Compact();
@@ -334,7 +338,7 @@ sealed class Clips : IDisposable
     // --- Copied entries ---
 
     // Remembers a copied text. Copied again, it is the same entry, which only takes the new time: at the top,
-    // with its star and its number. False if there is nothing worth keeping.
+    // with its arrow and its number. False if there is nothing worth keeping.
     public bool AddText(string text)
     {
         if (!Worth(text)) return false;
@@ -394,6 +398,8 @@ sealed class Clips : IDisposable
             + " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             kind, content, preview, kind == PictureKind ? (object)width : null, kind == PictureKind ? (object)height : null,
             folded, hash, Stamp(time), pinned);
+        // SQLite may give the new row the id of the last one removed: a preview kept for that one is not this one's.
+        previews.Remove(data.LastId);
         return data.LastId;
     }
 
@@ -411,8 +417,15 @@ sealed class Clips : IDisposable
         values.Add(most);
         sql.Append(" ORDER BY pinned DESC, copied_at DESC, id DESC LIMIT ?" + values.Count);
         List<Entry> entries = new List<Entry>();
+        Dictionary<long, Image> listed = new Dictionary<long, Image>();
         using (Statement rows = data.Prepare(sql.ToString(), values.ToArray()))
-            while (rows.Step()) entries.Add(Read(rows));
+            while (rows.Step())
+            {
+                Entry entry = Read(rows);
+                entries.Add(entry);
+                if (entry.Picture) listed[entry.Id] = entry.Preview;
+            }
+        previews = listed;   // those no longer listed are left to whoever still shows them
         return entries;
     }
 
@@ -459,6 +472,15 @@ sealed class Clips : IDisposable
     {
         using (Statement row = data.Prepare("SELECT " + EntryColumns + " FROM entries WHERE number = ?1", number))
             return row.Step() ? Read(row) : null;
+    }
+
+    // The numbers some entry has, whatever its kind and wherever it is listed.
+    public HashSet<int> Numbers()
+    {
+        HashSet<int> numbers = new HashSet<int>();
+        using (Statement rows = data.Prepare("SELECT number FROM entries WHERE number IS NOT NULL"))
+            while (rows.Step()) numbers.Add(rows.Int(0));
+        return numbers;
     }
 
     // The whole picture of an entry, as PNG.
@@ -767,17 +789,23 @@ sealed class Clips : IDisposable
     // An entry from a row of EntryColumns. The whole of a picture is read only when it is asked for.
     Entry Read(Statement row)
     {
+        long id = row.Long(0);
         bool saved = row.Bool(7);
         string name = row.Text(9);
         DateTime time = saved ? (row.IsNull(8) ? DateTime.MinValue : Moment(row.Long(8))) : Moment(row.Long(6));
         Entry entry;
         if (row.Int(1) == PictureKind)
         {
-            byte[] preview = saved ? Unprotect(row.Blob(3)) : row.Blob(3);
-            // Copied into a bitmap of its own, which does not need the stream to stay open.
-            using (MemoryStream packed = new MemoryStream(preview))
-            using (Image image = Image.FromStream(packed))
-                entry = new Entry(new Bitmap(image), row.Int(4), row.Int(5), time, name);
+            Image preview;
+            if (saved || !previews.TryGetValue(id, out preview))
+            {
+                // Copied into a bitmap of its own, which does not need the stream to stay open.
+                using (MemoryStream packed = new MemoryStream(saved ? Unprotect(row.Blob(3)) : row.Blob(3)))
+                using (Image image = Image.FromStream(packed))
+                    preview = new Bitmap(image);
+            }
+            entry = new Entry(preview, row.Int(4), row.Int(5), time, name);
+            entry.PngSource = delegate { return Png(id); };
         }
         else
         {
@@ -786,8 +814,6 @@ sealed class Clips : IDisposable
             entry.Html = Revealed(row.Blob(13));
             entry.Rtf = Revealed(row.Blob(14));
         }
-        long id = row.Long(0);
-        if (entry.Picture) entry.PngSource = delegate { return Png(id); };
         entry.Id = id;
         entry.Saved = saved;
         entry.FolderId = row.IsNull(10) ? 0 : row.Long(10);

@@ -40,7 +40,7 @@ class Peek : Form
         get { return true; }
     }
 
-    // Above the main window, which is topmost itself, and out of the taskbar and of Alt+Tab.
+    // Above the main window, which may be topmost itself while it types, and out of the taskbar and of Alt+Tab.
     protected override CreateParams CreateParams
     {
         get
@@ -65,7 +65,7 @@ class Peek : Form
     }
 
     // Takes an entry and the size it needs, up to a limit; 'zoom' is how much larger than designed the
-    // screen draws. Returns false if there is nothing to show: a picture the history file no longer gives.
+    // screen draws. Returns false if there is nothing to show: a picture the database no longer gives.
     public bool Fill(Entry entry, float zoom)
     {
         if (picture != null) picture.Dispose();

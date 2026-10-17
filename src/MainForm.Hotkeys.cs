@@ -218,11 +218,13 @@ partial class MainForm
     void HookNumbers()
     {
         if (!IsHandleCreated) return;
+        HashSet<int> given = new HashSet<int>();   // asked once, not once per number: this runs at every copy
+        if (quickBox.Checked && capturing == null) Change(delegate { given = clips.Numbers(); });
         List<string> taken = new List<string>();
         for (int number = 1; number <= MaxNumber; number++)
         {
             Native.UnregisterHotKey(Handle, NumberId + number);
-            if (!quickBox.Checked || capturing != null || Numbered(number) == null) continue;
+            if (!given.Contains(number)) continue;
             if (!Hook(NumberId + number, NumberKeys(number))) taken.Add(NumberName(number));
         }
         string said = string.Join(", ", taken);
