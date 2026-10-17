@@ -239,13 +239,15 @@ the privacy policy in [`PRIVACY.md`](PRIVACY.md).
 
 ## Tests
 
-`tests\test.cmd` compiles a test executable and runs three checks:
+`tests\test.cmd` compiles a test executable and runs four checks:
 
 
 - `tests.exe map` prints the key map of the active layout and compares the built-in US table against the installed
   US layout.
 - `tests.exe texts` checks the logic behind the list: private clipboard markers, the copied texts, the search and
   the encrypted round trip of a saved text through the registry.
+- `tests.exe data` checks the layer over the SQLite that comes with Windows (`winsqlite3.dll`): texts and bytes
+  come back as they went in, broken rules are refused, transactions are all or nothing.
 - `tests.exe type` opens a small window and really types into it: all ASCII characters, accented letters, AltGr
   symbols, Unicode, Alt codes, Tab and Enter. It then checks that a wrong window and a cancel both stop everything.
   It takes the keyboard focus for a couple of seconds, so keep your hands off while it runs.

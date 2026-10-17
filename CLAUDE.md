@@ -61,6 +61,14 @@ condiviso su GitHub).
   - `Backup.cs` — esportazione e importazione in un file di testo (`Backup`, `BackupResult`).
   - `Typer.cs` — mappa dei tasti e invio (`Typer`, `Stroke`, `TypeOptions`, `TypeResult`).
   - `Native.cs` — funzioni e costanti di Windows.
+  - `Sqlite.cs` — lo strato sul SQLite incluso in Windows (`winsqlite3.dll`, `DllImport` con `StdCall`, provato
+    anche a 32 bit): `Database` (apre, `Execute` anche di più istruzioni, `Prepare`, `Value`, `Begin` per le
+    transazioni, che sono savepoint e quindi si annidano), `Statement` (`Step`, `Run` per ripeterla con altri
+    valori, letture per colonna), `SqliteException` (`IsConstraint`). I valori si legano sempre a `?1`, `?2`…,
+    mai scritti nel testo dell'istruzione, e i messaggi d'errore riportano l'istruzione ma non i valori. Testi
+    legati con la loro lunghezza (il carattere zero non li taglia), byte vuoti con `zeroblob` (altrimenti
+    diventerebbero NULL). Chiudere il database finalizza le istruzioni rimaste aperte, così il file si libera.
+    È il passo 1 di `docs\piano-sqlite.md`: per ora non lo usa nessuno tranne i test.
   - `Packaged.cs` — quando il programma gira dal pacchetto del Microsoft Store (`Packaged.Family` non nullo):
     avvio con Windows con la `StartupTask` del pacchetto invece della chiave `Run` (`Startup` lo chiama), avvio
     all'accesso riconosciuto dall'attivazione invece che da `/tray`, cronologia in `LocalState` del pacchetto
@@ -494,8 +502,8 @@ condiviso su GitHub).
 
 ## Controlli
 
-`tests\test.cmd` compila `tests.exe` (`src\*.cs` + `Test.cs`, ingresso `TestProgram`) ed esegue `map`, `texts`
-e `type`; `test.cmd ci` salta `type` (vuole un desktop su cui digitare) e le pause, ed è ciò che GitHub esegue a
+`tests\test.cmd` compila `tests.exe` (`src\*.cs` + `Test.cs`, ingresso `TestProgram`) ed esegue `map`, `texts`,
+`data` e `type`; `test.cmd ci` salta `type` (vuole un desktop su cui digitare) e le pause, ed è ciò che GitHub esegue a
 ogni push. **I test non toccano mai i dati dell'utente**: `TestProgram.Main` punta `MainForm.SettingsKey` (e
 `OldSettingsKey`) su `HKCU\Software\SmartClip test`, `Texts.Folder` e `Log.FileName` su una cartella temporanea,
 e cancella tutto prima e dopo. Vale per ogni modo, anche `shot`, `real` e `store`, che quindi partono dalle
@@ -505,6 +513,9 @@ impostazioni di default.
   cifre, se il layout USA non è installato).
 - `tests.exe texts` — la logica dell'elenco, senza aprirlo e senza toccare gli appunti: formati riservati,
   testi copiati, cronologia su disco (in una cartella temporanea, non in quella dell'utente), ricerca, andata e ritorno cifrata di un testo salvato (nella chiave di prova), il log.
+- `tests.exe data` — il database, in file della cartella di prova: per ora lo strato SQLite (`SqliteTest`: testi
+  e byte in andata e ritorno, NULL e byte vuoti, regole rifiutate, transazioni annidate, file liberato alla
+  chiusura). Vi andranno anche schema, dati e migrazione.
 - `tests.exe type` — apre una finestrella e ci digita davvero: tutti i caratteri ASCII, accentate, simboli con
   AltGr, Unicode, Alt+codice, Tab, Invio; poi verifica che finestra sbagliata e annullamento blocchino tutto.
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.

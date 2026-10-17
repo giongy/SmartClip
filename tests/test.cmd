@@ -25,6 +25,11 @@ echo.
 echo Controllo l'elenco dei testi...
 "%HERE%tests.exe" texts
 if errorlevel 1 goto failed
+
+echo.
+echo Controllo il database...
+"%HERE%tests.exe" data
+if errorlevel 1 goto failed
 if /i "%~1"=="ci" goto passed
 
 echo.

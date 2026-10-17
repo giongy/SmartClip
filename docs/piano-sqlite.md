@@ -237,7 +237,8 @@ Ogni passo si chiude con i test che passano e lascia il programma funzionante.
    - gestore globale degli errori (`Program.Report`) e `Log.cs`, con `SmartClip.log` nella cartella dei dati
      (`Program.DataFolder`, dove andrà anche il database), così gli errori della migrazione si potranno leggere;
    - test isolati: chiave di registro e cartella temporanea loro, mai i dati dell'utente.
-1. **`Sqlite.cs` e i suoi test**. Nessun cambiamento visibile.
+1. **`Sqlite.cs` e i suoi test** (`tests.exe data`) — fatto il 17/10/2026, provato anche in un processo a 32
+   bit. Nessun cambiamento visibile.
 2. **Schema e `Clips.cs` con i test** (regole del database, scadenza, freccia, numeri che si liberano, albero delle
    cartelle). Non ancora collegati alla finestra.
 3. **`Migration.cs` con i test** su registro e cartella di prova.

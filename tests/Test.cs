@@ -111,7 +111,7 @@ static class TestProgram
         Application.SetCompatibleTextRenderingDefault(false);
         // Never what belongs to the user: settings and saved texts under a key of their own, history and log in a
         // folder of their own. Both are emptied before and removed after.
-        string sandbox = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "SmartClip test " + Guid.NewGuid());
+        sandbox = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "SmartClip test " + Guid.NewGuid());
         MainForm.SettingsKey = TestKey;
         MainForm.OldSettingsKey = TestKey + @"\Old";
         Texts.Folder = System.IO.Path.Combine(sandbox, "History");
@@ -129,6 +129,7 @@ static class TestProgram
     }
 
     const string TestKey = @"Software\" + Program.AppName + " test";
+    static string sandbox;   // the folder of the checks, removed at the end
 
     static int Run(string[] args)
     {
@@ -142,9 +143,10 @@ static class TestProgram
         if (mode == "shot") return Shot(args[1]);
         if (mode == "type") return TypeTest();
         if (mode == "texts") return TextsTest();
+        if (mode == "data") return DataTest();
         if (mode == "real") return Real(args[1]);
         if (mode == "store") return Store(args[1]);
-        Console.WriteLine("usage: map | texts | shot <png> [lang] | real <png> [lang] | store <folder> [lang] | type");
+        Console.WriteLine("usage: map | texts | data | shot <png> [lang] | real <png> [lang] | store <folder> [lang] | type");
         return 64;
     }
 
@@ -162,6 +164,123 @@ static class TestProgram
         data.SetData(DataFormats.UnicodeText, "secret");
         if (format != null) data.SetData(format, new System.IO.MemoryStream(BitConverter.GetBytes(value)));
         return data;
+    }
+
+    // The database, from SQLite up, in files of the sandbox.
+    static int DataTest()
+    {
+        SqliteTest();
+        return failed == 0 ? 0 : 1;
+    }
+
+    // Whether a call throws the exception it should.
+    static bool Throws<T>(Action call) where T : Exception
+    {
+        try
+        {
+            call();
+            return false;
+        }
+        catch (T)
+        {
+            return true;
+        }
+    }
+
+    // The layer over the SQLite of Windows: what goes in comes back as it was, what is wrong is refused.
+    static void SqliteTest()
+    {
+        Console.WriteLine("SQLite " + Database.Version);
+        Check(Database.VersionNumber >= 3008000, "Windows has a SQLite recent enough");
+        string path = System.IO.Path.Combine(sandbox, "sqlite test.db");
+        System.IO.Directory.CreateDirectory(sandbox);
+        using (Database db = new Database(path))
+        {
+            db.Execute("CREATE TABLE t (id INTEGER PRIMARY KEY, a, b, UNIQUE (a));"
+                + " -- a comment, then a second statement\n CREATE TABLE u (n INTEGER CHECK (n > 0));");
+            Check(Convert.ToInt64(db.Value("SELECT count(*) FROM sqlite_master WHERE type = 'table'")) == 2, "several statements run at once");
+
+            string text = "Città già 😀 ~`\r\nriga\0dopo lo zero";
+            byte[] big = new byte[1 << 20];
+            new Random(1).NextBytes(big);
+            db.Execute("INSERT INTO t (a, b) VALUES (?1, ?2)", text, big);
+            long id = db.LastId;
+            Check(id == 1 && db.Changes == 1, "the id of the row inserted, and the rows changed");
+            using (Statement row = db.Prepare("SELECT a, b FROM t WHERE id = ?1", id))
+            {
+                Check(row.Step() && row.Columns == 2, "a row comes back");
+                Check(row.Text(0) == text, "a text comes back whole: accents, emoji, line ends, the character zero");
+                byte[] back = row.Blob(1);
+                Check(back.Length == big.Length && back[12345] == big[12345] && back[big.Length - 1] == big[big.Length - 1],
+                    "a megabyte of bytes comes back");
+                Check(!row.Step(), "and only that row");
+            }
+            db.Execute("INSERT INTO t (a, b) VALUES (?1, ?2)", "empty", new byte[0]);
+            db.Execute("INSERT INTO t (a, b) VALUES (?1, ?2)", "nothing", null);
+            using (Statement row = db.Prepare("SELECT b FROM t WHERE a = ?1", "empty"))
+                Check(row.Step() && !row.IsNull(0) && row.Blob(0).Length == 0, "empty bytes stay empty, not nothing");
+            using (Statement row = db.Prepare("SELECT b FROM t WHERE a = ?1", "nothing"))
+                Check(row.Step() && row.IsNull(0) && row.Blob(0) == null && row.Text(0) == null && row.Get(0) == null, "nothing stays nothing");
+            Check(Equals(db.Value("SELECT ?1", long.MaxValue), long.MaxValue) && Equals(db.Value("SELECT ?1", -7), -7L)
+                && Equals(db.Value("SELECT ?1", true), 1L) && Equals(db.Value("SELECT ?1", 0.5), 0.5) && db.Value("SELECT 1 WHERE 0") == null,
+                "numbers, a bool, a missing row");
+
+            using (Statement insert = db.Prepare("INSERT INTO u (n) VALUES (?1)"))
+                for (int i = 1; i <= 100; i++) insert.Run(i);
+            Check(Convert.ToInt64(db.Value("SELECT sum(n) FROM u")) == 5050, "one statement prepared once, run many times");
+
+            SqliteException refused = null;
+            try
+            {
+                db.Execute("INSERT INTO t (a) VALUES (?1)", text);
+            }
+            catch (SqliteException ex)
+            {
+                refused = ex;
+            }
+            Check(refused != null && refused.IsConstraint && refused.Message.IndexOf("UNIQUE") >= 0 && refused.Message.IndexOf("Città") < 0,
+                "a broken rule is refused, said with the statement and never with the values");
+            Check(Throws<SqliteException>(delegate { db.Execute("INSERT INTO u (n) VALUES (0)"); }), "and so is a CHECK");
+            Check(Throws<SqliteException>(delegate { db.Execute("SELEKT 1"); }), "a statement that makes no sense is refused");
+            Check(Throws<ArgumentException>(delegate { db.Prepare("SELECT 1; SELECT 2").Dispose(); }), "Prepare takes one statement only");
+            Check(Throws<ArgumentException>(delegate { db.Value("SELECT ?1, ?2", 1); }), "and as many values as it asks for");
+            Check(Throws<ArgumentException>(delegate { db.Value("SELECT ?1", DateTime.Now); }), "and only values SQLite can take");
+
+            // Transactions: all or nothing, also one inside another.
+            try
+            {
+                using (Transaction transaction = db.Begin())
+                {
+                    db.Execute("INSERT INTO u (n) VALUES (1000)");
+                    throw new InvalidOperationException();
+                }
+            }
+            catch (InvalidOperationException)
+            {
+            }
+            Check(db.Value("SELECT n FROM u WHERE n = 1000") == null, "a transaction that fails halfway is undone");
+            using (Transaction outer = db.Begin())
+            {
+                db.Execute("INSERT INTO u (n) VALUES (2000)");
+                using (Transaction inner = db.Begin()) db.Execute("INSERT INTO u (n) VALUES (3000)");
+                using (Transaction inner = db.Begin())
+                {
+                    db.Execute("INSERT INTO u (n) VALUES (4000)");
+                    inner.Commit();
+                }
+                outer.Commit();
+            }
+            Check(db.Value("SELECT n FROM u WHERE n = 2000") != null && db.Value("SELECT n FROM u WHERE n = 3000") == null
+                && db.Value("SELECT n FROM u WHERE n = 4000") != null, "one inside another undoes only its own part");
+
+            db.Prepare("SELECT * FROM t").Step();   // left open on purpose: closing the database must finalize it
+        }
+        using (Database db = new Database(path))
+            Check(Convert.ToInt64(db.Value("SELECT count(*) FROM t")) == 3, "what was written is there when the file is opened again");
+        System.IO.File.Delete(path);
+        Check(!System.IO.File.Exists(path), "a closed database leaves its file free, statements left open included");
+        Check(Throws<SqliteException>(delegate { new Database(System.IO.Path.Combine(sandbox, @"no such folder\x.db")).Dispose(); }),
+            "a file that cannot be opened is refused");
     }
 
     // The logic behind the list, without opening it and without touching the clipboard.
