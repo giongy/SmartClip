@@ -68,7 +68,13 @@ sealed class Clips : IDisposable
     DateTime pruned;   // the day the expired entries were last removed
 
     // Opens the file at 'path', creating it if it is not there.
-    public Clips(string path)
+    public Clips(string path) : this(path, null)
+    {
+    }
+
+    // The same; a new database is filled by 'fill' (the migration) in the transaction that creates it. If that
+    // fails, the database is not created at all: the next time it is new again, and 'fill' is tried again.
+    public Clips(string path, Action<Clips> fill)
     {
         this.path = path;
         data = new Database(path);
@@ -79,7 +85,7 @@ sealed class Clips : IDisposable
             long version = (long)data.Value("PRAGMA user_version");
             if (version > SchemaVersion)
                 throw new InvalidDataException(string.Format(Strings.NewerDatabase, path, Program.AppName));
-            if (version == 0) Create();
+            if (version == 0) Create(fill);
         }
         catch (Exception)
         {
@@ -89,16 +95,21 @@ sealed class Clips : IDisposable
         KeepDays = Texts.DefaultKeepDays;
     }
 
-    void Create()
+    void Create(Action<Clips> fill)
     {
         data.Execute("PRAGMA auto_vacuum = INCREMENTAL");   // only before the first table: see Compact
         using (Transaction transaction = data.Begin())
         {
             data.Execute(Schema);
             data.Execute("PRAGMA user_version = " + SchemaVersion);
+            if (fill != null) fill(this);
             transaction.Commit();
         }
+        Created = true;
     }
+
+    // The database did not exist and was made now.
+    public bool Created { get; private set; }
 
     public string FileName
     {
@@ -167,6 +178,7 @@ sealed class Clips : IDisposable
     public bool AddText(string text)
     {
         if (!Worth(text)) return false;
+        if (pruned != DateTime.Today) Prune();
         byte[] content = Encoding.UTF8.GetBytes(text);
         Insert(TextKind, content, null, 0, 0, Texts.Fold(text), Hash(content), DateTime.Now, false);
         return true;
@@ -181,10 +193,17 @@ sealed class Clips : IDisposable
     // announces one copy several times, is the same entry.
     public void AddPicture(Image picture)
     {
+        if (pruned != DateTime.Today) Prune();
         Entry entry = new Entry(picture);
         using (entry.Preview)
-            Insert(PictureKind, entry.Png, Entry.ToPng(entry.Preview), entry.Width, entry.Height, Texts.Fold(entry.Label),
+            Insert(PictureKind, entry.Png, Entry.ToPng(entry.Preview), entry.Width, entry.Height, PictureWords(entry.Width, entry.Height),
                 Hash(entry.Png), DateTime.Now, false);
+    }
+
+    // What the search finds a picture by: its size, as the list writes it.
+    static string PictureWords(int width, int height)
+    {
+        return Texts.Fold(string.Format(Strings.PictureLabel, width, height));
     }
 
     // Puts back a copied text read from an exported file, at the time it was copied. False if it was left out:
@@ -195,20 +214,26 @@ sealed class Clips : IDisposable
         string bare = text.Replace("\r\n", "\n");
         foreach (string each in new string[] { text, bare, bare.Replace("\n", "\r\n") })
             if (data.Value("SELECT 1 FROM entries WHERE hash = ?1", Hash(Encoding.UTF8.GetBytes(each))) != null) return false;
+        if (pruned != DateTime.Today) Prune();
         byte[] content = Encoding.UTF8.GetBytes(text);
         Insert(TextKind, content, null, 0, 0, Texts.Fold(text), Hash(content), time, pinned);
         return true;
     }
 
-    void Insert(int kind, byte[] content, byte[] preview, int width, int height, string folded, byte[] hash, DateTime time, bool pinned)
+    // A new copied entry, or the one with the same content taking the later time. Returns its id.
+    long Insert(int kind, byte[] content, byte[] preview, int width, int height, string folded, byte[] hash, DateTime time, bool pinned)
     {
-        if (pruned != DateTime.Today) Prune();
-        data.Execute("UPDATE entries SET copied_at = max(copied_at, ?2) WHERE hash = ?1", hash, Stamp(time));
-        if (data.Changes > 0) return;
+        object same = data.Value("SELECT id FROM entries WHERE hash = ?1", hash);
+        if (same != null)
+        {
+            data.Execute("UPDATE entries SET copied_at = max(copied_at, ?2), pinned = max(pinned, ?3) WHERE id = ?1", same, Stamp(time), pinned);
+            return (long)same;
+        }
         data.Execute("INSERT INTO entries (kind, content, preview, width, height, folded, hash, copied_at, pinned)"
             + " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             kind, content, preview, kind == PictureKind ? (object)width : null, kind == PictureKind ? (object)height : null,
             folded, hash, Stamp(time), pinned);
+        return data.LastId;
     }
 
     // The copied entries the list shows, those at the top first and then the newest, at most 'most'. 'words' are
@@ -479,6 +504,49 @@ sealed class Clips : IDisposable
         using (Statement rows = data.Prepare("SELECT id FROM folders WHERE parent_id = ?1", id))
             while (rows.Step()) children.Add(rows.Long(0));
         return children;
+    }
+
+    // --- The migration: entries as the versions before the database kept them (see Migration) ---
+
+    // A copied text with its time, its star and its number. Nothing is pruned meanwhile: the days of the settings
+    // apply once the program runs.
+    internal void AdoptText(string text, DateTime time, bool pinned, int number)
+    {
+        if (!Worth(text)) return;
+        byte[] content = Encoding.UTF8.GetBytes(text);
+        Adopted(Insert(TextKind, content, null, 0, 0, Texts.Fold(text), Hash(content), time, pinned), number);
+    }
+
+    internal void AdoptPicture(byte[] png, byte[] preview, int width, int height, DateTime time, bool pinned, int number)
+    {
+        Adopted(Insert(PictureKind, png, preview, width, height, PictureWords(width, height), Hash(png), time, pinned), number);
+    }
+
+    // A saved text, its content still encrypted as the registry held it: it is not even read, so one that cannot
+    // be read here (another Windows user's) comes along too. A name taken already, whatever its letter case,
+    // gets a number after it. Returns its id.
+    internal long AdoptSaved(string name, byte[] secret, long folder, DateTime time, int number)
+    {
+        string sql = "INSERT INTO entries (kind, content, copied_at, saved, saved_at, name, name_key, folder_id)"
+            + " VALUES (?1, ?2, ?3, 1, ?4, ?5, ?6, ?7)";
+        bool dated = time != DateTime.MinValue;
+        for (int copy = 1; ; copy++)
+        {
+            string given = copy == 1 ? name : name + " (" + copy + ")";
+            if (data.Value("SELECT 1 FROM entries WHERE name_key = ?1", Key(given)) != null) continue;
+            data.Execute(sql, TextKind, secret, Stamp(dated ? time : DateTime.Now), dated ? (object)Stamp(time) : null,
+                Name(given), Key(given), Place(folder));
+            long id = data.LastId;
+            Adopted(id, number);
+            return id;
+        }
+    }
+
+    // A number goes to the first entry that had it: the old places could disagree.
+    void Adopted(long id, int number)
+    {
+        if (number < 1 || number > MainForm.MaxNumber || data.Value("SELECT 1 FROM entries WHERE number = ?1", number) != null) return;
+        data.Execute("UPDATE entries SET number = ?2 WHERE id = ?1", id, number);
     }
 
     // --- Rows and values ---

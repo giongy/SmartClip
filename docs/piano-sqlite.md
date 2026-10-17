@@ -244,13 +244,18 @@ Ogni passo si chiude con i test che passano e lascia il programma funzionante.
    - **Copiare di nuovo** un testo (o un'immagine) già tra i copiati aggiorna la stessa riga con l'ora nuova: torna
      in cima e tiene freccia e numero, invece di cancellare la vecchia e crearne una nuova (che perderebbe il
      numero).
-   - **«Pulisci ora…» toglie anche le voci in alto**, come la scadenza: in alto vuol dire temporanea. Oggi invece
-     le fissate restano. Da confermare con l'utente.
+   - **«Pulisci ora…» toglie anche le voci in alto**, come la scadenza (confermato dall'utente: «se vuoi salvarlo
+     lo salvi con l'apposita funzione; la freccia serve temporaneamente a tenere in alto una voce»). Oggi invece le
+     fissate restano.
    - **Eliminare una cartella** porta su di un livello ciò che contiene; se lassù c'è già una cartella con lo stesso
      nome, la riempie (oggi, con i percorsi, le due si fondevano da sole).
    - Dopo una pulizia il file si restringe a poco a poco (`auto_vacuum = INCREMENTAL`), senza ricostruirlo tutto.
    - «Dimentica» (la password digitata e tolta dagli appunti) non tocca le voci in alto né quelle con un numero.
-3. **`Migration.cs` con i test** su registro e cartella di prova.
+3. **`Migration.cs` con i test** su registro e cartella di prova. — Fatto il 17/10/2026. Gira dentro la
+   transazione che crea il database (`new Clips(path, fill)`), quindi un fallimento non lascia niente e il
+   prossimo avvio riprova. Legge soltanto: registro e file restano intatti byte per byte. Provata in sola lettura
+   anche sui dati veri dell'utente, verso un database temporaneo: 4 salvati (tutti leggibili), 1 cartella, 14
+   testi e 2 immagini copiati, nessun errore; il database pesa 80 KB.
 4. **Il cambio**: la finestra usa `Clips`, la migrazione parte al primo avvio, il codice vecchio di registro e
    `.clips` sparisce. L'interfaccia resta quella di oggi, salvo ciò che la migrazione impone (la stellina diventa
    freccia e scade). Release a sé, da provare dal vivo prima di andare avanti.

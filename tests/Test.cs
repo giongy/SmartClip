@@ -171,7 +171,142 @@ static class TestProgram
     {
         SqliteTest();
         ClipsTest();
+        MigrationTest();
         return failed == 0 ? 0 : 1;
+    }
+
+    // What a folder holds, byte by byte, and the values of a registry key with those of its subkeys: to see that
+    // the migration leaves them as they were.
+    static string Fingerprint(string folder, string key)
+    {
+        StringBuilder all = new StringBuilder();
+        foreach (string file in System.IO.Directory.GetFiles(folder))
+            all.Append(file).Append(Convert.ToBase64String(System.IO.File.ReadAllBytes(file)));
+        Fingerprint(Microsoft.Win32.Registry.CurrentUser.OpenSubKey(key), all);
+        return all.ToString();
+    }
+
+    static void Fingerprint(Microsoft.Win32.RegistryKey key, StringBuilder all)
+    {
+        if (key == null) return;
+        using (key)
+        {
+            foreach (string name in key.GetValueNames())
+            {
+                object value = key.GetValue(name);
+                all.Append(name).Append(value is byte[] ? Convert.ToBase64String((byte[])value) : Convert.ToString(value));
+            }
+            foreach (string sub in key.GetSubKeyNames()) Fingerprint(key.OpenSubKey(sub), all);
+        }
+    }
+
+    // The data of the versions before the database, as their own code writes it, brought into a new one.
+    static void MigrationTest()
+    {
+        string history = System.IO.Path.Combine(sandbox, "old history"), path = System.IO.Path.Combine(sandbox, "migrated.db");
+        string savedKey = MainForm.SettingsKey + @"\Saved", before = Texts.Folder;
+        Texts.Folder = history;
+        try
+        {
+            // Saved texts and folders: one folder only implied by the one inside it, one closed.
+            Texts.SetGroup(@"Lavoro\Server", false);
+            Texts.SetGroup("Casa", true);
+            DateTime day = new DateTime(2025, 5, 6, 7, 8, 9);
+            Texts.Save("Banca", "pässwörd €", null, day);
+            Texts.Save("Server prod", "root:secret", @"Lavoro\Server");
+            Texts.Save("Wi-Fi", "casa123", "Casa");
+            Texts.Save("Orfano", "nessuna cartella", "Sparita");   // a folder that is not there
+            Texts.Number("Banca", 2);
+            using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(savedKey))
+            {
+                key.SetValue("Senza data", System.Security.Cryptography.ProtectedData.Protect(Encoding.UTF8.GetBytes("vecchio"), null,
+                    System.Security.Cryptography.DataProtectionScope.CurrentUser));   // saved before the days were kept
+                key.SetValue("Illeggibile", new byte[] { 1, 2, 3 });   // as one encrypted by another Windows user
+            }
+            using (Microsoft.Win32.RegistryKey numbers = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(savedKey + @"\Numbers"))
+                numbers.SetValue("Wi-Fi", 2, Microsoft.Win32.RegistryValueKind.DWord);   // two claim one number
+
+            // The history: today, last week and long ago (beyond the days kept by default), a star with a number,
+            // a picture, an entry deleted, a record cut short, a file that cannot be read.
+            Texts.Recent.Clear();
+            Texts.Keep(30);
+            Texts.Add("copiato oggi");
+            Texts.Add("in alto");
+            Texts.Number(Texts.Recent[0], 7);
+            Texts.Add("cancellato");
+            Texts.Remove(Texts.Recent[0]);
+            using (Bitmap picture = new Bitmap(30, 20))
+            {
+                picture.SetPixel(3, 3, Color.Green);
+                Texts.Add(picture);
+            }
+            List<Entry> older = new List<Entry>();
+            older.Add(new Entry(null, "settimana scorsa", DateTime.Now.AddDays(-6)));
+            older.Add(new Entry(null, "cento giorni fa", DateTime.Now.AddDays(-100)));
+            Texts.Restore(older);
+            string today = System.IO.Path.Combine(history, DateTime.Today.ToString("yyyy-MM-dd") + ".clips");
+            using (System.IO.FileStream cut = new System.IO.FileStream(today, System.IO.FileMode.Append)) cut.Write(new byte[] { 1, 9, 9, 9 }, 0, 4);
+            string locked = System.IO.Path.Combine(history, "2020-01-01.clips");
+            string untouched = Fingerprint(history, savedKey);
+
+            MigrationResult result = null;
+            using (new System.IO.FileStream(locked, System.IO.FileMode.Create, System.IO.FileAccess.ReadWrite, System.IO.FileShare.None))
+            using (Clips clips = new Clips(path, delegate(Clips fresh) { result = Migration.Run(fresh, MainForm.SettingsKey, history); }))
+            {
+                Check(clips.Created && result.Saved == 6 && result.Folders == 3 && result.Copied == 4 && result.Pictures == 1
+                    && result.Unreadable == 1, "everything comes along, the file that cannot be read left out");
+                List<Entry> saved = clips.Saved();
+                Func<string, Entry> find = delegate(string name) { return saved.Find(delegate(Entry e) { return e.Name == name; }); };
+                Check(find("Banca").Text == "pässwörd €" && find("Banca").Time == day, "a saved text, readable, with its day");
+                Check(find("Senza data").Text == "vecchio" && find("Senza data").Time == DateTime.MinValue, "one without a day stays without");
+                Check(saved.Count == 5 && Convert.ToInt64(clips.Data.Value("SELECT count(*) FROM entries WHERE saved = 1")) == 6,
+                    "one that cannot be read here comes along all the same, still encrypted");
+                List<Folder> folders = clips.Folders();
+                Folder casa = folders.Find(delegate(Folder f) { return f.Name == "Casa"; });
+                Folder lavoro = folders.Find(delegate(Folder f) { return f.Name == "Lavoro"; });
+                Folder server = folders.Find(delegate(Folder f) { return f.Name == "Server"; });
+                Check(folders.Count == 3 && casa.Open && lavoro.Open && !server.Open && server.ParentId == lavoro.Id && server.Level == 1,
+                    "folders become a tree, with the one only implied, each open or closed as it was");
+                Check(find("Server prod").FolderId == server.Id && find("Wi-Fi").FolderId == casa.Id && find("Orfano").FolderId == 0,
+                    "saved texts go into their folders, into none if theirs is gone");
+                Check(Convert.ToInt64(clips.Data.Value("SELECT count(*) FROM entries WHERE number = 2")) == 1, "a number claimed twice goes to one");
+
+                List<Entry> copied = clips.Copied(MainForm.MaxShown, new string[0]);
+                Entry top = copied.Find(delegate(Entry e) { return e.Text == "in alto"; });
+                Check(top != null && top.Pinned && top.Number == 7 && copied[0] == top, "a starred entry is at the top, with its number");
+                Check(copied.Exists(delegate(Entry e) { return e.Text == "cento giorni fa"; })
+                    && copied.Exists(delegate(Entry e) { return e.Text == "settimana scorsa" && e.Time.Date == DateTime.Today.AddDays(-6); }),
+                    "copied entries keep their days, also beyond those kept by default");
+                Check(!copied.Exists(delegate(Entry e) { return e.Text == "cancellato"; }), "a deleted entry stays deleted");
+                Entry picture = copied.Find(delegate(Entry e) { return e.Picture; });
+                using (Image back = Image.FromStream(new System.IO.MemoryStream(clips.Png(picture.Id))))
+                using (Bitmap pixels = new Bitmap(back))
+                    Check(picture.Width == 30 && picture.Preview != null && pixels.GetPixel(3, 3).ToArgb() == Color.Green.ToArgb(),
+                        "a picture comes along whole, with its preview");
+            }
+            System.IO.File.Delete(locked);   // made for the test, after the fingerprint
+            Check(Fingerprint(history, savedKey) == untouched, "the registry and the history files are left exactly as they were");
+            using (Clips clips = new Clips(path, delegate(Clips fresh) { Migration.Run(fresh, MainForm.SettingsKey, history); }))
+                Check(!clips.Created && clips.Saved().Count == 5, "opened again, it is not migrated twice");
+
+            // A migration that fails halfway leaves no database: the next start tries again.
+            string again = System.IO.Path.Combine(sandbox, "again.db");
+            Check(Throws<InvalidOperationException>(delegate
+            {
+                new Clips(again, delegate(Clips fresh)
+                {
+                    Migration.Run(fresh, MainForm.SettingsKey, history);
+                    throw new InvalidOperationException("halfway");
+                }).Dispose();
+            }), "a failing migration says so");
+            using (Clips clips = new Clips(again, delegate(Clips fresh) { result = Migration.Run(fresh, MainForm.SettingsKey, history); }))
+                Check(clips.Created && result.Saved == 6 && clips.Saved().Count == 5, "and the next start migrates everything");
+        }
+        finally
+        {
+            Texts.Recent.Clear();
+            Texts.Folder = before;
+        }
     }
 
     // Whether the database refuses a statement written by hand: a rule of the schema at work.

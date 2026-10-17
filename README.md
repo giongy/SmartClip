@@ -248,7 +248,8 @@ the privacy policy in [`PRIVACY.md`](PRIVACY.md).
   the encrypted round trip of a saved text through the registry.
 - `tests.exe data` checks the layer over the SQLite that comes with Windows (`winsqlite3.dll`): texts and bytes
   come back as they went in, broken rules are refused, transactions are all or nothing. It also checks the
-  database the list will move to (not in use yet): copied and saved entries, numbers, days, folders.
+  database the list will move to (not in use yet): copied and saved entries, numbers, days, folders, and the
+  migration of the registry and the history files into it, which must leave them exactly as they were.
 - `tests.exe type` opens a small window and really types into it: all ASCII characters, accented letters, AltGr
   symbols, Unicode, Alt codes, Tab and Enter. It then checks that a wrong window and a cancel both stop everything.
   It takes the keyboard focus for a couple of seconds, so keep your hands off while it runs.

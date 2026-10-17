@@ -77,7 +77,18 @@ condiviso su GitHub).
     la ricerca né impronta sui salvati, numeri 1–`MaxNumber` unici, nomi unici senza maiuscole (`Key`, perché
     NOCASE di SQLite conosce solo le lettere inglesi). Versione in `PRAGMA user_version` (`SchemaVersion`): un
     file più nuovo si rifiuta (`Strings.NewerDatabase`). Ore in UTC, millisecondi dal 1970. Copiare di nuovo
-    aggiorna la stessa riga (`hash`). `Entry` ha in più `Id`, `Saved`, `FolderId`.
+    aggiorna la stessa riga (`hash`). `Entry` ha in più `Id`, `Saved`, `FolderId`. Un database nuovo si riempie
+    dentro la transazione che lo crea (`new Clips(path, fill)`): se il riempimento fallisce non resta niente, e al
+    prossimo avvio è di nuovo nuovo (`Created`).
+  - `Migration.cs` — porta nel database nuovo, una volta sola, ciò che le versioni precedenti tenevano altrove
+    (passo 3 del piano): i salvati dal registro, ancora cifrati così com'erano (anche quelli che qui non si
+    leggono), con giorno, numero e cartella (i percorsi diventano l'albero); i copiati dai file `.clips`, con
+    stellina (che diventa la freccia) e numero, senza i record eliminati e fino a un record troncato. **Legge
+    soltanto**: registro e file restano intatti (lo controlla un test byte per byte), a differenza di
+    `Texts.ReadFile`, che taglia i record troncati. Nessuna scadenza durante la migrazione. Un numero conteso va
+    alla prima voce, un nome già preso prende « (2)», un file illeggibile si salta e va nel log. Le costanti del
+    formato vecchio sono sue: quelle uguali in `Texts` spariranno con il passo 4. Provata il 17/10/2026 in sola
+    lettura sui dati veri dell'utente (4 salvati, 16 copiati, 2 immagini: tutto, dati vecchi intatti).
   - `Packaged.cs` — quando il programma gira dal pacchetto del Microsoft Store (`Packaged.Family` non nullo):
     avvio con Windows con la `StartupTask` del pacchetto invece della chiave `Run` (`Startup` lo chiama), avvio
     all'accesso riconosciuto dall'attivazione invece che da `/tray`, cronologia in `LocalState` del pacchetto
@@ -525,7 +536,9 @@ impostazioni di default.
 - `tests.exe data` — il database, in file della cartella di prova: per ora lo strato SQLite (`SqliteTest`: testi
   e byte in andata e ritorno, NULL e byte vuoti, regole rifiutate, transazioni annidate, file liberato alla
   chiusura) e `Clips` (`ClipsTest`: copiati, freccia, immagini, numeri, regole dello schema provate scrivendo
-  SQL a mano, salvati con e senza nome, giorni, cartelle). Vi andrà anche la migrazione.
+  SQL a mano, salvati con e senza nome, giorni, cartelle) e la migrazione (`MigrationTest`: i dati vecchi li
+  scrive il `Texts` di oggi nella chiave e nella cartella di prova, più i casi difficili scritti a mano; poi
+  il confronto voce per voce, i dati vecchi intatti, una migrazione fallita a metà che al riavvio riparte).
 - `tests.exe type` — apre una finestrella e ci digita davvero: tutti i caratteri ASCII, accentate, simboli con
   AltGr, Unicode, Alt+codice, Tab, Invio; poi verifica che finestra sbagliata e annullamento blocchino tutto.
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.
