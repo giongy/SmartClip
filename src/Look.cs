@@ -1281,7 +1281,8 @@ static class Look
             if (sign.HasValue && !keys)
             {
                 int side = TextFont.Height;
-                Draw(e.Graphics, sign.Value, new Rectangle(area.Left - side, (e.Item.Height - side) / 2, side, side),
+                // Level with the text, which the menu writes a little above the middle of the row.
+                Draw(e.Graphics, sign.Value, new Rectangle(area.Left - side, area.Top + (area.Height - side) / 2, side, side),
                     e.Item.Enabled ? (Color?)null : faint);
             }
             area.Offset(before, 0);
