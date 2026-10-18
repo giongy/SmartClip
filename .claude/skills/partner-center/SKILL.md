@@ -80,8 +80,8 @@ cambiato in `store\README.md`.
 
 - Commit dei sorgenti, dei testi e delle immagini, con messaggio in inglese come i precedenti e la riga
   `Co-Authored-By`.
-- **Il push solo con il consenso esplicito dell'utente in questa conversazione**: pubblica la release `vX.Y.Z`
-  su GitHub. L'utente a volte vuole aspettare per aggiungere altro.
+- Poi il push, **senza chiedere**: chiedere la skill vale già come consenso (detto dall'utente il 18/10/2026: «se
+  ti chiedo la skill partner fai tutto»). Pubblica la release `vX.Y.Z` su GitHub.
 - Dopo il push, il flusso *Release* crea il pacchetto (qualche minuto): `gh run list --workflow release.yml
   --limit 1`, poi `gh run watch <id> --exit-status`.
 - `powershell -ExecutionPolicy Bypass -File store\get-package.ps1` scarica in `store\upload` il `.msix` della
