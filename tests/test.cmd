@@ -8,9 +8,12 @@ setlocal
 set HERE=%~dp0
 set CSC=%WINDIR%\Microsoft.NET\Framework64\v4.0.30319\csc.exe
 if not exist "%CSC%" set CSC=%WINDIR%\Microsoft.NET\Framework\v4.0.30319\csc.exe
-rem As in build.cmd: the Windows Runtime types used from the Store package.
+rem As in build.cmd: the Windows Runtime types used from the Store package and to read the text of pictures.
 for %%I in ("%CSC%") do set FRAMEWORK=%%~dpI
-set WINRT=/r:"%WINDIR%\System32\WinMetadata\Windows.ApplicationModel.winmd" /r:"%WINDIR%\System32\WinMetadata\Windows.Foundation.winmd" /r:"%FRAMEWORK%System.Runtime.dll"
+set META=%WINDIR%\System32\WinMetadata\Windows
+set WINRT=/r:"%META%.ApplicationModel.winmd" /r:"%META%.Foundation.winmd" /r:"%META%.Globalization.winmd" ^
+  /r:"%META%.Graphics.winmd" /r:"%META%.Media.winmd" /r:"%META%.Security.winmd" /r:"%META%.Storage.winmd" ^
+  /r:"%FRAMEWORK%System.Runtime.dll"
 
 echo Compilo i controlli...
 "%CSC%" /nologo /codepage:65001 /target:exe /main:TestProgram /out:"%HERE%tests.exe" ^

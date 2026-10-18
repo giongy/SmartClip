@@ -48,7 +48,8 @@ Per domande: https://github.com/giongy/SmartClip/issues
 Last updated: October 17, 2026
 
 SmartClip is a clipboard manager that runs entirely on your PC. **It does not connect to the Internet, has no
-accounts, ads or usage statistics, and sends nothing to anyone**, not even to its author.
+accounts, ads or usage statistics, and sends nothing to anyone**, not even to its author. Even the text of a
+picture (“Copy the text”) is read on your PC, by the text recognition built into Windows.
 
 ## What it keeps, and where
 

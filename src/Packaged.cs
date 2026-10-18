@@ -8,8 +8,8 @@ using Windows.Foundation;
 
 // When the program runs from its Microsoft Store package (MSIX), some things work otherwise: Windows starts it
 // at sign-in through a startup task declared in the package, not through the Run key, and its own data folder
-// is the one Windows gives the package. Only here are the Windows Runtime types used: outside a package they
-// throw, so nothing calls them there.
+// is the one Windows gives the package. The Windows Runtime types of the package are used only here: outside a
+// package they throw, so nothing calls them there (those of Ocr work everywhere).
 static class Packaged
 {
     // As declared in packaging\AppxManifest.xml.
@@ -83,9 +83,9 @@ static class Packaged
         return Wait(StartupTask.GetAsync(StartupTaskId));
     }
 
-    // Waits for an asynchronous call of Windows. AsTask would need the metadata of the Windows SDK, which
-    // the compiler included in Windows does not have.
-    static T Wait<T>(IAsyncOperation<T> operation)
+    // Waits for an asynchronous call of Windows, also for Ocr. AsTask would need the metadata of the Windows SDK,
+    // which the compiler included in Windows does not have.
+    public static T Wait<T>(IAsyncOperation<T> operation)
     {
         using (ManualResetEvent done = new ManualResetEvent(false))
         {

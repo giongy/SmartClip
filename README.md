@@ -123,7 +123,10 @@ on the clipboard without opening the window. Only the names are shown there, as 
 
 Once an entry is back on the clipboard, paste it with Ctrl+V as usual or type it with **Ctrl+Alt+V** where paste
 does not work. Pictures can only be pasted, not typed; they can be saved like texts, and a saved picture always
-shows its thumbnail, with its name beside it if it has one.
+shows its thumbnail, with its name beside it if it has one. **Copy the text**, in the right-click menu of a
+picture, puts on the clipboard the text in it, read by the text recognition built into Windows, on your PC: it
+comes into the list like any copy (from a saved picture it is marked private). Small screen text can come out with
+a few mistakes.
 
 Press **Ctrl+D** in any program to bring the window up with the cursor in the search box. After you choose an
 entry the focus returns to the program you were in, and the window hides again if it was hidden. Esc goes back

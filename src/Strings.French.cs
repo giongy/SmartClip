@@ -41,6 +41,7 @@ static partial class Strings
 
         Open = "Ouvrir"; Exit = "Quitter"; Pause = "Suspendre la capture"; Resume = "Reprendre la capture";
         ShowContent = "Afficher le contenu"; MoveTo = "Déplacer vers"; NewFolder = "Nouveau dossier…";
+        CopyPictureText = "Copier le texte";
         Pin = "Garder en haut"; Unpin = "Retirer du haut"; OutOfFolders = "Hors des dossiers"; EmptyFolder = "Vide";
         NumberMenu = "Raccourci"; NoNumber = "Aucun";
 
@@ -59,6 +60,10 @@ static partial class Strings
         Pasted = "Collé dans {1} : {0}.";
         PasteFocusLost = "Rien n'a été collé : la fenêtre a changé. L'élément est dans le presse-papiers.";
         OnClipboard = "Dans le presse-papiers : {0}. Collez-le avec Ctrl+V.";
+        ReadingPicture = "Lecture du texte de l'image…";
+        NoPictureText = "Windows n'a trouvé aucun texte dans l'image.";
+        NoRecognition = "Windows ne sait pas lire les images dans vos langues : installez la reconnaissance optique de caractères "
+            + "de l'une d'elles depuis ses options, dans Paramètres > Heure et langue.";
         OnClipboardOrType = "Dans le presse-papiers : {0}. Collez-le avec Ctrl+V ou saisissez-le avec {1}.";
         AskReplace = "« {0} » existe déjà. Voulez-vous le remplacer ?";
         SavedSay = "« {0} » enregistré.";
@@ -325,6 +330,10 @@ static partial class Strings
                 + "liste avec " + pick + ", vous ramènent à la fenêtre où vous travailliez.",
             "- Collez-le alors avec Ctrl+V, ou saisissez-le avec " + type + ".",
             "- Le clic droit sélectionne l'élément et ouvre son menu, sans toucher au presse-papiers.",
+            "- « " + CopyPictureText + " », dans le menu du clic droit d'une image, met dans le presse-papiers le texte "
+                + "que Windows y lit, ici sur le PC, sans internet : il entre dans la liste comme tout ce que vous copiez "
+                + "(celui d'une image enregistrée est privé, comme un texte enregistré). Un petit texte peut sortir avec "
+                + "des erreurs : vérifiez-le d'abord.",
             "- En laissant le pointeur sur un élément copié que sa ligne coupe, il apparaît en entier après un "
                 + "instant, dans un petit cadre : le texte avec toutes ses lignes, l'image en plus grand. Il disparaît "
                 + "dès que vous bougez le pointeur.",

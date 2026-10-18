@@ -988,7 +988,73 @@ static class TestProgram
         Look.UseEntryFont(null, Look.DefaultEntrySize);
         RichTest();
         LanguagesTest();
+        OcrTest();
         return failed == 0 ? 0 : 1;
+    }
+
+    // A picture of a text as the screen shows it, as PNG: on white, or on nothing (transparent). Of 16 pixels:
+    // smaller, Windows reads the text of a screen with mistakes, which are not what is checked here.
+    static byte[] TextPicture(string text, bool transparent)
+    {
+        using (Bitmap picture = new Bitmap(500, 80, transparent ? PixelFormat.Format32bppArgb : PixelFormat.Format24bppRgb))
+        using (Font font = new Font("Segoe UI", 12f))
+        using (System.IO.MemoryStream png = new System.IO.MemoryStream())
+        {
+            using (Graphics graphics = Graphics.FromImage(picture))
+            {
+                // GDI would leave the letters transparent on a transparent picture: there GDI+ writes them.
+                if (transparent)
+                {
+                    graphics.TextRenderingHint = System.Drawing.Text.TextRenderingHint.AntiAlias;
+                    graphics.DrawString(text, font, Brushes.Black, 4, 4);
+                }
+                else
+                {
+                    graphics.Clear(Color.White);
+                    TextRenderer.DrawText(graphics, text, font, new Rectangle(4, 4, 490, 70), Color.Black, TextFormatFlags.WordBreak);
+                }
+            }
+            picture.Save(png, ImageFormat.Png);
+            return png.ToArray();
+        }
+    }
+
+    // The text of a picture, read by Windows. Where it reads none of the languages (a server may not), only said.
+    static void OcrTest()
+    {
+        string read;
+        try
+        {
+            read = Ocr.Read(TextPicture("Tuesday 2026 meeting\nsecond line here", false));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine("[SKIP] reading pictures: " + ex.Message);
+            return;
+        }
+        if (read == null)
+        {
+            Console.WriteLine("[SKIP] reading pictures: Windows reads none of the languages here");
+            return;
+        }
+        Check(read == "Tuesday 2026 meeting\r\nsecond line here", "the text of a picture is read, a line per line: " + read.Replace("\r\n", " | "));
+        Check(Ocr.Read(TextPicture("Tuesday 2026 meeting", true)) == "Tuesday 2026 meeting", "a transparent picture is read too");
+        Check(Ocr.Read(TextPicture("", false)) == "", "a picture without text has none");
+        // Read as the language of the program, when Windows has it: that of English would lose the accents.
+        bool italian = false;
+        foreach (Windows.Globalization.Language language in Windows.Media.Ocr.OcrEngine.AvailableRecognizerLanguages)
+            italian |= language.LanguageTag.StartsWith("it");
+        if (!italian) return;
+        string code = Strings.Code;
+        Strings.Code = "it";
+        try
+        {
+            Check(Ocr.Read(TextPicture("Città più bella", false)) == "Città più bella", "in Italian the accents are read");
+        }
+        finally
+        {
+            Strings.Code = code;
+        }
     }
 
     static Run NewRun(string text, string font, float size, FontStyle style, Color colour)

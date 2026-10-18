@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
+using System.Threading;
 using System.Windows.Forms;
 
 // The two columns: filling and drawing their rows, choosing, saving and moving entries, the keys of the list.
@@ -24,6 +25,8 @@ partial class MainForm
         {
             if (savedList.SelectedIndex >= 0) ShowPeek(savedList, savedList.SelectedIndex, true);
         });
+        // Only for a picture: the text Windows reads in it.
+        ToolStripItem readItem = listMenu.Items.Add(Strings.CopyPictureText, null, delegate { CopyText(Selected); });
         // Only for a copied entry: the same as a click on its arrow.
         ToolStripItem pinItem = listMenu.Items.Add("", null, delegate { TogglePin(Selected); });
         // The number that chooses the entry after the list hotkey: the numbers are listed when the menu opens.
@@ -39,6 +42,7 @@ partial class MainForm
         pauseItems.Add(listMenu.Items.Add("", null, delegate { Pause(!paused); }));
         // Each with its sign, as in the menus of Windows 11; the one that saves or changes takes that of its button.
         Look.Mark(showItem, Sign.Show);
+        Look.Mark(readItem, Sign.Text);
         Look.Mark(pinItem, Sign.Up);
         Look.Mark(numberItem, Sign.Keys);
         Look.Mark(moveItem, Sign.Move);
@@ -55,6 +59,7 @@ partial class MainForm
             changeItem.Enabled = saveButton.Enabled;
             changeItem.Visible = deleteItem.Visible = entry != null;
             showItem.Visible = entry != null && entry.Saved && !entry.IsGroup && entry.Name != null && !entry.Picture;
+            readItem.Visible = entry != null && entry.Picture;
             pinItem.Visible = entry != null && !entry.Saved;
             pinItem.Text = entry != null && entry.Pinned ? Strings.Unpin : Strings.Pin;
             ListNumbers(numberItem, entry);
@@ -728,9 +733,7 @@ partial class MainForm
     {
         try
         {
-            DataObject data = new DataObject();
-            // A saved entry may be a password: marked so that Windows clipboard history and other monitors skip it.
-            if (entry.Saved) data.SetData(Texts.PrivateMarker, new MemoryStream(new byte[sizeof(int)]));
+            DataObject data = NewData(entry.Saved);
             if (!entry.Picture)
             {
                 // A formatted text is there as plain text too: what takes no formatting, and the typing, use that.
@@ -757,6 +760,77 @@ partial class MainForm
         Say(string.Format(hotkeyBox.Checked && !entry.Picture ? Strings.OnClipboardOrType : Strings.OnClipboard,
             Shorten(entry.ToString()), HotkeyName));
         return true;
+    }
+
+    // What goes onto the clipboard. Of a saved entry, which may be a password, marked so that the clipboard history
+    // of Windows and other monitors skip it.
+    static DataObject NewData(bool saved)
+    {
+        DataObject data = new DataObject();
+        if (saved) data.SetData(Texts.PrivateMarker, new MemoryStream(new byte[sizeof(int)]));
+        return data;
+    }
+
+    // The text Windows reads in a picture, onto the clipboard as if the user had copied it: so it also comes into
+    // the list, unless the picture is a saved one. Read away from the window, which a large picture would hold still.
+    void CopyText(Entry entry)
+    {
+        byte[] png;
+        try
+        {
+            png = entry.LoadPng();
+        }
+        catch (Exception ex)   // a picture the database no longer gives
+        {
+            ShowError(ex);
+            return;
+        }
+        bool saved = entry.Saved;
+        status.Text = Strings.ReadingPicture;
+        ThreadPool.QueueUserWorkItem(delegate
+        {
+            string text = null;
+            Exception error = null;
+            try
+            {
+                text = Ocr.Read(png);
+            }
+            catch (Exception ex)   // a Windows without the recognition, or a picture it does not take
+            {
+                error = ex;
+            }
+            try
+            {
+                BeginInvoke((MethodInvoker)delegate { CopyRead(text, error, saved); });
+            }
+            catch (InvalidOperationException)
+            {
+                // the window closed meanwhile
+            }
+        });
+    }
+
+    void CopyRead(string text, Exception error, bool saved)
+    {
+        if (error != null) ShowError(error);
+        else if (text == null) Warn(Strings.NoRecognition);
+        else if (text.Length == 0) Warn(Strings.NoPictureText);
+        else
+        {
+            try
+            {
+                DataObject data = NewData(saved);
+                data.SetText(text);
+                Clipboard.SetDataObject(data, true);
+            }
+            catch (Exception ex)   // the clipboard locked by another program
+            {
+                ShowError(ex);
+                return;
+            }
+            Say(string.Format(hotkeyBox.Checked ? Strings.OnClipboardOrType : Strings.OnClipboard,
+                Shorten(new Entry(null, text).ToString()), HotkeyName));
+        }
     }
 
     // The list hotkey: shows the window with the list, remembering where the user was.

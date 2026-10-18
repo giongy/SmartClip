@@ -83,6 +83,7 @@ static partial class Strings
     public static string ShowContent = "Show the content", MoveTo = "Move to", NewFolder = "New folder…",
         Pin = "Keep at the top", Unpin = "Release from the top", OutOfFolders = "Out of the folders", EmptyFolder = "Empty";
     public static string NumberMenu = "Shortcut", NoNumber = "None";
+    public static string CopyPictureText = "Copy the text";
 
     // --- Tray ---
     public static string TrayReady = ": text ready on the clipboard", TrayEmpty = ": no text on the clipboard",
@@ -102,6 +103,10 @@ static partial class Strings
     public static string PasteFocusLost = "Not pasted: the window changed. The entry is on the clipboard.";
     public static string OnClipboard = "On the clipboard: {0}. Paste it with Ctrl+V.";
     public static string OnClipboardOrType = "On the clipboard: {0}. Paste it with Ctrl+V or type it with {1}.";
+    public static string ReadingPicture = "Reading the text in the picture…";
+    public static string NoPictureText = "Windows found no text in the picture.";
+    public static string NoRecognition = "Windows cannot read pictures in your languages: install the optical character recognition "
+        + "of one from its options, in Settings > Time & language.";
     public static string AskReplace = "“{0}” already exists. Replace it?";
     public static string SavedSay = "Saved “{0}”.";
     public static string FolderNoSeparator = "The name of a folder cannot contain “{0}”.";
@@ -370,6 +375,9 @@ static partial class Strings
                 + ", take you back to the window you were working in.",
             "- Then paste it with Ctrl+V, or type it with " + type + ".",
             "- Right-click selects the entry and opens its menu, without touching the clipboard.",
+            "- “" + CopyPictureText + "”, in the right-click menu of a picture, puts on the clipboard the text Windows "
+                + "reads in it, here on the PC, without the internet: it comes into the list as anything you copy (that of "
+                + "a saved picture is private, as a saved text is). Small text can come out with mistakes: look at it first.",
             "- Resting the pointer on a copied entry its row cuts short shows it whole after a moment, in a small "
                 + "box: the text with all its lines, the picture larger. It goes as soon as you move the pointer.",
             "- The arrow at the right end of a copied entry (" + Key(Keys.Control | MainForm.PinKey) + ") keeps it at "

@@ -39,6 +39,7 @@ static partial class Strings
 
         Open = "Abrir"; Exit = "Salir"; Pause = "Pausar la captura"; Resume = "Reanudar la captura";
         ShowContent = "Mostrar el contenido"; MoveTo = "Mover a"; NewFolder = "Nueva carpeta…";
+        CopyPictureText = "Copiar el texto";
         Pin = "Mantener arriba"; Unpin = "Quitar de arriba"; OutOfFolders = "Fuera de las carpetas"; EmptyFolder = "Vacía";
         NumberMenu = "Atajo"; NoNumber = "Ninguno";
 
@@ -57,6 +58,10 @@ static partial class Strings
         Pasted = "Pegado en {1}: {0}.";
         PasteFocusLost = "No se ha pegado: la ventana ha cambiado. La entrada está en el portapapeles.";
         OnClipboard = "En el portapapeles: {0}. Pégalo con Ctrl+V.";
+        ReadingPicture = "Leyendo el texto de la imagen…";
+        NoPictureText = "Windows no encontró texto en la imagen.";
+        NoRecognition = "Windows no sabe leer imágenes en tus idiomas: instala el reconocimiento óptico de caracteres "
+            + "de uno desde sus opciones, en Configuración > Hora e idioma.";
         OnClipboardOrType = "En el portapapeles: {0}. Pégalo con Ctrl+V o tecléalo con {1}.";
         AskReplace = "«{0}» ya existe. ¿Quieres reemplazarlo?";
         SavedSay = "Guardado «{0}».";
@@ -318,6 +323,10 @@ static partial class Strings
                 + pick + ", te devuelven a la ventana en la que estabas trabajando.",
             "- Luego la pegas con Ctrl+V, o la tecleas con " + type + ".",
             "- El clic derecho selecciona la entrada y abre su menú, sin tocar el portapapeles.",
+            "- «" + CopyPictureText + "», en el menú del clic derecho de una imagen, pone en el portapapeles el texto "
+                + "que Windows lee en ella, aquí en el PC, sin internet: entra en la lista como todo lo que copias (el de "
+                + "una imagen guardada es privado, como un texto guardado). El texto pequeño puede salir con algún error: "
+                + "revísalo antes.",
             "- Si dejas el puntero sobre una entrada copiada que no cabe entera en su fila, al momento aparece "
                 + "completa en un recuadro: el texto con todas sus líneas, la imagen más grande. Desaparece en cuanto "
                 + "mueves el puntero.",

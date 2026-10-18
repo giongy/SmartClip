@@ -39,6 +39,7 @@ static partial class Strings
 
         Open = "Apri"; Exit = "Esci"; Pause = "Sospendi la cattura"; Resume = "Riprendi la cattura";
         ShowContent = "Mostra il contenuto"; MoveTo = "Sposta in"; NewFolder = "Nuova cartella…";
+        CopyPictureText = "Copia il testo";
         Pin = "Tieni in alto"; Unpin = "Togli dall'alto"; OutOfFolders = "Fuori dalle cartelle"; EmptyFolder = "Vuota";
         NumberMenu = "Scorciatoia"; NoNumber = "Nessuna";
 
@@ -56,6 +57,10 @@ static partial class Strings
         Pasted = "Incollato in {1}: {0}.";
         PasteFocusLost = "Non incollato: la finestra è cambiata. La voce è negli appunti.";
         OnClipboard = "Negli appunti: {0}. Incollalo con Ctrl+V.";
+        ReadingPicture = "Lettura del testo nell'immagine…";
+        NoPictureText = "Windows non ha trovato testo nell'immagine.";
+        NoRecognition = "Windows non sa leggere le immagini nelle tue lingue: installa il riconoscimento ottico dei caratteri "
+            + "di una dalle sue opzioni, in Impostazioni > Ora e lingua.";
         OnClipboardOrType = "Negli appunti: {0}. Incollalo con Ctrl+V o digitalo con {1}.";
         AskReplace = "«{0}» esiste già. Vuoi sostituirlo?";
         SavedSay = "Salvato «{0}».";
@@ -314,6 +319,10 @@ static partial class Strings
                 + ", ti riportano alla finestra in cui stavi lavorando.",
             "- A quel punto la incolli con Ctrl+V, oppure la digiti con " + type + ".",
             "- Il tasto destro seleziona la voce e apre il suo menu, senza toccare gli appunti.",
+            "- «" + CopyPictureText + "», nel menu del tasto destro di un'immagine, mette negli appunti il testo che "
+                + "Windows ci legge, qui sul PC, senza internet: entra nell'elenco come ogni cosa che copi (quello di "
+                + "un'immagine salvata è riservato, come un testo salvato). Il testo piccolo può uscire con qualche errore: "
+                + "guardalo prima.",
             "- Fermando il puntatore su una voce copiata che nella riga non ci sta tutta, dopo un attimo compare per "
                 + "intero in un riquadro: il testo con tutte le sue righe, l'immagine più grande. Sparisce appena "
                 + "sposti il puntatore.",

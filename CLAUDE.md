@@ -112,8 +112,10 @@ condiviso su GitHub).
   - `Packaged.cs` — quando il programma gira dal pacchetto del Microsoft Store (`Packaged.Family` non nullo):
     avvio con Windows con la `StartupTask` del pacchetto invece della chiave `Run` (`Startup` lo chiama), avvio
     all'accesso riconosciuto dall'attivazione invece che da `/tray`, database e log in `LocalState` del pacchetto
-    (quella sotto `%LOCALAPPDATA%` Windows la sposterebbe in una copia nascosta che Esplora file non vede). È
-    l'unico file con tipi di Windows Runtime: fuori dal pacchetto non vanno chiamati.
+    (quella sotto `%LOCALAPPDATA%` Windows la sposterebbe in una copia nascosta che Esplora file non vede). I suoi
+    tipi di Windows Runtime fuori dal pacchetto non vanno chiamati (quelli di `Ocr` sì).
+  - `Ocr.cs` — il testo di un'immagine letto dal riconoscimento di Windows (`Windows.Media.Ocr`, sul PC, senza
+    rete; funziona anche fuori dal pacchetto): vedi «Copia il testo» sotto.
 - `packaging\` — il pacchetto MSIX per lo Store: `AppxManifest.xml` (identità da Partner Center, *Product
   management → Product identity*: `lsgag.SmartClipClipboardTyper`, editore `ls_gag`; il nome sullo Store è «SmartClip – Clipboard & Typer», scelto
   dall'utente perché «SmartClip» era preso e «ClipSmart» è già un gestore di appunti per Chrome: sta in
@@ -163,10 +165,12 @@ condiviso su GitHub).
   `out var`, membri a espressione, `readonly struct`, costruttori primari. I suggerimenti di VS Code che li
   propongono vanno ignorati. Lo scopo è poter ricompilare sul PC del lavoro senza installare nulla.
 - Il sorgente è UTF-8 senza BOM con lettere accentate: serve `/codepage:65001` (già in `build.cmd`).
-- `Packaged.cs` usa Windows Runtime: `build.cmd` e `test.cmd` riferiscono `Windows.ApplicationModel.winmd` e
-  `Windows.Foundation.winmd` da `%WINDIR%\System32\WinMetadata` e `System.Runtime.dll` accanto a `csc`, tutti già
-  in Windows 10 e 11. Niente `AsTask` (vorrebbe `Windows.winmd` dell'SDK): le operazioni asincrone si aspettano
-  con `Completed` (`Packaged.Wait`). Compilando a mano vanno aggiunti gli stessi `/r:`.
+- `Packaged.cs` e `Ocr.cs` usano Windows Runtime: `build.cmd` e `test.cmd` riferiscono i `.winmd` che servono
+  (`ApplicationModel`, `Foundation`, `Globalization`, `Graphics`, `Media`, `Security`, `Storage`) da
+  `%WINDIR%\System32\WinMetadata` e `System.Runtime.dll` accanto a `csc`, tutti già in Windows 10 e 11. Niente
+  `AsTask` né `AsBuffer` (vorrebbero `Windows.winmd` dell'SDK): le operazioni asincrone si aspettano con
+  `Completed` (`Packaged.Wait`), i byte diventano un `IBuffer` con `CryptographicBuffer.CreateFromByteArray`.
+  Compilando a mano vanno aggiunti gli stessi `/r:`.
 - `build.cmd` e `test.cmd` finiscono con `pause`: da riga di comando lanciarli con `< NUL`.
 - La compilazione fallisce se `SmartClip.exe` è in esecuzione (può essere nascosto nel tray): controllare
   prima con `Get-Process SmartClip`.
@@ -304,6 +308,18 @@ condiviso su GitHub).
   `EditForm` mostra l'immagine al posto del contenuto e chiede solo nome e cartella; un'immagine salvata mostra
   **sempre** la miniatura, con accanto il nome se c'è (decisione dell'utente: per le immagini il nome non nasconde
   niente, `PictureHintEmpty`/`PictureHintNamed`), e l'anteprima compare passandoci sopra. Non si esportano.
+- «Copia il testo» (voluto dall'utente il 18/10/2026), nel menu del tasto destro di un'immagine, copiata o salvata
+  (`CopyText`): il testo che il riconoscimento di Windows ci legge (`Ocr.Read`, una riga per riga) va negli appunti
+  **come una copia dell'utente** (niente `ownCopy`), così entra nell'elenco; quello di un'immagine salvata porta il
+  formato riservato (`NewData`, lo stesso di `Use`). Si legge in un thread a parte (una schermata intera, 120 ms) e
+  il risultato torna con `BeginInvoke`; intanto la riga di stato lo dice. Nessun testo, o nessuna lingua che
+  Windows sappia leggere, è un avviso. Scelte provate (prototipo del 18/10/2026, 240 immagini di testo dello
+  schermo, ClearType, 8–12 pt): la lingua è quella del programma se Windows ha il suo riconoscimento (quello
+  inglese legge «Città» male), altrimenti quelle del profilo; l'immagine **non si ingrandisce** (nitida non
+  migliora, sfumata non si legge più niente) ma si mette su un margine bianco di 400 px (`Ocr.Margin`: letture
+  esatte da 86 a 144 su 240), e una trasparente su bianco. Il testo sotto i 10 pt esce comunque con qualche
+  errore («second fine here»): è il motore di Windows, e la guida lo dice. La ricerca nel testo delle immagini
+  non c'è (vorrebbe leggerle tutte alla copia).
 - I testi salvati (`Entry.Saved`) stanno nello stesso database, contenuto e miniatura cifrati con DPAPI per
   l'utente (`ProtectedData`, in `System.Security.dll` che `csc` riferisce già da solo); non hanno testo per la
   ricerca né impronta, che li tradirebbero. Non scadono mai. L'elenco li tiene in memoria decifrati (`entries`,
@@ -681,7 +697,9 @@ cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
 - `tests.exe map` — stampa la mappa della tastiera attiva e confronta la tabella americana (solo lettere e
   cifre, se il layout USA non è installato).
 - `tests.exe texts` — la logica attorno all'elenco, senza aprirlo e senza toccare gli appunti: formati riservati,
-  ricerca, percorsi delle cartelle, file esportato, caratteri, testi formattati (`RichTest`), lingue, il log.
+  ricerca, percorsi delle cartelle, file esportato, caratteri, testi formattati (`RichTest`), lingue, il log, il
+  testo delle immagini (`OcrTest`: due righe a 16 px, una trasparente, una vuota, le accentate in italiano; dove
+  Windows non ha lingue da leggere, come forse il server di GitHub, scrive `[SKIP]`).
 - `tests.exe data` — il database, in file della cartella di prova: per ora lo strato SQLite (`SqliteTest`: testi
   e byte in andata e ritorno, NULL e byte vuoti, regole rifiutate, transazioni annidate, file liberato alla
   chiusura) e `Clips` (`ClipsTest`: copiati, freccia, immagini, numeri, regole dello schema provate scrivendo
@@ -725,6 +743,9 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - Che il formato «riservato» messo sui testi salvati tenga davvero fuori la cronologia di Windows (Win+V).
 - I formati riservati sugli appunti veri (provati solo su oggetti in memoria) e la cattura a ogni copia.
 - Le immagini dal vivo: cattura di una schermata vera e ritorno negli appunti.
+- «Copia il testo» dal vivo: il clic sulla voce del menu, la copia che entra nell'elenco, un Windows senza lingue
+  per il riconoscimento (l'avviso), Windows 10, il pacchetto dello Store. Provati `Ocr.Read` (`texts`, e una
+  schermata intera letta da un programmino usa e getta) e la compilazione.
 - L'avviso di SQLite mancante o troppo vecchio: nessun Windows a portata di mano ne è privo.
 - Il database con migliaia di voci (la ricerca, la scadenza, il file che si restringe): provato solo con le
   poche dei test. E dal pacchetto dello Store, dove sta in `LocalState`.
