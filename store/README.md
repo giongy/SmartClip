@@ -129,7 +129,7 @@ Pause capturing with one click
 Export and import to a text file, and the database in the folder you choose
 Starts with Windows, hidden in the notification area
 Built-in guide, organized by topic
-Windows 11 look with the icons of Windows, light or dark theme, fonts and sizes of the interface and of the entries of your choice
+Windows 11 look: options like Windows Settings, icons in menus, light or dark theme, fonts and sizes of the interface and of the entries of your choice
 In English, Spanish, French and Italian
 No account, no ads, no Internet connection
 ```
@@ -149,15 +149,13 @@ paste blocked
 ### What's new in this version
 
 ```
-A faster, smoother SmartClip.
+A more modern SmartClip, closer to Windows 11.
 
-The lists no longer flicker when the pointer moves over them: each row is drawn in one go.
+The options look like Windows Settings: each one on a card, with a few words on what it does and its switch on the right. A new page, Appearance, gathers language, theme and fonts.
 
-Every copy costs less: the list is read again only when something new has arrived, and the pictures in the history are no longer decoded again at each copy, which also keeps the memory lower.
+Menus have an icon beside each entry, and the choice in use is ticked. Messages appear in coloured bars that tell at once whether something worked, needs attention or went wrong. The mark of the selected row slides to the next one, the buttons at the bottom are quieter, and Ctrl+F takes you to the search box.
 
-Pasting a long formatted text into the window of a saved text is now immediate, even with tens of thousands of characters.
-
-Small fixes: the folder of a saved text fits on its button at every display scale.
+Formatted texts copied from browsers, web mail or VS Code now keep their formatting when you save them, accents included, and what comes from a dark page pastes into Word or Outlook in normal colours.
 ```
 
 ### Screenshot captions
@@ -169,7 +167,7 @@ Small fixes: the folder of a saved text fits on its button at every display scal
 | `3-preview.png` | Rest the pointer on an entry to see all of it. |
 | `4-save.png` | Save a text under a name, in its folder, formatted too: a mail signature keeps its bold and its fonts. |
 | `5-tray-menu.png` | Saved texts are also in the menu of the icon by the clock. |
-| `6-options.png` | Options in pages, like Windows Settings: typing, hotkeys, history and the program. |
+| `6-options.png` | Options like Windows Settings, one card each: typing, hotkeys, history, appearance and the program. |
 | `7-guide.png` | A guide organized by topic, always one F1 away. |
 | `8-light.png` | Dark or light: choose it in the options, or let it follow Windows. |
 
@@ -229,7 +227,7 @@ Cattura sospendibile con un clic
 Esportazione e importazione in un file di testo, e il database nella cartella che scegli
 Avvio con Windows, nascosto nell'area di notifica
 Guida integrata, divisa per argomenti
-Aspetto da Windows 11 con le icone di Windows, tema chiaro o scuro, caratteri e dimensioni di interfaccia e voci a scelta
+Aspetto da Windows 11: opzioni come Impostazioni, icone nei menu, tema chiaro o scuro, caratteri e dimensioni di interfaccia e voci a scelta
 In italiano, inglese, spagnolo e francese
 Nessun account, nessuna pubblicità, nessuna connessione a Internet
 ```
@@ -249,15 +247,13 @@ digitare password
 ### Novità di questa versione
 
 ```
-Uno SmartClip più veloce e più fluido.
+Uno SmartClip più moderno, più vicino a Windows 11.
 
-Gli elenchi non sfarfallano più quando ci passi sopra con il puntatore: ogni riga si disegna in un colpo solo.
+Le opzioni sono come Impostazioni di Windows: ognuna su una scheda, con poche parole su che cosa fa e l'interruttore a destra. Una pagina nuova, Aspetto, riunisce lingua, tema e caratteri.
 
-Ogni copia costa meno: l'elenco si rilegge solo quando è arrivato qualcosa di nuovo, e le immagini della cronologia non vengono più decodificate di nuovo a ogni copia, così si usa anche meno memoria.
+I menu hanno un'icona accanto a ogni voce, e la scelta in uso ha la spunta. I messaggi compaiono in barre colorate che dicono subito se qualcosa è riuscito, va controllato o è andato storto. La tacca della riga selezionata scivola alla successiva, i pulsanti in basso sono più discreti e Ctrl+F porta alla ricerca.
 
-Incollare un testo formattato lungo nella finestra di un testo salvato ora è immediato, anche con decine di migliaia di caratteri.
-
-Piccole correzioni: la cartella di un testo salvato sta nel suo pulsante a ogni scala dello schermo.
+I testi formattati copiati da browser, posta web o VS Code ora tengono la formattazione quando li salvi, accenti compresi, e ciò che arriva da una pagina scura si incolla in Word o Outlook con i colori normali.
 ```
 
 ### Didascalie delle schermate
@@ -269,7 +265,7 @@ Piccole correzioni: la cartella di un testo salvato sta nel suo pulsante a ogni 
 | `3-preview.png` | Fermati su una voce per vederla per intero. |
 | `4-save.png` | Salva un testo con un nome, nella sua cartella, anche formattato: una firma di posta tiene grassetti e caratteri. |
 | `5-tray-menu.png` | I testi salvati anche nel menu dell'icona vicino all'orologio. |
-| `6-options.png` | Opzioni divise in pagine, come in Impostazioni di Windows: digitazione, scorciatoie, cronologia e programma. |
+| `6-options.png` | Opzioni come in Impostazioni di Windows, una scheda ciascuna: digitazione, scorciatoie, cronologia, aspetto e programma. |
 | `7-guide.png` | Una guida divisa per argomenti, sempre a portata di F1. |
 | `8-light.png` | Scuro o chiaro: si sceglie nelle opzioni, o segue Windows. |
 
@@ -329,7 +325,7 @@ Captura que se pausa con un clic
 Exportación e importación a un archivo de texto, y la base de datos en la carpeta que elijas
 Inicio con Windows, oculto en el área de notificación
 Guía integrada, dividida por temas
-Aspecto de Windows 11 con los iconos de Windows, tema claro u oscuro, fuentes y tamaños de la interfaz y de las entradas a elegir
+Aspecto de Windows 11: opciones como Configuración, iconos en los menús, tema claro u oscuro, fuentes y tamaños de la interfaz y de las entradas a elegir
 En español, inglés, francés e italiano
 Sin cuenta, sin publicidad, sin conexión a Internet
 ```
@@ -349,15 +345,13 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Un SmartClip más rápido y más fluido.
+Un SmartClip más moderno, más cercano a Windows 11.
 
-Las listas ya no parpadean cuando pasas el puntero por encima: cada fila se dibuja de una vez.
+Las opciones se parecen a Configuración de Windows: cada una en una tarjeta, con unas palabras sobre lo que hace y su interruptor a la derecha. Una página nueva, Apariencia, reúne idioma, tema y fuentes.
 
-Cada copia cuesta menos: la lista se vuelve a leer solo cuando ha llegado algo nuevo, y las imágenes del historial ya no se decodifican de nuevo en cada copia, lo que además reduce la memoria usada.
+Los menús tienen un icono junto a cada entrada, y la opción en uso lleva una marca. Los mensajes aparecen en barras de color que dicen enseguida si algo ha salido bien, requiere atención o ha fallado. La marca de la fila seleccionada se desliza hasta la siguiente, los botones de abajo son más discretos y Ctrl+F lleva a la búsqueda.
 
-Pegar un texto con formato largo en la ventana de un texto guardado ahora es inmediato, incluso con decenas de miles de caracteres.
-
-Pequeñas correcciones: la carpeta de un texto guardado cabe en su botón con cualquier escala de pantalla.
+Los textos con formato copiados de navegadores, correo web o VS Code ahora conservan el formato al guardarlos, acentos incluidos, y lo que llega de una página oscura se pega en Word u Outlook con colores normales.
 ```
 
 ### Leyendas de las capturas
@@ -369,7 +363,7 @@ Pequeñas correcciones: la carpeta de un texto guardado cabe en su botón con cu
 | `3-preview.png` | Deja el puntero sobre una entrada para verla entera. |
 | `4-save.png` | Guarda un texto con un nombre, en su carpeta, también con formato: una firma de correo conserva sus negritas y sus fuentes. |
 | `5-tray-menu.png` | Los textos guardados también están en el menú del icono junto al reloj. |
-| `6-options.png` | Opciones en páginas, como en Configuración de Windows: tecleo, atajos, historial y programa. |
+| `6-options.png` | Opciones como en Configuración de Windows, una tarjeta cada una: tecleo, atajos, historial, apariencia y programa. |
 | `7-guide.png` | Una guía dividida por temas, siempre a un F1 de distancia. |
 | `8-light.png` | Oscuro o claro: se elige en las opciones, o sigue a Windows. |
 
@@ -429,7 +423,7 @@ Capture suspendue en un clic
 Export et import dans un fichier texte, et la base de données dans le dossier de votre choix
 Démarrage avec Windows, caché dans la zone de notification
 Guide intégré, organisé par sujet
-Aspect Windows 11 avec les icônes de Windows, thème clair ou sombre, polices et tailles de l'interface et des éléments au choix
+Aspect Windows 11 : options comme les Paramètres, icônes dans les menus, thème clair ou sombre, polices et tailles de l'interface et des éléments au choix
 En français, anglais, espagnol et italien
 Pas de compte, pas de publicité, pas de connexion à Internet
 ```
@@ -449,15 +443,13 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Un SmartClip plus rapide et plus fluide.
+Un SmartClip plus moderne, plus proche de Windows 11.
 
-Les listes ne scintillent plus quand le pointeur passe dessus : chaque ligne est dessinée d'un seul coup.
+Les options ressemblent aux Paramètres de Windows : chacune sur une carte, avec quelques mots sur ce qu'elle fait et son interrupteur à droite. Une nouvelle page, Apparence, réunit langue, thème et polices.
 
-Chaque copie coûte moins : la liste n'est relue que lorsque quelque chose de nouveau est arrivé, et les images de l'historique ne sont plus décodées à nouveau à chaque copie, ce qui réduit aussi la mémoire utilisée.
+Les menus ont une icône à côté de chaque élément, et le choix en cours est coché. Les messages s'affichent dans des barres colorées qui disent tout de suite si quelque chose a réussi, demande votre attention ou a échoué. La marque de la ligne sélectionnée glisse jusqu'à la suivante, les boutons du bas sont plus discrets et Ctrl+F mène à la recherche.
 
-Coller un long texte mis en forme dans la fenêtre d'un texte enregistré est maintenant immédiat, même avec des dizaines de milliers de caractères.
-
-Petites corrections : le dossier d'un texte enregistré tient sur son bouton à toutes les échelles d'affichage.
+Les textes mis en forme copiés depuis un navigateur, une messagerie web ou VS Code gardent maintenant leur mise en forme à l'enregistrement, accents compris, et ce qui vient d'une page sombre se colle dans Word ou Outlook avec des couleurs normales.
 ```
 
 ### Légendes des captures
@@ -469,7 +461,7 @@ Petites corrections : le dossier d'un texte enregistré tient sur son bouton à 
 | `3-preview.png` | Laissez le pointeur sur un élément pour le voir en entier. |
 | `4-save.png` | Enregistrez un texte sous un nom, dans son dossier, même mis en forme : une signature de courriel garde son gras et ses polices. |
 | `5-tray-menu.png` | Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge. |
-| `6-options.png` | Des options en pages, comme dans les Paramètres de Windows : saisie, raccourcis, historique et programme. |
+| `6-options.png` | Des options comme dans les Paramètres de Windows, une carte chacune : saisie, raccourcis, historique, apparence et programme. |
 | `7-guide.png` | Un guide organisé par sujet, toujours à portée de F1. |
 | `8-light.png` | Sombre ou clair : à choisir dans les options, ou comme Windows. |
 
@@ -479,7 +471,7 @@ Nell'invio, *Submission options → Notes for certification*. In inglese, perch�
 con le etichette dell'interfaccia inglese, quella che vedono al primo avvio:
 
 ```
-SmartClip is a clipboard manager that can also type the clipboard text as simulated key presses (SendInput), for sign-in screens of remote desktops and virtual machine consoles where paste is blocked. It is a .NET Framework 4 Windows Forms desktop app packaged as MSIX (runFullTrust). The user interface is in English by default, and also in Spanish, French and Italian (Options > Program > Language). No account, no network access, no purchases.
+SmartClip is a clipboard manager that can also type the clipboard text as simulated key presses (SendInput), for sign-in screens of remote desktops and virtual machine consoles where paste is blocked. It is a .NET Framework 4 Windows Forms desktop app packaged as MSIX (runFullTrust). The user interface is in English by default, and also in Spanish, French and Italian (Options > Appearance > Language). No account, no network access, no purchases.
 
 How to test:
 1. Launch SmartClip and copy some text in any program: it appears under "Recently copied".

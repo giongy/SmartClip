@@ -1768,9 +1768,9 @@ static class TestProgram
                 form.Hide();
                 using (ContextMenuStrip menu = new ContextMenuStrip())
                 {
-                    menu.Items.Add(Strings.Open);
-                    menu.Items.Add(Strings.Pause);
-                    menu.Items.Add(Strings.Exit);
+                    Look.Mark(menu.Items.Add(Strings.Open), Sign.Open);   // with their signs, as MainForm gives them
+                    Look.Mark(menu.Items.Add(Strings.Pause), Sign.Pause);
+                    Look.Mark(menu.Items.Add(Strings.Exit), Sign.Exit);
                     Look.Style(menu);
                     typeof(MainForm).GetMethod("ShowSaved", hidden).Invoke(form, new object[] { menu });
                     menu.Show(new Point(area.Left + area.Width / 3, area.Top + Top * 3));
