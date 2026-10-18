@@ -7,7 +7,7 @@ using System.Threading;
 using System.Windows.Forms;
 
 // A part of a card, where a click does something of its own.
-enum Part { None, Body, Copy, Save, Delete, Show, Pin, More }
+enum Part { None, Body, Copy, Save, Delete, Pin, More }
 
 // The name of a day among the cards: those under it were copied, or saved, that day.
 class Heading
@@ -25,12 +25,11 @@ class Heading
     }
 }
 
-// Where the parts of a card are, in its row: the card itself, with air under it; on top the program or the folder,
-// with what the entry is at the right end; the entry; at the bottom its buttons, and at the right end when it was
-// copied, its number, its arrow and the button of its menu.
+// Where the parts of a card are, in its row: the card itself, with air under it; the entry, first; at the right of
+// its first line its number, its arrow and the small buttons; under it the small line of where, when and what.
 class CardParts
 {
-    public Rectangle Card, Head, Body, Foot, Time, Number, Pin, More;
+    public Rectangle Card, Body, Meta, Number, Pin;
     public readonly Dictionary<Part, Rectangle> Buttons = new Dictionary<Part, Rectangle>();
 }
 
@@ -52,8 +51,8 @@ partial class MainForm
         EventHandler delete = delegate { DeleteSelected(); };
         newButton.Click += create;
         ToolStripItem changeItem = listMenu.Items.Add("", null, change);
-        // Only for a saved text, of which the card shows the name alone: its content, for a while.
-        ToolStripItem showItem = listMenu.Items.Add(Strings.ShowContent, null, delegate { PeekSelected(); });
+        // The whole entry, for a while: what the card cuts short, or the content of a saved text it shows by its name.
+        ToolStripItem showItem = listMenu.Items.Add(Strings.ShowFull, null, delegate { PeekSelected(); });
         // Only for a picture: the text Windows reads in it.
         ToolStripItem readItem = listMenu.Items.Add(Strings.CopyPictureText, null, delegate { CopyText(Selected); });
         // Only for a copied entry: the same as a click on its arrow.
@@ -61,6 +60,9 @@ partial class MainForm
         // The number that pastes the entry from anywhere: the numbers are listed when the menu opens.
         ToolStripMenuItem numberItem = new ToolStripMenuItem(Strings.NumberMenu);
         listMenu.Items.Add(numberItem);
+        // Only for a text: what it is, when the guess is wrong.
+        ToolStripMenuItem kindItem = new ToolStripMenuItem(Strings.KindMenu);
+        listMenu.Items.Add(kindItem);
         // Only for a saved text, once there are folders: they are listed when the menu opens.
         ToolStripMenuItem moveItem = new ToolStripMenuItem(Strings.MoveTo);
         listMenu.Items.Add(moveItem);
@@ -71,6 +73,7 @@ partial class MainForm
         Look.Mark(readItem, Sign.Text);
         Look.Mark(pinItem, Sign.Up);
         Look.Mark(numberItem, Sign.Keys);
+        Look.Mark(kindItem, Sign.Code);
         Look.Mark(moveItem, Sign.Move);
         Look.Mark(deleteItem, Sign.Delete);
         Look.Mark(newItem, Sign.Plus);
@@ -82,15 +85,18 @@ partial class MainForm
             changeItem.Text = entry != null && entry.Saved ? Strings.EditDots : Strings.SaveDots;
             Look.Mark(changeItem, entry != null && entry.Saved ? Sign.Edit : Sign.Star);
             changeItem.Visible = deleteItem.Visible = entry != null;
-            showItem.Visible = entry != null && entry.Saved && entry.Name != null && !entry.Picture;
+            showItem.Visible = entry != null;
+            showItem.Text = entry != null && entry.Saved && entry.Name != null && !entry.Picture ? Strings.ShowContent : Strings.ShowFull;
             readItem.Visible = entry != null && entry.Picture;
             pinItem.Visible = entry != null && !entry.Saved;
             pinItem.Text = entry != null && entry.Pinned ? Strings.Unpin : Strings.Pin;
             ListNumbers(numberItem, entry);
+            ListKinds(kindItem, entry);
             ListPlaces(moveItem, entry);
         };
         Look.Style((ToolStripDropDownMenu)moveItem.DropDown);
         Look.Style((ToolStripDropDownMenu)numberItem.DropDown);
+        Look.Style((ToolStripDropDownMenu)kindItem.DropDown);
         Look.Style(listMenu);
 
         Look.Field(cardList);
@@ -137,7 +143,6 @@ partial class MainForm
                 case Part.Copy: Use(entry); break;
                 case Part.Save: Edit(entry); break;
                 case Part.Delete: DeleteSelected(); break;
-                case Part.Show: ShowPeek(cardList, index, true); break;
                 case Part.Pin: TogglePin(entry); break;
                 case Part.More: listMenu.Show(cardList, e.Location); break;
             }
@@ -159,6 +164,9 @@ partial class MainForm
             hoverRow = index;
             hoverPart = part;
             if (index >= 0) cardList.Invalidate(cardList.GetItemRectangle(index));
+            // The small buttons are signs alone: their tooltip says what they do.
+            Entry entry = index < 0 ? null : cardList.Items[index] as Entry;
+            tips.SetToolTip(cardList, entry == null ? null : PartText(part, entry));
         };
         cardList.MouseLeave += delegate
         {
@@ -506,17 +514,48 @@ partial class MainForm
         }
     }
 
-    // What a card says the entry is, at the right end of its top line.
+    // What a card says the entry is, at the right end of its top line: a formatted text says so, unless the user
+    // said what it is.
     static string BadgeOf(Entry entry)
     {
-        if (entry.Html != null) return Strings.FormattedBadge;
-        switch (entry.Category)
+        return entry.Html != null && !entry.Chosen ? Strings.FormattedBadge : KindName(entry.Category);
+    }
+
+    static string KindName(Category category)
+    {
+        switch (category)
         {
             case Category.Link: return Strings.LinkBadge;
             case Category.Code: return Strings.CodeBadge;
             case Category.Picture: return Strings.PictureBadge;
             default: return Strings.TextBadge;
         }
+    }
+
+    // The categories a text can be given, in its menu: the one it has is ticked, and choosing it does nothing.
+    // Nothing for a picture, which is always one.
+    void ListKinds(ToolStripMenuItem menu, Entry entry)
+    {
+        menu.DropDownItems.Clear();
+        bool text = entry != null && !entry.Picture;
+        menu.Visible = text;   // asked back, 'Visible' would answer false: the menu is not on screen yet
+        if (!text) return;
+        foreach (Category each in new Category[] { Category.Text, Category.Code, Category.Link })
+        {
+            Category kind = each;   // a variable of its own for the delegate
+            ToolStripMenuItem item = new ToolStripMenuItem(KindName(kind), null, delegate { Choose(entry, kind); });
+            item.Checked = entry.Category == kind;
+            menu.DropDownItems.Add(item);
+        }
+    }
+
+    // Says what a text is, whatever was guessed: it goes under that tab, copied again or saved.
+    void Choose(Entry entry, Category kind)
+    {
+        if (entry.Category == kind) return;   // the one ticked in the menu: nothing changes
+        if (!Change(delegate { clips.Choose(entry.Id, kind); })) return;
+        Say(string.Format(Strings.KindChanged, Shorten(entry.Label), KindName(kind)));
+        Reload();
     }
 
     Entry Selected
@@ -528,6 +567,9 @@ partial class MainForm
 
     const TextFormatFlags BodyFlags = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.TextBoxControl;
     const int MaxBody = 600;   // of a long text, what a card takes to show its first lines
+    const string Dot = " · ";  // between the parts of the small line under the entry
+    // The small buttons at the right of a card, from the left: they are signs alone, named by their tooltips.
+    static readonly Part[] CardButtons = { Part.Copy, Part.Save, Part.Delete, Part.More };
 
     // What the card shows of an entry: of a saved one with a name only the name, so that a password never appears;
     // of a text its beginning, its lines kept.
@@ -544,61 +586,53 @@ partial class MainForm
     {
         if (row is Heading) return Look.StrongFont.Height + (int)((HeadingAir + CardLineGap) * Zoom);
         Entry entry = (Entry)row;
-        int frame = 2 * (int)(CardInset * Zoom) + Font.Height + 2 * (int)(CardLineGap * Zoom) + (int)(PartHeight * Zoom)
-            + (int)(CardGap * Zoom);
+        int frame = 2 * (int)(CardInset * Zoom) + (int)(CardLineGap * Zoom) + Look.NoteFont.Height + (int)(CardGap * Zoom);
         int body;
         if (entry.Picture) body = (int)(CardPicture * Zoom);
         else if (entry.Saved && entry.Name != null) body = Look.StrongEntryFont.Height;
         else
         {
-            int line = Look.EntryFont.Height, room = width - 2 * (int)(CardInset * Zoom);
+            int line = Look.EntryFont.Height, room = Lay(entry, new Rectangle(0, 0, width, MaxRow)).Body.Width;
             int tall = TextRenderer.MeasureText(CardText(entry), Look.EntryFont, new Size(Math.Max(1, room), 0), BodyFlags).Height;
             body = Math.Max(1, Math.Min(BodyLines, (tall + line - 1) / line)) * line;
         }
         return Math.Min(MaxRow, frame + body);
     }
 
-    // The parts of the card of an entry in its row (see CardParts). The buttons from the left, the rest from the right.
+    // The parts of the card of an entry in its row (see CardParts): the entry first, at the top left; at the right of
+    // its first line its number, its arrow and the small buttons; at the bottom the small line of where and when.
     CardParts Lay(Entry entry, Rectangle row)
     {
-        int inset = (int)(CardInset * Zoom), gap = (int)(CardLineGap * Zoom), foot = (int)(PartHeight * Zoom);
+        int inset = (int)(CardInset * Zoom), gap = (int)(CardLineGap * Zoom), side = (int)(PartHeight * Zoom);
+        int between = (int)(PartGap * Zoom) / 2;
         CardParts parts = new CardParts();
         parts.Card = Rectangle.FromLTRB(row.Left + 1, row.Top, row.Right - 2, row.Bottom - (int)(CardGap * Zoom));
-        int left = parts.Card.Left + inset, right = parts.Card.Right - inset;
-        parts.Head = new Rectangle(left, parts.Card.Top + inset, right - left, Font.Height);
-        parts.Foot = new Rectangle(left, parts.Card.Bottom - inset - foot, right - left, foot);
-        parts.Body = Rectangle.FromLTRB(left, parts.Head.Bottom + gap, right, parts.Foot.Top - gap);
-        int x = left, between = (int)(PartGap * Zoom);
-        foreach (Part part in new Part[] { Part.Copy, Part.Save, Part.Delete, Part.Show })
+        int left = parts.Card.Left + inset, right = parts.Card.Right - inset, top = parts.Card.Top + inset;
+        // The buttons in the middle of the first line of the entry.
+        int middle = top + Look.EntryFont.Height / 2, end = right;
+        for (int i = CardButtons.Length - 1; i >= 0; i--)
         {
-            int width = TextRenderer.MeasureText(PartText(part, entry), Font, Size.Empty, TextFormatFlags.NoPadding).Width
-                + PartSign + (int)(PartGap * Zoom) + 2 * (int)(PartPadding * Zoom);
-            parts.Buttons[part] = new Rectangle(x, parts.Foot.Top, width, foot);
-            x += width + between;
+            parts.Buttons[CardButtons[i]] = new Rectangle(end - side, middle - side / 2, side, side);
+            end -= side + between;
         }
-        parts.More = new Rectangle(right - foot, parts.Foot.Top, foot, foot);
-        int end = parts.More.Left - between;
         if (!entry.Saved)
         {
-            parts.Pin = new Rectangle(end - foot, parts.Foot.Top, foot, foot);
+            parts.Pin = new Rectangle(end - side, middle - side / 2, side, side);
             end = parts.Pin.Left - between;
         }
         if (entry.Number > 0)
         {
-            int side = Font.Height, width = side + NumberPadding;
-            parts.Number = new Rectangle(end - width, parts.Foot.Top + (foot - side) / 2, width, side);
+            int high = Font.Height, width = high + NumberPadding;
+            parts.Number = new Rectangle(end - width, middle - high / 2, width, high);
             end = parts.Number.Left - between;
         }
-        parts.Time = Rectangle.FromLTRB(x, parts.Foot.Top, end, parts.Foot.Bottom);
+        int meta = Look.NoteFont.Height;
+        parts.Meta = new Rectangle(left, parts.Card.Bottom - inset - meta, right - left, meta);
+        parts.Body = Rectangle.FromLTRB(left, top, end - gap, parts.Meta.Top - gap);
         return parts;
     }
 
-    // The sign of a button of a card, as large as the text beside it.
-    int PartSign
-    {
-        get { return Font.Height * 4 / 5; }
-    }
-
+    // What a small button does, in its tooltip.
     static string PartText(Part part, Entry entry)
     {
         switch (part)
@@ -606,7 +640,9 @@ partial class MainForm
             case Part.Copy: return Strings.CopyButton;
             case Part.Save: return entry.Saved ? Strings.EditDots : Strings.SaveDots;
             case Part.Delete: return Strings.Delete;
-            default: return Strings.ShowFull;
+            case Part.Pin: return entry.Pinned ? Strings.Unpin : Strings.Pin;
+            case Part.More: return Strings.MoreItem;
+            default: return null;
         }
     }
 
@@ -617,7 +653,7 @@ partial class MainForm
             case Part.Copy: return Sign.Copy;
             case Part.Save: return entry.Saved ? Sign.Edit : Sign.Star;
             case Part.Delete: return Sign.Delete;
-            default: return Sign.Show;
+            default: return Sign.More;
         }
     }
 
@@ -630,7 +666,6 @@ partial class MainForm
         foreach (KeyValuePair<Part, Rectangle> button in parts.Buttons)
             if (button.Value.Contains(where)) return button.Key;
         if (!entry.Saved && parts.Pin.Contains(where)) return Part.Pin;
-        if (parts.More.Contains(where)) return Part.More;
         return parts.Card.Contains(where) ? Part.Body : Part.None;
     }
 
@@ -652,11 +687,12 @@ partial class MainForm
         }
         Entry entry = (Entry)cardList.Items[e.Index];
         bool selected = (e.State & DrawItemState.Selected) != 0;
+        float glow = cardList.Glow.Of(e.Index);
         CardParts parts = Lay(entry, e.Bounds);
         // The card: a shade lighter than the pane, a little more under the pointer; the selected one has an edge in
         // the accent colour.
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        Color fill = Look.Blend(Look.Raised, Look.Soft, 0.4f * cardList.Glow.Of(e.Index));
+        Color fill = Look.Blend(Look.Raised, Look.Soft, 0.4f * glow);
         using (GraphicsPath shape = Look.Rounded(parts.Card))
         using (Brush back = new SolidBrush(fill))
         using (Pen edge = new Pen(selected ? Look.Accent : Look.Border, selected ? 2 * Zoom : 1))
@@ -665,17 +701,26 @@ partial class MainForm
             g.DrawPath(edge, shape);
         }
 
-        // On top: the program it was copied in, or the folder of a saved one; what it is at the right end.
-        string badge = BadgeOf(entry);
-        int badgeWidth = TextRenderer.MeasureText(badge, Look.NoteFont, Size.Empty, TextFormatFlags.NoPadding).Width + (int)(2 * PartGap * Zoom);
-        Rectangle tag = new Rectangle(parts.Head.Right - badgeWidth, parts.Head.Top, badgeWidth, parts.Head.Height);
-        using (GraphicsPath shape = Look.Pill(tag))
-        using (Pen edge = new Pen(Look.Border))
-            g.DrawPath(edge, shape);
-        TextRenderer.DrawText(g, badge, Look.NoteFont, tag, Look.Muted, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter
-            | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
-        int side = parts.Head.Height;
-        Rectangle icon = new Rectangle(parts.Head.Left, parts.Head.Top, side, side);
+        // First and largest, the entry: a picture with its size beside it, the name of a saved text, or the lines of a text.
+        if (entry.Preview != null)
+        {
+            Size room = new Size(parts.Body.Width / 2, parts.Body.Height);
+            float scale = Math.Min((float)room.Width / entry.Preview.Width, (float)room.Height / entry.Preview.Height);
+            Size size = new Size((int)(entry.Preview.Width * scale), (int)(entry.Preview.Height * scale));
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.DrawImage(entry.Preview, parts.Body.Left, parts.Body.Top + (parts.Body.Height - size.Height) / 2, size.Width, size.Height);
+            TextRenderer.DrawText(g, entry.Label, e.Font, Rectangle.FromLTRB(parts.Body.Left + size.Width + 2 * PreviewMargin, parts.Body.Top,
+                parts.Body.Right, parts.Body.Bottom), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
+        }
+        else if (entry.Saved && entry.Name != null)
+            TextRenderer.DrawText(g, entry.Name, Look.StrongEntryFont, parts.Body, Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
+        else
+            TextRenderer.DrawText(g, CardText(entry), e.Font, parts.Body, Look.Ink, BodyFlags | TextFormatFlags.EndEllipsis);
+
+        // Under it, small and grey: the program it was copied in with its icon, or the folder of a saved one; when;
+        // what it is.
+        int side = parts.Meta.Height;
+        Rectangle icon = new Rectangle(parts.Meta.Left, parts.Meta.Top, side, side);
         string source;
         if (entry.Saved)
         {
@@ -695,31 +740,15 @@ partial class MainForm
         else
         {
             Look.Draw(g, SignOf(entry), icon, null);
-            source = "";
+            source = null;
         }
-        TextRenderer.DrawText(g, source, Look.StrongFont, Rectangle.FromLTRB(icon.Right + (int)(PartGap * Zoom), parts.Head.Top,
-            tag.Left - (int)(PartGap * Zoom), parts.Head.Bottom), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
+        List<string> said = new List<string>();
+        foreach (string part in new string[] { source, When(entry), BadgeOf(entry) }) if (part != null) said.Add(part);
+        TextRenderer.DrawText(g, string.Join(Dot, said.ToArray()), Look.NoteFont, Rectangle.FromLTRB(icon.Right + (int)(PartGap * Zoom),
+            parts.Meta.Top, parts.Meta.Right, parts.Meta.Bottom), Look.Muted, TextFormatFlags.VerticalCenter | LineFlags);
 
-        // The entry: a picture with its size beside it, the name of a saved text, or the lines of a text.
-        if (entry.Preview != null)
-        {
-            Size room = new Size(parts.Body.Width / 2, parts.Body.Height);
-            float scale = Math.Min((float)room.Width / entry.Preview.Width, (float)room.Height / entry.Preview.Height);
-            Size size = new Size((int)(entry.Preview.Width * scale), (int)(entry.Preview.Height * scale));
-            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            g.DrawImage(entry.Preview, parts.Body.Left, parts.Body.Top + (parts.Body.Height - size.Height) / 2, size.Width, size.Height);
-            TextRenderer.DrawText(g, entry.Label, e.Font, Rectangle.FromLTRB(parts.Body.Left + size.Width + 2 * PreviewMargin, parts.Body.Top,
-                parts.Body.Right, parts.Body.Bottom), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
-        }
-        else if (entry.Saved && entry.Name != null)
-            TextRenderer.DrawText(g, entry.Name, Look.StrongEntryFont, parts.Body, Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
-        else
-            TextRenderer.DrawText(g, CardText(entry), e.Font, parts.Body, Look.Ink, BodyFlags | TextFormatFlags.EndEllipsis);
-
-        // At the bottom the buttons; at the right end when, the number, the arrow and the menu.
-        foreach (KeyValuePair<Part, Rectangle> button in parts.Buttons) DrawPart(g, e.Index, button.Key, button.Value, entry, fill);
-        string when = When(entry);
-        if (when != null) TextRenderer.DrawText(g, when, Look.NoteFont, parts.Time, Look.Muted, RightFlags);
+        // At the right of the first line: the number, the arrow and the small buttons, grey but on the card the pointer
+        // is on, or the selected one.
         if (entry.Number > 0)
         {
             // The digit that pastes it from anywhere, in a rounded frame in the accent colour.
@@ -729,48 +758,30 @@ partial class MainForm
             TextRenderer.DrawText(g, entry.Number.ToString(), Font, parts.Number, Look.Accent, TextFormatFlags.HorizontalCenter
                 | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
         }
-        if (!entry.Saved)
-        {
-            // The arrow that keeps the entry at the top for a while: in colour if it does, faint otherwise.
-            Highlight(g, e.Index, Part.Pin, parts.Pin, fill);
-            int arrow = PartSign;
-            Rectangle box = new Rectangle(parts.Pin.Left + (parts.Pin.Width - arrow) / 2, parts.Pin.Top + (parts.Pin.Height - arrow) / 2, arrow, arrow);
-            Look.Draw(g, Sign.Up, box, entry.Pinned ? (Color?)null : Look.Blend(fill, Look.Muted, 0.6f));
-        }
-        Highlight(g, e.Index, Part.More, parts.More, fill);
-        int dots = PartSign;
-        Look.Draw(g, Sign.More, new Rectangle(parts.More.Left + (parts.More.Width - dots) / 2, parts.More.Top + (parts.More.Height - dots) / 2,
-            dots, dots), Look.Ink);
+        bool awake = selected || glow > 0.5f;
+        Color quiet = Look.Blend(fill, Look.Muted, 0.8f);
+        // The arrow that keeps the entry at the top for a while: in colour if it does, faint otherwise.
+        if (!entry.Saved) DrawPart(g, e.Index, Part.Pin, parts.Pin, Sign.Up, entry.Pinned ? (Color?)null : Look.Blend(fill, Look.Muted, 0.5f), fill);
+        foreach (KeyValuePair<Part, Rectangle> button in parts.Buttons)
+            DrawPart(g, e.Index, button.Key, button.Value, PartSignOf(button.Key, entry),
+                awake && button.Key != Part.More || IsHovered(e.Index, button.Key) ? (Color?)null : quiet, fill);
     }
 
-    // A button of a card: Copy in the accent colour, the others with a thin edge; the one under the pointer brighter.
-    void DrawPart(Graphics g, int index, Part part, Rectangle area, Entry entry, Color fill)
+    bool IsHovered(int index, Part part)
     {
-        bool primary = part == Part.Copy, lit = index == hoverRow && part == hoverPart;
-        Rectangle shape = Rectangle.FromLTRB(area.Left, area.Top, area.Right - 1, area.Bottom - 1);
-        using (GraphicsPath path = Look.Rounded(shape))
-        {
-            Color back = primary ? (lit ? Look.Blend(Look.Accent, Look.Ink, 0.15f) : Look.Accent)
-                : lit ? Look.Blend(fill, Look.Ink, 0.08f) : fill;
-            using (Brush brush = new SolidBrush(back)) g.FillPath(brush, path);
-            if (!primary) using (Pen edge = new Pen(Look.Border)) g.DrawPath(edge, path);
-        }
-        Color ink = primary ? Color.White : Look.Ink;
-        int side = PartSign, padding = (int)(PartPadding * Zoom);
-        Look.Draw(g, PartSignOf(part, entry), new Rectangle(area.Left + padding, area.Top + (area.Height - side) / 2, side, side),
-            primary ? (Color?)Color.White : null);
-        TextRenderer.DrawText(g, PartText(part, entry), Font, Rectangle.FromLTRB(area.Left + padding + side + (int)(PartGap * Zoom), area.Top,
-            area.Right, area.Bottom), ink, TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix
-            | TextFormatFlags.NoPadding);
+        return index == hoverRow && part == hoverPart;
     }
 
-    // The faint shape under the pointer, on a part of a card drawn as a sign alone.
-    void Highlight(Graphics g, int index, Part part, Rectangle area, Color fill)
+    // A small button of a card: its sign, in its own colour or the one given, on a faint shape under the pointer.
+    void DrawPart(Graphics g, int index, Part part, Rectangle area, Sign sign, Color? colour, Color fill)
     {
-        if (index != hoverRow || part != hoverPart) return;
-        using (GraphicsPath path = Look.Rounded(Rectangle.FromLTRB(area.Left, area.Top, area.Right - 1, area.Bottom - 1)))
-        using (Brush brush = new SolidBrush(Look.Blend(fill, Look.Ink, 0.08f)))
-            g.FillPath(brush, path);
+        if (IsHovered(index, part))
+            using (GraphicsPath path = Look.Rounded(Rectangle.FromLTRB(area.Left, area.Top, area.Right - 1, area.Bottom - 1)))
+            using (Brush brush = new SolidBrush(Look.Blend(fill, Look.Ink, 0.08f)))
+                g.FillPath(brush, path);
+        int side = Font.Height * 4 / 5;
+        Look.Draw(g, sign, new Rectangle(area.Left + (area.Width - side) / 2, area.Top + (area.Height - side) / 2, side, side),
+            part == Part.More && IsHovered(index, part) ? Look.Ink : colour);
     }
 
     // The numbers an entry can be given, in its menu: the one it has is ticked, and beside each that another entry

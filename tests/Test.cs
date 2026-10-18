@@ -387,6 +387,36 @@ static class TestProgram
                 "a database of version 4 is brought up to date: its programs kept, what each entry is found");
         }
         System.IO.File.Delete(path);
+
+        // Version 5, where only copied entries could say what they are: they keep it, and a saved text can be told.
+        using (Clips clips = new Clips(path))
+        {
+            clips.AddText("int x = 1;\nreturn x;", null);
+            clips.AddSaved("Firma", "Sai", 0, DateTime.Now);
+            clips.Data.Execute("DROP INDEX entries_recent; DROP INDEX entries_hash; ALTER TABLE entries RENAME TO entries_new;"
+                + "CREATE TABLE entries (id INTEGER PRIMARY KEY, kind INTEGER NOT NULL CHECK (kind IN (1, 2)), width INTEGER, height INTEGER,"
+                + " copied_at INTEGER NOT NULL, saved INTEGER NOT NULL DEFAULT 0 CHECK (saved IN (0, 1)), saved_at INTEGER,"
+                + " name TEXT, name_key TEXT UNIQUE, folder_id INTEGER REFERENCES folders (id),"
+                + " pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)), number INTEGER UNIQUE CHECK (number BETWEEN 1 AND 9),"
+                + " app_id INTEGER REFERENCES apps (id), category INTEGER CHECK (category BETWEEN 1 AND 4),"
+                + " rtf BLOB, html BLOB, hash BLOB, folded TEXT, preview BLOB, content BLOB NOT NULL,"
+                + " CHECK (saved = 0 OR category IS NULL));"
+                + "INSERT INTO entries SELECT id, kind, width, height, copied_at, saved, saved_at, name, name_key, folder_id, pinned, number,"
+                + " app_id, category, rtf, html, hash, folded, preview, content FROM entries_new; DROP TABLE entries_new;"
+                + "CREATE INDEX entries_recent ON entries (saved, pinned DESC, copied_at DESC);"
+                + "CREATE INDEX entries_hash ON entries (hash) WHERE hash IS NOT NULL; PRAGMA user_version = 5;");
+        }
+        using (Clips clips = new Clips(path))
+        {
+            Sieve code = new Sieve();
+            code.Category = Category.Code;
+            long saved = clips.Saved()[0].Id;
+            clips.Choose(saved, Category.Link);
+            Check(Equals(clips.Data.Value("PRAGMA user_version"), (long)Clips.SchemaVersion) && clips.Copied(10, code).Count == 1
+                && clips.Saved()[0].Category == Category.Link && clips.Healthy(),
+                "a database of version 5 is brought up to date: what the copied entries are kept, a saved text can be told");
+        }
+        System.IO.File.Delete(path);
     }
 
     static string Describe(Entry e)
@@ -752,6 +782,27 @@ static class TestProgram
             clips.Remove(clips.Copied(1, code)[0].Id);
             clips.Remove(clips.Copied(1, link)[0].Id);
 
+            // What the user says a text is: it stays, copied again or saved; a saved text not told is guessed.
+            clips.AddText("just words", null);
+            long words = clips.Copied(1, Texts.Words("just words"))[0].Id;
+            clips.Choose(words, Category.Code);
+            clips.AddText("just words", null);
+            Entry told = clips.Copied(10, code).Find(delegate(Entry e) { return e.Id == words; });
+            Check(told != null && told.Chosen && told.Category == Category.Code, "a text told to be code is code, also copied again");
+            clips.Save(words, null, 0);
+            told = clips.Saved().Find(delegate(Entry e) { return e.Id == words; });
+            Check(told.Category == Category.Code && told.Chosen, "and saved it stays so");
+            long plain = clips.AddSaved("Plain", "int x = 1;\nreturn x;", 0, DateTime.Now);
+            Entry guessed = clips.Saved().Find(delegate(Entry e) { return e.Id == plain; });
+            Check(clips.Data.Value("SELECT category FROM entries WHERE id = ?1", plain) == null && guessed.Category == Category.Code
+                && !guessed.Chosen, "a saved text nobody told about is guessed, and nothing of it is kept");
+            clips.Choose(plain, Category.Text);
+            Check(clips.Saved().Find(delegate(Entry e) { return e.Id == plain; }).Category == Category.Text
+                && Throws<ArgumentException>(delegate { clips.Choose(plain, Category.Picture); })
+                && Refuses(clips, "UPDATE entries SET chosen = 0 WHERE id = " + plain), "told, it is what it was told; never a picture");
+            clips.Remove(words);
+            clips.Remove(plain);
+
             // Pictures.
             using (Bitmap picture = new Bitmap(40, 30))
             {
@@ -1104,6 +1155,8 @@ static class TestProgram
         using (Form own = new Form())
             Check(string.Equals(Origin.ProgramOf(own.Handle), System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName,
                 StringComparison.OrdinalIgnoreCase) && Origin.ProgramOf(IntPtr.Zero) == null, "the program of a window is that of its process");
+        Check(Origin.IsHost(@"C:\Windows\System32\SVCHOST.EXE") && !Origin.IsHost(@"C:\Windows\System32\notepad.exe"),
+            "the host of the clipboard service is never the program copied in");
         return failed == 0 ? 0 : 1;
     }
 

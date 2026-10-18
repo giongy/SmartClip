@@ -19,10 +19,20 @@ sealed class Origin
 
     // The executable of the program that put on the clipboard what is there now, or null if nobody knows: that of
     // the window owning the clipboard. A program that copies without one is the program in the foreground, where
-    // the copy was made.
+    // the copy was made; so is one that copies through the clipboard service of Windows, which then owns it.
     public static string Find()
     {
-        return ProgramOf(Native.GetClipboardOwner()) ?? ProgramOf(Native.GetForegroundWindow());
+        string owner = ProgramOf(Native.GetClipboardOwner());
+        return owner != null && !IsHost(owner) ? owner : ProgramOf(Native.GetForegroundWindow());
+    }
+
+    // The host of the services of Windows (svchost.exe), where the clipboard service runs: never the program the user
+    // copied in (seen 18/10/2026 as «Host Process for Windows Services»).
+    const string ServiceHost = "svchost.exe";
+
+    public static bool IsHost(string path)
+    {
+        return string.Equals(Path.GetFileName(path), ServiceHost, StringComparison.OrdinalIgnoreCase);
     }
 
     // The executable of the program a window belongs to, or null. Also of a program run as administrator: the little

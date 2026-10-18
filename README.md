@@ -69,11 +69,12 @@ The main window looks like the apps of Windows 11: a sidebar on the left, the en
   only what you copied there.
 
 Above the cards, tabs show one kind of entry only: **All**, **Text**, **Code**, **Links**, **Images**. Code is
-told from how the lines look, so now and then it guesses wrong.
+told from how the lines look, so now and then it guesses wrong: **Type**, in the menu of a text, says what it
+is, and it stays so, also copied again or saved.
 
-Each card says on top the program the entry was copied in, with its icon (or the folder of a saved text), and on
-the right what it is; then the entry; at the bottom the buttons **Copy**, **Save…** (or **Edit…**), **Delete** and
-**View full**, and on the right the time, the number, the arrow and a menu. Copied entries are texts and pictures
+Each card shows the entry first, large; under it, small and grey, the program it was copied in with its icon (or
+the folder of a saved text), the time and what it is. On the right of the entry are its number, its arrow and small
+signs that copy it, save or edit it, delete it and open its menu; their tooltips name them. Copied entries are texts and pictures
 (screenshots, for example), each picture with a small preview. They stay for the number of days set in the
 options, also across restarts; the list shows the 200 most recent, and the search reaches the rest. Copied
 pictures take at most 200 MB: beyond that the oldest go, even before their days are over, and a red bar under the
@@ -88,11 +89,11 @@ only the name and the content stays hidden, which suits a password; without, the
 | Click | Selects the card |
 | **Copy** | Puts the entry back on the clipboard; the window stays, so you can still save or delete it |
 | Enter, or a double click | Puts the entry back on the clipboard and returns to the window you came from |
-| Right click, or the three dots | Opens the menu of the entry |
-| **View full**, or resting the pointer on a card | Shows the entry whole in a small box: every line of a text, a larger picture. It goes away as the pointer moves on |
+| Right click, or the three dots on the right | Opens the menu of the entry |
+| **View full** in the menu, or resting the pointer on a card | Shows the entry whole in a small box: every line of a text, a larger picture. It goes away as the pointer moves on |
 | Dragging a saved card, or a folder of the sidebar | Onto a folder of the sidebar moves it there; onto **Saved** takes it out of the folders |
 | Resizing the window | The cards take the room; size and position are remembered for the next start, never smaller than the starting size |
-| The arrow at the bottom right of a copied entry, or Ctrl+P | Keeps the entry at the top for a while: it still goes when its days are over. What is to stay, save it |
+| The arrow on the right of a copied entry, or Ctrl+P | Keeps the entry at the top for a while: it still goes when its days are over. What is to stay, save it |
 | Ctrl+Shift+1 … Ctrl+Shift+9, in any program | Pastes the entry with that number into the active window, without opening SmartClip (see below) |
 | F1, or **Help** at the bottom of the sidebar | Opens the guide: everything the program does, by topic |
 

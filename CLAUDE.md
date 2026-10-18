@@ -106,7 +106,10 @@ condiviso su GitHub).
     testo, codice, link, immagine; mai su un salvato), per le schede dei tipi; `Upgrade` la calcola per le righe che
     c'erano (`Categorize`). È nata separata dalla 4 perché il database vero dell'utente era già passato a una 4 senza
     di lei (errore «no such column: category»): **una versione già aperta da un eseguibile non si ridefinisce mai**,
-    se ne fa una nuova. Ore in UTC, millisecondi dal 1970. Copiare di nuovo
+    se ne fa una nuova. Versione 6 (18/10/2026): `chosen`, il tipo detto dall'utente con «Tipo» nel menu di un testo
+    (`ListKinds`, `Clips.Choose`; voluto dall'utente, perché l'ipotesi sul codice sbaglia): vale anche su un salvato,
+    **in chiaro** (deciso con l'utente: non dice più del nome, che è già in chiaro); un salvato senza scelta non ha
+    `category` e si indovina in memoria. Copiato di nuovo o salvato, il tipo scelto resta. Ore in UTC, millisecondi dal 1970. Copiare di nuovo
     aggiorna la stessa riga (`hash`). `Entry` ha in più `Id`, `Saved`, `FolderId`. Un database nuovo si riempie
     dentro la transazione che lo crea (`new Clips(path, fill)`): se il riempimento fallisce non resta niente, e al
     prossimo avvio è di nuovo nuovo (`Created`).
@@ -284,7 +287,7 @@ condiviso su GitHub).
   copiati (`ReloadCopied`), mai i salvati, e solo se la copia è entrata (`Texts.Remember` dice se qualcosa è
   cambiato: non con la cronologia spenta o in pausa, né per una copia riservata o fatta dall'elenco).
 - Una voce copiata si può tenere in cima **per un po'** (`Entry.Pinned`, la freccia, voluta
-  dall'utente al posto della stellina il 17/10/2026; nella barra il posto «In alto»): freccia in basso a destra della
+  dall'utente al posto della stellina il 17/10/2026; nella barra il posto «In alto»): freccia a destra della prima riga della
   scheda (`Part.Pin`: lì il clic non sceglie la voce, `Sign.Up`), menu e Ctrl+P, tutti in `TogglePin`. **Scade come
   le altre**, e «Pulisci ora…» la toglie (l'utente: «se vuoi salvarlo lo salvi con l'apposita funzione; la freccia
   serve temporaneamente a tenere in alto una voce»). `Forget` (la password digitata) non la toglie, né toglie una
@@ -305,7 +308,7 @@ condiviso su GitHub).
   di altri; le altre due scorciatoie non possono essere modificatori + cifra (`NumberOf`). Impostazioni
   `QuickPaste` e `QuickKeys` (solo i modificatori). Si assegna e
   cambia da «Scorciatoia» nel menu del tasto destro (`ListNumbers`: «Nessuna» e i nove numeri, quello attuale
-  spuntato e senza effetto, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento in fondo alla scheda,
+  spuntato e senza effetto, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento a destra della prima riga,
   prima della freccia (`CardParts.Number`), e nel menu del tray accanto al testo salvato
   (`ShortcutKeyDisplayString`, che `MenuLook` scrive in grigio). Un numero è di una voce sola: `Clips.Number` lo
   toglie prima a chi lo aveva, e lo schema lo vuole `UNIQUE`. **Un numero non salva una voce copiata** (deciso con
@@ -345,10 +348,10 @@ condiviso su GitHub).
   esatte da 86 a 144 su 240), e una trasparente su bianco. Il testo sotto i 10 pt esce comunque con qualche
   errore («second fine here»): è il motore di Windows, e la guida lo dice. La ricerca nel testo delle immagini
   non c'è (vorrebbe leggerle tutte alla copia).
-- App di provenienza (voluta dall'utente il 18/10/2026: «serve per ogni voce copiata»): in cima alla scheda di ogni
+- App di provenienza (voluta dall'utente il 18/10/2026: «serve per ogni voce copiata»): nella riga piccola sotto la scheda di ogni
   voce copiata, icona e nome del programma in cui è stata copiata (`DrawEntry`); nella barra laterale, sotto
   «Provenienza», un posto per programma (`Clips.Sources`, con quante voci). `Texts.Remember`
-  chiede a `Origin.Find` l'eseguibile del proprietario degli appunti (`GetClipboardOwner`; senza, la finestra in primo
+  chiede a `Origin.Find` l'eseguibile del proprietario degli appunti (`GetClipboardOwner`; senza, o se è il servizio degli appunti di Windows in `svchost.exe`, `IsHost`, la finestra in primo
   piano), con `QueryFullProcessImageName` (funziona anche con i programmi da amministratore). Il nome è la descrizione
   del file («Microsoft Edge»), o il prodotto, o il nome del file (`Origin.NameOf`); l'icona quella di
   `ExtractAssociatedIcon` (`IconOf`). Ogni programma sta una volta sola nella tabella `apps` (`Clips.App`, descritto
@@ -427,10 +430,13 @@ condiviso su GitHub).
 - Ogni voce è una scheda (dal 18/10/2026, come Clipo; scelta dell'utente: con i pulsanti, anche se se ne vedono
   meno): disegnata a mano in una riga di `cardList` (`OwnerDrawVariable`, `DrawEntry`), un po' più chiara del
   pannello (`Look.Raised`, nuovo colore delle due tavolozze) e con il bordo d'accento se selezionata (`RowList.Marked`
-  falso: niente tacca). In cima programma o cartella e, a destra, il tipo (`BadgeOf`); poi la voce (fino a
-  `BodyLines` righe del testo, `CardText`; il nome di un salvato con nome; una miniatura con la misura); in fondo i
-  pulsanti Copia (d'accento), Salva…/Modifica…, Elimina, Mostra tutto, e a destra ora (`When`), numero, freccia e
-  «⋯» (il menu). Le parti si misurano in un posto solo (`Lay`, `CardParts`) che serve a disegno e clic (`PartAt`);
+  falso: niente tacca). **Prima la voce**, grande (fino a `BodyLines` righe del testo, `CardText`; il nome di un
+  salvato con nome; una miniatura con la misura); sotto, piccola e grigia, una riga sola: icona e nome del programma
+  (o stella e cartella di un salvato) · ora (`When`) · tipo (`BadgeOf`). A destra della prima riga numero, freccia e
+  piccoli segni senza testo: copia, salva/modifica, elimina, «⋯» (`CardButtons`), grigi tranne sulla scheda sotto il
+  puntatore o selezionata, con il nome nel suggerimento (`PartText`); «Mostra tutto» sta nel menu. Voluto
+  dall'utente il 18/10/2026: con il programma in grassetto in cima e una fila di pulsanti in fondo, come Clipo, «il
+  vero contenuto si perde» (scelte proposte: icone a destra). Le parti si misurano in un posto solo (`Lay`, `CardParts`) che serve a disegno e clic (`PartAt`);
   quella sotto il puntatore si illumina (`hoverRow`, `hoverPart`). Un clic altrove sulla scheda la seleziona soltanto; il doppio clic fa come Invio (`Accept`).
   **Una riga di `ListBox` non supera 255 pixel** (`MaxRow`): `CardHeight` vi taglia la voce; le altezze si rifanno
   quando cambia la larghezza (`ShowRows`). Sopra i giorni un `Heading`, che una selezione salta (`lastCard`, `Step`).

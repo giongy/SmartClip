@@ -117,6 +117,7 @@ class Entry
         get { return folded ?? (folded = Texts.Fold(Text)); }
     }
 
+    // What it is: as the database says, or else guessed from its text.
     public Category Category
     {
         get
@@ -124,7 +125,10 @@ class Entry
             if (!category.HasValue) category = Picture ? Category.Picture : Texts.CategoryOf(Text);
             return category.Value;
         }
+        set { category = value; }
     }
+
+    public bool Chosen;   // the user said what it is, whatever was guessed
 
     // How many folders it is inside of: zero for a folder or an entry outside them all.
     public int Level

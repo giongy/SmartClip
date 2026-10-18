@@ -22,7 +22,7 @@ static partial class Strings
         AllPlace = "Tout"; PinnedPlace = "En haut"; SourcesPlace = "Provenance"; GuideItem = "Aide";
         AllKinds = "Tout"; TextKinds = "Texte"; CodeKinds = "Code"; LinkKinds = "Liens"; PictureKinds = "Images";
         TextBadge = "Texte"; CodeBadge = "Code"; LinkBadge = "Lien"; PictureBadge = "Image"; FormattedBadge = "Mis en forme";
-        CopyButton = "Copier"; ShowFull = "Tout voir";
+        CopyButton = "Copier"; ShowFull = "Tout voir"; MoreItem = "Plus";
         Today = "Aujourd'hui"; Yesterday = "Hier"; Undated = "Avant";
         NoPinned = "Rien en haut : la flèche d'un élément copié l'amène ici pour un moment";
         NoneOfKind = "Rien de ce type";
@@ -43,6 +43,7 @@ static partial class Strings
         CopyPictureText = "Copier le texte";
         Pin = "Garder en haut"; Unpin = "Retirer du haut"; OutOfFolders = "Hors des dossiers"; EmptyFolder = "Vide";
         NumberMenu = "Raccourci"; NoNumber = "Aucun";
+        KindMenu = "Type";
 
         TrayReady = " : texte prêt dans le presse-papiers"; TrayEmpty = " : pas de texte dans le presse-papiers";
         TrayPaused = ", capture en pause";
@@ -54,6 +55,7 @@ static partial class Strings
         PausedSay = "En pause : ce que vous copiez n'est pas mémorisé tant que vous ne reprenez pas la capture.";
         ResumedSay = "La capture a repris : ce que vous copiez revient dans la liste.";
         Pinned = "Reste en haut : {0}."; Unpinned = "N'est plus en haut : {0}.";
+        KindChanged = "Marqué comme {1} : {0}.";
         NumberGiven = "{0} colle maintenant « {1} » où que vous soyez.";
         NumberTaken = "« {0} » n'a plus de raccourci.";
         Pasted = "Collé dans {1} : {0}.";
@@ -330,26 +332,29 @@ static partial class Strings
                 + SourcesPlace + " » ouvre ou ferme la liste.",
             "Les onglets au-dessus des cartes (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") ne montrent qu'un type d'élément. « " + CodeKinds + " » est une supposition faite d'après "
-                + "l'allure des lignes : de temps en temps un texte s'y retrouve, ou un morceau de code parmi les textes.",
-            "En haut, chaque carte indique le programme dans lequel l'élément a été copié, avec son icône, ou le dossier "
-                + "d'un texte enregistré, et à droite ce qu'il est ; puis l'élément ; en bas ses boutons et, à droite, "
-                + "l'heure de la copie.",
+                + "l'allure des lignes : de temps en temps un texte s'y retrouve, ou un morceau de code parmi les textes. "
+                + "Quand elle se trompe, « " + KindMenu + " », dans le menu d'un texte, dit ce qu'il est : copié à "
+                + "nouveau ou enregistré, il le reste.",
+            "Chaque carte montre d'abord l'élément ; en dessous, en petit, le programme dans lequel il a été copié, avec "
+                + "son icône (ou le dossier d'un texte enregistré), l'heure de la copie et ce qu'il est. À droite, de petits "
+                + "signes le copient, l'enregistrent ou le modifient, le suppriment et ouvrent son menu : en laissant le "
+                + "pointeur sur l'un d'eux, il dit ce qu'il fait.",
             "- Tapez dans la case du haut pour chercher parmi les éléments de l'endroit : les mots comptent dans "
                 + "n'importe quel ordre, sans tenir compte des majuscules ni des accents.",
-            "- Un clic sur une carte la sélectionne. « " + CopyButton + " » met l'élément dans le presse-papiers et laisse la "
+            "- Un clic sur une carte la sélectionne. Le signe de copie (« " + CopyButton + " ») met l'élément dans le presse-papiers et laisse la "
                 + "fenêtre ouverte, pour que vous puissiez encore l'enregistrer ou le supprimer.",
             "- " + EnterKeyName + " ou un double-clic le mettent dans le presse-papiers et, si vous aviez ouvert la "
                 + "liste avec " + pick + ", vous ramènent à la fenêtre où vous travailliez.",
             "- Collez-le alors avec Ctrl+V, ou saisissez-le avec " + type + ".",
-            "- « " + ShowFull + " » montre l'élément en entier dans un petit cadre : le texte avec toutes ses lignes, "
+            "- « " + ShowFull + " », dans le menu, montre l'élément en entier dans un petit cadre : le texte avec toutes ses lignes, "
                 + "l'image en plus grand. Laisser le pointeur sur une carte qui coupe son texte fait de même. Il disparaît "
                 + "dès que vous bougez le pointeur.",
-            "- Les trois points en bas à droite, ou le clic droit, ouvrent le menu de l'élément, sans toucher au presse-papiers.",
+            "- Les trois points à droite, ou le clic droit, ouvrent le menu de l'élément, sans toucher au presse-papiers.",
             "- « " + CopyPictureText + " », dans le menu d'une image, met dans le presse-papiers le texte "
                 + "que Windows y lit, ici sur le PC, sans internet : il entre dans la liste comme tout ce que vous copiez "
                 + "(celui d'une image enregistrée est privé, comme un texte enregistré). Un petit texte peut sortir avec "
                 + "des erreurs : vérifiez-le d'abord.",
-            "- La flèche en bas à droite d'un élément copié (" + Key(Keys.Control | MainForm.PinKey) + ") le garde "
+            "- La flèche à droite d'un élément copié (" + Key(Keys.Control | MainForm.PinKey) + ") le garde "
                 + "en haut un moment : elle est en couleur tant qu'elle le fait, et un clic l'allume ou l'éteint. "
                 + "L'élément part quand même quand les jours de l'historique expirent : ce qui doit rester, "
                 + "enregistrez-le. Copier à nouveau le même texte le ramène en haut avec la nouvelle heure, flèche et "
@@ -358,7 +363,7 @@ static partial class Strings
                 + "un numéro de 1 à " + MainForm.MaxNumber + " : ensuite, depuis n'importe quel programme, "
                 + MainForm.NumbersName + " le collent aussitôt dans la fenêtre où vous travaillez, sans ouvrir celle-ci "
                 + "(l'élément va dans le presse-papiers et Ctrl+V suit tout seul). Le numéro apparaît dans un petit "
-                + "cadre en bas de la carte, et à côté du texte enregistré dans le menu de l'icône. Un élément copié "
+                + "cadre à droite de la carte, et à côté du texte enregistré dans le menu de l'icône. Un élément copié "
                 + "garde son numéro jusqu'à ce que ses jours expirent. Chaque numéro appartient à un seul élément : "
                 + "donné à un autre, il passe à celui-ci.",
             "Pour ne pas mémoriser ce que vous allez copier, « " + Pause + " » est en bas de la barre latérale "

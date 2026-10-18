@@ -21,7 +21,7 @@ static partial class Strings
         AllPlace = "Tutti"; PinnedPlace = "In alto"; SourcesPlace = "Provenienza"; GuideItem = "Guida";
         AllKinds = "Tutti"; TextKinds = "Testo"; CodeKinds = "Codice"; LinkKinds = "Link"; PictureKinds = "Immagini";
         TextBadge = "Testo"; CodeBadge = "Codice"; LinkBadge = "Link"; PictureBadge = "Immagine"; FormattedBadge = "Formattato";
-        CopyButton = "Copia"; ShowFull = "Mostra tutto";
+        CopyButton = "Copia"; ShowFull = "Mostra tutto"; MoreItem = "Altro";
         Today = "Oggi"; Yesterday = "Ieri"; Undated = "Prima";
         NoPinned = "Niente in alto: la freccia di una voce copiata la porta qui per un po'";
         NoneOfKind = "Niente di questo tipo";
@@ -42,6 +42,7 @@ static partial class Strings
         CopyPictureText = "Copia il testo";
         Pin = "Tieni in alto"; Unpin = "Togli dall'alto"; OutOfFolders = "Fuori dalle cartelle"; EmptyFolder = "Vuota";
         NumberMenu = "Scorciatoia"; NoNumber = "Nessuna";
+        KindMenu = "Tipo";
 
         TrayReady = ": testo pronto negli appunti"; TrayEmpty = ": appunti senza testo"; TrayPaused = ", cattura in pausa";
         TrayHint = "Sono ancora attivo qui. Clic per riaprire, tasto destro e poi {0} per chiudere.";
@@ -52,6 +53,7 @@ static partial class Strings
         PausedSay = "In pausa: quello che copi non viene ricordato, finché non riprendi la cattura.";
         ResumedSay = "La cattura è ripresa: quello che copi torna nell'elenco.";
         Pinned = "Resta in alto: {0}."; Unpinned = "Non è più in alto: {0}.";
+        KindChanged = "Segnata come {1}: {0}.";
         NumberGiven = "{0} ora incolla «{1}» ovunque tu sia.";
         NumberTaken = "«{0}» non ha più una scorciatoia.";
         Pasted = "Incollato in {1}: {0}.";
@@ -319,32 +321,34 @@ static partial class Strings
                 + "lui. Un clic su uno mostra solo ciò che hai copiato lì; un clic su «" + SourcesPlace + "» apre o chiude l'elenco.",
             "Le schede sopra le voci (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") mostrano un solo tipo di voce. «" + CodeKinds + "» è un'ipotesi fatta dall'aspetto delle "
-                + "righe: ogni tanto ci finisce un testo, o un pezzo di codice tra i testi.",
-            "In cima, ogni scheda dice il programma in cui la voce è stata copiata, con la sua icona, o la cartella di un "
-                + "testo salvato, e a destra che cos'è; poi la voce; in fondo i suoi pulsanti e, a destra, l'ora della copia.",
+                + "righe: ogni tanto ci finisce un testo, o un pezzo di codice tra i testi. Quando sbaglia, «" + KindMenu
+                + "», nel menu di un testo, dice che cos'è: copiato di nuovo o salvato, resta così.",
+            "Ogni scheda mostra prima la voce; sotto, in piccolo, il programma in cui è stata copiata, con la sua icona (o "
+                + "la cartella di un testo salvato), l'ora della copia e che cos'è. A destra, piccoli segni la copiano, la "
+                + "salvano o la modificano, la eliminano e aprono il suo menu: fermando il puntatore su uno, dice che cosa fa.",
             "- Scrivi nella casella in alto per cercare tra le voci del posto: le parole valgono in qualsiasi "
                 + "ordine, senza badare a maiuscole e accenti.",
-            "- Un clic su una scheda la seleziona. «" + CopyButton + "» mette la voce negli appunti e lascia la "
+            "- Un clic su una scheda la seleziona. Il segno della copia («" + CopyButton + "») mette la voce negli appunti e lascia la "
                 + "finestra aperta, così puoi ancora salvarla o eliminarla.",
             "- " + EnterKeyName + " o un doppio clic la mettono negli appunti e, se avevi aperto l'elenco con " + pick
                 + ", ti riportano alla finestra in cui stavi lavorando.",
             "- A quel punto la incolli con Ctrl+V, oppure la digiti con " + type + ".",
-            "- «" + ShowFull + "» mostra la voce per intero in un riquadro: il testo con tutte le sue righe, l'immagine "
+            "- «" + ShowFull + "», nel menu, mostra la voce per intero in un riquadro: il testo con tutte le sue righe, l'immagine "
                 + "più grande. Fermare il puntatore su una scheda che taglia il suo testo fa lo stesso. Sparisce appena "
                 + "sposti il puntatore.",
-            "- I tre puntini in basso a destra, o il tasto destro, aprono il menu della voce, senza toccare gli appunti.",
+            "- I tre puntini a destra, o il tasto destro, aprono il menu della voce, senza toccare gli appunti.",
             "- «" + CopyPictureText + "», nel menu di un'immagine, mette negli appunti il testo che "
                 + "Windows ci legge, qui sul PC, senza internet: entra nell'elenco come ogni cosa che copi (quello di "
                 + "un'immagine salvata è riservato, come un testo salvato). Il testo piccolo può uscire con qualche errore: "
                 + "guardalo prima.",
-            "- La freccia in basso a destra di una voce copiata (" + Key(Keys.Control | MainForm.PinKey) + ") la "
+            "- La freccia a destra di una voce copiata (" + Key(Keys.Control | MainForm.PinKey) + ") la "
                 + "tiene in alto per un po': è colorata finché lo fa, e un clic la accende o la spegne. La voce se ne va "
                 + "comunque quando scadono i giorni della cronologia: ciò che deve restare, salvalo. Copiare di nuovo lo "
                 + "stesso testo lo riporta in cima con l'ora nuova, freccia e numero compresi.",
             "- «" + NumberMenu + "», nel menu, dà a un testo salvato o a una voce copiata un numero "
                 + "da 1 a " + MainForm.MaxNumber + ": poi, da qualsiasi programma, " + MainForm.NumbersName + " la "
                 + "incollano subito nella finestra in cui stai lavorando, senza aprire questa (la voce va negli appunti "
-                + "e Ctrl+V segue da solo). Il numero compare in un riquadro in fondo alla scheda, e accanto al testo "
+                + "e Ctrl+V segue da solo). Il numero compare in un riquadro a destra della scheda, e accanto al testo "
                 + "salvato nel menu dell'icona. Una voce copiata tiene il suo numero finché non scadono i suoi giorni. "
                 + "Ogni numero è di una voce sola: dato a un'altra, passa a lei.",
             "Per non ricordare quello che stai per copiare, «" + Pause + "» sta in fondo alla barra laterale "

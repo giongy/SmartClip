@@ -21,7 +21,7 @@ static partial class Strings
         AllPlace = "Todo"; PinnedPlace = "Arriba"; SourcesPlace = "Origen"; GuideItem = "Ayuda";
         AllKinds = "Todo"; TextKinds = "Texto"; CodeKinds = "Código"; LinkKinds = "Enlaces"; PictureKinds = "Imágenes";
         TextBadge = "Texto"; CodeBadge = "Código"; LinkBadge = "Enlace"; PictureBadge = "Imagen"; FormattedBadge = "Con formato";
-        CopyButton = "Copiar"; ShowFull = "Ver todo";
+        CopyButton = "Copiar"; ShowFull = "Ver todo"; MoreItem = "Más";
         Today = "Hoy"; Yesterday = "Ayer"; Undated = "Antes";
         NoPinned = "Nada arriba: la flecha de una entrada copiada la trae aquí por un tiempo";
         NoneOfKind = "Nada de este tipo";
@@ -42,6 +42,7 @@ static partial class Strings
         CopyPictureText = "Copiar el texto";
         Pin = "Mantener arriba"; Unpin = "Quitar de arriba"; OutOfFolders = "Fuera de las carpetas"; EmptyFolder = "Vacía";
         NumberMenu = "Atajo"; NoNumber = "Ninguno";
+        KindMenu = "Tipo";
 
         TrayReady = ": texto listo en el portapapeles"; TrayEmpty = ": sin texto en el portapapeles";
         TrayPaused = ", captura en pausa";
@@ -53,6 +54,7 @@ static partial class Strings
         PausedSay = "En pausa: lo que copias no se recuerda hasta que reanudes la captura.";
         ResumedSay = "La captura se ha reanudado: lo que copias vuelve a la lista.";
         Pinned = "Se queda arriba: {0}."; Unpinned = "Ya no está arriba: {0}.";
+        KindChanged = "Marcada como {1}: {0}.";
         NumberGiven = "{0} ahora pega «{1}» dondequiera que estés.";
         NumberTaken = "«{0}» ya no tiene atajo.";
         Pasted = "Pegado en {1}: {0}.";
@@ -322,32 +324,35 @@ static partial class Strings
                 + "de él. Un clic en uno muestra solo lo que copiaste allí; un clic en «" + SourcesPlace + "» abre o cierra la lista.",
             "Las pestañas sobre las tarjetas (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") muestran un solo tipo de entrada. «" + CodeKinds + "» es una suposición hecha por el "
-                + "aspecto de las líneas: de vez en cuando acaba ahí un texto, o un trozo de código entre los textos.",
-            "Arriba, cada tarjeta dice el programa en el que se copió la entrada, con su icono, o la carpeta de un texto "
-                + "guardado, y a la derecha qué es; luego la entrada; abajo sus botones y, a la derecha, la hora de la copia.",
+                + "aspecto de las líneas: de vez en cuando acaba ahí un texto, o un trozo de código entre los textos. "
+                + "Cuando se equivoca, «" + KindMenu + "», en el menú de un texto, dice qué es: copiado de nuevo o "
+                + "guardado, se queda así.",
+            "Cada tarjeta muestra primero la entrada; debajo, en pequeño, el programa en el que se copió, con su icono (o "
+                + "la carpeta de un texto guardado), la hora de la copia y qué es. A la derecha, pequeños signos la copian, la "
+                + "guardan o la editan, la eliminan y abren su menú: dejando el puntero sobre uno, dice qué hace.",
             "- Escribe en la casilla de arriba para buscar entre las entradas del lugar: las palabras valen en cualquier "
                 + "orden, sin importar mayúsculas ni acentos.",
-            "- Un clic en una tarjeta la selecciona. «" + CopyButton + "» pone la entrada en el portapapeles y deja la "
+            "- Un clic en una tarjeta la selecciona. El signo de copiar («" + CopyButton + "») pone la entrada en el portapapeles y deja la "
                 + "ventana abierta, para que aún puedas guardarla o eliminarla.",
             "- " + EnterKeyName + " o un doble clic la ponen en el portapapeles y, si habías abierto la lista con "
                 + pick + ", te devuelven a la ventana en la que estabas trabajando.",
             "- Luego la pegas con Ctrl+V, o la tecleas con " + type + ".",
-            "- «" + ShowFull + "» muestra la entrada completa en un recuadro: el texto con todas sus líneas, la imagen más "
+            "- «" + ShowFull + "», en el menú, muestra la entrada completa en un recuadro: el texto con todas sus líneas, la imagen más "
                 + "grande. Dejar el puntero sobre una tarjeta que corta su texto hace lo mismo. Desaparece en cuanto mueves "
                 + "el puntero.",
-            "- Los tres puntos de abajo a la derecha, o el clic derecho, abren el menú de la entrada, sin tocar el portapapeles.",
+            "- Los tres puntos de la derecha, o el clic derecho, abren el menú de la entrada, sin tocar el portapapeles.",
             "- «" + CopyPictureText + "», en el menú de una imagen, pone en el portapapeles el texto "
                 + "que Windows lee en ella, aquí en el PC, sin internet: entra en la lista como todo lo que copias (el de "
                 + "una imagen guardada es privado, como un texto guardado). El texto pequeño puede salir con algún error: "
                 + "revísalo antes.",
-            "- La flecha de abajo a la derecha de una entrada copiada (" + Key(Keys.Control | MainForm.PinKey) + ") la "
+            "- La flecha de la derecha de una entrada copiada (" + Key(Keys.Control | MainForm.PinKey) + ") la "
                 + "mantiene arriba un tiempo: está en color mientras lo hace, y un clic la enciende o la apaga. La entrada "
                 + "se va igualmente cuando vencen los días del historial: lo que deba quedarse, guárdalo. Copiar de nuevo "
                 + "el mismo texto lo devuelve arriba con la hora nueva, flecha y número incluidos.",
             "- «" + NumberMenu + "», en el menú, da a un texto guardado o a una entrada copiada un "
                 + "número del 1 al " + MainForm.MaxNumber + ": luego, desde cualquier programa, " + MainForm.NumbersName
                 + " la pegan enseguida en la ventana en la que estás trabajando, sin abrir esta (la entrada va al "
-                + "portapapeles y Ctrl+V sigue solo). El número aparece en un pequeño recuadro abajo en la tarjeta, "
+                + "portapapeles y Ctrl+V sigue solo). El número aparece en un pequeño recuadro a la derecha de la tarjeta, "
                 + "y junto al texto guardado en el menú del icono. Una entrada copiada conserva su número hasta que "
                 + "vencen sus días. Cada número es de una sola entrada: si se lo das a otra, pasa a ella.",
             "Para no recordar lo que vas a copiar, «" + Pause + "» está abajo en la barra lateral y en "

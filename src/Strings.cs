@@ -63,7 +63,7 @@ static partial class Strings
     public static string AllPlace = "All", PinnedPlace = "Pinned", SourcesPlace = "Source", GuideItem = "Help";
     public static string AllKinds = "All", TextKinds = "Text", CodeKinds = "Code", LinkKinds = "Links", PictureKinds = "Images";
     public static string TextBadge = "Text", CodeBadge = "Code", LinkBadge = "Link", PictureBadge = "Image", FormattedBadge = "Formatted";
-    public static string CopyButton = "Copy", ShowFull = "View full";
+    public static string CopyButton = "Copy", ShowFull = "View full", MoreItem = "More";
     public static string Today = "Today", Yesterday = "Yesterday", Undated = "Earlier";
     public static string NoPinned = "Nothing kept at the top: the arrow of a copied entry brings it here for a while",
         NoneOfKind = "Nothing of this kind";
@@ -83,7 +83,7 @@ static partial class Strings
     public static string Open = "Open", Exit = "Exit", Pause = "Pause capture", Resume = "Resume capture";
     public static string ShowContent = "Show the content", MoveTo = "Move to", NewFolder = "New folder…",
         Pin = "Keep at the top", Unpin = "Release from the top", OutOfFolders = "Out of the folders", EmptyFolder = "Empty";
-    public static string NumberMenu = "Shortcut", NoNumber = "None";
+    public static string NumberMenu = "Shortcut", NoNumber = "None", KindMenu = "Type";
     public static string CopyPictureText = "Copy the text";
 
     // --- Tray ---
@@ -98,6 +98,7 @@ static partial class Strings
     public static string PausedSay = "Paused: what you copy is not remembered until you resume capturing.";
     public static string ResumedSay = "Capturing has resumed: what you copy comes back to the list.";
     public static string Pinned = "Kept at the top: {0}.", Unpinned = "No longer at the top: {0}.";
+    public static string KindChanged = "Marked as {1}: {0}.";
     public static string NumberGiven = "{0} now pastes “{1}” wherever you are.";
     public static string NumberTaken = "“{0}” no longer has a shortcut.";
     public static string Pasted = "Pasted into {1}: {0}.";
@@ -378,29 +379,31 @@ static partial class Strings
                 + "click on one shows only what you copied there; a click on " + SourcesPlace + " opens or closes the list.",
             "The tabs above the cards (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") show one kind of entry only. " + CodeKinds + " is a guess from how the lines look: now "
-                + "and then a text ends up there, or a piece of code among the texts.",
-            "On top, each card says the program the entry was copied in, with its icon, or the folder of a saved text, and "
-                + "on the right what it is; then the entry; at the bottom its buttons and, on the right, the time of the copy.",
+                + "and then a text ends up there, or a piece of code among the texts. When it guesses wrong, “" + KindMenu
+                + "”, in the menu of a text, says what it is: copied again or saved, it stays so.",
+            "Each card shows the entry first; under it, small, the program it was copied in, with its icon (or the folder "
+                + "of a saved text), the time of the copy and what it is. On the right, small signs copy it, save or edit it, "
+                + "delete it and open its menu: resting the pointer on one says what it does.",
             "- Type in the box at the top to search the cards of the place: words count in any order, ignoring case and accents.",
-            "- A click on a card selects it. “" + CopyButton + "” puts the entry on the clipboard and leaves the "
+            "- A click on a card selects it. The copy sign (“" + CopyButton + "”) puts the entry on the clipboard and leaves the "
                 + "window open, so that you can still save or delete it.",
             "- " + EnterKeyName + " or a double click put it on the clipboard and, if you opened the list with " + pick
                 + ", take you back to the window you were working in.",
             "- Then paste it with Ctrl+V, or type it with " + type + ".",
-            "- “" + ShowFull + "” shows the entry whole in a small box: the text with all its lines, the picture larger. "
+            "- “" + ShowFull + "”, in the menu, shows the entry whole in a small box: the text with all its lines, the picture larger. "
                 + "Resting the pointer on a card that cuts its text short does the same. It goes as soon as you move the pointer.",
-            "- The three dots at the bottom right, or right-click, open the menu of the entry, without touching the clipboard.",
+            "- The three dots on the right, or right-click, open the menu of the entry, without touching the clipboard.",
             "- “" + CopyPictureText + "”, in the menu of a picture, puts on the clipboard the text Windows "
                 + "reads in it, here on the PC, without the internet: it comes into the list as anything you copy (that of "
                 + "a saved picture is private, as a saved text is). Small text can come out with mistakes: look at it first.",
-            "- The arrow at the bottom right of a copied entry (" + Key(Keys.Control | MainForm.PinKey) + ") keeps it at "
+            "- The arrow on the right of a copied entry (" + Key(Keys.Control | MainForm.PinKey) + ") keeps it at "
                 + "the top for a while: in colour while it does, and a click turns it on or off. The entry still goes when "
                 + "the days of the history are over: what is to stay, save it. Copying the same text again brings it back "
                 + "to the top with the new time, arrow and number included.",
             "- “" + NumberMenu + "”, in the menu, gives a saved text or a copied entry a number from 1 to "
                 + MainForm.MaxNumber + ": then, from any program, " + MainForm.NumbersName + " paste it at once into "
                 + "the window you are working in, without opening this one (the entry goes on the clipboard and Ctrl+V "
-                + "follows by itself). The number shows in a small frame at the bottom of the card, and beside the saved "
+                + "follows by itself). The number shows in a small frame on the right of the card, and beside the saved "
                 + "text in the icon menu. A copied entry keeps its number until its days are over. Each number "
                 + "belongs to one entry: given to another, it moves.",
             "Not to remember what you are about to copy, “" + Pause + "” is at the bottom of the sidebar and "

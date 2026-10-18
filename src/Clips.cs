@@ -27,8 +27,8 @@ sealed class Clips : IDisposable
 {
     // In PRAGMA user_version: a newer file is refused, an older one brought up to date (Upgrade). 2: the large
     // columns of the entries at the end of their rows. 3: the formatting of saved texts. 4: the program each copied
-    // entry was copied in. 5: what it is (Category).
-    public const int SchemaVersion = 5;
+    // entry was copied in. 5: what it is (Category). 6: what the user says it is, of a saved entry too.
+    public const int SchemaVersion = 6;
     const int TextKind = 1, PictureKind = 2;
     // The most the copied pictures take, previews included: beyond it the oldest go (TrimPictures). The checks
     // make it smaller.
@@ -65,16 +65,21 @@ sealed class Clips : IDisposable
         + " pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)),"
         + " number INTEGER UNIQUE CHECK (number BETWEEN 1 AND " + MainForm.MaxNumber + "),"
         + " app_id INTEGER REFERENCES apps (id),"    // the program a copied entry was copied in, if known
-        + " category INTEGER CHECK (category BETWEEN 1 AND 4),"   // what a copied entry is (Category), for the tabs of the list
+        // What an entry is (Category), for the tabs of the list: of a copied one as guessed (Texts.CategoryOf), or as
+        // the user chose ('chosen'); of a saved one only as chosen, otherwise it is guessed again from its content.
+        + " category INTEGER CHECK (category BETWEEN 1 AND 4),"
+        + " chosen INTEGER NOT NULL DEFAULT 0 CHECK (chosen IN (0, 1)),"
         + " rtf BLOB, html BLOB,"                    // of a formatted saved text (Rich), encrypted
         + " hash BLOB,"                              // of a copied entry, to know it when it is copied again
         + " folded TEXT,"                            // of a copied entry, as the search compares it (Texts.Fold)
         + " preview BLOB,"                           // of a picture, as PNG; encrypted if saved
         + " content BLOB NOT NULL,"                  // the text in UTF-8, or the picture as PNG; encrypted if saved
         + " CHECK (saved = 1 OR (name IS NULL AND folder_id IS NULL AND saved_at IS NULL)),"
-        // Nothing of a saved entry stays readable: its search text and its hash would give its content away, and the
-        // program it was copied in and what it is a little of it.
-        + " CHECK (saved = 0 OR (pinned = 0 AND folded IS NULL AND hash IS NULL AND app_id IS NULL AND category IS NULL)),"
+        // The content of a saved entry stays unreadable: its search text and its hash would give it away, and the
+        // program it was copied in a little of it. What it is says no more than its name, which is readable too.
+        + " CHECK (saved = 0 OR (pinned = 0 AND folded IS NULL AND hash IS NULL AND app_id IS NULL AND (category IS NULL OR chosen = 1))),"
+        + " CHECK (chosen = 0 OR category IS NOT NULL),"
+        + " CHECK (category IS NULL OR (category = " + (int)Category.Picture + ") = (kind = " + PictureKind + ")),"
         + " CHECK ((name IS NULL) = (name_key IS NULL)),"
         + " CHECK ((kind = " + PictureKind + ") = (preview IS NOT NULL)),"
         // Only saved texts are kept formatted, always with HTML, which every program that takes formatting reads.
@@ -86,12 +91,12 @@ sealed class Clips : IDisposable
     // has the formatting too.
     const string OldFields = "id, kind, width, height, copied_at, saved, saved_at, name, name_key, folder_id, pinned, number,"
         + " hash, folded, preview, content";
-    const string FormattingFields = ", rtf, html", ProgramFields = ", app_id";   // and version 4 the program too
+    const string FormattingFields = ", rtf, html", ProgramFields = ", app_id", CategoryFields = ", category";   // 4 and 5
     static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     // The columns an entry is read from, in the order Read takes them. The content of a copied picture is left
     // out: it is read when it is chosen (Png).
     static readonly string EntryColumns ="id, kind, CASE WHEN kind = " + TextKind + " THEN content END, preview, width, height,"
-        + " copied_at, saved, saved_at, name, folder_id, pinned, number, html, rtf, app_id";
+        + " copied_at, saved, saved_at, name, folder_id, pinned, number, html, rtf, app_id, category, chosen";
 
     public const string Memory = ":memory:";   // a database that is not a file: when the file cannot be opened
     // Where the program keeps it; the checks use one of their own.
@@ -157,17 +162,18 @@ sealed class Clips : IDisposable
         using (Transaction transaction = data.Begin())
         {
             // 1 → 2: the same entries, the large columns at the end. 2 → 3: the columns of the formatting, 3 → 4 the
-            // program of a copied entry, and 4 → 5 its category, before the large ones, which ADD COLUMN would put
+            // program of a copied entry, 4 → 5 its category and 5 → 6 whether the user chose it (and the checks that let
+            // a saved entry have one), before the large ones, which ADD COLUMN would put
             // after them. Either way the table is made anew under its name and filled from the old one.
-            if (version < 5)
+            if (version < 6)
             {
                 string fields = version < 3 ? OldFields : version < 4 ? OldFields + FormattingFields
-                    : OldFields + FormattingFields + ProgramFields;
+                    : version < 5 ? OldFields + FormattingFields + ProgramFields : OldFields + FormattingFields + ProgramFields + CategoryFields;
                 if (version < 4) data.Execute(AppsSchema);
                 data.Execute("DROP INDEX entries_recent; DROP INDEX entries_hash; ALTER TABLE entries RENAME TO entries_old;");
                 data.Execute(EntriesSchema);
                 data.Execute("INSERT INTO entries (" + fields + ") SELECT " + fields + " FROM entries_old; DROP TABLE entries_old;");
-                Categorize();
+                if (version < 5) Categorize();
             }
             data.Execute("PRAGMA user_version = " + SchemaVersion);
             transaction.Commit();
@@ -624,6 +630,14 @@ sealed class Clips : IDisposable
 
     // --- Any entry ---
 
+    // Says what a text is, whatever was guessed: copied again, or saved, it stays so.
+    public void Choose(long id, Category category)
+    {
+        if (category == Category.Picture) throw new ArgumentException("A text is not a picture");
+        data.Execute("UPDATE entries SET category = ?2, chosen = 1 WHERE id = ?1 AND kind = ?3", id, (int)category, TextKind);
+        if (data.Changes == 0) throw new InvalidOperationException("No text " + id);
+    }
+
     public void Remove(long id)
     {
         data.Execute("DELETE FROM entries WHERE id = ?1", id);
@@ -709,7 +723,7 @@ sealed class Clips : IDisposable
                 preview = row.Blob(1);
             }
             data.Execute("UPDATE entries SET saved = 1, saved_at = ?2, name = ?3, name_key = ?4, folder_id = ?5, pinned = 0,"
-                + " app_id = NULL, category = NULL, folded = NULL, hash = NULL, content = ?6, preview = ?7 WHERE id = ?1",
+                + " app_id = NULL, category = CASE WHEN chosen = 1 THEN category END, folded = NULL, hash = NULL, content = ?6, preview = ?7 WHERE id = ?1",
                 id, Stamp(DateTime.Now), Name(name), Key(name), Place(folder), Protect(content), preview == null ? null : Protect(preview));
             transaction.Commit();
         }
@@ -993,6 +1007,8 @@ sealed class Clips : IDisposable
         entry.Pinned = row.Bool(11);
         entry.Number = row.IsNull(12) ? 0 : row.Int(12);
         entry.Origin = row.IsNull(15) ? null : OriginOf(row.Long(15));
+        if (!row.IsNull(16)) entry.Category = (Category)row.Int(16);   // of a saved one, only if chosen: else guessed
+        entry.Chosen = row.Bool(17);
         return entry;
     }
 
