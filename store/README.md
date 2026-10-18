@@ -123,7 +123,7 @@ Saved texts and copied entries pasted anywhere with Ctrl+Shift+1…9
 Encrypted saved texts and pictures, with or without a name, in folders and subfolders
 Formatted saved texts, such as mail signatures: bold, italic, fonts and sizes, pasted as they are
 Saved texts also in the tray icon menu, without opening the window
-Full preview of long texts and pictures
+Full preview of long texts and pictures, and the text in a picture copied with the text recognition of Windows
 Private copies from password managers are not remembered
 Pause capturing with one click
 Export and import to a text file, and the database in the folder you choose
@@ -149,13 +149,9 @@ paste blocked
 ### What's new in this version
 
 ```
-A more modern SmartClip, closer to Windows 11.
+Copy the text of a picture. Right-click a screenshot, or any picture you copied or saved, and choose Copy the text: Windows reads it right on your PC, without the Internet, and the text goes to the clipboard and into the list like anything you copy.
 
-The options look like Windows Settings: each one on a card, with a few words on what it does and its switch on the right. A new page, Appearance, gathers language, theme and fonts.
-
-Menus have an icon beside each entry, and the choice in use is ticked. Messages appear in coloured bars that tell at once whether something worked, needs attention or went wrong. The mark of the selected row slides to the next one, the buttons at the bottom are quieter, and Ctrl+F takes you to the search box.
-
-Formatted texts copied from browsers, web mail or VS Code now keep their formatting when you save them, accents included, and what comes from a dark page pastes into Word or Outlook in normal colours.
+When an entry goes back on the clipboard, the message keeps it apart from how to paste it, which now sits at the right end of the bar.
 ```
 
 ### Screenshot captions
@@ -221,7 +217,7 @@ Testi salvati e voci copiate incollati ovunque con Ctrl+Maiusc+1…9
 Testi e immagini salvati cifrati, con o senza nome, in cartelle e sottocartelle
 Testi salvati formattati, come le firme di posta: grassetto, corsivo, caratteri e dimensioni, incollati così come sono
 Testi salvati anche nel menu dell'icona, senza aprire la finestra
-Anteprima completa di testi lunghi e immagini
+Anteprima completa di testi lunghi e immagini, e il testo di un'immagine copiato con il riconoscimento di Windows
 Le copie riservate dei gestori di password non vengono ricordate
 Cattura sospendibile con un clic
 Esportazione e importazione in un file di testo, e il database nella cartella che scegli
@@ -247,13 +243,9 @@ digitare password
 ### Novità di questa versione
 
 ```
-Uno SmartClip più moderno, più vicino a Windows 11.
+Copia il testo di un'immagine. Fai clic destro su una schermata, o su qualsiasi immagine copiata o salvata, e scegli Copia il testo: Windows lo legge direttamente sul tuo PC, senza Internet, e il testo va negli appunti e nell'elenco come ogni cosa che copi.
 
-Le opzioni sono come Impostazioni di Windows: ognuna su una scheda, con poche parole su che cosa fa e l'interruttore a destra. Una pagina nuova, Aspetto, riunisce lingua, tema e caratteri.
-
-I menu hanno un'icona accanto a ogni voce, e la scelta in uso ha la spunta. I messaggi compaiono in barre colorate che dicono subito se qualcosa è riuscito, va controllato o è andato storto. La tacca della riga selezionata scivola alla successiva, i pulsanti in basso sono più discreti e Ctrl+F porta alla ricerca.
-
-I testi formattati copiati da browser, posta web o VS Code ora tengono la formattazione quando li salvi, accenti compresi, e ciò che arriva da una pagina scura si incolla in Word o Outlook con i colori normali.
+Quando una voce torna negli appunti, il messaggio la tiene separata da come incollarla, che ora sta all'estremità destra della barra.
 ```
 
 ### Didascalie delle schermate
@@ -319,7 +311,7 @@ Textos guardados y entradas copiadas pegados en cualquier sitio con Ctrl+Mayús+
 Textos e imágenes guardados cifrados, con o sin nombre, en carpetas y subcarpetas
 Textos guardados con formato, como las firmas de correo: negrita, cursiva, fuentes y tamaños, pegados tal cual
 Textos guardados también en el menú del icono, sin abrir la ventana
-Vista previa completa de textos largos e imágenes
+Vista previa completa de textos largos e imágenes, y el texto de una imagen copiado con el reconocimiento de Windows
 Las copias privadas de los gestores de contraseñas no se recuerdan
 Captura que se pausa con un clic
 Exportación e importación a un archivo de texto, y la base de datos en la carpeta que elijas
@@ -345,13 +337,9 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Un SmartClip más moderno, más cercano a Windows 11.
+Copia el texto de una imagen. Haz clic derecho en una captura de pantalla, o en cualquier imagen copiada o guardada, y elige Copiar el texto: Windows lo lee directamente en tu PC, sin Internet, y el texto va al portapapeles y a la lista como todo lo que copias.
 
-Las opciones se parecen a Configuración de Windows: cada una en una tarjeta, con unas palabras sobre lo que hace y su interruptor a la derecha. Una página nueva, Apariencia, reúne idioma, tema y fuentes.
-
-Los menús tienen un icono junto a cada entrada, y la opción en uso lleva una marca. Los mensajes aparecen en barras de color que dicen enseguida si algo ha salido bien, requiere atención o ha fallado. La marca de la fila seleccionada se desliza hasta la siguiente, los botones de abajo son más discretos y Ctrl+F lleva a la búsqueda.
-
-Los textos con formato copiados de navegadores, correo web o VS Code ahora conservan el formato al guardarlos, acentos incluidos, y lo que llega de una página oscura se pega en Word u Outlook con colores normales.
+Cuando una entrada vuelve al portapapeles, el mensaje la separa de cómo pegarla, que ahora está en el extremo derecho de la barra.
 ```
 
 ### Leyendas de las capturas
@@ -417,7 +405,7 @@ Textes enregistrés et éléments copiés collés partout avec Ctrl+Maj+1…9
 Textes et images enregistrés chiffrés, avec ou sans nom, dans des dossiers et sous-dossiers
 Textes enregistrés mis en forme, comme les signatures de courriel : gras, italique, polices et tailles, collés tels quels
 Textes enregistrés aussi dans le menu de l'icône, sans ouvrir la fenêtre
-Aperçu complet des textes longs et des images
+Aperçu complet des textes longs et des images, et le texte d'une image copié grâce à la reconnaissance de Windows
 Les copies privées des gestionnaires de mots de passe ne sont pas mémorisées
 Capture suspendue en un clic
 Export et import dans un fichier texte, et la base de données dans le dossier de votre choix
@@ -443,13 +431,9 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Un SmartClip plus moderne, plus proche de Windows 11.
+Copiez le texte d'une image. Faites un clic droit sur une capture d'écran, ou sur toute image copiée ou enregistrée, et choisissez Copier le texte : Windows le lit directement sur votre PC, sans Internet, et le texte va dans le presse-papiers et dans la liste comme tout ce que vous copiez.
 
-Les options ressemblent aux Paramètres de Windows : chacune sur une carte, avec quelques mots sur ce qu'elle fait et son interrupteur à droite. Une nouvelle page, Apparence, réunit langue, thème et polices.
-
-Les menus ont une icône à côté de chaque élément, et le choix en cours est coché. Les messages s'affichent dans des barres colorées qui disent tout de suite si quelque chose a réussi, demande votre attention ou a échoué. La marque de la ligne sélectionnée glisse jusqu'à la suivante, les boutons du bas sont plus discrets et Ctrl+F mène à la recherche.
-
-Les textes mis en forme copiés depuis un navigateur, une messagerie web ou VS Code gardent maintenant leur mise en forme à l'enregistrement, accents compris, et ce qui vient d'une page sombre se colle dans Word ou Outlook avec des couleurs normales.
+Quand un élément revient dans le presse-papiers, le message le sépare de la façon de le coller, qui se trouve maintenant à l'extrémité droite de la barre.
 ```
 
 ### Légendes des captures
