@@ -51,7 +51,7 @@ static partial class Strings
 
     // --- Main window ---
     public static string TypeButton = "Type clipboard";
-    public static string RecentTitle = "Recently copied", SavedTitle = "Saved", PausedSuffix = " (paused)";
+    public static string SavedTitle = "Saved", PausedSuffix = " (paused)";
     public static string New = "New…", SaveDots = "Save…", EditDots = "Edit…", RenameDots = "Rename…", Delete = "Delete";
     public static string Options = "Options", SearchCue = "Search…";
     public static string CountOf = "{0} of {1}";
@@ -59,15 +59,16 @@ static partial class Strings
         PausedEmpty = "Paused: what you copy is not remembered", CopyHint = "What you copy will appear here",
         NoSaved = "No saved texts";
     public static string NewTip = "Writes a new text to keep, with its name ({0}).";
-    public static string SaveTip = "On a copied entry: saves it so that it never expires, with a name or without,\n"
-        + "and you can touch up its content. With a name the list shows the name, not the content.\n"
-        + "On a saved entry: changes its name or content ({0}).\n"
-        + "On a folder: renames it or moves it.\n"
-        + "A picture can be saved too: it keeps showing itself, with its name beside it.";
-    public static string HelpTip = "Opens the guide: everything the program can do ({0}).";
-    public static string DeleteTip = "Deletes the saved text, or drops the copied entry from the list ({0}).\n"
-        + "Of a folder it deletes only the folder: what it holds moves up one level.";
-    public static string DividerTip = "Drag to give the saved texts more or less room.\nDouble-click: the starting width.";
+    // The sidebar, the tabs above the list, and the cards of the entries.
+    public static string AllPlace = "All", PinnedPlace = "Pinned", SourcesPlace = "Source", GuideItem = "Help";
+    public static string AllKinds = "All", TextKinds = "Text", CodeKinds = "Code", LinkKinds = "Links", PictureKinds = "Images";
+    public static string TextBadge = "Text", CodeBadge = "Code", LinkBadge = "Link", PictureBadge = "Image", FormattedBadge = "Formatted";
+    public static string CopyButton = "Copy", ShowFull = "View full";
+    public static string Today = "Today", Yesterday = "Yesterday", Undated = "Earlier";
+    public static string NoPinned = "Nothing kept at the top: the arrow of a copied entry brings it here for a while",
+        NoneOfKind = "Nothing of this kind";
+    public static string SourcesTip = "The programs you copied in: choose one to see only what you copied there.";
+    public static string PinnedTip = "Copied entries kept at the top for a while: they still go when their days are over.";
     public static string Error = "Error: {0}";
     public static string NewerDatabase = "{0} was written by a newer version of {1}: update the program to open it.";
     public static string UnexpectedError ="Something went wrong: {0}\n\nThe program goes on. The details are in {1}.";
@@ -165,11 +166,11 @@ static partial class Strings
     public static string TypeTip = "Types the clipboard text one key at a time, where paste does not work:\n"
         + "copy the password, press here and click into the field of the remote window.\n"
         + "Or press {0} right in the field.";
-    public static string SearchTip = "Type to search both columns: words in any order, ignoring case and accents.\n"
-        + "The arrows move through the column, Tab switches to the other.\n"
-        + "{0} or a click put the entry back on the clipboard: then paste it with Ctrl+V or\n"
-        + "type it with {1}. With a click the window stays open, with {0} or a double click\n"
-        + "you go back where you were. Right-click opens the entry's menu.\n"
+    public static string SearchTip = "Type to search the cards of the place: words in any order, ignoring case and accents.\n"
+        + "The arrows move through the cards.\n"
+        + "“" + CopyButton + "”, {0} or a double click put the entry back on the clipboard: then paste it with\n"
+        + "Ctrl+V or type it with {1}. With “" + CopyButton + "” the window stays open, with {0} or a double click\n"
+        + "you go back where you were. A click only selects; right-click opens the entry's menu.\n"
         + "Resting the pointer on a copied entry shows it whole.\n"
         + "The arrow at the right of a copied entry ({2}) keeps it at the top of the list\n"
         + "for a while: it still goes when its days are over. What is to stay, save it.\n"
@@ -368,37 +369,44 @@ static partial class Strings
                 + "in where paste does not work, for example on the lock screens of remote desktops.",
 
             "# The list",
-            "On the left are the recently copied items, texts and pictures, newest first. On the right the saved "
-                + "texts, which stay until you delete them.",
-            "- Type in the box at the top to search both columns: words count in any order, ignoring case and accents.",
-            "- A click puts the entry on the clipboard and leaves the window open, so that you can still save or delete it.",
+            "On the left the sidebar, on the right the cards of the place chosen there:",
+            "- " + AllPlace + ": everything, copied and saved, newest first, each day under its name; the entries kept at "
+                + "the top come before the others.",
+            "- " + PinnedPlace + ": only the copied entries kept at the top.",
+            "- " + SavedTitle + ": the saved texts, by name. Under it are their folders.",
+            "- " + SourcesPlace + ": the programs you copied in, each with its icon and how many entries come from it. A "
+                + "click on one shows only what you copied there; a click on " + SourcesPlace + " opens or closes the list.",
+            "The tabs above the cards (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
+                + PictureKinds + ") show one kind of entry only. " + CodeKinds + " is a guess from how the lines look: now "
+                + "and then a text ends up there, or a piece of code among the texts.",
+            "On top, each card says the program the entry was copied in, with its icon, or the folder of a saved text, and "
+                + "on the right what it is; then the entry; at the bottom its buttons and, on the right, the time of the copy.",
+            "- Type in the box at the top to search the cards of the place: words count in any order, ignoring case and accents.",
+            "- A click on a card selects it. “" + CopyButton + "” puts the entry on the clipboard and leaves the "
+                + "window open, so that you can still save or delete it.",
             "- " + EnterKeyName + " or a double click put it on the clipboard and, if you opened the list with " + pick
                 + ", take you back to the window you were working in.",
             "- Then paste it with Ctrl+V, or type it with " + type + ".",
-            "- Right-click selects the entry and opens its menu, without touching the clipboard.",
-            "- “" + CopyPictureText + "”, in the right-click menu of a picture, puts on the clipboard the text Windows "
+            "- “" + ShowFull + "” shows the entry whole in a small box: the text with all its lines, the picture larger. "
+                + "Resting the pointer on a card that cuts its text short does the same. It goes as soon as you move the pointer.",
+            "- The three dots at the bottom right, or right-click, open the menu of the entry, without touching the clipboard.",
+            "- “" + CopyPictureText + "”, in the menu of a picture, puts on the clipboard the text Windows "
                 + "reads in it, here on the PC, without the internet: it comes into the list as anything you copy (that of "
                 + "a saved picture is private, as a saved text is). Small text can come out with mistakes: look at it first.",
-            "- Resting the pointer on a copied entry its row cuts short shows it whole after a moment, in a small "
-                + "box: the text with all its lines, the picture larger. It goes as soon as you move the pointer.",
-            "- The arrow at the right end of a copied entry (" + Key(Keys.Control | MainForm.PinKey) + ") keeps it at "
-                + "the top of the column for a while: it shows faintly when the pointer is over it, and a click turns "
-                + "it on or off. The entry still goes when the days of the history are over: what is to stay, save it. "
-                + "Copying the same text again brings it back to the top with the new time, arrow and number included.",
-            "- “" + NumberMenu + "”, in the right-click menu, gives a saved text or a copied entry a number from 1 to "
+            "- The arrow at the bottom right of a copied entry (" + Key(Keys.Control | MainForm.PinKey) + ") keeps it at "
+                + "the top for a while: in colour while it does, and a click turns it on or off. The entry still goes when "
+                + "the days of the history are over: what is to stay, save it. Copying the same text again brings it back "
+                + "to the top with the new time, arrow and number included.",
+            "- “" + NumberMenu + "”, in the menu, gives a saved text or a copied entry a number from 1 to "
                 + MainForm.MaxNumber + ": then, from any program, " + MainForm.NumbersName + " paste it at once into "
                 + "the window you are working in, without opening this one (the entry goes on the clipboard and Ctrl+V "
-                + "follows by itself). The number shows in a small frame at the right of the row, and beside the saved "
+                + "follows by itself). The number shows in a small frame at the bottom of the card, and beside the saved "
                 + "text in the icon menu. A copied entry keeps its number until its days are over. Each number "
                 + "belongs to one entry: given to another, it moves.",
-            "The coloured sign on the left says what the entry is: a text, a web address, a saved text. Pictures "
-                + "show a thumbnail. Under the entry, small and on the right, is the time of the copy (the day, if not today) or the day it was saved.",
-            "Not to remember what you are about to copy, “" + Pause + "” is in the right-click menu of the list and "
-                + "in that of the icon by the clock: the column says “paused” until you choose “" + Resume + "”. At "
+            "Not to remember what you are about to copy, “" + Pause + "” is at the bottom of the sidebar and "
+                + "in the menu of the icon by the clock: the title says “paused” until you choose “" + Resume + "”. At "
                 + "the next start capturing is on again.",
-            "The gap between the two columns can be dragged, to give the saved texts more or less room: the width "
-                + "stays at the next start too, and a double click there goes back to the starting one.",
-            "The column of the copied items shows the " + MainForm.MaxShown + " most recent: search finds the others.",
+            "The list shows the " + MainForm.MaxShown + " most recent copied entries: search finds the others.",
 
             "# Saved texts",
             "They are what you want always at hand: a signature, an address, a password. They never expire. The "
@@ -431,24 +439,24 @@ static partial class Strings
                 + "changed, it keeps only what the buttons know: links, pictures, alignment and lists are lost.",
 
             "# Folders",
-            "When the saved texts become many you can gather them in folders, and folders in other folders.",
-            "- “" + NewFolder + "” is in the right-click menu (" + Key(Keys.Control | Keys.Shift | MainForm.NewKey)
-                + "): it is created inside the selected folder, or that of the selected text, but its window lets "
-                + "you choose where it goes.",
-            "- A click on the name of a folder, or " + EnterKeyName + ", opens and closes it; the number on the right "
-                + "says how many texts it holds, those in the folders inside it too. Open or closed, you find them as "
-                + "you left them.",
-            "- A saved text, or a folder with all it holds, can be dragged into another folder: onto the folder "
-                + "itself or onto one of its texts. Dropped on a text outside the folders, or below the last row, it "
-                + "leaves the one it was in.",
-            "- “" + MoveTo + "”, in the right-click menu of a saved text or a folder, does the same. The same choice "
+            "When the saved texts become many you can gather them in folders, and folders in other folders. They are in "
+                + "the sidebar, under " + SavedTitle + ": a click on a folder shows its texts, and those of the folders inside it.",
+            "- “" + NewFolder + "” is at the bottom of the sidebar and in the right-click menu of a folder "
+                + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): it is created inside the folder shown, "
+                + "but its window lets you choose where it goes.",
+            "- The arrow at the right end of a folder that holds others opens and closes it; that of " + SavedTitle
+                + " shows or hides all of them. The number says how many texts a folder holds, those in the folders "
+                + "inside it too. Open or closed, you find them as you left them.",
+            "- The card of a saved text, or a folder of the sidebar with all it holds, can be dragged onto a folder of the "
+                + "sidebar; dropped onto " + SavedTitle + ", it leaves the folders.",
+            "- “" + MoveTo + "”, in the menu of a saved text or of a folder, does the same. The same choice "
                 + "is in the window where you write it, to the left of the buttons.",
-            "- With a folder selected, “" + RenameDots + "” changes its name or place and “" + Delete + "” removes "
-                + "the folder only: what it held, texts and folders, moves up into the folder that held it, or stays "
-                + "among the saved texts outside the folders.",
+            "- In the right-click menu of a folder, “" + RenameDots + "” changes its name or place and “" + Delete
+                + "” removes the folder only: what it held, texts and folders, moves up into the folder that held it, or "
+                + "stays among the saved texts outside the folders.",
             "- The name of a folder cannot contain “" + Texts.Separator + "”.",
             "- In the menu of the icon by the clock each folder is a submenu with its texts.",
-            "- Search also looks inside closed folders, and the name of a folder finds its texts.",
+            "- The name of a folder finds its texts in a search.",
 
             "# Typing a password",
             "Where Ctrl+V does not work, " + app + " writes the clipboard text one key at a time, as you would on the keyboard.",
@@ -469,8 +477,7 @@ static partial class Strings
             type + "\tTypes the clipboard into the active window at once.",
             MainForm.NumbersName + "\tPastes the entry with that number into the active window.",
             "F1\tOpens this guide.",
-            ArrowsName + "\tMoves through the column.",
-            "Tab\tSwitches to the other column.",
+            ArrowsName + "\tMoves through the cards, or the places of the sidebar.",
             EnterKeyName + "\tChooses the entry and goes back to the window you came from.",
             "Esc\tGoes back to that window without choosing.",
             Key(Keys.Control | MainForm.SearchKey) + "\tTakes the cursor to the search box.",

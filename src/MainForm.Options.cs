@@ -638,10 +638,10 @@ partial class MainForm
         string entryFamily = Transfer(key, save, "EntryFont", Look.EntryFamily);
         int entrySize = Transfer(key, save, "EntrySize", Look.EntrySize);
         if (!save) UseEntryFont(entryFamily, entrySize);
-        savedColumn = Transfer(key, save, "SavedWidth", savedColumn);   // applied when the window loads
+        savedOpen = Transfer(key, save, "SavedOpen", savedOpen);       // the sidebar shows the folders
+        sourcesOpen = Transfer(key, save, "SourcesOpen", sourcesOpen); // and the programs
 
-        // Window size, in pixels at 96 dpi like the column: applied when the window loads (see OnLoad). Zero if
-        // never saved.
+        // Window size, in pixels at 96 dpi: applied when the window loads (see OnLoad). Zero if never saved.
         Size size = !save ? Size.Empty : WindowState == FormWindowState.Normal ? Size : RestoreBounds.Size;
         savedSize = new Size(Transfer(key, save, "Width", (int)Math.Round(size.Width / Zoom)),
             Transfer(key, save, "Height", (int)Math.Round(size.Height / Zoom)));
@@ -740,16 +740,12 @@ partial class MainForm
         themeButton.Text = ThemeName(theme);
     }
 
-    // Writes the entries in another font or size, at once: the lists are filled again, which measures their rows
-    // anew, and an entry shown whole takes the font when it is shown next.
+    // Writes the entries in another font or size, at once: the cards are filled again, which measures them anew,
+    // and an entry shown whole takes the font when it is shown next.
     void UseEntryFont(string family, int size)
     {
         Look.UseEntryFont(family, size);
-        foreach (ListBox list in new ListBox[] { recentList, savedList })
-        {
-            list.Font = Look.EntryFont;
-            list.ItemHeight = EntryHeight;
-        }
+        cardList.Font = Look.EntryFont;
         fontButton.Text = Look.FontLabel(Look.EntryFamily);
         sizeButton.Text = PixelsName(Look.EntrySize);
         Filter();

@@ -139,9 +139,13 @@ class RowList : ListBox
     // As in the lists of Windows 11 the mark goes from the row selected before to the new one: its leading end
     // first, the other after it, so that it stretches and gathers again. Without a row before, or out of sight, it
     // is simply there.
+    // Whether the selected row has the mark: a list of cards shows the selected one by its edge instead.
+    public bool Marked = true;
+
     protected override void OnSelectedIndexChanged(EventArgs e)
     {
         base.OnSelectedIndexChanged(e);
+        if (!Marked) return;
         int index = SelectedIndex;
         bool known = marked >= 0 && marked < Items.Count;
         RectangleF before = step >= 0 ? Mark() : known ? Look.MarkIn(GetItemRectangle(marked)) : RectangleF.Empty;
@@ -221,7 +225,7 @@ class RowList : ListBox
                 if (mark.IntersectsWith(row)) Look.DrawMark(g, mark);
                 g.ResetClip();
             }
-            else if ((e.State & DrawItemState.Selected) != 0) Look.DrawMark(g, Look.MarkIn(row));
+            else if ((e.State & DrawItemState.Selected) != 0 && Marked) Look.DrawMark(g, Look.MarkIn(row));
             buffer.Render(e.Graphics);
         }
     }

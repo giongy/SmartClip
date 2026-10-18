@@ -6,41 +6,67 @@ using System.IO;
 using System.Threading;
 using System.Windows.Forms;
 
-// The two columns: filling and drawing their rows, choosing, saving and moving entries, the keys of the list.
+// A part of a card, where a click does something of its own.
+enum Part { None, Body, Copy, Save, Delete, Show, Pin, More }
+
+// The name of a day among the cards: those under it were copied, or saved, that day.
+class Heading
+{
+    public readonly string Text;
+
+    public Heading(string text)
+    {
+        Text = text;
+    }
+
+    public override string ToString()
+    {
+        return Text;
+    }
+}
+
+// Where the parts of a card are, in its row: the card itself, with air under it; on top the program or the folder,
+// with what the entry is at the right end; the entry; at the bottom its buttons, and at the right end when it was
+// copied, its number, its arrow and the button of its menu.
+class CardParts
+{
+    public Rectangle Card, Head, Body, Foot, Time, Number, Pin, More;
+    public readonly Dictionary<Part, Rectangle> Buttons = new Dictionary<Part, Rectangle>();
+}
+
+// The entries of the place chosen in the sidebar, as cards: filling them, drawing them, what a click on each part
+// does; choosing, saving and moving entries, the keys of the list.
 partial class MainForm
 {
-    // What the lists answer to: buttons, right-click menu, mouse, dragging a saved text into a folder.
+    // The categories of the tabs above the cards, in their order: all of them first.
+    static readonly Category?[] TabKinds = { null, Category.Text, Category.Code, Category.Link, Category.Picture };
+    List<object> rows = new List<object>();   // what the cards show: entries, and the names of their days
+    bool headed;                               // the cards are under the names of their days: each says its time only
+    int lastCard = -1;                         // the card selected last, where a click on the name of a day leaves it
+
+    // What the cards answer to: buttons, right-click menu, mouse, dragging a saved text into a folder.
     void WireLists()
     {
-        // The same three actions from the buttons, from the right-click menu and from the keyboard.
         EventHandler create = delegate { Edit(null); };
         EventHandler change = delegate { Edit(Selected); };
         EventHandler delete = delegate { DeleteSelected(); };
         newButton.Click += create;
-        saveButton.Click += change;
-        deleteButton.Click += delete;
         ToolStripItem changeItem = listMenu.Items.Add("", null, change);
-        // Only for a saved text, of which the list shows the name alone: its content, for a while.
-        ToolStripItem showItem = listMenu.Items.Add(Strings.ShowContent, null, delegate
-        {
-            if (savedList.SelectedIndex >= 0) ShowPeek(savedList, savedList.SelectedIndex, true);
-        });
+        // Only for a saved text, of which the card shows the name alone: its content, for a while.
+        ToolStripItem showItem = listMenu.Items.Add(Strings.ShowContent, null, delegate { PeekSelected(); });
         // Only for a picture: the text Windows reads in it.
         ToolStripItem readItem = listMenu.Items.Add(Strings.CopyPictureText, null, delegate { CopyText(Selected); });
         // Only for a copied entry: the same as a click on its arrow.
         ToolStripItem pinItem = listMenu.Items.Add("", null, delegate { TogglePin(Selected); });
-        // The number that chooses the entry after the list hotkey: the numbers are listed when the menu opens.
+        // The number that pastes the entry from anywhere: the numbers are listed when the menu opens.
         ToolStripMenuItem numberItem = new ToolStripMenuItem(Strings.NumberMenu);
         listMenu.Items.Add(numberItem);
         // Only for a saved text, once there are folders: they are listed when the menu opens.
         ToolStripMenuItem moveItem = new ToolStripMenuItem(Strings.MoveTo);
         listMenu.Items.Add(moveItem);
-        ToolStripItem deleteItem = listMenu.Items.Add(deleteButton.Text, null, delete);
-        ToolStripItem newItem = listMenu.Items.Add(newButton.Text, null, create);
-        ToolStripItem folderItem = listMenu.Items.Add(Strings.NewFolder, null, delegate { EditGroup(null); });
-        listMenu.Items.Add(new ToolStripSeparator());
-        pauseItems.Add(listMenu.Items.Add("", null, delegate { Pause(!paused); }));
-        // Each with its sign, as in the menus of Windows 11; the one that saves or changes takes that of its button.
+        ToolStripItem deleteItem = listMenu.Items.Add(Strings.Delete, null, delete);
+        ToolStripItem newItem = listMenu.Items.Add(Strings.New, null, create);
+        // Each with its sign, as in the menus of Windows 11.
         Look.Mark(showItem, Sign.Show);
         Look.Mark(readItem, Sign.Text);
         Look.Mark(pinItem, Sign.Up);
@@ -48,102 +74,108 @@ partial class MainForm
         Look.Mark(moveItem, Sign.Move);
         Look.Mark(deleteItem, Sign.Delete);
         Look.Mark(newItem, Sign.Plus);
-        Look.Mark(folderItem, Sign.NewFolder);
-        // With nothing selected the menu still opens: a first folder can be made in an empty list.
+        // With nothing selected the menu still opens: a first text can be written from an empty list.
         listMenu.Opening += delegate
         {
             HidePeek();
             Entry entry = Selected;
-            changeItem.Text = saveButton.Text;
-            Look.Mark(changeItem, saveButton.Sign.Value);
-            changeItem.Enabled = saveButton.Enabled;
+            changeItem.Text = entry != null && entry.Saved ? Strings.EditDots : Strings.SaveDots;
+            Look.Mark(changeItem, entry != null && entry.Saved ? Sign.Edit : Sign.Star);
             changeItem.Visible = deleteItem.Visible = entry != null;
-            showItem.Visible = entry != null && entry.Saved && !entry.IsGroup && entry.Name != null && !entry.Picture;
+            showItem.Visible = entry != null && entry.Saved && entry.Name != null && !entry.Picture;
             readItem.Visible = entry != null && entry.Picture;
             pinItem.Visible = entry != null && !entry.Saved;
             pinItem.Text = entry != null && entry.Pinned ? Strings.Unpin : Strings.Pin;
             ListNumbers(numberItem, entry);
-            // A saved text or a folder, wherever else it can go: a folder never into itself or one it holds.
-            List<string> groups = entry == null ? new List<string>()
-                : GroupNames().FindAll(delegate(string group) { return !entry.IsGroup || !Texts.Within(group, entry.Name); });
-            // Asked back, 'Visible' would answer false: the menu is not on screen yet.
-            bool movable = entry != null && entry.Saved && (groups.Count > 0 || PlaceOf(entry) != null);
-            moveItem.Visible = movable;
-            moveItem.DropDownItems.Clear();
-            if (!movable) return;
-            // The place where it already is cannot be chosen.
-            moveItem.DropDownItems.Add(Strings.OutOfFolders, null, delegate { MoveTo(entry, null); }).Enabled = PlaceOf(entry) != null;
-            foreach (string each in groups)
-            {
-                string group = each;   // a variable of its own for the delegate
-                moveItem.DropDownItems.Add(Texts.Display(group), null, delegate { MoveTo(entry, group); }).Enabled = CanGo(entry, group);
-            }
+            ListPlaces(moveItem, entry);
         };
         Look.Style((ToolStripDropDownMenu)moveItem.DropDown);
         Look.Style((ToolStripDropDownMenu)numberItem.DropDown);
         Look.Style(listMenu);
 
-        foreach (RowList each in new RowList[] { recentList, savedList })
+        Look.Field(cardList);
+        cardList.IntegralHeight = false;
+        cardList.BorderStyle = BorderStyle.None;
+        cardList.DrawMode = DrawMode.OwnerDrawVariable;
+        cardList.Font = Look.EntryFont;   // the entries have a font of their own, chosen in the options
+        cardList.Marked = false;          // a selected card shows it by its edge
+        cardList.ContextMenuStrip = listMenu;
+        cardList.MeasureItem += delegate(object sender, MeasureItemEventArgs e)
         {
-            RowList list = each;   // a variable of its own for the delegates below
-            Look.Field(list);
-            list.IntegralHeight = false;
-            list.BorderStyle = BorderStyle.None;
-            list.DrawMode = DrawMode.OwnerDrawVariable;
-            list.Font = Look.EntryFont;   // the entries have a font of their own, chosen in the options
-            list.ItemHeight = EntryHeight;
-            list.ContextMenuStrip = listMenu;
-            list.MeasureItem += delegate(object sender, MeasureItemEventArgs e)
+            e.ItemHeight = CardHeight(cardList.Items[e.Index], cardList.ClientSize.Width);
+        };
+        cardList.DrawItem += DrawEntry;
+        // The name of a day is not chosen: the selection stays where it was.
+        cardList.SelectedIndexChanged += delegate
+        {
+            if (cardList.SelectedItem is Heading) cardList.SelectedIndex = lastCard < cardList.Items.Count ? lastCard : -1;
+            else lastCard = cardList.SelectedIndex;
+        };
+        // The left button acts, the right one only selects, so that its menu acts on the card under the pointer.
+        cardList.MouseDown += delegate(object sender, MouseEventArgs e)
+        {
+            HidePeek();
+            int index = cardList.RowAt(e.Location);
+            if (e.Button == MouseButtons.Right && index >= 0 && !(cardList.Items[index] is Heading)) cardList.SelectedIndex = index;
+            // A saved text may be dragged to a folder of the sidebar.
+            Entry entry = index < 0 ? null : cardList.Items[index] as Entry;
+            grabbed = e.Button == MouseButtons.Left && entry != null && entry.Saved && PartAt(index, e.Location) == Part.Body ? entry : null;
+            grabbedAt = e.Location;
+        };
+        Draggable(cardList);
+        // A click on a button of a card does what it says; anywhere else on the card it only selects it (wanted by
+        // the user: the entry goes on the clipboard from Copy, a double click or Enter). Copy leaves the window where
+        // it is, so that the entry can still be saved or deleted; a double click, like Enter, also goes back to the
+        // window the list hotkey was pressed in.
+        cardList.MouseClick += delegate(object sender, MouseEventArgs e)
+        {
+            int index = cardList.RowAt(e.Location);
+            if (e.Button != MouseButtons.Left || index < 0 || cardList.Items[index] is Heading) return;
+            Entry entry = (Entry)cardList.Items[index];
+            switch (PartAt(index, e.Location))
             {
-                e.ItemHeight = ((Entry)list.Items[e.Index]).Picture ? list.Font.Height * PictureLines : list.ItemHeight;
-            };
-            list.DrawItem += DrawEntry;
-            // One entry is selected in the whole window: selecting in a column clears the other.
-            EventHandler taken = delegate
-            {
-                if (list.SelectedIndex >= 0)
-                {
-                    active = list;
-                    Other(list).ClearSelected();
-                }
-                ShowActions();
-            };
-            list.SelectedIndexChanged += taken;
-            // The left button chooses, the right one only selects, so that its menu acts on the entry under the pointer.
-            list.MouseDown += delegate(object sender, MouseEventArgs e)
-            {
-                HidePeek();
-                int index = list.RowAt(e.Location);
-                if (e.Button == MouseButtons.Right && index >= 0) list.SelectedIndex = index;
-                // Windows announces the row taken by a click only when the button is released, after the
-                // click has been handled: without this the click would act on the entry selected before.
-                taken(list, EventArgs.Empty);
-            };
-            // One click leaves the window where it is, so that the entry can still be saved or deleted; a
-            // double click, like Enter, also goes back to the window the list hotkey was pressed in.
-            // A click on the arrow of a copied entry does not choose it: it keeps it at the top, or lets it go.
-            list.MouseClick += delegate(object sender, MouseEventArgs e)
-            {
-                int index = list.RowAt(e.Location);
-                if (e.Button != MouseButtons.Left || index < 0) return;
-                if (OnPin(list, e.Location)) TogglePin((Entry)list.Items[index]);
-                else Accept(false);
-            };
-            // The second click on an arrow finds another entry there: the first one moved the row.
-            // Nor does it count on a folder, which the first click has already opened or closed.
-            list.MouseDoubleClick += delegate(object sender, MouseEventArgs e)
-            {
-                int index = list.RowAt(e.Location);
-                if (e.Button == MouseButtons.Left && index >= 0 && !OnPin(list, e.Location) && !((Entry)list.Items[index]).IsGroup)
-                    Accept(true);
-            };
-            // The entry under the pointer lights up: a click would choose it.
-            list.MouseMove += delegate(object sender, MouseEventArgs e) { Hover(list, list.RowAt(e.Location)); };
-            list.MouseLeave += delegate { Hover(list, -1); };
-            list.MouseWheel += delegate { HidePeek(); };      // the rows move under it
-            list.Resize += delegate { list.Invalidate(); };   // the rows are drawn up to the right edge
-        }
-        // The pointer resting on a copied entry shows it whole; one that was asked for leaves by itself.
+                case Part.Copy: Use(entry); break;
+                case Part.Save: Edit(entry); break;
+                case Part.Delete: DeleteSelected(); break;
+                case Part.Show: ShowPeek(cardList, index, true); break;
+                case Part.Pin: TogglePin(entry); break;
+                case Part.More: listMenu.Show(cardList, e.Location); break;
+            }
+        };
+        cardList.MouseDoubleClick += delegate(object sender, MouseEventArgs e)
+        {
+            int index = cardList.RowAt(e.Location);
+            if (e.Button == MouseButtons.Left && index >= 0 && PartAt(index, e.Location) == Part.Body) Accept();
+        };
+        // The card under the pointer lights up, and the part of it a click would act on.
+        cardList.MouseMove += delegate(object sender, MouseEventArgs e)
+        {
+            int index = cardList.RowAt(e.Location);
+            Part part = PartAt(index, e.Location);
+            cardList.Cursor = part != Part.None && part != Part.Body ? Cursors.Hand : Cursors.Default;   // the card itself is only selected
+            Hover(index < 0 || cardList.Items[index] is Heading ? -1 : index);
+            if (index == hoverRow && part == hoverPart) return;
+            if (hoverRow >= 0 && hoverRow < cardList.Items.Count) cardList.Invalidate(cardList.GetItemRectangle(hoverRow));
+            hoverRow = index;
+            hoverPart = part;
+            if (index >= 0) cardList.Invalidate(cardList.GetItemRectangle(index));
+        };
+        cardList.MouseLeave += delegate
+        {
+            Hover(-1);
+            if (hoverRow >= 0 && hoverRow < cardList.Items.Count) cardList.Invalidate(cardList.GetItemRectangle(hoverRow));
+            hoverRow = -1;
+        };
+        cardList.MouseWheel += delegate { HidePeek(); };   // the cards move under it
+        // Wider or narrower, a text may take another number of lines: the cards are measured again.
+        int measuredWidth = 0;
+        cardList.Resize += delegate
+        {
+            if (cardList.ClientSize.Width == measuredWidth || !shown) return;
+            measuredWidth = cardList.ClientSize.Width;
+            ShowRows(Selected);
+        };
+        // The pointer resting on a card shows the entry whole; one that was asked for leaves by itself.
         rest.Tick += delegate
         {
             rest.Stop();
@@ -158,46 +190,9 @@ partial class MainForm
                 ShowPeek(resting, row, false);
         };
 
-        // A saved text, or a folder with all it holds, is dragged to a folder: onto the folder itself or onto
-        // a text it holds. Dropped on a text outside the folders, or below them all, it leaves the one it was in.
-        savedList.AllowDrop = true;
-        savedList.MouseDown += delegate(object sender, MouseEventArgs e)
-        {
-            int index = savedList.RowAt(e.Location);
-            grabbed = e.Button == MouseButtons.Left && index >= 0 ? (Entry)savedList.Items[index] : null;
-            grabbedAt = e.Location;
-        };
-        savedList.MouseUp += delegate { grabbed = null; };
-        savedList.MouseMove += delegate(object sender, MouseEventArgs e)
-        {
-            // Only once the pointer has really moved: a click must stay a click.
-            Rectangle still = new Rectangle(grabbedAt, Size.Empty);
-            still.Inflate(SystemInformation.DragSize);
-            if (grabbed == null || e.Button != MouseButtons.Left || still.Contains(e.Location)) return;
-            Entry entry = grabbed;
-            grabbed = null;
-            HidePeek();
-            savedList.DoDragDrop(entry, DragDropEffects.Move);
-            Aim(null);
-        };
-        savedList.DragOver += delegate(object sender, DragEventArgs e)
-        {
-            Entry entry = e.Data.GetData(typeof(Entry)) as Entry;
-            string group = GroupAt(savedList.PointToClient(new Point(e.X, e.Y)));
-            bool moves = entry != null && CanGo(entry, group);
-            e.Effect = moves ? DragDropEffects.Move : DragDropEffects.None;
-            Aim(moves ? group : null);
-        };
-        savedList.DragLeave += delegate { Aim(null); };
-        savedList.DragDrop += delegate(object sender, DragEventArgs e)
-        {
-            Entry entry = e.Data.GetData(typeof(Entry)) as Entry;
-            string group = GroupAt(savedList.PointToClient(new Point(e.X, e.Y)));
-            Aim(null);
-            if (entry != null && CanGo(entry, group)) MoveTo(entry, group);
-        };
-        // A new search starts again from its best result.
-        search.TextChanged += delegate { active = null; Filter(); };
+        // A new search, or another category, starts again from its best result.
+        search.TextChanged += delegate { cardList.ClearSelected(); Filter(); };
+        tabs.SelectedChanged += delegate { cardList.ClearSelected(); Filter(); };
     }
 
     // Everything again, the saved entries too: after anything that changed them.
@@ -214,8 +209,8 @@ partial class MainForm
         HookNumbers();   // a number may have come or gone, with its entry
     }
 
-    // The saved entries as their column shows them: those outside the folders first, then each folder right
-    // before its own entries and then the folders inside it. A folder is a row too (IsGroup), named by its path.
+    // The saved entries, each folder right before its own entries and then the folders inside it. A folder is an
+    // entry too (IsGroup), named by its path: the sidebar and the menus of the icon and of the cards list them.
     List<Entry> LoadSaved()
     {
         List<Folder> folders = clips.Folders();
@@ -253,97 +248,136 @@ partial class MainForm
         return clips.FindFolder(path);
     }
 
+    // The cards of the place chosen in the sidebar, of the category of the tabs, with the words of the search: the
+    // copied entries from the database, which searches them itself (the history can hold thousands), the saved ones
+    // from those in memory, whose content only this program can read.
     void Filter()
     {
-        // The lists are refilled at every copy remembered, and after anything done to an entry: the selection
-        // must stay on the same entry, not jump back to the first.
         Entry selected = Selected;
-        HidePeek();   // the row it belongs to may be about to move
+        HidePeek();   // the card it belongs to may be about to move
         string[] words = Texts.Words(search.Text);   // taken from the box once, not for each entry
-        bool searching = words.Length > 0;
-        // The copied entries come from the database, which searches them itself: the history can hold thousands.
-        List<Entry> recent = new List<Entry>();
-        int copied = 0;
-        Change(delegate
+        Category? kind = TabKinds[tabs.Selected];
+        List<Entry> copied = new List<Entry>();
+        int total = 0;
+        if (place.HasCopied)
         {
-            recent = clips.Copied(MaxShown, words);
-            copied = clips.CopiedCount();
-        });
-        // What the titles of the columns and the rows of the folders count: the saved texts, not the folders,
-        // those in a closed folder too. Counted once here rather than at every row drawn.
-        int saved = 0;
-        held.Clear();
-        foreach (Entry entry in entries)
-        {
-            if (!entry.IsGroup)
+            Sieve sieve = new Sieve();
+            sieve.Words = words;
+            sieve.Category = kind;
+            sieve.Pinned = place.Kind == PlaceKind.Pinned;
+            sieve.App = place.Kind == PlaceKind.Source ? place.Id : 0;
+            Change(delegate
             {
-                saved++;
-                for (string group = entry.Group; group != null; group = Texts.Parent(group))
-                {
-                    int count;
-                    held.TryGetValue(group, out count);
-                    held[group] = count + 1;
-                }
-            }
+                copied = clips.Copied(MaxShown, sieve);
+                total = clips.CopiedCount(sieve);
+            });
         }
-        // Filled again for a change that keeps the selection (a copy, a folder opened), the columns stay where they
-        // were scrolled to; a new search starts from the top.
-        int recentTop = recentList.TopIndex, savedTop = savedList.TopIndex;
-        recentList.BeginUpdate();
-        savedList.BeginUpdate();
-        recentList.Items.Clear();
-        savedList.Items.Clear();
-        foreach (Entry entry in recent) ShowRow(recentList, entry, selected);
-        // A folder is there unless one it is inside of is closed, and in a search only with what was found in
-        // it: its row, and those of the folders around it, wait here until something of theirs is listed.
-        Dictionary<string, bool> open = new Dictionary<string, bool>(StringComparer.OrdinalIgnoreCase);
-        List<Entry> waiting = new List<Entry>();   // from the outermost: each folder comes just before what it holds
-        foreach (Entry entry in entries)
-        {
-            if (entry.IsGroup)
-            {
-                open[entry.Name] = entry.Open;
-                waiting.RemoveAll(delegate(Entry other) { return !Texts.Within(entry.Name, other.Name); });
-                if (searching) waiting.Add(entry);
-                else if (InView(Texts.Parent(entry.Name), open)) ShowRow(savedList, entry, selected);
-                continue;
-            }
-            if (!Texts.Matches(entry, words)) continue;
-            if (entry.Group != null)
-            {
-                if (!searching && !InView(entry.Group, open)) continue;
-                foreach (Entry folder in waiting) ShowRow(savedList, folder, selected);
-                waiting.Clear();
-            }
-            ShowRow(savedList, entry, selected);
-        }
-        if (selected != null)
-        {
-            Rescroll(recentList, recentTop);
-            Rescroll(savedList, savedTop);
-        }
-        recentList.EndUpdate();
-        savedList.EndUpdate();
-        recentList.Glow.Reset();   // the rows changed under the pointer
-        savedList.Glow.Reset();
-        if (Selected == null) Pick(recentList.Items.Count > 0 ? recentList : savedList);
-        ShowActions();
+        List<Entry> saved = new List<Entry>();
+        if (place.HasSaved)
+            foreach (Entry entry in entries)
+                if (!entry.IsGroup && (place.Kind != PlaceKind.Folder || Texts.Within(entry.Group, place.Path))
+                    && (!kind.HasValue || entry.Category == kind.Value) && Texts.Matches(entry, words))
+                    saved.Add(entry);
+        total += saved.Count;
+        rows = Arrange(copied, saved);
+        ShowRows(selected);
 
-        recentCount.Text = recentList.Items.Count == copied ? copied.ToString()
-            : string.Format(Strings.CountOf, recentList.Items.Count, copied);
+        ShowTitle();
+        int shownCount = copied.Count + saved.Count;
+        count.Text = shownCount == total ? total.ToString() : string.Format(Strings.CountOf, shownCount, total);
         // What the copied pictures take may have changed: in the red bar, and in the options if they are open.
         ShowPictureRoom();
         if (options.Visible) ShowSize();
-        int found = 0;
-        foreach (Entry entry in savedList.Items) if (!entry.IsGroup) found++;
-        savedCount.Text = searching && found != saved ? string.Format(Strings.CountOf, found, saved) : saved.ToString();
-        recentEmpty.Text = searching ? Strings.NoResults : !historyBox.Checked ? Strings.HistoryOffEmpty
-            : paused ? Strings.PausedEmpty : Strings.CopyHint;
-        recentEmpty.Sign = searching ? Sign.Search : !historyBox.Checked ? Sign.History : paused ? Sign.Pause : Sign.Paste;
-        savedEmpty.Text = searching ? Strings.NoResults : Strings.NoSaved;
-        savedEmpty.Sign = searching ? Sign.Search : Sign.Star;
-        recentEmpty.Visible = recentList.Items.Count == 0;
-        savedEmpty.Visible = savedList.Items.Count == 0;
+        bool searching = words.Length > 0;
+        emptyNote.Text = searching ? Strings.NoResults : kind.HasValue ? Strings.NoneOfKind
+            : place.Kind == PlaceKind.Pinned ? Strings.NoPinned
+            : place.Kind == PlaceKind.Folder ? Strings.EmptyFolder : place.Kind == PlaceKind.Saved ? Strings.NoSaved
+            : !historyBox.Checked ? Strings.HistoryOffEmpty : paused ? Strings.PausedEmpty : Strings.CopyHint;
+        emptyNote.Sign = searching ? Sign.Search : kind.HasValue ? Sign.Search : place.Kind == PlaceKind.Pinned ? Sign.Up
+            : place.HasSaved && place.Kind != PlaceKind.All ? Sign.Star
+            : !historyBox.Checked ? Sign.History : paused ? Sign.Pause : Sign.Paste;
+        emptyNote.Visible = shownCount == 0;
+        FillNav();   // the counts of the sidebar, and the programs, may have changed
+    }
+
+    // The cards in their order. In Saved and its folders the texts by name; elsewhere those kept at the top first,
+    // then the others from the newest, each day under its name.
+    List<object> Arrange(List<Entry> copied, List<Entry> saved)
+    {
+        List<object> arranged = new List<object>();
+        headed = place.HasCopied;
+        if (!headed)
+        {
+            saved.Sort(delegate(Entry a, Entry b) { return StringComparer.CurrentCultureIgnoreCase.Compare(a.Label, b.Label); });
+            arranged.AddRange(saved.ToArray());
+            return arranged;
+        }
+        List<Entry> rest = new List<Entry>();
+        foreach (Entry entry in copied)
+        {
+            if (entry.Pinned && place.Kind != PlaceKind.Pinned)
+            {
+                if (arranged.Count == 0) arranged.Add(new Heading(Strings.PinnedPlace));
+                arranged.Add(entry);
+            }
+            else rest.Add(entry);
+        }
+        rest.AddRange(saved);
+        // The newest first; those nobody knows the day of last. Sorted as a whole, the order of equal times by row.
+        rest.Sort(delegate(Entry a, Entry b)
+        {
+            int byTime = b.Time.CompareTo(a.Time);
+            return byTime != 0 ? byTime : b.Id.CompareTo(a.Id);
+        });
+        string day = null;
+        foreach (Entry entry in rest)
+        {
+            string name = DayName(entry.Time);
+            if (name != day) arranged.Add(new Heading(name));
+            day = name;
+            arranged.Add(entry);
+        }
+        return arranged;
+    }
+
+    // How a day is named over its cards: today, yesterday, or the day itself as the language writes it.
+    static string DayName(DateTime time)
+    {
+        if (time == DateTime.MinValue) return Strings.Undated;
+        if (time.Date == DateTime.Today) return Strings.Today;
+        if (time.Date == DateTime.Today.AddDays(-1)) return Strings.Yesterday;
+        string day = time.ToString(time.Year == DateTime.Today.Year ? "M" : "D", Strings.Culture);
+        return day.Substring(0, 1).ToUpper(Strings.Culture) + day.Substring(1);
+    }
+
+    // Fills the cards with the rows of the place; the entry that was selected is selected again, and the list stays
+    // where it was scrolled to as far as that entry stays in view. Without one, the first entry is.
+    void ShowRows(Entry selected)
+    {
+        int top = cardList.TopIndex;
+        cardList.BeginUpdate();
+        cardList.Items.Clear();
+        int found = -1, first = -1;
+        foreach (object row in rows)
+        {
+            int index = cardList.Items.Add(row);
+            Entry entry = row as Entry;
+            if (entry == null) continue;
+            if (first < 0) first = index;
+            if (selected != null && entry.Id == selected.Id) found = index;
+        }
+        lastCard = -1;
+        cardList.SelectedIndex = found >= 0 ? found : first;
+        if (found >= 0) Rescroll(cardList, top);
+        cardList.EndUpdate();
+        cardList.Glow.Reset();   // the rows changed under the pointer
+        hoverRow = -1;
+    }
+
+    // The name of the place over the cards, and that capturing is paused where copied entries are shown.
+    void ShowTitle()
+    {
+        title.Text = place.Title + (paused && place.HasCopied ? Strings.PausedSuffix : "");
     }
 
     // Whether what a folder holds is in view: that folder and every one it is inside of are open. Null is
@@ -370,39 +404,35 @@ partial class MainForm
         if (row.Top < 0 || row.Bottom > list.ClientSize.Height) list.TopIndex = index;
     }
 
-    // Adds a row to a list; if it is the entry that was selected, it is selected again: an entry by its row in the
-    // database, a folder by its path.
-    static void ShowRow(ListBox list, Entry entry, Entry selected)
+    // Remembers which card the pointer is on, and lets it light up. An entry whose content the card shows (a copied
+    // one, a saved one without a name, a picture) is shown whole if the pointer rests there; a text with a name only
+    // when asked.
+    void Hover(int index)
     {
-        int index = list.Items.Add(entry);
-        if (selected != null && entry.IsGroup == selected.IsGroup && (entry.IsGroup ? entry.Name == selected.Name : entry.Id == selected.Id))
-            list.SelectedIndex = index;
-    }
-
-    // Remembers which row of a list the pointer is on, and has the two rows involved drawn again.
-    void Hover(RowList list, int index)
-    {
-        if (list.Glow.Row == index) return;
-        list.Cursor = index >= 0 ? Cursors.Hand : Cursors.Default;
-        list.Glow.Set(index);   // the row lights up gradually, the one left fades
-        // What was in view belonged to the row the pointer left; an entry whose content the list shows (a copied one,
-        // a saved one without a name, a picture) is shown whole if it rests there. A text with a name only when asked.
+        if (cardList.Glow.Row == index) return;
+        cardList.Glow.Set(index);   // the card lights up gradually, the one left fades
         if (!peekAsked || index < 0) HidePeek();
         if (index < 0) return;
-        Entry entry = (Entry)list.Items[index];
-        if (list != recentList && entry.Name != null && !entry.Picture) return;
-        resting = list;
+        Entry entry = (Entry)cardList.Items[index];
+        if (entry.Saved && entry.Name != null && !entry.Picture) return;
+        resting = cardList;
         rest.Interval = RestMs;
         rest.Start();
     }
 
-    // Shows whole the entry of a row, in a small window under it. A text its row already shows whole needs
-    // none, unless it was asked for: then it stays in view for a while, wherever the pointer goes.
+    // The content of the selected saved text, asked for from its menu.
+    void PeekSelected()
+    {
+        if (Selected != null) ShowPeek(cardList, cardList.SelectedIndex, true);
+    }
+
+    // Shows whole the entry of a card, in a small window under it. A text its card already shows whole needs none,
+    // unless it was asked for: then it stays in view for a while, wherever the pointer goes.
     void ShowPeek(ListBox list, int row, bool asked)
     {
-        Entry entry = (Entry)list.Items[row];
+        Entry entry = list.Items[row] as Entry;
         Rectangle area = list.GetItemRectangle(row);
-        if (entry.IsGroup || !asked && !entry.Picture && !Cut(list, entry, area)) return;
+        if (entry == null || !asked && !entry.Picture && !Cut(list, entry, area)) return;
         peek.Reveal(entry, list.RectangleToScreen(area), Zoom);
         peekAsked = asked && peek.Visible;
         if (!peekAsked) return;
@@ -417,98 +447,29 @@ partial class MainForm
         if (peek.Visible) peek.Hide();
     }
 
-    // Whether the row of a copied text shows less than the text: more lines, or more than fits.
+    // Whether the card of a text shows less than the text: more lines than it has, or more than fit.
     bool Cut(ListBox list, Entry entry, Rectangle row)
     {
-        // Measured without the ellipsis of the row: asked how wide the text is, with it the answer is the dots alone.
-        return entry.Label != entry.Text.Trim() || TextRenderer.MeasureText(entry.Label, list.Font, Size.Empty,
-            LineFlags & ~TextFormatFlags.EndEllipsis).Width > Content(list, entry, row).Width - SignRoom;
+        if (entry.Picture || entry.Saved && entry.Name != null) return false;
+        Rectangle body = Lay(entry, row).Body;
+        return CardText(entry) != entry.Text.Trim() || TextRenderer.MeasureText(entry.Text.Trim(), list.Font, new Size(body.Width, 0),
+            BodyFlags).Height > body.Height;
     }
 
-    // The folder a saved text dropped at a point of their column would go to: that of the row there, which
-    // is none for a text outside the folders and below the last row.
-    string GroupAt(Point where)
-    {
-        int row = savedList.RowAt(where);
-        return row < 0 ? null : GroupOf((Entry)savedList.Items[row]);
-    }
-
-    // The folder an entry stands for or is in: a folder itself, the one of a saved text. Null for none.
-    static string GroupOf(Entry entry)
-    {
-        return entry == null ? null : entry.IsGroup ? entry.Name : entry.Group;
-    }
-
-    // Lights up the folder a dragged text is over, as the pointer does.
-    void Aim(string group)
-    {
-        if (dropGroup == group) return;
-        dropGroup = group;
-        savedList.Invalidate();
-    }
-
-    // When, as a row says it at its right: of a copied entry the time today and the day before that, of a
-    // saved text always the day it was saved. The year only when it is not this one. Null if nobody knows.
-    static string When(Entry entry)
+    // When, as a card says it at the right end of its buttons: under the name of its day only the time; otherwise
+    // of a copied entry the time today and the day before that, of a saved text always the day it was saved. The
+    // year only when it is not this one. Null if nobody knows.
+    string When(Entry entry)
     {
         if (!Dated(entry)) return null;
-        return entry.Time.ToString(!entry.Saved && entry.Time.Date == DateTime.Today ? "HH:mm"
+        return entry.Time.ToString(headed || !entry.Saved && entry.Time.Date == DateTime.Today ? "HH:mm"
             : entry.Time.Year == DateTime.Today.Year ? Strings.DayFormat : Strings.YearDayFormat, Strings.Culture);
     }
 
-    // Whether a row says when: not a folder, nor a text saved before the days were kept.
+    // Whether an entry says when: not a folder, nor a text saved before the days were kept.
     static bool Dated(Entry entry)
     {
         return !entry.IsGroup && entry.Time != DateTime.MinValue;
-    }
-
-    // A row of the lists, but for a picture: the line of the entry, and the small one of when it was copied or
-    // saved under it. Every row has room for both, also those that do not say when.
-    static int EntryHeight
-    {
-        get { return Look.EntryFont.Height + Look.CaptionFont.Height + RowPadding; }
-    }
-
-    // The first line of a row, where its sign, its text, its number and its arrow are. A row that does not say when,
-    // and a picture, which is taller, have them in the middle.
-    static Rectangle Line(Entry entry, Rectangle row)
-    {
-        if (entry.Picture || !Dated(entry)) return row;
-        return new Rectangle(row.Left, row.Top + RowPadding / 2, row.Width, Look.EntryFont.Height);
-    }
-
-    // The small line at the bottom of a row, where when it was copied or saved ends at the right edge, under the
-    // arrow and the number.
-    static Rectangle Caption(Rectangle row)
-    {
-        int bottom = row.Bottom - RowPadding / 2;
-        return Rectangle.FromLTRB(row.Left, bottom - Look.CaptionFont.Height, row.Right - TimeGap, bottom);
-    }
-
-    // The part of the first line left to its sign and its text: up to the number, which comes before the arrow in a
-    // row of the copied entries.
-    Rectangle Content(ListBox list, Entry entry, Rectangle row)
-    {
-        Rectangle line = Line(entry, row);
-        int left = row.Left + RowInset + GroupIndent * entry.Level;
-        int right = NumberArea(list, entry, row).Left - (entry.Number > 0 ? TimeGap : 0);
-        return Rectangle.FromLTRB(left, line.Top, right, line.Bottom);
-    }
-
-    // Where the number of an entry is drawn, near the right end of its first line, so that the numbers make a column;
-    // without one, an empty area where it would end.
-    Rectangle NumberArea(ListBox list, Entry entry, Rectangle row)
-    {
-        Rectangle line = Line(entry, row);
-        int right = row.Right - TimeGap - (list == recentList ? PinArea(line).Width + TimeGap : 0);
-        int side = list.Font.Height, width = entry.Number > 0 ? side + NumberPadding : 0;
-        return new Rectangle(right - width, line.Top + (line.Height - side) / 2, width, side);
-    }
-
-    // What the sign of an entry takes at the left of its row, with the air after it.
-    int SignRoom
-    {
-        get { return Look.EntryFont.Height + 2 * PreviewMargin; }
     }
 
     void DrawGlyph(object sender, PaintEventArgs e)
@@ -530,136 +491,286 @@ partial class MainForm
         TextRenderer.DrawText(e.Graphics, keys, Look.NoteFont, badge, Look.Muted, flags);
     }
 
-    // One star before the title of the saved texts says what the whole column is: its rows need none each.
-    void DrawStar(object sender, PaintEventArgs e)
-    {
-        Look.Draw(e.Graphics, Sign.Star, new Rectangle(0, (savedTitle.Height - StarSide) / 2, StarSide, StarSide), null);
-    }
-
-    int StarSide
-    {
-        get { return savedTitle.Font.Height * 4 / 5; }
-    }
-
-    // The sign that tells what an entry is: a formatted text, an address, any other text. That it is saved the
-    // column says, with the star of its title. A picture shows itself.
+    // The sign that tells what an entry is: a formatted text, an address, a piece of code, a picture, any other text;
+    // and that of a folder, open or closed.
     static Sign SignOf(Entry entry)
     {
         if (entry.IsGroup) return entry.Open ? Sign.Opened : Sign.Closed;
         if (entry.Html != null) return Sign.Formatted;
-        string start = entry.Text.TrimStart();
-        foreach (string prefix in new string[] { "http://", "https://", "www." })
-            if (start.StartsWith(prefix, StringComparison.OrdinalIgnoreCase)) return Sign.Link;
-        return Sign.Text;
+        switch (entry.Category)
+        {
+            case Category.Link: return Sign.Link;
+            case Category.Code: return Sign.Code;
+            case Category.Picture: return Sign.Picture;
+            default: return Sign.Text;
+        }
+    }
+
+    // What a card says the entry is, at the right end of its top line.
+    static string BadgeOf(Entry entry)
+    {
+        if (entry.Html != null) return Strings.FormattedBadge;
+        switch (entry.Category)
+        {
+            case Category.Link: return Strings.LinkBadge;
+            case Category.Code: return Strings.CodeBadge;
+            case Category.Picture: return Strings.PictureBadge;
+            default: return Strings.TextBadge;
+        }
     }
 
     Entry Selected
     {
-        get { return active == null ? null : active.SelectedItem as Entry; }
+        get { return cardList.SelectedItem as Entry; }
     }
 
-    ListBox Other(ListBox list)
+    // --- The cards ---
+
+    const TextFormatFlags BodyFlags = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.TextBoxControl;
+    const int MaxBody = 600;   // of a long text, what a card takes to show its first lines
+
+    // What the card shows of an entry: of a saved one with a name only the name, so that a password never appears;
+    // of a text its beginning, its lines kept.
+    static string CardText(Entry entry)
     {
-        return list == recentList ? savedList : recentList;
+        if (entry.Saved && entry.Name != null || entry.Picture) return entry.Label;
+        string text = entry.Text.Trim().Replace("\r\n", "\n").Replace('\t', ' ');
+        return text.Length > MaxBody ? text.Substring(0, MaxBody) : text;
     }
 
-    // Moves the selection to a column: to the entry it held last, or to its first.
-    void Pick(ListBox list)
+    // How tall the row of a card is, its air included, or that of the name of a day: never taller than a list box
+    // of Windows allows, which leaves less of the entry.
+    int CardHeight(object row, int width)
     {
-        if (list.Items.Count > 0) list.SelectedIndex = Math.Max(0, list.SelectedIndex);
+        if (row is Heading) return Look.StrongFont.Height + (int)((HeadingAir + CardLineGap) * Zoom);
+        Entry entry = (Entry)row;
+        int frame = 2 * (int)(CardInset * Zoom) + Font.Height + 2 * (int)(CardLineGap * Zoom) + (int)(PartHeight * Zoom)
+            + (int)(CardGap * Zoom);
+        int body;
+        if (entry.Picture) body = (int)(CardPicture * Zoom);
+        else if (entry.Saved && entry.Name != null) body = Look.StrongEntryFont.Height;
+        else
+        {
+            int line = Look.EntryFont.Height, room = width - 2 * (int)(CardInset * Zoom);
+            int tall = TextRenderer.MeasureText(CardText(entry), Look.EntryFont, new Size(Math.Max(1, room), 0), BodyFlags).Height;
+            body = Math.Max(1, Math.Min(BodyLines, (tall + line - 1) / line)) * line;
+        }
+        return Math.Min(MaxRow, frame + body);
     }
 
-    // The buttons under the list follow the selected entry: a copied text can be saved, a saved one changed.
-    void ShowActions()
+    // The parts of the card of an entry in its row (see CardParts). The buttons from the left, the rest from the right.
+    CardParts Lay(Entry entry, Rectangle row)
     {
-        Entry entry = Selected;
-        bool saved = entry != null && entry.Saved;
-        saveButton.Text = saved && entry.IsGroup ? Strings.RenameDots : saved ? Strings.EditDots : Strings.SaveDots;
-        saveButton.Sign = saved ? Sign.Edit : Sign.Star;
-        saveButton.Enabled = entry != null;
-        deleteButton.Enabled = entry != null;
+        int inset = (int)(CardInset * Zoom), gap = (int)(CardLineGap * Zoom), foot = (int)(PartHeight * Zoom);
+        CardParts parts = new CardParts();
+        parts.Card = Rectangle.FromLTRB(row.Left + 1, row.Top, row.Right - 2, row.Bottom - (int)(CardGap * Zoom));
+        int left = parts.Card.Left + inset, right = parts.Card.Right - inset;
+        parts.Head = new Rectangle(left, parts.Card.Top + inset, right - left, Font.Height);
+        parts.Foot = new Rectangle(left, parts.Card.Bottom - inset - foot, right - left, foot);
+        parts.Body = Rectangle.FromLTRB(left, parts.Head.Bottom + gap, right, parts.Foot.Top - gap);
+        int x = left, between = (int)(PartGap * Zoom);
+        foreach (Part part in new Part[] { Part.Copy, Part.Save, Part.Delete, Part.Show })
+        {
+            int width = TextRenderer.MeasureText(PartText(part, entry), Font, Size.Empty, TextFormatFlags.NoPadding).Width
+                + PartSign + (int)(PartGap * Zoom) + 2 * (int)(PartPadding * Zoom);
+            parts.Buttons[part] = new Rectangle(x, parts.Foot.Top, width, foot);
+            x += width + between;
+        }
+        parts.More = new Rectangle(right - foot, parts.Foot.Top, foot, foot);
+        int end = parts.More.Left - between;
+        if (!entry.Saved)
+        {
+            parts.Pin = new Rectangle(end - foot, parts.Foot.Top, foot, foot);
+            end = parts.Pin.Left - between;
+        }
+        if (entry.Number > 0)
+        {
+            int side = Font.Height, width = side + NumberPadding;
+            parts.Number = new Rectangle(end - width, parts.Foot.Top + (foot - side) / 2, width, side);
+            end = parts.Number.Left - between;
+        }
+        parts.Time = Rectangle.FromLTRB(x, parts.Foot.Top, end, parts.Foot.Bottom);
+        return parts;
     }
 
-    // A row of a list: the preview of a picture, if it is one, then the text.
+    // The sign of a button of a card, as large as the text beside it.
+    int PartSign
+    {
+        get { return Font.Height * 4 / 5; }
+    }
+
+    static string PartText(Part part, Entry entry)
+    {
+        switch (part)
+        {
+            case Part.Copy: return Strings.CopyButton;
+            case Part.Save: return entry.Saved ? Strings.EditDots : Strings.SaveDots;
+            case Part.Delete: return Strings.Delete;
+            default: return Strings.ShowFull;
+        }
+    }
+
+    static Sign PartSignOf(Part part, Entry entry)
+    {
+        switch (part)
+        {
+            case Part.Copy: return Sign.Copy;
+            case Part.Save: return entry.Saved ? Sign.Edit : Sign.Star;
+            case Part.Delete: return Sign.Delete;
+            default: return Sign.Show;
+        }
+    }
+
+    // The part of a card at a point, Body anywhere else on the card, None outside the cards.
+    Part PartAt(int index, Point where)
+    {
+        Entry entry = index < 0 ? null : cardList.Items[index] as Entry;
+        if (entry == null) return Part.None;
+        CardParts parts = Lay(entry, cardList.GetItemRectangle(index));
+        foreach (KeyValuePair<Part, Rectangle> button in parts.Buttons)
+            if (button.Value.Contains(where)) return button.Key;
+        if (!entry.Saved && parts.Pin.Contains(where)) return Part.Pin;
+        if (parts.More.Contains(where)) return Part.More;
+        return parts.Card.Contains(where) ? Part.Body : Part.None;
+    }
+
+    // A row of the list: the name of a day, or the card of an entry.
     void DrawEntry(object sender, DrawItemEventArgs e)
     {
         if (e.Index < 0) return;
-        RowList list = (RowList)sender;
-        Entry entry = (Entry)list.Items[e.Index];
+        Graphics g = e.Graphics;
+        using (Brush plain = new SolidBrush(cardList.BackColor)) g.FillRectangle(plain, e.Bounds);
+        Heading heading = cardList.Items[e.Index] as Heading;
+        if (heading != null)
+        {
+            // Its name low in its row, with a thin line under it, across.
+            int height = Look.StrongFont.Height, bottom = e.Bounds.Bottom - (int)(CardLineGap * Zoom);
+            TextRenderer.DrawText(g, heading.Text, Look.StrongFont, new Rectangle(e.Bounds.Left + 2, bottom - height - 2, e.Bounds.Width, height),
+                Look.Ink, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+            using (Pen line = new Pen(Look.Border)) g.DrawLine(line, e.Bounds.Left, bottom, e.Bounds.Right - 2, bottom);
+            return;
+        }
+        Entry entry = (Entry)cardList.Items[e.Index];
         bool selected = (e.State & DrawItemState.Selected) != 0;
-        // How lit by the pointer it is; fully, the folder a dragged text would be dropped into.
-        float glow = entry.IsGroup && dropGroup != null && Texts.SameName(entry.Name, dropGroup) ? 1 : list.Glow.Of(e.Index);
-        // The copied entries, many and alike, every other row a shade apart.
-        Color back = list == recentList && e.Index % 2 == 1 ? Look.Stripe(list.BackColor) : list.BackColor;
-        Look.DrawRow(e.Graphics, e.Bounds, back, selected, glow);
-        Rectangle label = Content(list, entry, e.Bounds), line = Line(entry, e.Bounds);
-        string when = When(entry);
-        if (when != null) TextRenderer.DrawText(e.Graphics, when, Look.CaptionFont, Caption(e.Bounds), Look.Muted, RightFlags);
-        if (entry.Number > 0)
+        CardParts parts = Lay(entry, e.Bounds);
+        // The card: a shade lighter than the pane, a little more under the pointer; the selected one has an edge in
+        // the accent colour.
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        Color fill = Look.Blend(Look.Raised, Look.Soft, 0.4f * cardList.Glow.Of(e.Index));
+        using (GraphicsPath shape = Look.Rounded(parts.Card))
+        using (Brush back = new SolidBrush(fill))
+        using (Pen edge = new Pen(selected ? Look.Accent : Look.Border, selected ? 2 * Zoom : 1))
         {
-            // The digit that chooses it after the list hotkey, in a rounded frame in the accent colour.
-            Rectangle area = NumberArea(list, entry, e.Bounds);
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            using (GraphicsPath shape = Look.Rounded(Rectangle.FromLTRB(area.Left, area.Top, area.Right - 1, area.Bottom - 1)))
-            using (Pen edge = new Pen(Look.Accent))
+            g.FillPath(back, shape);
+            g.DrawPath(edge, shape);
+        }
+
+        // On top: the program it was copied in, or the folder of a saved one; what it is at the right end.
+        string badge = BadgeOf(entry);
+        int badgeWidth = TextRenderer.MeasureText(badge, Look.NoteFont, Size.Empty, TextFormatFlags.NoPadding).Width + (int)(2 * PartGap * Zoom);
+        Rectangle tag = new Rectangle(parts.Head.Right - badgeWidth, parts.Head.Top, badgeWidth, parts.Head.Height);
+        using (GraphicsPath shape = Look.Pill(tag))
+        using (Pen edge = new Pen(Look.Border))
+            g.DrawPath(edge, shape);
+        TextRenderer.DrawText(g, badge, Look.NoteFont, tag, Look.Muted, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter
+            | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+        int side = parts.Head.Height;
+        Rectangle icon = new Rectangle(parts.Head.Left, parts.Head.Top, side, side);
+        string source;
+        if (entry.Saved)
+        {
+            Look.Draw(g, Sign.Star, icon, null);
+            source = entry.Group != null ? Texts.Display(entry.Group) : Strings.SavedTitle;
+        }
+        else if (entry.Origin != null)
+        {
+            if (entry.Origin.Icon != null)
             {
-                e.Graphics.DrawPath(edge, shape);
+                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+                g.DrawImage(entry.Origin.Icon, icon);
             }
-            TextRenderer.DrawText(e.Graphics, entry.Number.ToString(), e.Font, area, Look.Accent, TextFormatFlags.HorizontalCenter
-                | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
-        }
-        if (list == recentList)
-        {
-            // At the right end, the arrow that keeps the entry at the top for a while: in colour if it does, faint
-            // on the row where a click would light it.
-            Rectangle arrow = PinArea(line);
-            if (entry.Pinned) Look.Draw(e.Graphics, Sign.Up, arrow, null);
-            else if (selected || glow > 0)
-                Look.Draw(e.Graphics, Sign.Up, arrow, Look.Blend(back, Look.Blend(Look.Muted, back, 0.4f), selected ? 1 : glow));
-        }
-        if (entry.IsGroup)
-        {
-            // On the right of a folder, how many texts it holds, those of the folders inside it too.
-            int texts;
-            held.TryGetValue(entry.Name, out texts);
-            string count = texts.ToString();
-            int width = TextRenderer.MeasureText(e.Graphics, count, e.Font, Size.Empty, TextFormatFlags.NoPadding).Width;
-            TextRenderer.DrawText(e.Graphics, count, e.Font, label, Look.Muted, RightFlags);
-            label.Width -= width + TimeGap;
-        }
-        if (entry.Preview != null)
-        {
-            // As tall as the row allows, never wider than half of it, keeping the proportions.
-            Size room = new Size(label.Width / 2, e.Bounds.Height - 2 * PreviewMargin);
-            float scale = Math.Min((float)room.Width / entry.Preview.Width, (float)room.Height / entry.Preview.Height);
-            Size size = new Size((int)(entry.Preview.Width * scale), (int)(entry.Preview.Height * scale));
-            e.Graphics.InterpolationMode = InterpolationMode.HighQualityBicubic;
-            e.Graphics.DrawImage(entry.Preview, label.Left, e.Bounds.Top + (e.Bounds.Height - size.Height) / 2, size.Width, size.Height);
-            label = Rectangle.FromLTRB(label.Left + size.Width + 2 * PreviewMargin, label.Top, label.Right, label.Bottom);
+            else Look.Draw(g, Sign.Apps, icon, null);
+            source = entry.Origin.Name;
         }
         else
         {
-            int side = e.Font.Height;
-            Look.Draw(e.Graphics, SignOf(entry), new Rectangle(label.Left, line.Top + (line.Height - side) / 2, side, side), null);
-            label = Rectangle.FromLTRB(label.Left + SignRoom, label.Top, label.Right, label.Bottom);
+            Look.Draw(g, SignOf(entry), icon, null);
+            source = "";
         }
-        // A folder stands out.
-        TextRenderer.DrawText(e.Graphics, entry.Label, entry.IsGroup ? Look.StrongEntryFont : e.Font, label, list.ForeColor,
-            TextFormatFlags.VerticalCenter | LineFlags);
+        TextRenderer.DrawText(g, source, Look.StrongFont, Rectangle.FromLTRB(icon.Right + (int)(PartGap * Zoom), parts.Head.Top,
+            tag.Left - (int)(PartGap * Zoom), parts.Head.Bottom), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
+
+        // The entry: a picture with its size beside it, the name of a saved text, or the lines of a text.
+        if (entry.Preview != null)
+        {
+            Size room = new Size(parts.Body.Width / 2, parts.Body.Height);
+            float scale = Math.Min((float)room.Width / entry.Preview.Width, (float)room.Height / entry.Preview.Height);
+            Size size = new Size((int)(entry.Preview.Width * scale), (int)(entry.Preview.Height * scale));
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.DrawImage(entry.Preview, parts.Body.Left, parts.Body.Top + (parts.Body.Height - size.Height) / 2, size.Width, size.Height);
+            TextRenderer.DrawText(g, entry.Label, e.Font, Rectangle.FromLTRB(parts.Body.Left + size.Width + 2 * PreviewMargin, parts.Body.Top,
+                parts.Body.Right, parts.Body.Bottom), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
+        }
+        else if (entry.Saved && entry.Name != null)
+            TextRenderer.DrawText(g, entry.Name, Look.StrongEntryFont, parts.Body, Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
+        else
+            TextRenderer.DrawText(g, CardText(entry), e.Font, parts.Body, Look.Ink, BodyFlags | TextFormatFlags.EndEllipsis);
+
+        // At the bottom the buttons; at the right end when, the number, the arrow and the menu.
+        foreach (KeyValuePair<Part, Rectangle> button in parts.Buttons) DrawPart(g, e.Index, button.Key, button.Value, entry, fill);
+        string when = When(entry);
+        if (when != null) TextRenderer.DrawText(g, when, Look.NoteFont, parts.Time, Look.Muted, RightFlags);
+        if (entry.Number > 0)
+        {
+            // The digit that pastes it from anywhere, in a rounded frame in the accent colour.
+            using (GraphicsPath shape = Look.Rounded(Rectangle.FromLTRB(parts.Number.Left, parts.Number.Top, parts.Number.Right - 1, parts.Number.Bottom - 1)))
+            using (Pen edge = new Pen(Look.Accent))
+                g.DrawPath(edge, shape);
+            TextRenderer.DrawText(g, entry.Number.ToString(), Font, parts.Number, Look.Accent, TextFormatFlags.HorizontalCenter
+                | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
+        }
+        if (!entry.Saved)
+        {
+            // The arrow that keeps the entry at the top for a while: in colour if it does, faint otherwise.
+            Highlight(g, e.Index, Part.Pin, parts.Pin, fill);
+            int arrow = PartSign;
+            Rectangle box = new Rectangle(parts.Pin.Left + (parts.Pin.Width - arrow) / 2, parts.Pin.Top + (parts.Pin.Height - arrow) / 2, arrow, arrow);
+            Look.Draw(g, Sign.Up, box, entry.Pinned ? (Color?)null : Look.Blend(fill, Look.Muted, 0.6f));
+        }
+        Highlight(g, e.Index, Part.More, parts.More, fill);
+        int dots = PartSign;
+        Look.Draw(g, Sign.More, new Rectangle(parts.More.Left + (parts.More.Width - dots) / 2, parts.More.Top + (parts.More.Height - dots) / 2,
+            dots, dots), Look.Ink);
     }
 
-    // Where the arrow of a copied entry is drawn, at the right end of the first line of its row.
-    Rectangle PinArea(Rectangle line)
+    // A button of a card: Copy in the accent colour, the others with a thin edge; the one under the pointer brighter.
+    void DrawPart(Graphics g, int index, Part part, Rectangle area, Entry entry, Color fill)
     {
-        int side = Look.EntryFont.Height;
-        return new Rectangle(line.Right - TimeGap - side, line.Top + (line.Height - side) / 2, side, side);
+        bool primary = part == Part.Copy, lit = index == hoverRow && part == hoverPart;
+        Rectangle shape = Rectangle.FromLTRB(area.Left, area.Top, area.Right - 1, area.Bottom - 1);
+        using (GraphicsPath path = Look.Rounded(shape))
+        {
+            Color back = primary ? (lit ? Look.Blend(Look.Accent, Look.Ink, 0.15f) : Look.Accent)
+                : lit ? Look.Blend(fill, Look.Ink, 0.08f) : fill;
+            using (Brush brush = new SolidBrush(back)) g.FillPath(brush, path);
+            if (!primary) using (Pen edge = new Pen(Look.Border)) g.DrawPath(edge, path);
+        }
+        Color ink = primary ? Color.White : Look.Ink;
+        int side = PartSign, padding = (int)(PartPadding * Zoom);
+        Look.Draw(g, PartSignOf(part, entry), new Rectangle(area.Left + padding, area.Top + (area.Height - side) / 2, side, side),
+            primary ? (Color?)Color.White : null);
+        TextRenderer.DrawText(g, PartText(part, entry), Font, Rectangle.FromLTRB(area.Left + padding + side + (int)(PartGap * Zoom), area.Top,
+            area.Right, area.Bottom), ink, TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix
+            | TextFormatFlags.NoPadding);
     }
 
-    // Whether the pointer is on the arrow of a row, or in the little room around it.
-    bool OnPin(RowList list, Point where)
+    // The faint shape under the pointer, on a part of a card drawn as a sign alone.
+    void Highlight(Graphics g, int index, Part part, Rectangle area, Color fill)
     {
-        int index = list.RowAt(where);
-        return list == recentList && index >= 0 && where.X >= PinArea(list.GetItemRectangle(index)).Left - TimeGap / 2;
+        if (index != hoverRow || part != hoverPart) return;
+        using (GraphicsPath path = Look.Rounded(Rectangle.FromLTRB(area.Left, area.Top, area.Right - 1, area.Bottom - 1)))
+        using (Brush brush = new SolidBrush(Look.Blend(fill, Look.Ink, 0.08f)))
+            g.FillPath(brush, path);
     }
 
     // The numbers an entry can be given, in its menu: the one it has is ticked, and beside each that another entry
@@ -714,18 +825,22 @@ partial class MainForm
         ReloadCopied();
     }
 
+    // The card before or after the selected one, over the names of the days.
     void Step(int by)
     {
-        if (active == null) return;
-        int index = active.SelectedIndex + by;
-        if (index >= 0 && index < active.Items.Count) active.SelectedIndex = index;
+        for (int index = cardList.SelectedIndex + by; index >= 0 && index < cardList.Items.Count; index += by)
+            if (cardList.Items[index] is Entry)
+            {
+                cardList.SelectedIndex = index;
+                return;
+            }
     }
 
-    void Accept(bool leave)
+    // Enter, or a double click: the entry on the clipboard, and back to the window the list hotkey was pressed in.
+    void Accept()
     {
         Entry entry = Selected;
-        if (entry != null && entry.IsGroup) ToggleGroup(entry);   // a folder is not chosen: it opens and closes
-        else if (entry != null && !busy && Use(entry) && leave) GoBack();
+        if (entry != null && !busy && Use(entry)) GoBack();
     }
 
     // Makes an entry the clipboard content again: from there Ctrl+V pastes it and the hotkey types it.
@@ -861,23 +976,19 @@ partial class MainForm
         if (wasHidden) Hide();
     }
 
+
     // Opens the window with name and content: for a new text ('source' is null), to keep a copied text or picture,
     // or to change a saved one.
     void Edit(Entry source)
     {
-        if (source != null && source.IsGroup)
-        {
-            EditGroup(source.Name);
-            return;
-        }
-        // A new text is proposed for the folder the selection is in; any text can then be put elsewhere.
-        string group = source != null ? source.Group : GroupOf(Selected);
+        // A new text is proposed for the folder shown; any text can then be put elsewhere.
+        string group = source != null ? source.Group : FolderHere();
         using (EditForm edit = new EditForm(source, group, GroupNames()))
         {
             // Asked again, with what was written still there, if the name turns out to be taken.
             while (edit.ShowDialog(this) == DialogResult.OK)
             {
-                string name = edit.EntryName;   // empty: none, and the list shows the content
+                string name = edit.EntryName;   // empty: none, and the card shows the content
                 long other = 0;
                 if (name.Length > 0 && !Change(delegate { other = clips.Named(name); })) continue;
                 bool taken = other != 0 && (source == null || other != source.Id);
@@ -897,7 +1008,7 @@ partial class MainForm
                             // A picture keeps itself.
                             clips.Change(source.Id, name, source.Picture ? null : edit.Content, edit.Html, edit.Rtf, folder);
                         }
-                        clips.Reveal(folder);   // or the text would not be seen
+                        clips.Reveal(folder);   // or its folder would not be seen in the sidebar
                         transaction.Commit();
                     }
                 })) continue;
@@ -907,6 +1018,14 @@ partial class MainForm
             }
         }
         Reload();
+    }
+
+    // The folder something new goes into: the one shown, or else that of the selected saved text. Null for none.
+    string FolderHere()
+    {
+        if (place.Kind == PlaceKind.Folder) return place.Path;
+        Entry entry = Selected;
+        return entry != null && entry.Saved ? entry.Group : null;
     }
 
     // The folders of the saved texts, by path, each just before those inside it.
@@ -941,10 +1060,10 @@ partial class MainForm
     }
 
     // Asks the name of a new folder and where it goes, or another name or place for the given one. A new
-    // folder is proposed inside the one the selection is in.
+    // folder is proposed inside the one shown.
     void EditGroup(string old)
     {
-        string parent = old != null ? Texts.Parent(old) : GroupOf(Selected);
+        string parent = old != null ? Texts.Parent(old) : FolderHere();
         List<string> parents = GroupNames().FindAll(delegate(string group) { return !Texts.Within(group, old); });
         using (EditForm edit = new EditForm(old, parent, parents))
         {
@@ -961,10 +1080,18 @@ partial class MainForm
                 })) continue;
                 Say(string.Format(old == null ? Strings.FolderCreated : Texts.SameName(Texts.Parent(path), Texts.Parent(old))
                     ? Strings.FolderRenamed : Strings.FolderMoved, Shorten(Texts.Display(path))));
+                if (old != null) Follow(old, path);
                 break;
             }
         }
+        if (old == null) savedOpen = true;   // the new folder is seen
         Reload();
+    }
+
+    // A folder that was renamed or moved, or one inside it: if it is the one shown, it stays shown at its new path.
+    void Follow(string old, string path)
+    {
+        if (place.Kind == PlaceKind.Folder && Texts.Within(place.Path, old)) place.Path = path + place.Path.Substring(old.Length);
     }
 
     // Puts a saved text or a folder into a folder, which opens to show it, or out of them all.
@@ -980,16 +1107,8 @@ partial class MainForm
         })) return;
         Say(group == null ? string.Format(Strings.LeftFolder, Shorten(entry.Label))
             : string.Format(Strings.InFolder, Shorten(entry.Label), Shorten(Texts.Display(group))));
+        if (entry.IsGroup) Follow(entry.Name, Texts.Join(group, Texts.Leaf(entry.Name)));
         Reload();
-    }
-
-    // Shows or hides the texts of a folder.
-    // Nothing else changed: the lists are filled again from what they have, without reading the saved ones anew.
-    void ToggleGroup(Entry group)
-    {
-        if (!Change(delegate { clips.OpenFolder(group.FolderId, !group.Open); })) return;
-        group.Open = !group.Open;
-        Filter();
     }
 
     void DeleteSelected()
@@ -1000,23 +1119,28 @@ partial class MainForm
         {
             if (!Change(delegate { clips.Remove(entry.Id); })) return;
         }
-        else if (entry.IsGroup)
-        {
-            // Only the folder goes: what it holds is too easily a password to be deleted along. It moves up a level.
-            bool holds = entries.Exists(delegate(Entry other)
-            {
-                return other != entry && (Texts.Within(other.Group, entry.Name) || other.IsGroup && Texts.Within(other.Name, entry.Name));
-            });
-            string parent = Texts.Parent(entry.Name);
-            if (!Ask(string.Format(Strings.AskDeleteFolder, Texts.Display(entry.Name))
-                + (!holds ? "" : parent == null ? Strings.DeleteFolderTop : string.Format(Strings.DeleteFolderUp, Texts.Display(parent))))
-                || !Change(delegate { clips.DeleteFolder(entry.FolderId); })) return;
-        }
         else if (!Ask(string.Format(Strings.AskDelete, entry.Label)) || !Change(delegate { clips.Remove(entry.Id); })) return;
         Reload();
     }
 
-    // The keys of the list, while the search box or the list itself has the focus.
+    // Deletes a folder, only the folder: what it holds is too easily a password to be deleted along. It moves up a
+    // level, and Saved is shown.
+    void DeleteFolder(Entry folder)
+    {
+        if (folder == null) return;
+        bool holds = entries.Exists(delegate(Entry other)
+        {
+            return other != folder && (Texts.Within(other.Group, folder.Name) || other.IsGroup && Texts.Within(other.Name, folder.Name));
+        });
+        string parent = Texts.Parent(folder.Name);
+        if (!Ask(string.Format(Strings.AskDeleteFolder, Texts.Display(folder.Name))
+            + (!holds ? "" : parent == null ? Strings.DeleteFolderTop : string.Format(Strings.DeleteFolderUp, Texts.Display(parent))))
+            || !Change(delegate { clips.DeleteFolder(folder.FolderId); })) return;
+        place = new Place(PlaceKind.Saved);
+        Reload();
+    }
+
+    // The keys of the list, while the search box, the cards or the sidebar have the focus.
     protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
     {
         HidePeek();
@@ -1032,24 +1156,10 @@ partial class MainForm
             search.SelectAll();
             return true;
         }
-        if (!(search.Focused || recentList.Focused || savedList.Focused)) return base.ProcessCmdKey(ref msg, keyData);
+        bool inCards = search.Focused || cardList.Focused;
+        if (!inCards && !navList.Focused) return base.ProcessCmdKey(ref msg, keyData);
         switch (keyData)
         {
-            case Keys.Escape:
-                GoBack();
-                return true;
-            case Keys.Enter:
-                enterDown = true;
-                return true;
-            case Keys.Tab:
-                if (active != null) Pick(Other(active));
-                return true;
-            case Keys.Up:
-                Step(-1);
-                return true;
-            case Keys.Down:
-                Step(1);
-                return true;
             case NewKeys:
                 Edit(null);
                 return true;
@@ -1066,6 +1176,23 @@ partial class MainForm
                 TogglePin(Selected);
                 return true;
         }
+        // The arrows of the sidebar move among its places.
+        if (!inCards) return base.ProcessCmdKey(ref msg, keyData);
+        switch (keyData)
+        {
+            case Keys.Escape:
+                GoBack();
+                return true;
+            case Keys.Enter:
+                enterDown = true;
+                return true;
+            case Keys.Up:
+                Step(-1);
+                return true;
+            case Keys.Down:
+                Step(1);
+                return true;
+        }
         return base.ProcessCmdKey(ref msg, keyData);
     }
 
@@ -1076,7 +1203,7 @@ partial class MainForm
         base.OnKeyUp(e);
         if (e.KeyCode != Keys.Enter || !enterDown) return;
         enterDown = false;
-        Accept(true);
+        Accept();
     }
 
     protected override void OnDeactivate(EventArgs e)
@@ -1085,33 +1212,5 @@ partial class MainForm
         enterDown = false;
         HidePeek();
         EndCapture();   // keys pressed elsewhere are not for us
-    }
-
-    // Gives the column of the saved texts the asked width, as far as both columns stay usable; the copied
-    // ones take the rest of the window. Everything is measured from the window and from what never moves
-    // (the left margin, the width of the divider), not from where the columns are: so they cannot drift.
-    void PlaceColumns(int width)
-    {
-        if (WindowState == FormWindowState.Minimized) return;
-        int gap = divider.Width, right = ClientSize.Width - recentCard.Left, least = (int)(MinColumn * Zoom);
-        width = Math.Max(least, Math.Min(width, right - recentCard.Left - gap - least));
-        savedCard.SetBounds(right - width, savedCard.Top, width, savedCard.Height);
-        recentCard.Width = savedCard.Left - gap - recentCard.Left;
-        savedTitle.Left = savedCard.Left;
-        recentCount.Left = recentCard.Right - recentCount.Width;
-        divider.Left = recentCard.Right;
-        savedColumn = (int)Math.Round(width / Zoom);
-    }
-
-    // A short line in the middle of the room between the columns: the sign that it can be dragged.
-    void DrawGrip(object sender, PaintEventArgs e)
-    {
-        int height = (int)(GripHeight * Zoom);
-        using (Pen pen = new Pen(Look.Border, 2 * Zoom))
-        {
-            pen.StartCap = pen.EndCap = LineCap.Round;
-            e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
-            e.Graphics.DrawLine(pen, divider.Width / 2f, (divider.Height - height) / 2f, divider.Width / 2f, (divider.Height + height) / 2f);
-        }
     }
 }

@@ -39,12 +39,21 @@ partial class MainForm : Window
     const int NavWidth = 170, NavGap = 20, PaneWidth = 500;
     const int NavInset = 12, NavPadding = 20;          // where a row of that column starts its sign; added to the text height for the row
     const int PageTop = 48;                            // under the name of a page, where its options begin
-    const int SavedWidth = 250, TitleHeight = 20;      // the column of the saved texts, and the title above each column
-    const int MinColumn = 185;                         // the least a column can be dragged to
-    const int GripHeight = 28;                         // of the mark between the columns, where they are dragged
-    const int RowPadding = 8;                          // added to the two lines of an entry to get its row: half above, half below
-    const int PictureLines = 5;                        // lines of text a picture is as tall as, to make room for its preview
-    const int PreviewMargin = 4;                       // around the preview, inside its row
+    // The window: on the left the sidebar, the places of the entries; on the right, on a lighter pane, the title of the
+    // place, the search with its buttons, the tabs of the categories, the cards of the entries and the status line.
+    const int SideWidth = 210;                         // the sidebar, its margin on the left included
+    const int PaneInset = 16;                          // inside the pane, around what it holds
+    const int TitleRow = 34, TabsHeight = 32;          // the title of the place, and the tabs under the search
+    const int ListHeight = 380;                        // the cards, as the window starts
+    const int SideIndent = 16;                         // of a folder in the sidebar, for each folder it is inside of
+    // A card: the program or folder on top, then the entry, then its buttons; between the cards some air.
+    const int CardGap = 8, CardInset = 12, CardLineGap = 6;
+    const int PartHeight = 26, PartGap = 6, PartPadding = 10;   // the buttons of a card, and the room around their text
+    const int BodyLines = 2;                           // lines of text a card shows of its entry, at most
+    const int CardPicture = 72;                        // how tall a picture is shown in its card
+    const int HeadingAir = 12;                         // above the name of a day, among the cards
+    const int MaxRow = 255;                            // the tallest row a list box of Windows can have, in pixels
+    const int PreviewMargin = 4;                       // around the preview, inside its card
     const int TileHeight = 52, TileGap = 4;            // the least a card of the options is tall, and between two cards
     const int RowHeight = 22;                          // a line of text on the card of the folder of the database
     const int NoteHeight = 18;                         // the same for a line of what it says, smaller
@@ -55,12 +64,11 @@ partial class MainForm : Window
     const int SearchHeight = 30, GlyphWidth = 20;      // the search box, and the magnifying glass on its left
     const int KeysWidth = 64, KeysPadding = 10;        // the frame of its keys on its right, and the air around them
     const int ListPadding = 3;                         // between the rounded edge of a column and its list
-    const int CountWidth = 120;                        // room for the number of entries, right of a column title
-    const int GroupIndent = 14;                        // of a saved text under its folder
+    const int CountWidth = 120;                        // room for the number of entries, right of the title
     const int RowInset = 12, TimeGap = 8;              // of the text in a row, and around the time on its right
     const int NumberPadding = 2;                       // added to the text height for the width of the frame of a number
     const int Gap = 5;                                 // between neighbouring controls
-    const int ActionHeight = ButtonHeight, ActionWidth = 92;   // the buttons in the bottom row
+    const int ActionHeight = ButtonHeight, ActionWidth = 92;   // a button beside the search
     const int TypeWidth = 160;                         // the button that types the clipboard, in the same row
     const int StatusHeight = 44;                       // two lines of text in their bar: the room the status line starts with
     const int FadeMs = 6000;                           // how long a passing message stays in the status line
@@ -99,34 +107,39 @@ partial class MainForm : Window
     HelpForm help;      // the guide, while it is open
     readonly OptionsWindow options;   // the window of the options: made once, hidden when closed
     bool optionsAtStart;              // it opens as soon as this window shows
-    readonly Label recentCount = new Label(), savedCount = new Label();   // how many entries each column lists
-    readonly EmptyNote recentEmpty = new EmptyNote(), savedEmpty = new EmptyNote();   // what a column says while it has none
+    readonly Card pane = new Card();              // the lighter area on the right of the sidebar, where the entries are
+    readonly Label title = new Label();           // the name of the place shown
+    readonly Label count = new Label();           // how many entries it lists
+    readonly EmptyNote emptyNote = new EmptyNote();   // what the list says while it has none
     readonly InfoBar status = new InfoBar();   // what just happened, tinted by its kind
-    readonly InfoBar banner = new InfoBar();   // red, under the lists: the room for copied pictures is full
+    readonly InfoBar banner = new InfoBar();   // red, under the list: the room for copied pictures is full
     bool bannerShown;                      // asked back, Visible would answer false while the window is hidden
     readonly TextBox search = new TextBox();
-    readonly RowList recentList = new RowList(), savedList = new RowList();   // what was copied, and what was saved
-    ListBox active;     // the one of the two that holds the selected entry
-    Panel recentCard, savedCard;                  // the rounded shapes the two lists are in
-    Label recentTitle, savedTitle;
+    readonly TabStrip tabs = new TabStrip();      // the categories: all, texts, code, links, pictures
+    readonly RowList cardList = new RowList();    // the entries of the place, as cards, with the names of the days among them
+    readonly RowList navList = new RowList();     // the sidebar: the places (see Place)
+    readonly RowList footList = new RowList();    // under it: a new folder, the options, the guide
+    Place place = new Place(PlaceKind.All);       // the place shown
+    bool savedOpen = true, sourcesOpen = true;    // the sidebar shows the folders, and the programs
+    bool fillingNav;                              // the sidebar is being filled: its selection is not the user's
     readonly ContextMenuStrip listMenu = new ContextMenuStrip();
-    readonly Peek peek = new Peek();              // shows whole the entry of a row
-    readonly Timer rest = new Timer();            // runs while the pointer rests on a row, and while a text asked for is in view
+    readonly ContextMenuStrip navMenu = new ContextMenuStrip();   // of a folder in the sidebar
+    readonly Peek peek = new Peek();              // shows whole the entry of a card
+    readonly Timer rest = new Timer();            // runs while the pointer rests on a card, and while a text asked for is in view
     RowList resting;                              // the list whose row the pointer rests on
-    bool peekAsked;                               // what is in view was asked for from the menu: moving the pointer leaves it there
+    bool peekAsked;                               // what is in view was asked for: moving the pointer leaves it there
     readonly Timer fade = new Timer();            // runs while the status line holds a passing message
-    Entry grabbed;                                // the saved text the button went down on: it may be dragged to a folder
+    Entry grabbed;                                // the saved text or folder the button went down on: it may be dragged to a folder
     Point grabbedAt;
-    string dropGroup;                             // the folder a dragged text would go to, while it is over one
+    Place dropPlace;                              // the folder a dragged text would go to, while it is over one; Saved for none
+    int hoverRow = -1;                            // the card the pointer is on, and the part of it
+    Part hoverPart;
     bool paused;                                  // what is copied is not remembered, until the user says otherwise
     readonly List<ToolStripItem> pauseItems = new List<ToolStripItem>();   // the menu entries that say so
     CheckBox capturing;                           // the hotkey whose new keys are awaited, or null
-    readonly Panel divider = new Panel();         // the room between the columns: dragged, it moves their border
-    int savedColumn = SavedWidth;                 // the width the user gave to the saved texts, in pixels at 96 dpi
-    Size savedSize;                               // the same for the window, empty until the user has had one
-    int dragFrom, dragWidth;                      // where the pointer and the border were when a drag started
-    bool shown;                                   // the window has its final scale: the columns can be placed
-    readonly RoundButton newButton = new RoundButton(), saveButton = new RoundButton(), deleteButton = new RoundButton();
+    Size savedSize;                               // the size the user left the window at, empty until there is one
+    bool shown;                                   // the window has its final scale
+    readonly RoundButton newButton = new RoundButton();
     // The options, which belong to this window although they are shown in their own (see OptionsWindow).
     readonly RowList pageList = new RowList();   // the categories of the options: each item is the page of one
     readonly Panel pagePane = new Panel();       // where the pages take turns
@@ -163,8 +176,8 @@ partial class MainForm : Window
     readonly Label databaseSize = new Label(); // and how much it takes
     readonly RoundButton changeFolderButton = new RoundButton(), defaultFolderButton = new RoundButton();
     Control[] folderTipped;   // what the tooltip about that folder is on
-    List<Entry> entries = new List<Entry>();   // the saved entries and the folders, as their column shows them
-    // How many texts each folder holds, those of the folders inside it too: counted when the lists are filled,
+    List<Entry> entries = new List<Entry>();   // the saved entries and the folders, each folder right before what it holds
+    // How many texts each folder holds, those of the folders inside it too: counted when the sidebar is filled,
     // drawn on its row.
     readonly Dictionary<string, int> held = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
     bool enterDown;    // Enter was pressed in the list, so its release belongs to it
@@ -203,18 +216,14 @@ partial class MainForm : Window
         }
 
         typeButton.Text = Strings.TypeButton;
+        typeButton.Sign = Sign.Keys;
         typeButton.Click += delegate { if (busy) cancel = true; else Run(Delay); };
-        optionsButton.Text = Strings.Options;
-        optionsButton.Sign = Sign.Options;
-        optionsButton.Click += delegate { OpenOptions(); };
-        helpButton.Click += delegate { ShowHelp(); };
         Look.Style(typeButton, true);
-        // Beside it, the others are commands of a bar, quiet until the pointer reaches them.
-        foreach (RoundButton button in new RoundButton[] { optionsButton, helpButton, newButton, saveButton, deleteButton })
-        {
-            Look.Style(button, false);
-            button.Subtle = true;
-        }
+        // Beside it a new text, a command of a bar, quiet until the pointer reaches it.
+        newButton.Text = Strings.New;
+        newButton.Sign = Sign.Plus;
+        Look.Style(newButton, false);
+        newButton.Subtle = true;
 
         // The status line takes the room of what it says. A message written with Say leaves after a while;
         // anything else stays until the next one. The window of the options says it too: what an option did must
@@ -235,109 +244,72 @@ partial class MainForm : Window
         banner.Visible = false;
         banner.Tell(string.Format(Strings.PicturesFull, Strings.Size(Clips.PictureSpace)), Notice.Error);
 
-        // The lists; under them the status line, then one row of small buttons. On the left those that act on the
-        // selected entry, on the right typing, the options and the guide.
-        int areaBottom = Edge + AreaHeight, statusTop = areaBottom + Gap, actionTop = statusTop + StatusHeight + Gap;
         PlaceOptions();
         options = new OptionsWindow(this);
-        ClientSize = new Size(Edge + ContentWidth + Edge, actionTop + ActionHeight + Edge);
-        status.SetBounds(Edge, statusTop, ContentWidth, StatusHeight);
-        newButton.Text = Strings.New;
-        newButton.Sign = Sign.Plus;
-        deleteButton.Sign = Sign.Delete;
-        typeButton.Sign = Sign.Keys;
-        newButton.SetBounds(Edge, actionTop, ActionWidth, ActionHeight);
-        saveButton.SetBounds(newButton.Right + Gap, actionTop, ActionWidth, ActionHeight);
-        deleteButton.Text = Strings.Delete;
-        deleteButton.SetBounds(saveButton.Right + Gap, actionTop, ActionWidth, ActionHeight);
-        helpButton.Sign = Sign.Help;
-        helpButton.SetBounds(Edge + ContentWidth - ActionHeight, actionTop, ActionHeight, ActionHeight);   // a square
-        optionsButton.SetBounds(helpButton.Left - Gap - ActionWidth, actionTop, ActionWidth, ActionHeight);
-        typeButton.SetBounds(optionsButton.Left - Gap - TypeWidth, actionTop, TypeWidth, ActionHeight);
 
-        // The search box on top of the lists.
-        search.SetBounds(Edge, Edge, ContentWidth, SearchHeight);
+        // On the right a lighter pane, as in the apps of Windows 11: on top the name of the place and how many entries
+        // it has, then the search with a new text and the typing of the clipboard beside it, the tabs of the
+        // categories, the cards, and at the bottom the status line.
+        int paneWidth = PaneInset + ContentWidth + PaneInset;
+        pane.Quiet = true;
+        pane.BackColor = Look.Well;
+        title.SetBounds(PaneInset, PaneInset, ContentWidth - CountWidth, TitleRow);
+        title.Font = Look.TitleFont;
+        title.UseMnemonic = false;
+        title.AutoEllipsis = true;
+        title.TextAlign = ContentAlignment.MiddleLeft;
+        count.SetBounds(PaneInset + ContentWidth - CountWidth, PaneInset, CountWidth, TitleRow);
+        count.TextAlign = ContentAlignment.MiddleRight;
+        count.ForeColor = Look.Muted;
+        int searchTop = title.Bottom + Gap;
+        search.SetBounds(PaneInset, searchTop, ContentWidth - TypeWidth - ActionWidth - 2 * Gap, SearchHeight);
         Panel searchFrame = Look.Frame(search);
         // A magnifying glass on the left of the box, and its keys on the right: it makes room for them.
         search.Left += GlyphWidth;
         search.Width -= GlyphWidth + KeysWidth;
         searchFrame.Paint += DrawGlyph;
+        typeButton.SetBounds(PaneInset + ContentWidth - TypeWidth, searchTop, TypeWidth, searchFrame.Height);
+        newButton.SetBounds(typeButton.Left - Gap - ActionWidth, searchTop, ActionWidth, searchFrame.Height);
+        tabs.SetBounds(PaneInset, searchFrame.Bottom + Gap, ContentWidth, TabsHeight);
+        foreach (string name in new string[] { Strings.AllKinds, Strings.TextKinds, Strings.CodeKinds, Strings.LinkKinds, Strings.PictureKinds })
+            tabs.Add(name);
+        int listTop = tabs.Bottom + Gap, statusTop = listTop + ListHeight + Gap;
+        cardList.SetBounds(PaneInset, listTop, ContentWidth, ListHeight);
+        // What an empty list says, in its place.
+        emptyNote.Bounds = cardList.Bounds;
+        emptyNote.TextAlign = ContentAlignment.MiddleCenter;
+        emptyNote.BackColor = Look.Well;
+        emptyNote.ForeColor = Look.Muted;
+        status.SetBounds(PaneInset, statusTop, ContentWidth, StatusHeight);
+        pane.SetBounds(SideWidth, Edge, paneWidth, statusTop + StatusHeight + PaneInset);
+        pane.Controls.AddRange(new Control[] { title, count, searchFrame, newButton, typeButton, tabs, cardList, emptyNote, banner, status });
+        emptyNote.BringToFront();
+        ClientSize = new Size(SideWidth + paneWidth + Edge, Edge + pane.Height + Edge);
 
-        // Two columns: on the left what was copied, which comes and goes, on the right what was saved. Above
-        // each its title and, on the right, how many entries it lists.
-        int titleTop = searchFrame.Bottom + Gap + 2, listTop = titleTop + TitleHeight, listHeight = areaBottom - listTop;
-        int savedLeft = Edge + ContentWidth - SavedWidth;
-        recentTitle = NewLabel(Strings.RecentTitle, Edge, titleTop);
-        savedTitle = NewLabel(Strings.SavedTitle, savedLeft, titleTop);
-        recentTitle.Font = savedTitle.Font = Look.StrongFont;
-        savedTitle.Paint += DrawStar;   // room is made for it once the window has its scale (OnLoad)
-        recentList.SetBounds(Edge, listTop, savedLeft - Edge - Edge, listHeight);
-        savedList.SetBounds(savedLeft, listTop, SavedWidth, listHeight);
-        recentCard = Look.Wrap(recentList, ListPadding);
-        savedCard = Look.Wrap(savedList, ListPadding);
-        // The room between the columns can be dragged, to give the saved texts more of the window or less; a
-        // double click goes back to the width they start with.
-        divider.SetBounds(recentCard.Right, listTop, Edge, listHeight);
-        divider.Cursor = Cursors.VSplit;
-        divider.Paint += DrawGrip;
-        divider.MouseDown += delegate(object sender, MouseEventArgs e)
-        {
-            dragFrom = Cursor.Position.X;
-            dragWidth = savedCard.Width;
-        };
-        divider.MouseMove += delegate(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Left) PlaceColumns(dragWidth + dragFrom - Cursor.Position.X);
-        };
-        divider.DoubleClick += delegate { PlaceColumns((int)(SavedWidth * Zoom)); };
-        recentCount.SetBounds(recentCard.Right - CountWidth, titleTop, CountWidth, TitleHeight);
-        savedCount.SetBounds(savedCard.Right - CountWidth, titleTop, CountWidth, TitleHeight);
-        foreach (Label count in new Label[] { recentCount, savedCount })
-        {
-            count.TextAlign = ContentAlignment.TopRight;
-            count.ForeColor = Look.Muted;
-        }
-        // What an empty column says, in the place of its list.
-        foreach (Label empty in new Label[] { recentEmpty, savedEmpty })
-        {
-            empty.Bounds = recentList.Bounds;
-            empty.TextAlign = ContentAlignment.MiddleCenter;
-            empty.ForeColor = Look.Muted;
-        }
-        recentCard.Controls.Add(recentEmpty);
-        savedEmpty.Width = savedList.Width;
-        savedCard.Controls.Add(savedEmpty);
-        recentEmpty.BringToFront();
-        savedEmpty.BringToFront();
+        // On the left the sidebar: the places, and under them a new folder, the options and the guide.
+        navList.SetBounds(Edge, Edge, SideWidth - 2 * Edge, pane.Height);
+        footList.SetBounds(Edge, Edge, SideWidth - 2 * Edge, 0);   // at the bottom, once its rows have their height (PlaceSidebar)
+        Controls.AddRange(new Control[] { pane, navList, footList });
         // Thin scroll bars over those of the lists, which always have one so that their rows never change width.
-        recentList.ScrollAlwaysVisible = savedList.ScrollAlwaysVisible = true;
-        Rail.Over(recentList);
-        Rail.Over(savedList);
+        cardList.ScrollAlwaysVisible = navList.ScrollAlwaysVisible = true;
+        Rail.Over(cardList);
+        Rail.Over(navList);
 
-        // When the window grows, the column of the copied entries takes the room; the saved ones stay on the
-        // right, status and buttons at the bottom.
+        // When the window grows, the pane and its cards take the room; the sidebar stays as wide as it is.
         const AnchorStyles toTop = AnchorStyles.Top, toBottom = AnchorStyles.Bottom, toLeft = AnchorStyles.Left, toRight = AnchorStyles.Right;
-        searchFrame.Anchor = toTop | toLeft | toRight;
-        recentCard.Anchor = toTop | toBottom | toLeft | toRight;
-        savedCard.Anchor = toTop | toBottom | toRight;
-        savedTitle.Anchor = recentCount.Anchor = savedCount.Anchor = toTop | toRight;
-        divider.Anchor = toTop | toBottom | toRight;
-        recentEmpty.Anchor = savedEmpty.Anchor = toTop | toBottom | toLeft | toRight;
+        pane.Anchor = cardList.Anchor = emptyNote.Anchor = toTop | toBottom | toLeft | toRight;
+        title.Anchor = searchFrame.Anchor = tabs.Anchor = toTop | toLeft | toRight;
+        count.Anchor = newButton.Anchor = typeButton.Anchor = toTop | toRight;
         status.Anchor = banner.Anchor = toBottom | toLeft | toRight;
-        newButton.Anchor = saveButton.Anchor = deleteButton.Anchor = toBottom | toLeft;
-        optionsButton.Anchor = typeButton.Anchor = helpButton.Anchor = toBottom | toRight;
+        navList.Anchor = toTop | toBottom | toLeft;
+        footList.Anchor = toBottom | toLeft;
 
         WireLists();
+        WireSidebar();
 
         tips.AutoPopDelay = 30000;
         Look.Style(tips);
         Tip(string.Format(Strings.NewTip, NameOf(NewKeys)), newButton);
-        Tip(string.Format(Strings.SaveTip, NameOf(SaveKeys)), saveButton);
-        Tip(string.Format(Strings.HelpTip, NameOf(HelpKey)), helpButton);
-        Tip(string.Format(Strings.DeleteTip, NameOf(DeleteKeys)), deleteButton);
-        Tip(Strings.DividerTip, divider);
-        Controls.AddRange(new Control[] { typeButton, optionsButton, helpButton, status, banner, searchFrame, recentTitle, savedTitle,
-            recentCount, savedCount, recentCard, savedCard, divider, newButton, saveButton, deleteButton });
         // No AcceptButton: Enter chooses an entry, and in the search box it must not start typing the clipboard.
 
         OpenClips();
@@ -522,7 +494,8 @@ partial class MainForm : Window
             item.Text = paused ? Strings.Resume : Strings.Pause;
             Look.Mark(item, paused ? Sign.Resume : Sign.Pause);
         }
-        recentTitle.Text = Strings.RecentTitle + (paused ? Strings.PausedSuffix : "");
+        footList.Items[PauseRow] = paused ? Strings.Resume : Strings.Pause;
+        ShowTitle();
         if (IsHandleCreated) ShowClipboardState();
     }
 
@@ -540,23 +513,24 @@ partial class MainForm : Window
     }
 
     // Gives the status line the room of what it says, in its bar, and none while it is silent; above it the red bar,
-    // while it has something to say, as tall as its text; the lists take what is left.
+    // while it has something to say, as tall as its text; the cards take what is left.
     void FitStatus()
     {
         // Minimised, the window has no room and its controls are squeezed to nothing: placing them now would
         // leave them wrong when it comes back. OnResize calls again then.
         if (!shown || WindowState == FormWindowState.Minimized) return;
-        int gap = (int)(Gap * Zoom), bottom = typeButton.Top - gap, height = status.Fit(status.Width);
+        int gap = (int)(Gap * Zoom), height = status.Fit(status.Width);
+        int bottom = pane.ClientSize.Height - (int)(PaneInset * Zoom) + (height == 0 ? gap : 0);   // silent, it leaves its gap too
         status.SetBounds(status.Left, bottom - height, status.Width, height);
-        int end = status.Top - gap;   // where the lists end
+        int end = status.Top - (height == 0 ? 0 : gap);   // where the cards end
         if (bannerShown)
         {
             int tall = banner.Fit(status.Width);
             banner.SetBounds(status.Left, end - tall, status.Width, tall);
             end = banner.Top - gap;
         }
-        foreach (Control column in new Control[] { recentCard, savedCard, divider }) column.Height = end - column.Top;
-        divider.Invalidate();   // its mark stays in the middle
+        cardList.Height = end - cardList.Top;
+        emptyNote.Height = cardList.Height;
     }
 
     // Shows the red bar while the copied pictures fill their room, and only while the history is on.
@@ -601,7 +575,7 @@ partial class MainForm : Window
     {
         base.OnLoad(e);
         MinimumSize = Size;   // as designed, at the scale of this screen
-        savedTitle.Padding = new Padding(StarSide + StarSide / 3, 0, 0, 0);
+        PlaceSidebar();
         // The size the user left it at, never smaller than designed nor larger than the screen, which it stays on.
         if (savedSize.Width > 0 && savedSize.Height > 0)
         {
@@ -611,7 +585,6 @@ partial class MainForm : Window
             PlaceOnScreen(Location, screen);
         }
         shown = true;
-        PlaceColumns((int)(savedColumn * Zoom));
         FitStatus();
     }
 
@@ -805,12 +778,8 @@ partial class MainForm : Window
     {
         base.OnResize(e);
         if (WindowState == FormWindowState.Minimized && trayBox.Checked) HideToTray();
-        // A narrower window may leave too little to the copied entries: the saved ones give some back.
-        else if (shown && WindowState != FormWindowState.Minimized)
-        {
-            PlaceColumns((int)(savedColumn * Zoom));
-            FitStatus();   // in a wider window the same message may take one line less
-        }
+        // In a wider window the same message may take one line less.
+        else if (shown && WindowState != FormWindowState.Minimized) FitStatus();
     }
 
     protected override void Dispose(bool disposing)

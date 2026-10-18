@@ -26,8 +26,9 @@ class Folder
 sealed class Clips : IDisposable
 {
     // In PRAGMA user_version: a newer file is refused, an older one brought up to date (Upgrade). 2: the large
-    // columns of the entries at the end of their rows. 3: the formatting of saved texts.
-    public const int SchemaVersion = 3;
+    // columns of the entries at the end of their rows. 3: the formatting of saved texts. 4: the program each copied
+    // entry was copied in. 5: what it is (Category).
+    public const int SchemaVersion = 5;
     const int TextKind = 1, PictureKind = 2;
     // The most the copied pictures take, previews included: beyond it the oldest go (TrimPictures). The checks
     // make it smaller.
@@ -40,6 +41,14 @@ sealed class Clips : IDisposable
         + " name_key TEXT NOT NULL,"                 // the name as compared: see Key
         + " open INTEGER NOT NULL DEFAULT 1,"
         + " UNIQUE (parent_id, name_key));";
+    // The programs things were copied in (Origin), each once: the name and the icon the rows of the copied entries
+    // show. Those no copied entry comes from any more go with the expired entries (DropApps).
+    const string AppsSchema =
+        "CREATE TABLE apps ("
+        + " id INTEGER PRIMARY KEY,"
+        + " path TEXT NOT NULL UNIQUE,"              // of its executable, as Windows gives it
+        + " name TEXT NOT NULL,"
+        + " icon BLOB);";                            // PNG; null if none could be read
     // The small columns first, the large ones last: SQLite keeps a large value in a chain of pages of its own, and
     // reads through all of it to get to any column after it. So the list and the search read times, names and
     // search texts without touching the pictures.
@@ -55,14 +64,17 @@ sealed class Clips : IDisposable
         + " folder_id INTEGER REFERENCES folders (id),"
         + " pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)),"
         + " number INTEGER UNIQUE CHECK (number BETWEEN 1 AND " + MainForm.MaxNumber + "),"
+        + " app_id INTEGER REFERENCES apps (id),"    // the program a copied entry was copied in, if known
+        + " category INTEGER CHECK (category BETWEEN 1 AND 4),"   // what a copied entry is (Category), for the tabs of the list
         + " rtf BLOB, html BLOB,"                    // of a formatted saved text (Rich), encrypted
         + " hash BLOB,"                              // of a copied entry, to know it when it is copied again
         + " folded TEXT,"                            // of a copied entry, as the search compares it (Texts.Fold)
         + " preview BLOB,"                           // of a picture, as PNG; encrypted if saved
         + " content BLOB NOT NULL,"                  // the text in UTF-8, or the picture as PNG; encrypted if saved
         + " CHECK (saved = 1 OR (name IS NULL AND folder_id IS NULL AND saved_at IS NULL)),"
-        // Nothing of a saved entry stays readable: its search text and its hash would give its content away.
-        + " CHECK (saved = 0 OR (pinned = 0 AND folded IS NULL AND hash IS NULL)),"
+        // Nothing of a saved entry stays readable: its search text and its hash would give its content away, and the
+        // program it was copied in and what it is a little of it.
+        + " CHECK (saved = 0 OR (pinned = 0 AND folded IS NULL AND hash IS NULL AND app_id IS NULL AND category IS NULL)),"
         + " CHECK ((name IS NULL) = (name_key IS NULL)),"
         + " CHECK ((kind = " + PictureKind + ") = (preview IS NOT NULL)),"
         // Only saved texts are kept formatted, always with HTML, which every program that takes formatting reads.
@@ -70,14 +82,16 @@ sealed class Clips : IDisposable
         + " CHECK (rtf IS NULL OR html IS NOT NULL));"
         + "CREATE INDEX entries_recent ON entries (saved, pinned DESC, copied_at DESC);"
         + "CREATE INDEX entries_hash ON entries (hash) WHERE hash IS NOT NULL;";
-    // The columns of the entries in versions 1 and 2, which an upgrade copies into the table of today.
+    // The columns of the entries in versions 1 and 2, which an upgrade copies into the table of today; version 3
+    // has the formatting too.
     const string OldFields = "id, kind, width, height, copied_at, saved, saved_at, name, name_key, folder_id, pinned, number,"
         + " hash, folded, preview, content";
+    const string FormattingFields = ", rtf, html", ProgramFields = ", app_id";   // and version 4 the program too
     static readonly DateTime Epoch = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);
     // The columns an entry is read from, in the order Read takes them. The content of a copied picture is left
     // out: it is read when it is chosen (Png).
     static readonly string EntryColumns ="id, kind, CASE WHEN kind = " + TextKind + " THEN content END, preview, width, height,"
-        + " copied_at, saved, saved_at, name, folder_id, pinned, number, html, rtf";
+        + " copied_at, saved, saved_at, name, folder_id, pinned, number, html, rtf, app_id";
 
     public const string Memory = ":memory:";   // a database that is not a file: when the file cannot be opened
     // Where the program keeps it; the checks use one of their own.
@@ -89,6 +103,10 @@ sealed class Clips : IDisposable
     // The previews of the copied pictures listed last, by row. The list is read again at every copy, and a picture
     // never changes: decoded anew each time, they would cost time and fill the memory with copies of themselves.
     Dictionary<long, Image> previews = new Dictionary<long, Image>();
+    // The programs things were copied in: by the path of their executable, those described in this session; by their
+    // row, as the list shows them, read once.
+    readonly Dictionary<string, long> programs = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
+    readonly Dictionary<long, Origin> origins = new Dictionary<long, Origin>();
 
     // Opens the file at 'path', creating it if it is not there.
     public Clips(string path) : this(path, null)
@@ -125,7 +143,7 @@ sealed class Clips : IDisposable
         data.Execute("PRAGMA auto_vacuum = INCREMENTAL");   // only before the first table: see Compact
         using (Transaction transaction = data.Begin())
         {
-            data.Execute(FoldersSchema + EntriesSchema);
+            data.Execute(FoldersSchema + AppsSchema + EntriesSchema);
             data.Execute("PRAGMA user_version = " + SchemaVersion);
             if (fill != null) fill(this);
             transaction.Commit();
@@ -138,19 +156,34 @@ sealed class Clips : IDisposable
     {
         using (Transaction transaction = data.Begin())
         {
-            // 1 → 2: the same entries, the large columns at the end. 2 → 3: the columns of the formatting, before
-            // the large ones, which ADD COLUMN would put after them. Either way the table is made anew under its
-            // name and filled from the old one.
-            if (version < 3)
+            // 1 → 2: the same entries, the large columns at the end. 2 → 3: the columns of the formatting, 3 → 4 the
+            // program of a copied entry, and 4 → 5 its category, before the large ones, which ADD COLUMN would put
+            // after them. Either way the table is made anew under its name and filled from the old one.
+            if (version < 5)
             {
+                string fields = version < 3 ? OldFields : version < 4 ? OldFields + FormattingFields
+                    : OldFields + FormattingFields + ProgramFields;
+                if (version < 4) data.Execute(AppsSchema);
                 data.Execute("DROP INDEX entries_recent; DROP INDEX entries_hash; ALTER TABLE entries RENAME TO entries_old;");
                 data.Execute(EntriesSchema);
-                data.Execute("INSERT INTO entries (" + OldFields + ") SELECT " + OldFields + " FROM entries_old; DROP TABLE entries_old;");
+                data.Execute("INSERT INTO entries (" + fields + ") SELECT " + fields + " FROM entries_old; DROP TABLE entries_old;");
+                Categorize();
             }
             data.Execute("PRAGMA user_version = " + SchemaVersion);
             transaction.Commit();
         }
         Compact();   // the room of the old table back to the disk
+    }
+
+    // Says what each copied entry is, those of an older version that did not say it.
+    void Categorize()
+    {
+        data.Execute("UPDATE entries SET category = ?1 WHERE saved = 0 AND kind = ?2", (int)Category.Picture, PictureKind);
+        Dictionary<long, Category> found = new Dictionary<long, Category>();
+        using (Statement rows = data.Prepare("SELECT id, content FROM entries WHERE saved = 0 AND kind = ?1", TextKind))
+            while (rows.Step()) found[rows.Long(0)] = Texts.CategoryOf(Encoding.UTF8.GetString(rows.Blob(1)));
+        using (Statement update = data.Prepare("UPDATE entries SET category = ?2 WHERE id = ?1"))
+            foreach (KeyValuePair<long, Category> each in found) update.Run(each.Key, (int)each.Value);
     }
 
     // The database did not exist and was made now.
@@ -320,13 +353,25 @@ sealed class Clips : IDisposable
     public void ClearCopied()
     {
         data.Execute("DELETE FROM entries WHERE saved = 0");
+        DropApps();
         Compact();
     }
 
     void Drop(DateTime oldest)
     {
         data.Execute("DELETE FROM entries WHERE saved = 0 AND copied_at < ?1", Stamp(oldest));
+        DropApps();
         Compact();
+    }
+
+    // Forgets the programs no copied entry comes from any more. Their rows can then go to other programs: what this
+    // session knows of them is forgotten too.
+    void DropApps()
+    {
+        data.Execute("DELETE FROM apps WHERE id NOT IN (SELECT app_id FROM entries WHERE app_id IS NOT NULL)");
+        if (data.Changes == 0) return;
+        programs.Clear();
+        origins.Clear();
     }
 
     // Gives back to the disk the room of what was removed, a little at a time instead of rebuilding the file.
@@ -341,10 +386,17 @@ sealed class Clips : IDisposable
     // with its arrow and its number. False if there is nothing worth keeping.
     public bool AddText(string text)
     {
+        return AddText(text, null);
+    }
+
+    // The same, copied in the program whose executable is 'program' (null: nobody knows). Copied again elsewhere,
+    // the entry comes from there.
+    public bool AddText(string text, string program)
+    {
         if (!Worth(text)) return false;
         if (pruned != DateTime.Today) Prune();
         byte[] content = Encoding.UTF8.GetBytes(text);
-        Insert(TextKind, content, null, 0, 0, Texts.Fold(text), Hash(content), DateTime.Now, false);
+        Insert(TextKind, content, null, 0, 0, Texts.Fold(text), Hash(content), DateTime.Now, false, App(program));
         return true;
     }
 
@@ -357,12 +409,78 @@ sealed class Clips : IDisposable
     // announces one copy several times, is the same entry.
     public void AddPicture(Image picture)
     {
+        AddPicture(picture, null);
+    }
+
+    // The same, copied in the program whose executable is 'program' (null: nobody knows).
+    public void AddPicture(Image picture, string program)
+    {
         if (pruned != DateTime.Today) Prune();
         Entry entry = new Entry(picture);
         using (entry.Preview)
             Insert(PictureKind, entry.Png, Entry.ToPng(entry.Preview), entry.Width, entry.Height, PictureWords(entry.Width, entry.Height),
-                Hash(entry.Png), DateTime.Now, false);
+                Hash(entry.Png), DateTime.Now, false, App(program));
         TrimPictures();
+    }
+
+    // The row of the program whose executable is 'path' among the apps, made the first time it is met. Once per
+    // session it is described again, so that a program updated since shows its name and icon of today. Null for none.
+    object App(string path)
+    {
+        if (path == null) return null;
+        long id;
+        if (programs.TryGetValue(path, out id)) return id;
+        string name = Origin.NameOf(path);
+        byte[] icon = Origin.IconOf(path);
+        object known = data.Value("SELECT id FROM apps WHERE path = ?1", path);
+        if (known == null)
+        {
+            data.Execute("INSERT INTO apps (path, name, icon) VALUES (?1, ?2, ?3)", path, name, icon);
+            id = data.LastId;
+        }
+        else
+        {
+            id = (long)known;
+            data.Execute("UPDATE apps SET name = ?2, icon = ?3 WHERE id = ?1", id, name, icon);
+            origins.Remove(id);
+        }
+        programs[path] = id;
+        return id;
+    }
+
+    // Says in which program a copied entry was copied: for the entries the checks make up, which come from no
+    // clipboard.
+    internal void Attribute(long id, string program)
+    {
+        data.Execute("UPDATE entries SET app_id = ?2 WHERE id = ?1 AND saved = 0", id, App(program));
+    }
+
+    // The program of a row of the apps, as the list shows it: read once, its icon decoded once.
+    Origin OriginOf(long id)
+    {
+        Origin origin;
+        if (origins.TryGetValue(id, out origin)) return origin;
+        using (Statement row = data.Prepare("SELECT name, icon FROM apps WHERE id = ?1", id))
+        {
+            if (!row.Step()) return null;
+            Image icon = null;
+            if (!row.IsNull(1))
+            {
+                try
+                {
+                    using (MemoryStream packed = new MemoryStream(row.Blob(1)))
+                    using (Image image = Image.FromStream(packed))
+                        icon = new Bitmap(image);
+                }
+                catch (ArgumentException)
+                {
+                    // Not a picture after all: the name alone.
+                }
+            }
+            origin = new Origin(row.Text(0), icon);
+        }
+        origins[id] = origin;
+        return origin;
     }
 
     // What the search finds a picture by: its size, as the list writes it.
@@ -381,23 +499,27 @@ sealed class Clips : IDisposable
             if (data.Value("SELECT 1 FROM entries WHERE hash = ?1", Hash(Encoding.UTF8.GetBytes(each))) != null) return false;
         if (pruned != DateTime.Today) Prune();
         byte[] content = Encoding.UTF8.GetBytes(text);
-        Insert(TextKind, content, null, 0, 0, Texts.Fold(text), Hash(content), time, pinned);
+        Insert(TextKind, content, null, 0, 0, Texts.Fold(text), Hash(content), time, pinned, null);
         return true;
     }
 
-    // A new copied entry, or the one with the same content taking the later time. Returns its id.
-    long Insert(int kind, byte[] content, byte[] preview, int width, int height, string folded, byte[] hash, DateTime time, bool pinned)
+    // A new copied entry, or the one with the same content taking the later time, and the program it was copied in
+    // last if known ('app', a row of the apps, or null). Returns its id.
+    long Insert(int kind, byte[] content, byte[] preview, int width, int height, string folded, byte[] hash, DateTime time, bool pinned,
+        object app)
     {
         object same = data.Value("SELECT id FROM entries WHERE hash = ?1", hash);
         if (same != null)
         {
-            data.Execute("UPDATE entries SET copied_at = max(copied_at, ?2), pinned = max(pinned, ?3) WHERE id = ?1", same, Stamp(time), pinned);
+            data.Execute("UPDATE entries SET copied_at = max(copied_at, ?2), pinned = max(pinned, ?3), app_id = coalesce(?4, app_id)"
+                + " WHERE id = ?1", same, Stamp(time), pinned, app);
             return (long)same;
         }
-        data.Execute("INSERT INTO entries (kind, content, preview, width, height, folded, hash, copied_at, pinned)"
-            + " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
+        Category category = kind == PictureKind ? Category.Picture : Texts.CategoryOf(Encoding.UTF8.GetString(content));
+        data.Execute("INSERT INTO entries (kind, content, preview, width, height, folded, hash, copied_at, pinned, app_id, category)"
+            + " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
             kind, content, preview, kind == PictureKind ? (object)width : null, kind == PictureKind ? (object)height : null,
-            folded, hash, Stamp(time), pinned);
+            folded, hash, Stamp(time), pinned, app, (int)category);
         // SQLite may give the new row the id of the last one removed: a preview kept for that one is not this one's.
         previews.Remove(data.LastId);
         return data.LastId;
@@ -407,13 +529,16 @@ sealed class Clips : IDisposable
     // those of a search, as Texts.Words gives them: every one must be there.
     public List<Entry> Copied(int most, string[] words)
     {
-        StringBuilder sql = new StringBuilder("SELECT " + EntryColumns + " FROM entries WHERE saved = 0");
+        Sieve sieve = new Sieve();
+        sieve.Words = words;
+        return Copied(most, sieve);
+    }
+
+    // The same, only those the sieve lets through.
+    public List<Entry> Copied(int most, Sieve sieve)
+    {
         List<object> values = new List<object>();
-        foreach (string word in words)
-        {
-            values.Add(word);
-            sql.Append(" AND instr(folded, ?" + values.Count + ") > 0");
-        }
+        StringBuilder sql = new StringBuilder("SELECT " + EntryColumns + " FROM entries WHERE " + Where(sieve, values));
         values.Add(most);
         sql.Append(" ORDER BY pinned DESC, copied_at DESC, id DESC LIMIT ?" + values.Count);
         List<Entry> entries = new List<Entry>();
@@ -432,7 +557,55 @@ sealed class Clips : IDisposable
     // How many copied entries there are, also beyond those the list shows.
     public int CopiedCount()
     {
-        return (int)(long)data.Value("SELECT count(*) FROM entries WHERE saved = 0");
+        return CopiedCount(new Sieve());
+    }
+
+    // The same, those the sieve lets through.
+    public int CopiedCount(Sieve sieve)
+    {
+        List<object> values = new List<object>();
+        string where = Where(sieve, values);
+        return (int)(long)data.Value("SELECT count(*) FROM entries WHERE " + where, values.ToArray());
+    }
+
+    // The condition of the copied entries a sieve lets through, its values added to 'values'.
+    static string Where(Sieve sieve, List<object> values)
+    {
+        StringBuilder sql = new StringBuilder("saved = 0");
+        foreach (string word in sieve.Words)
+        {
+            values.Add(word);
+            sql.Append(" AND instr(folded, ?" + values.Count + ") > 0");
+        }
+        if (sieve.Category.HasValue)
+        {
+            values.Add((int)sieve.Category.Value);
+            sql.Append(" AND category = ?" + values.Count);
+        }
+        if (sieve.App != 0)
+        {
+            values.Add(sieve.App);
+            sql.Append(" AND app_id = ?" + values.Count);
+        }
+        if (sieve.Pinned) sql.Append(" AND pinned = 1");
+        return sql.ToString();
+    }
+
+    // The programs the copied entries come from, by name, each with how many come from it.
+    public List<Source> Sources()
+    {
+        List<Source> sources = new List<Source>();
+        using (Statement rows = data.Prepare("SELECT app_id, count(*) FROM entries WHERE saved = 0 AND app_id IS NOT NULL GROUP BY app_id"))
+            while (rows.Step())
+            {
+                Source source = new Source();
+                source.App = rows.Long(0);
+                source.Count = rows.Int(1);
+                source.Origin = OriginOf(source.App);
+                if (source.Origin != null) sources.Add(source);
+            }
+        sources.Sort(delegate(Source a, Source b) { return StringComparer.CurrentCultureIgnoreCase.Compare(a.Origin.Name, b.Origin.Name); });
+        return sources;
     }
 
     // Forgets a copied text, typed as a password and cleared from the clipboard: unless the user kept it at the
@@ -536,7 +709,7 @@ sealed class Clips : IDisposable
                 preview = row.Blob(1);
             }
             data.Execute("UPDATE entries SET saved = 1, saved_at = ?2, name = ?3, name_key = ?4, folder_id = ?5, pinned = 0,"
-                + " folded = NULL, hash = NULL, content = ?6, preview = ?7 WHERE id = ?1",
+                + " app_id = NULL, category = NULL, folded = NULL, hash = NULL, content = ?6, preview = ?7 WHERE id = ?1",
                 id, Stamp(DateTime.Now), Name(name), Key(name), Place(folder), Protect(content), preview == null ? null : Protect(preview));
             transaction.Commit();
         }
@@ -749,12 +922,12 @@ sealed class Clips : IDisposable
     {
         if (!Worth(text)) return;
         byte[] content = Encoding.UTF8.GetBytes(text);
-        Adopted(Insert(TextKind, content, null, 0, 0, Texts.Fold(text), Hash(content), time, pinned), number);
+        Adopted(Insert(TextKind, content, null, 0, 0, Texts.Fold(text), Hash(content), time, pinned, null), number);
     }
 
     internal void AdoptPicture(byte[] png, byte[] preview, int width, int height, DateTime time, bool pinned, int number)
     {
-        Adopted(Insert(PictureKind, png, preview, width, height, PictureWords(width, height), Hash(png), time, pinned), number);
+        Adopted(Insert(PictureKind, png, preview, width, height, PictureWords(width, height), Hash(png), time, pinned, null), number);
     }
 
     // A saved text, its content still encrypted as the registry held it: it is not even read, so one that cannot
@@ -819,6 +992,7 @@ sealed class Clips : IDisposable
         entry.FolderId = row.IsNull(10) ? 0 : row.Long(10);
         entry.Pinned = row.Bool(11);
         entry.Number = row.IsNull(12) ? 0 : row.Int(12);
+        entry.Origin = row.IsNull(15) ? null : OriginOf(row.Long(15));
         return entry;
     }
 
@@ -877,6 +1051,24 @@ sealed class Clips : IDisposable
     {
         return secret == null ? null : Encoding.UTF8.GetString(Unprotect(secret));
     }
+}
+
+// Which copied entries the list asks for: the words of a search (as Texts.Words gives them, every one must be there)
+// and what the sidebar and the tabs above the list chose.
+class Sieve
+{
+    public string[] Words = new string[0];
+    public Category? Category;   // null: of any category
+    public long App;             // the row of the program they come from among the apps; 0: any
+    public bool Pinned;          // only those kept at the top
+}
+
+// A program copied entries come from, as the sidebar lists it.
+class Source
+{
+    public long App;
+    public Origin Origin;
+    public int Count;
 }
 
 // A move of the database that did not happen (Clips.Move): the reason, and the database back at its old place.

@@ -10,7 +10,7 @@ static partial class Strings
         Quote = "«{0}»";
 
         TypeButton = "Digita gli appunti";
-        RecentTitle = "Copiati di recente"; SavedTitle = "Salvati"; PausedSuffix = " (in pausa)";
+        SavedTitle = "Salvati"; PausedSuffix = " (in pausa)";
         New = "Nuovo…"; SaveDots = "Salva…"; EditDots = "Modifica…"; RenameDots = "Rinomina…"; Delete = "Elimina";
         Options = "Opzioni"; SearchCue = "Cerca…";
         CountOf = "{0} di {1}";
@@ -18,15 +18,15 @@ static partial class Strings
         PausedEmpty = "In pausa: quello che copi non viene ricordato"; CopyHint = "Quello che copi comparirà qui";
         NoSaved = "Nessun testo salvato";
         NewTip = "Scrive un testo nuovo da tenere, con il suo nome ({0}).";
-        SaveTip = "Su una voce copiata: la salva perché non scada mai, con un nome o senza,\n"
-            + "e puoi ritoccarne il contenuto. Con il nome l'elenco mostra il nome, non il contenuto.\n"
-            + "Su una voce salvata: ne cambia il nome o il contenuto ({0}).\n"
-            + "Su una cartella: le cambia il nome o il posto.\n"
-            + "Si salva anche un'immagine: continua a vedersi, con accanto il suo nome.";
-        HelpTip = "Apre la guida: tutto quello che il programma sa fare ({0}).";
-        DeleteTip = "Elimina il testo salvato, o toglie dall'elenco la voce copiata ({0}).\n"
-            + "Di una cartella elimina solo la cartella: quello che contiene sale di un livello.";
-        DividerTip = "Trascina per dare più o meno spazio ai testi salvati.\nDoppio clic: la larghezza di partenza.";
+        AllPlace = "Tutti"; PinnedPlace = "In alto"; SourcesPlace = "Provenienza"; GuideItem = "Guida";
+        AllKinds = "Tutti"; TextKinds = "Testo"; CodeKinds = "Codice"; LinkKinds = "Link"; PictureKinds = "Immagini";
+        TextBadge = "Testo"; CodeBadge = "Codice"; LinkBadge = "Link"; PictureBadge = "Immagine"; FormattedBadge = "Formattato";
+        CopyButton = "Copia"; ShowFull = "Mostra tutto";
+        Today = "Oggi"; Yesterday = "Ieri"; Undated = "Prima";
+        NoPinned = "Niente in alto: la freccia di una voce copiata la porta qui per un po'";
+        NoneOfKind = "Niente di questo tipo";
+        SourcesTip = "I programmi in cui hai copiato: scegline uno per vedere solo ciò che hai copiato lì.";
+        PinnedTip = "Le voci copiate tenute in alto per un po': se ne vanno comunque quando scadono i loro giorni.";
         Error = "Errore: {0}";
         NewerDatabase = "{0} è stato scritto da una versione più nuova di {1}: aggiorna il programma per aprirlo.";
         UnexpectedError ="Qualcosa è andato storto: {0}\n\nIl programma continua. I dettagli sono in {1}.";
@@ -116,11 +116,11 @@ static partial class Strings
         TypeTip = "Digita il testo degli appunti un tasto alla volta, dove incollare non funziona:\n"
             + "copia la password, premi qui e clicca nel campo della finestra remota.\n"
             + "Oppure premi {0} direttamente nel campo.";
-        SearchTip = "Scrivi per cercare nelle due colonne: parole in qualsiasi ordine, senza badare a\n"
-            + "maiuscole e accenti. Le frecce scorrono la colonna, Tab passa all'altra.\n"
-            + "{0} o un clic rimettono la voce negli appunti: poi la incolli con Ctrl+V o la\n"
-            + "digiti con {1}. Con un clic la finestra resta aperta, con {0} o un\n"
-            + "doppio clic torni dov'eri. Il tasto destro apre il menu della voce.\n"
+        SearchTip = "Scrivi per cercare tra le voci del posto: parole in qualsiasi ordine, senza badare a\n"
+            + "maiuscole e accenti. Le frecce scorrono le voci.\n"
+            + "«" + CopyButton + "», {0} o un doppio clic rimettono la voce negli appunti: poi la incolli\n"
+            + "con Ctrl+V o la digiti con {1}. Con «" + CopyButton + "» la finestra resta aperta, con {0} o un\n"
+            + "doppio clic torni dov'eri. Un clic seleziona soltanto; il tasto destro apre il menu della voce.\n"
             + "Fermando il puntatore su una voce copiata la vedi per intero.\n"
             + "La freccia a destra di una voce copiata ({2}) la tiene per un po' in cima all'elenco:\n"
             + "se ne va comunque quando scadono i suoi giorni. Ciò che deve restare, salvalo.\n"
@@ -310,41 +310,47 @@ static partial class Strings
                 + "dove incollare non funziona, ad esempio nelle schermate di blocco dei desktop remoti.",
 
             "# L'elenco",
-            "A sinistra ci sono le cose copiate di recente, testi e immagini, dalla più nuova. A destra i testi salvati, "
-                + "che restano finché non li elimini.",
-            "- Scrivi nella casella in alto per cercare in tutte e due le colonne: le parole valgono in qualsiasi "
+            "A sinistra c'è la barra laterale, a destra le schede delle voci del posto scelto lì:",
+            "- «" + AllPlace + "»: tutto, copiato e salvato, dal più nuovo, ogni giorno sotto il suo nome; le voci tenute "
+                + "in alto vengono prima delle altre.",
+            "- «" + PinnedPlace + "»: solo le voci copiate tenute in alto.",
+            "- «" + SavedTitle + "»: i testi salvati, per nome. Sotto ci sono le loro cartelle.",
+            "- «" + SourcesPlace + "»: i programmi in cui hai copiato, ognuno con la sua icona e quante voci vengono da "
+                + "lui. Un clic su uno mostra solo ciò che hai copiato lì; un clic su «" + SourcesPlace + "» apre o chiude l'elenco.",
+            "Le schede sopra le voci (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
+                + PictureKinds + ") mostrano un solo tipo di voce. «" + CodeKinds + "» è un'ipotesi fatta dall'aspetto delle "
+                + "righe: ogni tanto ci finisce un testo, o un pezzo di codice tra i testi.",
+            "In cima, ogni scheda dice il programma in cui la voce è stata copiata, con la sua icona, o la cartella di un "
+                + "testo salvato, e a destra che cos'è; poi la voce; in fondo i suoi pulsanti e, a destra, l'ora della copia.",
+            "- Scrivi nella casella in alto per cercare tra le voci del posto: le parole valgono in qualsiasi "
                 + "ordine, senza badare a maiuscole e accenti.",
-            "- Un clic mette la voce negli appunti e lascia la finestra aperta, così puoi ancora salvarla o eliminarla.",
+            "- Un clic su una scheda la seleziona. «" + CopyButton + "» mette la voce negli appunti e lascia la "
+                + "finestra aperta, così puoi ancora salvarla o eliminarla.",
             "- " + EnterKeyName + " o un doppio clic la mettono negli appunti e, se avevi aperto l'elenco con " + pick
                 + ", ti riportano alla finestra in cui stavi lavorando.",
             "- A quel punto la incolli con Ctrl+V, oppure la digiti con " + type + ".",
-            "- Il tasto destro seleziona la voce e apre il suo menu, senza toccare gli appunti.",
-            "- «" + CopyPictureText + "», nel menu del tasto destro di un'immagine, mette negli appunti il testo che "
+            "- «" + ShowFull + "» mostra la voce per intero in un riquadro: il testo con tutte le sue righe, l'immagine "
+                + "più grande. Fermare il puntatore su una scheda che taglia il suo testo fa lo stesso. Sparisce appena "
+                + "sposti il puntatore.",
+            "- I tre puntini in basso a destra, o il tasto destro, aprono il menu della voce, senza toccare gli appunti.",
+            "- «" + CopyPictureText + "», nel menu di un'immagine, mette negli appunti il testo che "
                 + "Windows ci legge, qui sul PC, senza internet: entra nell'elenco come ogni cosa che copi (quello di "
                 + "un'immagine salvata è riservato, come un testo salvato). Il testo piccolo può uscire con qualche errore: "
                 + "guardalo prima.",
-            "- Fermando il puntatore su una voce copiata che nella riga non ci sta tutta, dopo un attimo compare per "
-                + "intero in un riquadro: il testo con tutte le sue righe, l'immagine più grande. Sparisce appena "
-                + "sposti il puntatore.",
-            "- La freccia all'estremità destra di una voce copiata (" + Key(Keys.Control | MainForm.PinKey) + ") la "
-                + "tiene per un po' in cima alla colonna: compare sbiadita quando ci passi sopra, e un clic la accende o "
-                + "la spegne. La voce se ne va comunque quando scadono i giorni della cronologia: ciò che deve restare, "
-                + "salvalo. Copiare di nuovo lo stesso testo lo riporta in cima con l'ora nuova, freccia e numero compresi.",
-            "- «" + NumberMenu + "», nel menu del tasto destro, dà a un testo salvato o a una voce copiata un numero "
+            "- La freccia in basso a destra di una voce copiata (" + Key(Keys.Control | MainForm.PinKey) + ") la "
+                + "tiene in alto per un po': è colorata finché lo fa, e un clic la accende o la spegne. La voce se ne va "
+                + "comunque quando scadono i giorni della cronologia: ciò che deve restare, salvalo. Copiare di nuovo lo "
+                + "stesso testo lo riporta in cima con l'ora nuova, freccia e numero compresi.",
+            "- «" + NumberMenu + "», nel menu, dà a un testo salvato o a una voce copiata un numero "
                 + "da 1 a " + MainForm.MaxNumber + ": poi, da qualsiasi programma, " + MainForm.NumbersName + " la "
                 + "incollano subito nella finestra in cui stai lavorando, senza aprire questa (la voce va negli appunti "
-                + "e Ctrl+V segue da solo). Il numero compare in un riquadro a destra della riga, e accanto al testo "
+                + "e Ctrl+V segue da solo). Il numero compare in un riquadro in fondo alla scheda, e accanto al testo "
                 + "salvato nel menu dell'icona. Una voce copiata tiene il suo numero finché non scadono i suoi giorni. "
                 + "Ogni numero è di una voce sola: dato a un'altra, passa a lei.",
-            "Il segno colorato a sinistra dice che cos'è la voce: un testo, un indirizzo web, un testo salvato. Le "
-                + "immagini mostrano una miniatura. Sotto la voce, in piccolo a destra, c'è l'ora della copia (il giorno, se non è di oggi) o il "
-                + "giorno del salvataggio.",
-            "Per non ricordare quello che stai per copiare, «" + Pause + "» sta nel menu del tasto destro dell'elenco "
-                + "e in quello dell'icona vicino all'orologio: sopra la colonna compare «in pausa» finché non scegli «"
+            "Per non ricordare quello che stai per copiare, «" + Pause + "» sta in fondo alla barra laterale "
+                + "e nel menu dell'icona vicino all'orologio: il titolo dice «in pausa» finché non scegli «"
                 + Resume + "». Al prossimo avvio la cattura è di nuovo attiva.",
-            "Lo spazio tra le due colonne si trascina, per dare più o meno posto ai testi salvati: la larghezza scelta "
-                + "resta anche al prossimo avvio, e un doppio clic lì torna a quella di partenza.",
-            "La colonna dei copiati mostra le " + MainForm.MaxShown + " voci più recenti: le altre si trovano con la ricerca.",
+            "L'elenco mostra le " + MainForm.MaxShown + " voci copiate più recenti: le altre si trovano con la ricerca.",
 
             "# I testi salvati",
             "Sono le cose che vuoi avere sempre a portata di mano: una firma, un indirizzo, una password. Non scadono "
@@ -378,23 +384,25 @@ static partial class Strings
                 + "cambiato tiene solo ciò che i pulsanti conoscono: link, immagini, allineamento ed elenchi si perdono.",
 
             "# Le cartelle",
-            "Quando i testi salvati diventano tanti puoi raccoglierli in cartelle, e le cartelle in altre cartelle.",
-            "- «" + NewFolder + "» sta nel menu del tasto destro (" + Key(Keys.Control | Keys.Shift | MainForm.NewKey)
-                + "): nasce dentro la cartella selezionata, o quella del testo selezionato, ma nella sua finestra puoi "
-                + "scegliere dove metterla.",
-            "- Un clic sul nome di una cartella, o " + EnterKeyName + ", la apre e la chiude; il numero a destra dice "
-                + "quanti testi contiene, anche nelle cartelle al suo interno. Aperte e chiuse, le ritrovi come le hai lasciate.",
-            "- Un testo salvato, o una cartella con tutto quello che contiene, si trascina dentro un'altra cartella: "
-                + "sulla cartella stessa o su uno dei suoi testi. Lasciato su un testo fuori dalle cartelle, o sotto "
-                + "l'ultima riga, esce da quella in cui era.",
-            "- «" + MoveTo + "», nel menu del tasto destro di un testo salvato o di una cartella, fa lo stesso. La stessa "
+            "Quando i testi salvati diventano tanti puoi raccoglierli in cartelle, e le cartelle in altre cartelle. Stanno "
+                + "nella barra laterale, sotto «" + SavedTitle + "»: un clic su una cartella mostra i suoi testi, e quelli "
+                + "delle cartelle al suo interno.",
+            "- «" + NewFolder + "» sta in fondo alla barra laterale e nel menu del tasto destro di una cartella "
+                + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nasce dentro la cartella mostrata, "
+                + "ma nella sua finestra puoi scegliere dove metterla.",
+            "- La freccia all'estremità destra di una cartella che ne contiene altre la apre e la chiude; quella di «"
+                + SavedTitle + "» le mostra o le nasconde tutte. Il numero dice quanti testi contiene una cartella, anche "
+                + "nelle cartelle al suo interno. Aperte e chiuse, le ritrovi come le hai lasciate.",
+            "- La scheda di un testo salvato, o una cartella della barra con tutto quello che contiene, si trascina su una "
+                + "cartella della barra; lasciata su «" + SavedTitle + "», esce dalle cartelle.",
+            "- «" + MoveTo + "», nel menu di un testo salvato o di una cartella, fa lo stesso. La stessa "
                 + "scelta c'è nella finestra in cui lo scrivi, a sinistra dei pulsanti.",
-            "- Con una cartella selezionata, «" + RenameDots + "» le cambia il nome o il posto ed «" + Delete + "» toglie "
-                + "la cartella soltanto: quello che conteneva, testi e cartelle, sale nella cartella che la conteneva, "
-                + "o resta tra i salvati fuori dalle cartelle.",
+            "- Nel menu del tasto destro di una cartella, «" + RenameDots + "» le cambia il nome o il posto ed «" + Delete
+                + "» toglie la cartella soltanto: quello che conteneva, testi e cartelle, sale nella cartella che la "
+                + "conteneva, o resta tra i salvati fuori dalle cartelle.",
             "- Nel nome di una cartella non può esserci «" + Texts.Separator + "».",
             "- Nel menu dell'icona vicino all'orologio ogni cartella è un sottomenu con i suoi testi.",
-            "- La ricerca trova anche dentro le cartelle chiuse, e il nome di una cartella trova i suoi testi.",
+            "- Il nome di una cartella trova i suoi testi nella ricerca.",
 
             "# Digitare una password",
             "Dove Ctrl+V non funziona, " + app + " scrive il testo degli appunti un tasto alla volta, come faresti tu "
@@ -416,8 +424,7 @@ static partial class Strings
             type + "\tDigita subito gli appunti nella finestra attiva.",
             MainForm.NumbersName + "\tIncolla nella finestra attiva la voce con quel numero.",
             "F1\tApre questa guida.",
-            ArrowsName + "\tScorre la colonna.",
-            "Tab\tPassa all'altra colonna.",
+            ArrowsName + "\tScorre le voci, o i posti della barra laterale.",
             EnterKeyName + "\tSceglie la voce e torna alla finestra di partenza.",
             "Esc\tTorna alla finestra di partenza senza scegliere.",
             Key(Keys.Control | MainForm.SearchKey) + "\tPorta il cursore nella casella di ricerca.",

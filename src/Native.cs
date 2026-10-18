@@ -30,6 +30,7 @@ static class Native
     // the documentation describes it but gives it no name.
     public const uint TOUNICODE_KEEP_STATE = 0x0004;
     public const int ASFW_ANY = -1;
+    public const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
     // The formatting of the characters in a rich edit box: of the selection, and which of it is the same throughout.
     public const int EM_GETCHARFORMAT = 0x043A, EM_SETCHARFORMAT = 0x0444, SCF_DEFAULT = 0x0000, SCF_SELECTION = 0x0001;
     public const uint CFM_BOLD = 0x00000001, CFM_ITALIC = 0x00000002, CFM_UNDERLINE = 0x00000004, CFM_STRIKEOUT = 0x00000008,
@@ -171,6 +172,19 @@ static class Native
 
     [DllImport("user32.dll")]
     public static extern uint GetClipboardSequenceNumber();
+
+    // The program something was copied in (see Origin).
+    [DllImport("user32.dll")]
+    public static extern IntPtr GetClipboardOwner();
+
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr OpenProcess(uint access, bool inherit, uint processId);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]
+    public static extern bool QueryFullProcessImageName(IntPtr process, uint flags, StringBuilder path, ref int length);
+
+    [DllImport("kernel32.dll")]
+    public static extern bool CloseHandle(IntPtr handle);
 
     [DllImport("user32.dll")]
     public static extern bool DestroyIcon(IntPtr icon);

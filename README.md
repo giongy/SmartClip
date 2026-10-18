@@ -59,40 +59,52 @@ window. A remote desktop client running full screen usually captures every short
 
 ### The lists
 
-The main window has two columns. On the left, **Recently copied**: the things you copied while the program
-was running, texts and pictures (screenshots, for example), each picture with a small preview. They stay for the
-number of days set in the options, also across restarts; the column lists the 200 most recent, and the search
-reaches the rest. Copied pictures take at most 200 MB: beyond that the oldest go, even before their days are over,
-and a red bar under the list says the room is full. Saved pictures do not count. On the right, **Saved**: the texts you saved, which stay until you delete them. A name is
-optional: with one, the list shows only the name and the content stays hidden, which suits a password; without,
-the list shows the content.
+The main window looks like the apps of Windows 11: a sidebar on the left, the entries as cards on the right.
+
+- **All**: everything, copied and saved, newest first, each day under its name. The entries kept at the top come
+  first.
+- **Pinned**: only the copied entries kept at the top.
+- **Saved**: the texts you saved, by name, which stay until you delete them. Their folders are under it.
+- **Source**: the programs you copied in, each with its icon and how many entries come from it; choose one to see
+  only what you copied there.
+
+Above the cards, tabs show one kind of entry only: **All**, **Text**, **Code**, **Links**, **Images**. Code is
+told from how the lines look, so now and then it guesses wrong.
+
+Each card says on top the program the entry was copied in, with its icon (or the folder of a saved text), and on
+the right what it is; then the entry; at the bottom the buttons **Copy**, **Save…** (or **Edit…**), **Delete** and
+**View full**, and on the right the time, the number, the arrow and a menu. Copied entries are texts and pictures
+(screenshots, for example), each picture with a small preview. They stay for the number of days set in the
+options, also across restarts; the list shows the 200 most recent, and the search reaches the rest. Copied
+pictures take at most 200 MB: beyond that the oldest go, even before their days are over, and a red bar under the
+list says the room is full. Saved pictures do not count. A saved text's name is optional: with one, the card shows
+only the name and the content stays hidden, which suits a password; without, the card shows the content.
 
 | Key | Action |
 | --- | --- |
-| Typing | Filters both columns. Words can come in any order; case and accents are ignored. |
-| Up / Down | Moves through the column |
-| Tab | Switches to the other column |
+| Typing | Filters the cards of the place. Words can come in any order; case and accents are ignored. |
+| Up / Down | Moves through the cards |
 | Ctrl+F | Takes the cursor to the search box, from anywhere in the window |
-| Click | Puts the entry back on the clipboard; the window stays, so you can still save or delete it |
+| Click | Selects the card |
+| **Copy** | Puts the entry back on the clipboard; the window stays, so you can still save or delete it |
 | Enter, or a double click | Puts the entry back on the clipboard and returns to the window you came from |
-| Right click | Opens the menu of the entry |
-| Resting the pointer on a copied entry | Shows it whole in a small box when its row cuts it: every line of a text, a larger picture. It goes away as the pointer moves on |
-| Dragging a saved text or a folder | Onto a folder, or onto a text inside one, moves it there; onto a text outside the folders, or below the last row, takes it out |
-| Dragging the gap between the columns | Gives the saved texts more room, or less; the width is remembered. A double click there restores it |
-| Resizing the window | The copied items take the room; size and position are remembered for the next start, never smaller than the starting size |
-| The arrow at the right end of a copied entry, or Ctrl+P | Keeps the entry at the top of its column for a while: it still goes when its days are over. What is to stay, save it |
+| Right click, or the three dots | Opens the menu of the entry |
+| **View full**, or resting the pointer on a card | Shows the entry whole in a small box: every line of a text, a larger picture. It goes away as the pointer moves on |
+| Dragging a saved card, or a folder of the sidebar | Onto a folder of the sidebar moves it there; onto **Saved** takes it out of the folders |
+| Resizing the window | The cards take the room; size and position are remembered for the next start, never smaller than the starting size |
+| The arrow at the bottom right of a copied entry, or Ctrl+P | Keeps the entry at the top for a while: it still goes when its days are over. What is to stay, save it |
 | Ctrl+Shift+1 … Ctrl+Shift+9, in any program | Pastes the entry with that number into the active window, without opening SmartClip (see below) |
-| F1, or the **?** button | Opens the guide: everything the program does, by topic |
+| F1, or **Help** at the bottom of the sidebar | Opens the guide: everything the program does, by topic |
 
-Of a saved text the list shows the name only: **Show the content** in its right-click
-menu shows the text in the same small box for a few seconds.
+Of a saved text the card shows the name only: **Show the content** in its menu shows the text in the same small
+box for a few seconds.
 
-**Pause capture**, in the right-click menu of the list and in the menu of the tray icon, stops remembering what
+**Pause capture**, at the bottom of the sidebar and in the menu of the tray icon, stops remembering what
 you copy until you choose **Resume capture**. It is not a setting: the next start
 always listens again.
 
-Three buttons under the lists manage the saved texts; each opens a small window with a name, optional, and a
-content box. Under the name a grey line says what the list will show.
+**New…**, beside the search, and **Save…** / **Edit…** on the cards open a small window with a name, optional, and
+a content box. Under the name a grey line says what the card will show.
 
 A saved text can be **formatted**, as a mail signature is: bold, italic, underlined, fonts, sizes and colours.
 Copy the signature from a mail or a document and save it, or paste it into the content box: it keeps its
@@ -104,11 +116,13 @@ it came with one, and as plain text: a mail pastes it formatted, a plain field g
 types the text. As long as it is not changed it stays exactly as it was copied, links and pictures included;
 once edited, it is written again from what the buttons know, and links, pictures, alignment and lists are lost.
 
-Saved texts can be gathered in folders, and folders in other folders. **New folder…** is in the right-click menu
-(Ctrl+Shift+N) and creates the folder inside the selected one; **Move to** moves a saved text or a whole folder, and the window of a text or a folder has the same choice beside its
-buttons. A click on a folder opens and closes it, and it is found as it was left. With a folder selected the
-buttons rename or move it, or delete it: deleting a folder never deletes what it holds, which moves up one
-level. The search also looks inside closed folders. A folder name cannot contain `\`.
+Saved texts can be gathered in folders, and folders in other folders. They are in the sidebar under **Saved**: a
+click on one shows its texts, and those of the folders inside it. **New folder…** is at the bottom of the sidebar
+and in the right-click menu of a folder (Ctrl+Shift+N), and creates the folder inside the one shown; **Move to** moves a saved
+text or a whole folder, and the window of a text or a folder has the same choice beside its buttons. The arrow at
+the right end of a folder opens and closes the folders inside it, and they are found as they were left. The
+right-click menu of a folder renames or moves it, or deletes it: deleting a folder never deletes what it holds,
+which moves up one level. A folder name cannot contain `\`.
 
 The saved texts are also in the right-click menu of the tray icon, each folder a submenu: choosing one puts it
 on the clipboard without opening the window. Only the names are shown there, as in the list.
@@ -118,8 +132,8 @@ on the clipboard without opening the window. Only the names are shown there, as 
 | Button | Key | Action |
 | --- | --- | --- |
 | New… | Ctrl+N | Write a new text to keep |
-| Save… / Edit… | Ctrl+S | Save the selected copied text, with a name or without, or change the name or content of a saved one |
-| Delete | Ctrl+E | Delete the selected saved text, or drop a copied entry from the list |
+| Save… / Edit… | Ctrl+S | Save the copied entry, with a name or without, or change the name or content of a saved one |
+| Delete | Ctrl+E | Delete the saved text, or drop a copied entry from the list |
 
 Once an entry is back on the clipboard, paste it with Ctrl+V as usual or type it with **Ctrl+Alt+V** where paste
 does not work. Pictures can only be pasted, not typed; they can be saved like texts, and a saved picture always

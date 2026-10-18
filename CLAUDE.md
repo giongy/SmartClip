@@ -24,8 +24,11 @@ condiviso su GitHub).
     le 2000 righe (i nomi dei membri non sono cambiati: i test li cercano per riflessione):
     - `MainForm.cs` — costanti e campi (tutti qui, in cima), costruttore con la disposizione, viste, riga di
       stato, tray, icona, messaggi di Windows, chiusura.
-    - `MainForm.List.cs` — le due colonne: `WireLists` (menu, mouse, trascinamento), riempimento e disegno
-      delle righe, anteprima, scelta, modifica, cartelle, tasti dell'elenco, larghezza delle colonne.
+    - `MainForm.List.cs` — le schede delle voci (`cardList`): `WireLists` (menu, mouse), riempimento (`Filter`,
+      `Arrange`, `ShowRows`), misura e disegno delle schede (`CardHeight`, `Lay`, `DrawEntry`, `PartAt`), anteprima,
+      scelta, modifica, cartelle, tasti dell'elenco.
+    - `MainForm.Nav.cs` — la barra laterale (`navList`, i posti `Place`/`PlaceKind`; `footList` sotto), il suo
+      menu (`navMenu`) e il trascinamento nelle cartelle (`Draggable`).
     - `MainForm.Options.cs` — `PlaceOptions` (le opzioni e i loro suggerimenti), i `Place…`, esportazione,
       importazione, pulizia, `TransferSettings` e `AdoptOldSettings`, e `OptionsWindow`, la finestra delle
       opzioni (classe annidata in `MainForm`, così usa i suoi campi).
@@ -49,8 +52,9 @@ condiviso su GitHub).
   - `Look.cs` — colori chiari e scuri, caratteri (`Look.TextFont`, `StrongFont`, `TitleFont`, `NoteFont`, `EntryFont`),
     icone (`Draw`, colore proprio in `Own`), righe (`DrawRow`, `DrawTopic`, la tacca `MarkIn`/`DrawMark`), forme
     (`Rounded`, `Pill`), menu (con i segni delle voci, `Look.Mark`), suggerimenti e controlli disegnati: `Look`,
-    `Card`, `RoundButton` (anche `Subtle`), `Toggle` (anche `SaysState`), `Tile` (una scheda delle opzioni),
-    `InfoBar` (un messaggio con il suo tipo, `Notice`), `EmptyNote` (ciò che dice una colonna vuota). Anche
+    `Card` (anche `Quiet`, senza bordo di focus: il pannello di destra), `RoundButton` (anche `Subtle`), `Toggle`
+    (anche `SaysState`), `Tile` (una scheda delle opzioni), `TabStrip` (le schede dei tipi sopra le voci),
+    `InfoBar` (un messaggio con il suo tipo, `Notice`), `EmptyNote` (ciò che dice un elenco vuoto). Anche
     `Window`, la base di tutte le finestre tranne `Peek`: carattere e colori
     dell'interfaccia, barra del titolo (`Caption`), `Finish` alla fine del costruttore (la scala, vedi le trappole),
     `Secondary` (le finestre che appartengono a un'altra: niente pulsante sulla barra, icona, ingrandisci e riduci),
@@ -63,7 +67,9 @@ condiviso su GitHub).
   - `AskForm.cs` — le domande e gli avvisi, al posto di `MessageBox` (`AskForm.Ask`, `AskForm.Tell`).
   - `Peek.cs` — il riquadro che mostra una voce per intero (`Peek`), accanto alla sua riga.
   - `Texts.cs` — `Entry` (una voce dell'elenco, o la riga di una cartella) e `Texts`: la lettura degli appunti
-    (`Remember`, che passa la copia a `Clips`), i formati riservati, la ricerca, i percorsi delle cartelle.
+    (`Remember`, che passa la copia a `Clips`), i formati riservati, la ricerca, i percorsi delle cartelle, il tipo
+    di un testo (`Category`, `Texts.CategoryOf`: link se è solo un indirizzo, codice se due righe su cinque hanno
+    l'aspetto di codice o la sola riga ce l'ha, un'ipotesi).
   - `Backup.cs` — esportazione e importazione in un file di testo (`Backup`, `BackupResult`).
   - `Rich.cs` — i testi salvati formattati (vedi sotto): `Run` (un pezzo di testo tutto uguale; ciò che non
     imposta è «predefinito»), `Rich` (HTML e RTF degli appunti, l'intestazione di «HTML Format» in byte UTF-8,
@@ -94,7 +100,13 @@ condiviso su GitHub).
     tutta per arrivare a qualunque colonna dopo di lui: con `content` al terzo posto ogni ricarica dell'elenco e ogni
     ricerca leggevano le immagini intere. **Le colonne nuove vanno messe prima di `hash`**. Versione 3: `rtf` e
     `html` dei testi salvati formattati, cifrati (lo schema li vuole solo su un salvato di testo, l'RTF solo
-    accanto all'HTML); `Upgrade` rifà la tabella anche per questo, perché `ADD COLUMN` li metterebbe in fondo. Ore in UTC, millisecondi dal 1970. Copiare di nuovo
+    accanto all'HTML); `Upgrade` rifà la tabella anche per questo, perché `ADD COLUMN` li metterebbe in fondo. Versione 4 (18/10/2026):
+    `app_id` di un copiato, verso la tabella `apps` (percorso dell'eseguibile, nome, icona in PNG; mai su un salvato);
+    `Upgrade` crea `apps` e rifà di nuovo la tabella. Versione 5 (18/10/2026): `category` di un copiato (`Category`:
+    testo, codice, link, immagine; mai su un salvato), per le schede dei tipi; `Upgrade` la calcola per le righe che
+    c'erano (`Categorize`). È nata separata dalla 4 perché il database vero dell'utente era già passato a una 4 senza
+    di lei (errore «no such column: category»): **una versione già aperta da un eseguibile non si ridefinisce mai**,
+    se ne fa una nuova. Ore in UTC, millisecondi dal 1970. Copiare di nuovo
     aggiorna la stessa riga (`hash`). `Entry` ha in più `Id`, `Saved`, `FolderId`. Un database nuovo si riempie
     dentro la transazione che lo crea (`new Clips(path, fill)`): se il riempimento fallisce non resta niente, e al
     prossimo avvio è di nuovo nuovo (`Created`).
@@ -115,6 +127,7 @@ condiviso su GitHub).
     all'accesso riconosciuto dall'attivazione invece che da `/tray`, database e log in `LocalState` del pacchetto
     (quella sotto `%LOCALAPPDATA%` Windows la sposterebbe in una copia nascosta che Esplora file non vede). I suoi
     tipi di Windows Runtime fuori dal pacchetto non vanno chiamati (quelli di `Ocr` sì).
+  - `Origin.cs` — il programma in cui è stata copiata una voce (`Origin`: nome e icona), vedi «App di provenienza» sotto.
   - `Ocr.cs` — il testo di un'immagine letto dal riconoscimento di Windows (`Windows.Media.Ocr`, sul PC, senza
     rete; funziona anche fuori dal pacchetto): vedi «Copia il testo» sotto.
 - `packaging\` — il pacchetto MSIX per lo Store: `AppxManifest.xml` (identità da Partner Center, *Product
@@ -212,24 +225,35 @@ condiviso su GitHub).
   da `WM_CLIPBOARDUPDATE`. Guarda solo se il formato testo è disponibile, senza aprire gli appunti. La versione
   grigia si genera all'avvio dall'icona normale (`Gray`).
 
-- La finestra principale è l'elenco (voluto dall'utente), su due colonne affiancate (anche questo voluto: i
-  salvati non devono stare in cima ai copiati): a sinistra `recentList` con le cose copiate (le 200 più recenti che corrispondono alla ricerca, `MaxShown`), a
-  destra `savedList` con i testi salvati. La voce selezionata è una sola in tutta la finestra (`active`,
-  `Selected`); Tab passa da una colonna all'altra. Tutte e due si filtrano mentre si scrive (`Texts.Matches`: parole in qualsiasi ordine, senza maiuscole né accenti). Il
+- La finestra principale è l'elenco, come Clipo (voluto dall'utente il 18/10/2026, con un'immagine di Clipo: «del
+  tutto simile», prima erano due colonne affiancate, copiati e salvati). A sinistra la barra laterale (`navList`,
+  `MainForm.Nav.cs`): «Tutti», «In alto» (i copiati con la freccia), «Salvati» con sotto l'albero delle cartelle,
+  «Provenienza» con sotto i programmi (icona e quante voci), ognuno un `Place`; la freccia a destra di una riga apre
+  e chiude ciò che ha sotto (Salvati e Provenienza nelle impostazioni `SavedOpen`, `SourcesOpen`; le cartelle nel
+  database), un clic su «Provenienza» pure. Sotto, `footList`: Nuova cartella, Sospendi/Riprendi la cattura, Opzioni, Guida. A destra, su un
+  pannello più chiaro (`pane`, un `Card` `Quiet`): titolo del posto e conteggio, ricerca con «Nuovo…» e «Digita gli
+  appunti», le schede dei tipi (`tabs`, `TabStrip`: Tutti, Testo, Codice, Link, Immagini, scelte dell'utente),
+  l'elenco delle schede delle voci (`cardList`), la riga di stato. «Tutti» mescola copiati e salvati per ora, con i
+  copiati in alto prima e il nome del giorno sopra ogni giorno (`Heading`, mai selezionabile); «Salvati» e una
+  cartella (con le sue sottocartelle) mostrano i salvati per nome, senza giorni. I copiati li filtra il database
+  (`Clips.Copied` con un `Sieve`: parole, tipo, programma, solo in alto; al massimo `MaxShown`), i salvati la memoria
+  (`Texts.Matches`: parole in qualsiasi ordine, senza maiuscole né accenti). `Filter` rifà anche la barra (`FillNav`,
+  i conteggi cambiano a ogni copia); un posto che sparisce (cartella eliminata, programma senza più voci) lascia
+  «Tutti». Il
   testo di ogni voce si prepara una volta sola senza accenti e in minuscolo (`Texts.Fold`, `Entry.Folded`) e poi si
   confronta ordinalmente: dieci volte più veloce del confronto culturale con `IgnoreNonSpace` (misurato: 45 → 4,6 ms
   su 5000 voci), che però trovava anche «ae» in «æ». Il
   pulsante «Opzioni» apre le opzioni in una finestra a parte (voluto dall'utente il 17/10/2026, «come la guida»;
   prima prendevano il posto dell'elenco, con un pulsante «Elenco» per tornare): vedi sotto. Le idee vengono dal progetto vicino `..\pastepad` (WinUI 3, .NET 10), riscritte qui in
   piccolo: niente modelli, formato, temi.
-- Scegliere una voce (Invio o clic, `Use`) la rimette soltanto negli appunti: poi l'utente incolla con Ctrl+V o
+- Scegliere una voce («Copia», doppio clic o Invio, `Use`; un clic sulla scheda la seleziona soltanto, voluto dall'utente il 18/10/2026: copiava anche lui e «Copia» era ridondante) la rimette soltanto negli appunti: poi l'utente incolla con Ctrl+V o
   digita con Ctrl+Alt+V. Non si digita né si incolla da soli (provato e scartato dall'utente; l'eccezione voluta
   sono i numeri delle voci, sotto). Un testo salvato
   torna negli appunti con il formato che lo segna riservato; ciò che il programma stesso mette negli appunti
   non rientra nell'elenco (`ownCopy`, numero di sequenza degli appunti).
 - Ctrl+D (`OpenList`) porta la finestra in primo piano da qualsiasi programma; dopo la scelta con Invio o
   doppio clic `GoBack` restituisce il primo piano alla finestra di partenza e rinasconde la finestra se era
-  nascosta. Un clic singolo no (voluto dall'utente: la finestra spariva e la voce non si poteva più salvare).
+  nascosta. «Copia» no (voluto dall'utente: la finestra spariva e la voce non si poteva più salvare).
 - Copiati e salvati stanno in un solo database SQLite (dalla 4.0, `docs\piano-sqlite.md`; prima i salvati
   nel registro e la cronologia in un file al giorno): `Clips.DefaultFile`, cioè `SmartClip.db` nella cartella
   dei dati (`Program.DataFolder`), o nella cartella scelta dall'utente (vedi sotto), sempre con il log accanto. `MainForm` lo apre in `OpenClips`; la prima volta vi porta i
@@ -259,9 +283,9 @@ condiviso su GitHub).
   dalla ricerca (`Clips.Copied`, con `instr` sul testo per la ricerca `folded`): a ogni copia si rileggono solo i
   copiati (`ReloadCopied`), mai i salvati, e solo se la copia è entrata (`Texts.Remember` dice se qualcosa è
   cambiato: non con la cronologia spenta o in pausa, né per una copia riservata o fatta dall'elenco).
-- Una voce copiata si può tenere in cima alla colonna **per un po'** (`Entry.Pinned`, la freccia, voluta
-  dall'utente al posto della stellina il 17/10/2026): freccia all'estremità destra della riga (`PinArea`, `OnPin`:
-  lì il clic non sceglie la voce, `Sign.Up`), menu del tasto destro e Ctrl+P, tutti in `TogglePin`. **Scade come
+- Una voce copiata si può tenere in cima **per un po'** (`Entry.Pinned`, la freccia, voluta
+  dall'utente al posto della stellina il 17/10/2026; nella barra il posto «In alto»): freccia in basso a destra della
+  scheda (`Part.Pin`: lì il clic non sceglie la voce, `Sign.Up`), menu e Ctrl+P, tutti in `TogglePin`. **Scade come
   le altre**, e «Pulisci ora…» la toglie (l'utente: «se vuoi salvarlo lo salvi con l'apposita funzione; la freccia
   serve temporaneamente a tenere in alto una voce»). `Forget` (la password digitata) non la toglie, né toglie una
   voce con un numero.
@@ -281,8 +305,8 @@ condiviso su GitHub).
   di altri; le altre due scorciatoie non possono essere modificatori + cifra (`NumberOf`). Impostazioni
   `QuickPaste` e `QuickKeys` (solo i modificatori). Si assegna e
   cambia da «Scorciatoia» nel menu del tasto destro (`ListNumbers`: «Nessuna» e i nove numeri, quello attuale
-  spuntato e senza effetto, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento a destra della prima linea della riga,
-  prima della freccia (`NumberArea`), e nel menu del tray accanto al testo salvato
+  spuntato e senza effetto, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento in fondo alla scheda,
+  prima della freccia (`CardParts.Number`), e nel menu del tray accanto al testo salvato
   (`ShortcutKeyDisplayString`, che `MenuLook` scrive in grigio). Un numero è di una voce sola: `Clips.Number` lo
   toglie prima a chi lo aveva, e lo schema lo vuole `UNIQUE`. **Un numero non salva una voce copiata** (deciso con
   l'utente): resta finché la voce non scade, e se ne va con lei. `Numbered` lo chiede al database, perché una
@@ -321,28 +345,45 @@ condiviso su GitHub).
   esatte da 86 a 144 su 240), e una trasparente su bianco. Il testo sotto i 10 pt esce comunque con qualche
   errore («second fine here»): è il motore di Windows, e la guida lo dice. La ricerca nel testo delle immagini
   non c'è (vorrebbe leggerle tutte alla copia).
+- App di provenienza (voluta dall'utente il 18/10/2026: «serve per ogni voce copiata»): in cima alla scheda di ogni
+  voce copiata, icona e nome del programma in cui è stata copiata (`DrawEntry`); nella barra laterale, sotto
+  «Provenienza», un posto per programma (`Clips.Sources`, con quante voci). `Texts.Remember`
+  chiede a `Origin.Find` l'eseguibile del proprietario degli appunti (`GetClipboardOwner`; senza, la finestra in primo
+  piano), con `QueryFullProcessImageName` (funziona anche con i programmi da amministratore). Il nome è la descrizione
+  del file («Microsoft Edge»), o il prodotto, o il nome del file (`Origin.NameOf`); l'icona quella di
+  `ExtractAssociatedIcon` (`IconOf`). Ogni programma sta una volta sola nella tabella `apps` (`Clips.App`, descritto
+  di nuovo alla prima copia di ogni sessione, così un aggiornamento cambia nome e icona); quelli da cui non viene più
+  nessun copiato se ne vanno con la scadenza (`DropApps`). Copiare di nuovo la stessa cosa altrove sposta la voce al
+  programma nuovo; un programma sconosciuto lascia quello di prima. Salvare una voce la toglie (regola dello schema:
+  un salvato non dice niente di sé). Non si esporta, e la ricerca non trova le voci per programma (si potrebbe: ma
+  «code» troverebbe tutto ciò che è copiato in VS Code). Le voci finte delle immagini (`FillSample`) vengono da Edge,
+  PowerShell e Blocco note (`Clips.Attribute`).
 - I testi salvati (`Entry.Saved`) stanno nello stesso database, contenuto e miniatura cifrati con DPAPI per
   l'utente (`ProtectedData`, in `System.Security.dll` che `csc` riferisce già da solo); non hanno testo per la
   ricerca né impronta, che li tradirebbero. Non scadono mai. L'elenco li tiene in memoria decifrati (`entries`,
-  `LoadSaved`, rifatto da `Reload` solo quando cambiano) e la ricerca li scorre lì (`Texts.Matches`). L'elenco
-  ne mostra solo il nome e, a destra, il giorno in cui sono stati salvati (quelli salvati prima che si tenesse il
-  giorno restano senza). Una voce si riconosce dal suo `Id`, non più dal nome.
+  `LoadSaved`, rifatto da `Reload` solo quando cambiano) e la ricerca li scorre lì (`Texts.Matches`). La scheda
+  ne mostra in cima la cartella (o «Salvati») e il nome, in basso il giorno in cui sono stati salvati (sotto il nome
+  di un giorno solo l'ora; quelli salvati prima che si tenesse il giorno restano senza, in «Tutti» sotto «Prima»).
+  Una voce si riconosce dal suo `Id`, non più dal nome.
 - Cartelle dei testi salvati (volute dall'utente), anche una dentro l'altra (sottocartelle volute dopo, dalla
   3.8). Nel codice si chiamano «group». Nel database sono un albero (`folders`, `parent_id`, `Folder`), ma la
   finestra continua a conoscerle per **percorso**, i nomi uniti da `Texts.Separator` (`\`, vietato nei nomi,
   `Refused`): `Lavoro\Server`. `LoadSaved` costruisce i percorsi e `FolderAt` (`Clips.FindFolder`) fa il
   contrario; una riga di cartella ha in `FolderId` l'id della cartella. Gli aiuti sui percorsi stanno in `Texts`
-  (`Parent`, `Leaf`, `Join`, `Within`, `Depth`, `Display` con « › », `CleanPath` per i file esportati). Nell'elenco
+  (`Parent`, `Leaf`, `Join`, `Within`, `Depth`, `Display` con « › », `CleanPath` per i file esportati). In `entries`
   una cartella è una `Entry` con `IsGroup` (e `Saved`) e `Name` uguale al percorso (`Label` ne mostra l'ultimo
-  nome, `Level` dà il rientro), messa subito prima dei suoi testi e poi delle sue sottocartelle, quelle affiancate
-  per nome: per questo dove si scorre `entries` cercando i testi va escluso `IsGroup`. Una cartella chiusa
-  nasconde anche quelle dentro (`InView`). Clic o Invio la aprono e chiudono (`Accept`, `ToggleGroup`),
-  «Rinomina…» ed «Elimina» sono gli stessi pulsanti dei testi. Rinominare e spostare insieme è `PlaceFolder` (un
+  nome), messa subito prima dei suoi testi e poi delle sue sottocartelle, quelle affiancate
+  per nome: per questo dove si scorre `entries` cercando i testi va escluso `IsGroup`. Le cartelle stanno solo
+  nella barra laterale (dal 18/10/2026, scelta dell'utente), sotto «Salvati», rientrate per livello: un clic mostra i
+  testi della cartella e delle sue sottocartelle; la freccia a destra apre e chiude le sottocartelle (una chiusa
+  nasconde anche quelle dentro, `InView`). Il menu del tasto destro di una cartella (`navMenu`) ha «Nuova cartella…»,
+  «Rinomina…», «Sposta in» ed «Elimina»; quello di «Salvati» solo la prima. La cartella mostrata segue i propri
+  spostamenti e cambi di nome (`Follow`); eliminata, si torna a «Salvati». Rinominare e spostare insieme è `PlaceFolder` (un
   solo aggiornamento, così un nome uguale solo a metà strada non conta); `DeleteFolder` elimina la cartella e il
   contenuto sale di un livello (scelta dell'utente: i testi potrebbero essere password), riempiendo una cartella
   con lo stesso nome se lassù c'è già. «Nuova cartella…»
-  (Ctrl+Maiusc+N, nasce dentro la cartella della selezione) e «Sposta in» (anche per le cartelle, mai dentro
-  se stesse: `CanGo`) stanno nel menu del tasto destro, che ora si apre anche senza selezione. In
+  (Ctrl+Maiusc+N, in fondo alla barra, nasce dentro la cartella mostrata: `FolderHere`) e «Sposta in» (anche per le
+  cartelle, mai dentro se stesse: `CanGo`, `ListPlaces`) «Sposta in» sta anche nel menu delle voci, che si apre anche senza selezione (voluto dall'utente: «Nuova cartella…» e la pausa no, stanno in fondo alla barra). In
   `EditForm` la cartella si sceglie da un pulsante che apre un menu (un `ComboBox` resterebbe chiaro), con il
   percorso accorciato da sinistra se non ci sta; la stessa finestra, senza contenuto, chiede nome e posto di
   una cartella. In una ricerca le cartelle compaiono solo se contengono risultati, anche da chiuse, insieme a
@@ -383,28 +424,30 @@ condiviso su GitHub).
   i copiati tornano con la loro ora e la freccia (`Clips.Import`), tranne quelli che l'elenco ha già, e quelli
   scaduti se ne vanno subito; con la cronologia spenta non si importano. Tutta l'importazione è una transazione
   (`Backup.Import`), e le cartelle nominate dal file si creano (`MakeFolder`).
-- Ogni riga ha due linee (voluto dall'utente nella 3.9.3: con le voci a 14 px l'ora a destra si prendeva un pezzo
-  importante della riga): sopra segno, testo, numero e freccia (`Line`), sotto, piccola (`Look.CaptionFont`,
-  `CaptionShare` della dimensione delle voci) e grigia, l'ora o il giorno (`When`) che finisce all'estremità destra,
-  sotto freccia e numero (`Caption`). L'altezza è `EntryHeight`, con un margine stretto (`RowPadding`) perché la
-  seconda linea dà già aria. Le righe che non dicono quando (cartelle, salvati senza data) sono alte uguali con
-  tutto al centro; le immagini hanno il testo al centro della miniatura e l'ora in basso. Le righe a due livelli
-  di prima, con sotto anche caratteri e righe, erano state scartate dall'utente: il numero di caratteri non gli serve.
-  Nella colonna dei copiati una riga sì e una no è appena più scura (più chiara nello scuro): `Look.Stripe`,
-  `StripeShare` verso `Soft`, calcolata mentre si disegna e quindi fuori dalla tavolozza (voluta dall'utente il
-  17/10/2026, «un'alternanza delicata»). I salvati no.
+- Ogni voce è una scheda (dal 18/10/2026, come Clipo; scelta dell'utente: con i pulsanti, anche se se ne vedono
+  meno): disegnata a mano in una riga di `cardList` (`OwnerDrawVariable`, `DrawEntry`), un po' più chiara del
+  pannello (`Look.Raised`, nuovo colore delle due tavolozze) e con il bordo d'accento se selezionata (`RowList.Marked`
+  falso: niente tacca). In cima programma o cartella e, a destra, il tipo (`BadgeOf`); poi la voce (fino a
+  `BodyLines` righe del testo, `CardText`; il nome di un salvato con nome; una miniatura con la misura); in fondo i
+  pulsanti Copia (d'accento), Salva…/Modifica…, Elimina, Mostra tutto, e a destra ora (`When`), numero, freccia e
+  «⋯» (il menu). Le parti si misurano in un posto solo (`Lay`, `CardParts`) che serve a disegno e clic (`PartAt`);
+  quella sotto il puntatore si illumina (`hoverRow`, `hoverPart`). Un clic altrove sulla scheda la seleziona soltanto; il doppio clic fa come Invio (`Accept`).
+  **Una riga di `ListBox` non supera 255 pixel** (`MaxRow`): `CardHeight` vi taglia la voce; le altezze si rifanno
+  quando cambia la larghezza (`ShowRows`). Sopra i giorni un `Heading`, che una selezione salta (`lastCard`, `Step`).
+  Le righe alternate e le colonne di prima non ci sono più.
 - Anteprima (voluta dall'utente «con il mouse che resta sopra un po'»): il puntatore fermo `RestMs` su una voce
-  copiata che la riga taglia (`Cut`) la mostra per intero in `Peek`, sotto la riga (`ShowPeek`, timer `rest`
+  che la scheda taglia (`Cut`), o «Mostra tutto», la mostra per intero in `Peek`, sotto la scheda (`ShowPeek`, timer `rest`
   avviato da `Hover`). `Peek` non prende il primo piano e lascia passare il puntatore (`HTTRANSPARENT`), così
   l'elenco continua a seguire il mouse; sparisce a ogni tasto, clic, rotella, ricarica dell'elenco. Dei testi
   salvati **non** compare passandoci sopra (potrebbero essere password, scelta mia da confermare con l'utente):
   c'è «Mostra il contenuto» nel menu del tasto destro, che lo lascia in vista `AskedMs` (`peekAsked`).
-- Pausa della cattura (voluta dall'utente): «Sospendi/Riprendi la cattura» nel menu dell'icona e in quello
-  dell'elenco (`Pause`, `paused`, `pauseItems`). Non è un'impostazione: a ogni avvio si riparte in ascolto.
-  Lo dicono il titolo della colonna, la colonna vuota e il suggerimento dell'icona.
-- Un testo salvato, o una cartella, si trascina in una cartella (voluto dall'utente): `DoDragDrop` parte da `MouseMove` solo
-  oltre `DragSize`, così un clic resta un clic; `GroupAt` dice la cartella della riga sotto il puntatore
-  (nessuna fuori dalle cartelle), `Aim` la illumina, il rilascio passa da `MoveTo` come «Sposta in».
+- Pausa della cattura (voluta dall'utente): «Sospendi/Riprendi la cattura» nel menu dell'icona e in fondo
+  alla barra laterale (`Pause`, `paused`, `pauseItems` e `PauseRow` di `footList`). Non è un'impostazione: a ogni avvio si riparte in ascolto.
+  Lo dicono il titolo (dove ci sono copiati), l'elenco vuoto e il suggerimento dell'icona.
+- La scheda di un testo salvato, o una cartella della barra, si trascina su una cartella della barra (voluto
+  dall'utente; su «Salvati» esce dalle cartelle): `DoDragDrop` parte da `MouseMove` solo oltre `DragSize`, così un
+  clic resta un clic (`Draggable`); `DropAt` dice la riga sotto il puntatore, `Aim` la illumina, il rilascio passa
+  da `MoveTo` come «Sposta in».
 - I testi salvati si scrivono in `EditForm` (nome e contenuto), aperta da `Edit`: testo nuovo, voce copiata
   da tenere, voce salvata da cambiare. **Il nome è facoltativo** (deciso con l'utente il 17/10/2026): con il
   nome l'elenco mostra il nome e nasconde il contenuto (adatto alle password), senza mostra il contenuto (la mail
@@ -412,9 +455,9 @@ condiviso su GitHub).
   `NameHintNamed`); «Salva» vuole solo il contenuto. L'anteprima al passaggio del mouse compare anche sui salvati
   senza nome (`Hover`, `resting`), «Mostra il contenuto» solo su quelli con il nome. Nel file esportato un salvato
   senza nome non ha la riga `Name:`; reimportato non si ripete (si riconosce dal contenuto). Si salva solo dalla
-  finestra: un «Salva subito» senza finestra è stato proposto e scartato dall'utente. Le stesse tre azioni stanno nei pulsanti sotto l'elenco, nel menu del
-  tasto destro e in Ctrl+N/S/E. Il nome scritto nella casella di ricerca è stato provato e scartato dall'utente
-  (poco chiaro). Il clic sinistro sceglie la voce, il destro la seleziona soltanto.
+  finestra: un «Salva subito» senza finestra è stato proposto e scartato dall'utente. Le stesse tre azioni stanno in
+  «Nuovo…» accanto alla ricerca e nei pulsanti delle schede, nel menu del tasto destro e in Ctrl+N/S/E. Il nome scritto nella casella di ricerca è stato provato e scartato dall'utente
+  (poco chiaro). Il clic, sinistro o destro, seleziona soltanto; il destro apre anche il menu.
 
 - Tema (voluto dall'utente, a cui lo scuro con accenti pastello di prima non piaceva più, ma nemmeno il
   bianco): grigio caldo neutro con tocchi di colore nelle icone. I colori stanno tutti in cima a `Look`; i
@@ -488,7 +531,7 @@ condiviso su GitHub).
     segno grande e tenue del perché (`EmptyNote`); la versione è passata dal titolo alle opzioni.
 - Aspetto (`Look`): barra del titolo nel colore della finestra
   (`DwmSetWindowAttribute`, solo Windows 11: altrove fallisce senza danni), pulsanti piatti con un solo
-  pulsante in colore d'accento, righe dell'elenco disegnate a mano (`DrawEntry`) con il segno in colonna: testo, indirizzo, testo formattato (`SignOf`); i salvati non hanno più ciascuno la stella (voluto dall'utente il 17/10/2026: «se sono salvati si sa»), che sta una volta sola prima del titolo «Salvati» (`DrawStar`, spazio fatto con `Padding` in `OnLoad`, dopo la scala).
+  pulsante in colore d'accento, schede delle voci disegnate a mano (`DrawEntry`, vedi sopra); il segno di una voce dice che cos'è: testo, indirizzo, codice, immagine, testo formattato (`SignOf`, nel menu del tray e sulle schede senza programma).
   I controlli che Windows non lascia scurire sono stati sostituiti: le caselle di testo stanno senza bordo
   dentro un pannello (`Look.Frame`), le spunte sono interruttori disegnati (`Toggle`, restano `CheckBox`; voluti
   dall'utente al posto dei quadratini), l'attesa è una casella di testo
@@ -527,31 +570,26 @@ condiviso su GitHub).
   a una casella di testo invece, come in Windows 11, una riga d'accento sul fondo, `Card.Underline`), i
   pulsanti sono `RoundButton`, la riga selezionata è una forma arrotondata con una tacca d'accento e quella
   sotto il puntatore si illumina (`Hover`, indice e luce in `RowList.Glow`; `Look.DrawRow`). Le voci copiate mostrano sotto, a destra, l'ora
-  (o il giorno, se non è oggi); sopra ogni colonna il numero di voci; una colonna vuota dice perché.
+  (o il giorno, se non è oggi); accanto al titolo il numero di voci; un elenco vuoto dice perché (`emptyNote`).
   La descrizione sotto il pulsante deve stare in due righe: è il motivo della larghezza (`ContentWidth`).
 
-- Disposizione (voluta dall'utente: «Digita gli appunti» in cima era troppo ingombrante): in alto la ricerca,
-  poi le colonne, sotto la riga di stato e un'unica fila di pulsanti piccoli: a sinistra quelli
-  della voce selezionata, a destra «Digita gli appunti», «Opzioni» e il quadratino «?» della guida
-  (una scritta «Guida» nella fila non ci sta).
+- Disposizione (dal 18/10/2026, come Clipo, vedi sopra): la barra laterale a sinistra, con in fondo Nuova cartella,
+  la pausa, Opzioni e Guida (`PlaceSidebar` la mette a posto quando la finestra ha la sua scala); a destra il pannello con
+  titolo, ricerca, «Nuovo…» sottile e «Digita gli appunti» d'accento, schede dei tipi, voci e riga di stato in fondo.
+  Prima la ricerca stava in cima e sotto le colonne c'era una fila di pulsanti piccoli.
   La riga di stato (una `InfoBar`) occupa solo lo spazio di ciò che dice (`FitStatus` con `InfoBar.Fit`: niente,
-  o le righe del testo nella loro barra; il resto va alle colonne) e a riposo tace (`ShowIdle`): come si digita
+  o le righe del testo nella loro barra; il resto va alle voci) e a riposo tace (`ShowIdle`): come si digita
   una password sta nel suggerimento del pulsante. Le conferme si scrivono con `Say` e spariscono dopo `FadeMs`;
   avvisi (`Warn`), errori (`ShowError`) e ciò che riguarda la digitazione restano fino al messaggio dopo (l'esito
   di una digitazione fatta a finestra nascosta deve potersi leggere riaprendola).
 
 - La finestra è ridimensionabile (voluto dall'utente), mai più piccola di come nasce (`MinimumSize` in
   `OnLoad`). Dimensione e posizione si ricordano (la dimensione dal 16/10/2026, voluta dall'utente: prima tornava
-  ogni volta quella di default): impostazioni `Width` e `Height`, in pixel a 96 dpi come `SavedWidth`, applicate in
+  ogni volta quella di default): impostazioni `Width` e `Height`, in pixel a 96 dpi, applicate in
   `OnLoad` (`savedSize`), mai sotto la minima né oltre lo schermo, sul quale la finestra viene riportata. Le
-  immagini dei test (`FillSample`) le ignorano, come la larghezza dei salvati: `shot` mostra la finestra come
-  disegnata, `store` e `real` più larga di `Wider` (metà a ciascuna colonna; voluto dall'utente nella 3.9.3,
-  perché con le voci a 14 px i nomi dei salvati si tagliavano).
-  Allargandola cresce la colonna dei copiati (`Anchor`); le opzioni restano in alto a sinistra.
-  Lo spazio tra le due colonne si trascina (`divider`, `PlaceColumns`; voluto dall'utente, a cui i salvati
-  stavano stretti): la larghezza dei salvati si salva (`SavedWidth`, in pixel a 96 dpi) e si applica in
-  `OnLoad`, quando la finestra ha la sua scala. Nessuna colonna scende sotto `MinColumn`; doppio clic sullo
-  spazio torna alla larghezza di partenza.
+  immagini dei test (`FillSample`) le ignorano: `shot` mostra la finestra come disegnata, `store` e `real` più
+  larga di `Wider`. Allargandola crescono il pannello e le schede (`Anchor`); la barra laterale resta larga
+  `SideWidth`. Lo spazio trascinabile tra le due colonne di prima (`SavedWidth`) non c'è più.
 
 ## Regole di stile volute dall'utente
 
@@ -750,6 +788,14 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - «Copia il testo» dal vivo: il clic sulla voce del menu, la copia che entra nell'elenco, un Windows senza lingue
   per il riconoscimento (l'avviso), Windows 10, il pacchetto dello Store. Provati `Ocr.Read` (`texts`, e una
   schermata intera letta da un programmino usa e getta) e la compilazione.
+- L'app di provenienza dal vivo: provati `Origin.ProgramOf` su una finestra dei test, `Clips` con eseguibili veri e
+  l'immagine di `shot`; mai una copia vera da Chrome, Office, un'app dello Store (il proprietario potrebbe essere
+  `ApplicationFrameHost`, e l'icona del suo eseguibile quella generica), un desktop remoto (dovrebbe dire «Connessione
+  Desktop remoto»), un programma da amministratore.
+- La finestra come Clipo (18/10/2026) dal vivo: viste le immagini di `shot` in chiaro e in scuro, provati da `shot`
+  posti, schede dei tipi, giorni e selezione; mai i clic veri sui pulsanti delle schede, sulle frecce della barra,
+  il trascinamento sulla barra, il menu di una cartella, schermi oltre il 100% (le schede alte più di 255 pixel si
+  tagliano), Windows 10. Le immagini dello Store e del README mostrano ancora le due colonne.
 - L'avviso di SQLite mancante o troppo vecchio: nessun Windows a portata di mano ne è privo.
 - Il database con migliaia di voci (la ricerca, la scadenza, il file che si restringe): provato solo con le
   poche dei test. E dal pacchetto dello Store, dove sta in `LocalState`.

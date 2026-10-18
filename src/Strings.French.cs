@@ -11,7 +11,7 @@ static partial class Strings
         Megabytes = "{0} Mo"; Kilobytes = "{0} Ko";
 
         TypeButton = "Saisir le presse-papiers";
-        RecentTitle = "Copiés récemment"; SavedTitle = "Enregistrés"; PausedSuffix = " (en pause)";
+        SavedTitle = "Enregistrés"; PausedSuffix = " (en pause)";
         New = "Nouveau…"; SaveDots = "Garder…"; EditDots = "Modifier…"; RenameDots = "Renommer…"; Delete = "Supprimer";
         Options = "Options"; SearchCue = "Rechercher…";
         CountOf = "{0} sur {1}";
@@ -19,16 +19,15 @@ static partial class Strings
         PausedEmpty = "En pause : ce que vous copiez n'est pas mémorisé"; CopyHint = "Ce que vous copiez apparaîtra ici";
         NoSaved = "Aucun texte enregistré";
         NewTip = "Écrit un nouveau texte à garder, avec son nom ({0}).";
-        SaveTip = "Sur un élément copié : l'enregistre pour qu'il n'expire jamais, avec ou sans nom,\n"
-            + "et vous pouvez retoucher son contenu. Avec un nom, la liste montre le nom, pas le contenu.\n"
-            + "Sur un élément enregistré : change son nom ou son contenu ({0}).\n"
-            + "Sur un dossier : change son nom ou sa place.\n"
-            + "Une image s'enregistre aussi : elle reste visible, avec son nom à côté.";
-        HelpTip = "Ouvre le guide : tout ce que sait faire le programme ({0}).";
-        DeleteTip = "Supprime le texte enregistré, ou retire l'élément copié de la liste ({0}).\n"
-            + "D'un dossier, il supprime seulement le dossier : son contenu remonte d'un niveau.";
-        DividerTip = "Faites glisser pour donner plus ou moins de place aux textes enregistrés.\n"
-            + "Double-clic : la largeur de départ.";
+        AllPlace = "Tout"; PinnedPlace = "En haut"; SourcesPlace = "Provenance"; GuideItem = "Aide";
+        AllKinds = "Tout"; TextKinds = "Texte"; CodeKinds = "Code"; LinkKinds = "Liens"; PictureKinds = "Images";
+        TextBadge = "Texte"; CodeBadge = "Code"; LinkBadge = "Lien"; PictureBadge = "Image"; FormattedBadge = "Mis en forme";
+        CopyButton = "Copier"; ShowFull = "Tout voir";
+        Today = "Aujourd'hui"; Yesterday = "Hier"; Undated = "Avant";
+        NoPinned = "Rien en haut : la flèche d'un élément copié l'amène ici pour un moment";
+        NoneOfKind = "Rien de ce type";
+        SourcesTip = "Les programmes dans lesquels vous avez copié : choisissez-en un pour ne voir que ce que vous y avez copié.";
+        PinnedTip = "Les éléments copiés gardés en haut pour un moment : ils partent quand même à la fin de leurs jours.";
         Error = "Erreur : {0}";
         NewerDatabase = "{0} a été écrit par une version plus récente de {1} : mettez le programme à jour pour l'ouvrir.";
         UnexpectedError ="Une erreur s'est produite : {0}\n\nLe programme continue. Les détails sont dans {1}.";
@@ -121,11 +120,12 @@ static partial class Strings
         TypeTip = "Saisit le texte du presse-papiers une touche à la fois, là où coller ne marche pas :\n"
             + "copiez le mot de passe, appuyez ici et cliquez dans le champ de la fenêtre distante.\n"
             + "Ou appuyez sur {0} directement dans le champ.";
-        SearchTip = "Tapez pour chercher dans les deux colonnes : mots dans n'importe quel ordre, sans tenir\n"
-            + "compte des majuscules ni des accents. Les flèches parcourent la colonne, Tab passe à l'autre.\n"
-            + "{0} ou un clic remettent l'élément dans le presse-papiers : collez-le ensuite avec Ctrl+V\n"
-            + "ou saisissez-le avec {1}. Avec un clic la fenêtre reste ouverte, avec {0} ou un\n"
-            + "double-clic vous revenez où vous étiez. Le clic droit ouvre le menu de l'élément.\n"
+        SearchTip = "Tapez pour chercher parmi les éléments de l'endroit : mots dans n'importe quel ordre, sans tenir\n"
+            + "compte des majuscules ni des accents. Les flèches parcourent les éléments.\n"
+            + "« " + CopyButton + " », {0} ou un double-clic remettent l'élément dans le presse-papiers : collez-le\n"
+            + "ensuite avec Ctrl+V ou saisissez-le avec {1}. Avec « " + CopyButton + " » la fenêtre reste ouverte, avec {0}\n"
+            + "ou un double-clic vous revenez où vous étiez. Un clic sélectionne seulement ; le clic droit ouvre le menu\n"
+            + "de l'élément.\n"
             + "En laissant le pointeur sur un élément copié, vous le voyez en entier.\n"
             + "La flèche à droite d'un élément copié ({2}) le garde un moment en haut de la liste :\n"
             + "il part quand même quand ses jours expirent. Ce qui doit rester, enregistrez-le.\n"
@@ -320,45 +320,51 @@ static partial class Strings
                 + "écrans de verrouillage des bureaux à distance.",
 
             "# La liste",
-            "À gauche, les éléments copiés récemment, textes et images, du plus récent au plus ancien. À droite, les "
-                + "textes enregistrés, qui restent jusqu'à ce que vous les supprimiez.",
-            "- Tapez dans la case du haut pour chercher dans les deux colonnes : les mots comptent dans n'importe quel "
-                + "ordre, sans tenir compte des majuscules ni des accents.",
-            "- Un clic met l'élément dans le presse-papiers et laisse la fenêtre ouverte, pour que vous puissiez "
-                + "encore l'enregistrer ou le supprimer.",
+            "À gauche la barre latérale, à droite les cartes des éléments de l'endroit choisi dans celle-ci :",
+            "- « " + AllPlace + " » : tout, copié et enregistré, du plus récent au plus ancien, chaque jour sous son nom ; "
+                + "les éléments gardés en haut passent avant les autres.",
+            "- « " + PinnedPlace + " » : seulement les éléments copiés gardés en haut.",
+            "- « " + SavedTitle + " » : les textes enregistrés, par nom. En dessous se trouvent leurs dossiers.",
+            "- « " + SourcesPlace + " » : les programmes dans lesquels vous avez copié, chacun avec son icône et le nombre "
+                + "d'éléments qui en viennent. Un clic sur l'un d'eux ne montre que ce que vous y avez copié ; un clic sur « "
+                + SourcesPlace + " » ouvre ou ferme la liste.",
+            "Les onglets au-dessus des cartes (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
+                + PictureKinds + ") ne montrent qu'un type d'élément. « " + CodeKinds + " » est une supposition faite d'après "
+                + "l'allure des lignes : de temps en temps un texte s'y retrouve, ou un morceau de code parmi les textes.",
+            "En haut, chaque carte indique le programme dans lequel l'élément a été copié, avec son icône, ou le dossier "
+                + "d'un texte enregistré, et à droite ce qu'il est ; puis l'élément ; en bas ses boutons et, à droite, "
+                + "l'heure de la copie.",
+            "- Tapez dans la case du haut pour chercher parmi les éléments de l'endroit : les mots comptent dans "
+                + "n'importe quel ordre, sans tenir compte des majuscules ni des accents.",
+            "- Un clic sur une carte la sélectionne. « " + CopyButton + " » met l'élément dans le presse-papiers et laisse la "
+                + "fenêtre ouverte, pour que vous puissiez encore l'enregistrer ou le supprimer.",
             "- " + EnterKeyName + " ou un double-clic le mettent dans le presse-papiers et, si vous aviez ouvert la "
                 + "liste avec " + pick + ", vous ramènent à la fenêtre où vous travailliez.",
             "- Collez-le alors avec Ctrl+V, ou saisissez-le avec " + type + ".",
-            "- Le clic droit sélectionne l'élément et ouvre son menu, sans toucher au presse-papiers.",
-            "- « " + CopyPictureText + " », dans le menu du clic droit d'une image, met dans le presse-papiers le texte "
+            "- « " + ShowFull + " » montre l'élément en entier dans un petit cadre : le texte avec toutes ses lignes, "
+                + "l'image en plus grand. Laisser le pointeur sur une carte qui coupe son texte fait de même. Il disparaît "
+                + "dès que vous bougez le pointeur.",
+            "- Les trois points en bas à droite, ou le clic droit, ouvrent le menu de l'élément, sans toucher au presse-papiers.",
+            "- « " + CopyPictureText + " », dans le menu d'une image, met dans le presse-papiers le texte "
                 + "que Windows y lit, ici sur le PC, sans internet : il entre dans la liste comme tout ce que vous copiez "
                 + "(celui d'une image enregistrée est privé, comme un texte enregistré). Un petit texte peut sortir avec "
                 + "des erreurs : vérifiez-le d'abord.",
-            "- En laissant le pointeur sur un élément copié que sa ligne coupe, il apparaît en entier après un "
-                + "instant, dans un petit cadre : le texte avec toutes ses lignes, l'image en plus grand. Il disparaît "
-                + "dès que vous bougez le pointeur.",
-            "- La flèche à l'extrémité droite d'un élément copié (" + Key(Keys.Control | MainForm.PinKey) + ") le garde "
-                + "un moment en haut de la colonne : elle apparaît estompée au survol, et un clic l'allume ou l'éteint. "
+            "- La flèche en bas à droite d'un élément copié (" + Key(Keys.Control | MainForm.PinKey) + ") le garde "
+                + "en haut un moment : elle est en couleur tant qu'elle le fait, et un clic l'allume ou l'éteint. "
                 + "L'élément part quand même quand les jours de l'historique expirent : ce qui doit rester, "
                 + "enregistrez-le. Copier à nouveau le même texte le ramène en haut avec la nouvelle heure, flèche et "
                 + "numéro compris.",
-            "- « " + NumberMenu + " », dans le menu du clic droit, donne à un texte enregistré ou à un élément copié "
+            "- « " + NumberMenu + " », dans le menu, donne à un texte enregistré ou à un élément copié "
                 + "un numéro de 1 à " + MainForm.MaxNumber + " : ensuite, depuis n'importe quel programme, "
                 + MainForm.NumbersName + " le collent aussitôt dans la fenêtre où vous travaillez, sans ouvrir celle-ci "
                 + "(l'élément va dans le presse-papiers et Ctrl+V suit tout seul). Le numéro apparaît dans un petit "
-                + "cadre à droite de la ligne, et à côté du texte enregistré dans le menu de l'icône. Un élément copié "
+                + "cadre en bas de la carte, et à côté du texte enregistré dans le menu de l'icône. Un élément copié "
                 + "garde son numéro jusqu'à ce que ses jours expirent. Chaque numéro appartient à un seul élément : "
                 + "donné à un autre, il passe à celui-ci.",
-            "Le signe coloré à gauche dit ce qu'est l'élément : un texte, une adresse web, un texte enregistré. Les "
-                + "images montrent une miniature. Sous l'élément, en petit à droite, figure l'heure de la copie (le jour, si ce n'est pas "
-                + "aujourd'hui) ou le jour de l'enregistrement.",
-            "Pour ne pas mémoriser ce que vous allez copier, « " + Pause + " » est dans le menu du clic droit de la "
-                + "liste et dans celui de l'icône près de l'horloge : au-dessus de la colonne apparaît « en pause » "
+            "Pour ne pas mémoriser ce que vous allez copier, « " + Pause + " » est en bas de la barre latérale "
+                + "et dans le menu de l'icône près de l'horloge : le titre indique « en pause » "
                 + "jusqu'à ce que vous choisissiez « " + Resume + " ». Au démarrage suivant, la capture est de nouveau active.",
-            "L'espace entre les deux colonnes se fait glisser, pour donner plus ou moins de place aux textes "
-                + "enregistrés : la largeur choisie reste au démarrage suivant, et un double-clic à cet endroit revient "
-                + "à celle de départ.",
-            "La colonne des éléments copiés montre les " + MainForm.MaxShown + " plus récents : la recherche trouve les autres.",
+            "La liste montre les " + MainForm.MaxShown + " éléments copiés les plus récents : la recherche trouve les autres.",
 
             "# Les textes enregistrés",
             "Ce sont les choses que vous voulez toujours avoir sous la main : une signature, une adresse, un mot de "
@@ -397,24 +403,24 @@ static partial class Strings
 
             "# Les dossiers",
             "Quand les textes enregistrés deviennent nombreux, vous pouvez les regrouper en dossiers, et les dossiers "
-                + "dans d'autres dossiers.",
-            "- « " + NewFolder + " » est dans le menu du clic droit (" + Key(Keys.Control | Keys.Shift | MainForm.NewKey)
-                + ") : il est créé dans le dossier sélectionné, ou dans celui du texte sélectionné, mais sa fenêtre "
-                + "permet de choisir où le mettre.",
-            "- Un clic sur le nom d'un dossier, ou " + EnterKeyName + ", l'ouvre et le ferme ; le nombre à droite dit "
-                + "combien de textes il contient, y compris dans les dossiers qu'il contient. Ouverts ou fermés, vous "
-                + "les retrouvez comme vous les avez laissés.",
-            "- Un texte enregistré, ou un dossier avec tout son contenu, se fait glisser dans un autre dossier : sur le "
-                + "dossier lui-même ou sur l'un de ses textes. Lâché sur un texte hors des dossiers, ou sous la "
-                + "dernière ligne, il sort de celui où il était.",
-            "- « " + MoveTo + " », dans le menu du clic droit d'un texte enregistré ou d'un dossier, fait de même. Le "
+                + "dans d'autres dossiers. Ils sont dans la barre latérale, sous « " + SavedTitle + " » : un clic sur un "
+                + "dossier montre ses textes, et ceux des dossiers qu'il contient.",
+            "- « " + NewFolder + " » est en bas de la barre latérale et dans le menu du clic droit d'un dossier "
+                + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + ") : il est créé dans le dossier "
+                + "affiché, mais sa fenêtre permet de choisir où le mettre.",
+            "- La flèche à l'extrémité droite d'un dossier qui en contient d'autres l'ouvre et le ferme ; celle de « "
+                + SavedTitle + " » les montre ou les cache tous. Le nombre dit combien de textes contient un dossier, y "
+                + "compris dans les dossiers qu'il contient. Ouverts ou fermés, vous les retrouvez comme vous les avez laissés.",
+            "- La carte d'un texte enregistré, ou un dossier de la barre avec tout son contenu, se fait glisser sur un "
+                + "dossier de la barre ; lâché sur « " + SavedTitle + " », il sort des dossiers.",
+            "- « " + MoveTo + " », dans le menu d'un texte enregistré ou d'un dossier, fait de même. Le "
                 + "même choix est dans la fenêtre où vous l'écrivez, à gauche des boutons.",
-            "- Avec un dossier sélectionné, « " + RenameDots + " » change son nom ou sa place et « " + Delete + " » "
-                + "retire seulement le dossier : son contenu, textes et dossiers, remonte dans le dossier qui le "
+            "- Dans le menu du clic droit d'un dossier, « " + RenameDots + " » change son nom ou sa place et « " + Delete
+                + " » retire seulement le dossier : son contenu, textes et dossiers, remonte dans le dossier qui le "
                 + "contenait, ou reste parmi les textes enregistrés hors des dossiers.",
             "- Le nom d'un dossier ne peut pas contenir « " + Texts.Separator + " ».",
             "- Dans le menu de l'icône près de l'horloge, chaque dossier est un sous-menu avec ses textes.",
-            "- La recherche trouve aussi dans les dossiers fermés, et le nom d'un dossier trouve ses textes.",
+            "- Le nom d'un dossier trouve ses textes dans la recherche.",
 
             "# Saisir un mot de passe",
             "Là où Ctrl+V ne marche pas, " + app + " écrit le texte du presse-papiers une touche à la fois, comme vous "
@@ -437,8 +443,7 @@ static partial class Strings
             type + "\tSaisit aussitôt le presse-papiers dans la fenêtre active.",
             MainForm.NumbersName + "\tColle dans la fenêtre active l'élément qui a ce numéro.",
             "F1\tOuvre ce guide.",
-            ArrowsName + "\tParcourt la colonne.",
-            "Tab\tPasse à l'autre colonne.",
+            ArrowsName + "\tParcourt les éléments, ou les endroits de la barre latérale.",
             EnterKeyName + "\tChoisit l'élément et revient à la fenêtre de départ.",
             "Échap\tRevient à la fenêtre de départ sans choisir.",
             Key(Keys.Control | MainForm.SearchKey) + "\tAmène le curseur dans la zone de recherche.",

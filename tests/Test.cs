@@ -301,7 +301,7 @@ static class TestProgram
                 + " CHECK (saved = 0 OR (pinned = 0 AND folded IS NULL AND hash IS NULL)),"
                 + " CHECK ((name IS NULL) = (name_key IS NULL)), CHECK ((kind = 2) = (preview IS NOT NULL)));"
                 + "INSERT INTO entries SELECT id, kind, content, preview, width, height, folded, hash, copied_at, saved, saved_at,"
-                + " name, name_key, folder_id, pinned, number FROM entries_new; DROP TABLE entries_new;"
+                + " name, name_key, folder_id, pinned, number FROM entries_new; DROP TABLE entries_new; DROP TABLE apps;"
                 + "CREATE INDEX entries_recent ON entries (saved, pinned DESC, copied_at DESC);"
                 + "CREATE INDEX entries_hash ON entries (hash) WHERE hash IS NOT NULL; PRAGMA user_version = 1;");
         }
@@ -314,12 +314,77 @@ static class TestProgram
             using (Statement rows = clips.Data.Prepare("PRAGMA table_info(entries)"))
                 while (rows.Step()) columns.Add(rows.Text(1));
             Check(Equals(clips.Data.Value("PRAGMA user_version"), (long)Clips.SchemaVersion) && columns[columns.Count - 1] == "content"
-                && columns[columns.Count - 2] == "preview" && columns.IndexOf("html") >= 0 && columns.IndexOf("html") < columns.IndexOf("hash"),
-                "a database of version 1 is brought up to date, the large columns last, the formatting before them");
+                && columns[columns.Count - 2] == "preview" && columns.IndexOf("html") >= 0 && columns.IndexOf("html") < columns.IndexOf("hash")
+                && columns.IndexOf("app_id") >= 0 && columns.IndexOf("app_id") < columns.IndexOf("hash")
+                && Equals(clips.Data.Value("SELECT count(*) FROM apps"), 0L)
+                && Equals(clips.Data.Value("SELECT count(*) FROM entries WHERE saved = 0 AND category IS NULL"), 0L)
+                && Equals(clips.Data.Value("SELECT category FROM entries WHERE id = ?1", pictureId), (long)Category.Picture),
+                "a database of version 1 is brought up to date, the large columns last, formatting and program before them,"
+                + " and what each copied entry is");
             Check(string.Join("|", after.ToArray()) == string.Join("|", before.ToArray()) && after.Count == 4
                 && System.Linq.Enumerable.SequenceEqual(clips.Png(pictureId), png), "with all its entries, as they were");
             Check(Equals(clips.Data.Value("SELECT count(*) FROM sqlite_master WHERE name IN ('entries_recent', 'entries_hash')"), 2L)
                 && clips.Healthy(), "its indexes, and sound");
+        }
+        System.IO.File.Delete(path);
+
+        // Version 3, the one before the programs: its formatted saved texts come along.
+        using (Clips clips = new Clips(path))
+        {
+            clips.AddText("copied text");
+            clips.AddSaved("Firma", "Sai", "<b>Sai</b>", @"{\rtf1 \b Sai}", 0, DateTime.Now);
+            before.Clear();
+            foreach (Entry e in clips.Copied(10, new string[0])) before.Add(Describe(e));
+            foreach (Entry e in clips.Saved()) before.Add(Describe(e) + e.Html + e.Rtf);
+            clips.Data.Execute("DROP INDEX entries_recent; DROP INDEX entries_hash; ALTER TABLE entries RENAME TO entries_new;"
+                + "CREATE TABLE entries (id INTEGER PRIMARY KEY, kind INTEGER NOT NULL CHECK (kind IN (1, 2)), width INTEGER, height INTEGER,"
+                + " copied_at INTEGER NOT NULL, saved INTEGER NOT NULL DEFAULT 0 CHECK (saved IN (0, 1)), saved_at INTEGER,"
+                + " name TEXT, name_key TEXT UNIQUE, folder_id INTEGER REFERENCES folders (id),"
+                + " pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)), number INTEGER UNIQUE CHECK (number BETWEEN 1 AND 9),"
+                + " rtf BLOB, html BLOB, hash BLOB, folded TEXT, preview BLOB, content BLOB NOT NULL);"
+                + "INSERT INTO entries SELECT id, kind, width, height, copied_at, saved, saved_at, name, name_key, folder_id, pinned, number,"
+                + " rtf, html, hash, folded, preview, content FROM entries_new; DROP TABLE entries_new; DROP TABLE apps;"
+                + "CREATE INDEX entries_recent ON entries (saved, pinned DESC, copied_at DESC);"
+                + "CREATE INDEX entries_hash ON entries (hash) WHERE hash IS NOT NULL; PRAGMA user_version = 3;");
+        }
+        using (Clips clips = new Clips(path))
+        {
+            List<string> after = new List<string>();
+            foreach (Entry e in clips.Copied(10, new string[0])) after.Add(Describe(e));
+            foreach (Entry e in clips.Saved()) after.Add(Describe(e) + e.Html + e.Rtf);
+            Check(Equals(clips.Data.Value("PRAGMA user_version"), (long)Clips.SchemaVersion)
+                && string.Join("|", after.ToArray()) == string.Join("|", before.ToArray()) && after.Count == 2 && after[1].EndsWith(@"<b>Sai</b>{\rtf1 \b Sai}")
+                && clips.Healthy(), "a database of version 3 is brought up to date, the formatting kept");
+            Check(clips.AddText("now from somewhere", System.IO.Path.Combine(Environment.SystemDirectory, "notepad.exe"))
+                && clips.Copied(1, new string[0])[0].Origin != null, "and knows the programs from then on");
+        }
+        System.IO.File.Delete(path);
+
+        // Version 4, with the programs but not what each entry is: the programs stay, the categories come.
+        using (Clips clips = new Clips(path))
+        {
+            string notepad = System.IO.Path.Combine(Environment.SystemDirectory, "notepad.exe");
+            clips.AddText("int x = 1;\nreturn x;", notepad);
+            clips.AddSaved("Firma", "Sai", "<b>Sai</b>", null, 0, DateTime.Now);
+            clips.Data.Execute("DROP INDEX entries_recent; DROP INDEX entries_hash; ALTER TABLE entries RENAME TO entries_new;"
+                + "CREATE TABLE entries (id INTEGER PRIMARY KEY, kind INTEGER NOT NULL CHECK (kind IN (1, 2)), width INTEGER, height INTEGER,"
+                + " copied_at INTEGER NOT NULL, saved INTEGER NOT NULL DEFAULT 0 CHECK (saved IN (0, 1)), saved_at INTEGER,"
+                + " name TEXT, name_key TEXT UNIQUE, folder_id INTEGER REFERENCES folders (id),"
+                + " pinned INTEGER NOT NULL DEFAULT 0 CHECK (pinned IN (0, 1)), number INTEGER UNIQUE CHECK (number BETWEEN 1 AND 9),"
+                + " app_id INTEGER REFERENCES apps (id), rtf BLOB, html BLOB, hash BLOB, folded TEXT, preview BLOB, content BLOB NOT NULL);"
+                + "INSERT INTO entries SELECT id, kind, width, height, copied_at, saved, saved_at, name, name_key, folder_id, pinned, number,"
+                + " app_id, rtf, html, hash, folded, preview, content FROM entries_new; DROP TABLE entries_new;"
+                + "CREATE INDEX entries_recent ON entries (saved, pinned DESC, copied_at DESC);"
+                + "CREATE INDEX entries_hash ON entries (hash) WHERE hash IS NOT NULL; PRAGMA user_version = 4;");
+        }
+        using (Clips clips = new Clips(path))
+        {
+            Sieve code = new Sieve();
+            code.Category = Category.Code;
+            List<Entry> found = clips.Copied(10, code);
+            Check(Equals(clips.Data.Value("PRAGMA user_version"), (long)Clips.SchemaVersion) && found.Count == 1 && found[0].Origin != null
+                && clips.Saved()[0].Html == "<b>Sai</b>" && clips.Healthy(),
+                "a database of version 4 is brought up to date: its programs kept, what each entry is found");
         }
         System.IO.File.Delete(path);
     }
@@ -641,6 +706,52 @@ static class TestProgram
             clips.AddText("two");
             Check(clips.CopiedCount() == 3 && clips.Copied(10, new string[0])[0].Pinned, "copied again, it keeps its star");
 
+            // The program each entry was copied in, kept once for all its entries.
+            string notepad = System.IO.Path.Combine(Environment.SystemDirectory, "notepad.exe"), explorer = System.IO.Path.Combine(
+                Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe");
+            clips.AddText("written in notepad", notepad);
+            clips.AddText("notepad again", notepad);
+            Entry noted = clips.Copied(10, Texts.Words("written"))[0];
+            Check(noted.Origin != null && noted.Origin.Name == Origin.NameOf(notepad) && noted.Origin.Icon != null
+                && Equals(clips.Data.Value("SELECT count(*) FROM apps"), 1L), "a copied entry knows its program, with name and icon, kept once");
+            Check(Origin.NameOf(notepad) != "notepad" && Origin.NameOf(@"C:\nowhere\made up.exe") == "made up",
+                "a program goes by the description in its file, or else by the file's name");
+            clips.AddText("written in notepad", explorer);
+            clips.AddText("written in notepad", null);
+            Check(clips.Copied(10, Texts.Words("written"))[0].Origin.Name == Origin.NameOf(explorer),
+                "copied again elsewhere it comes from there; from nowhere known, it keeps the last");
+            Check(clips.Copied(10, Texts.Words("two"))[0].Origin == null, "copied where nobody knows, it has none");
+            Check(Refuses(clips, "UPDATE entries SET app_id = 999 WHERE id = " + noted.Id), "a program must be among the apps");
+            clips.Save(noted.Id, null, 0);
+            Check(clips.Data.Value("SELECT app_id FROM entries WHERE id = ?1", noted.Id) == null
+                && Refuses(clips, "UPDATE entries SET app_id = (SELECT min(id) FROM apps) WHERE id = " + noted.Id),
+                "a saved entry has none: it would say something of it");
+            clips.Remove(noted.Id);
+            clips.Remove(clips.Copied(10, Texts.Words("notepad again"))[0].Id);
+
+            // What each entry is, for the tabs over the cards; and what the sidebar and the tabs let through.
+            Check(Texts.CategoryOf("https://example.com/a?b=1") == Category.Link && Texts.CategoryOf("www.example.com and more") == Category.Text
+                && Texts.CategoryOf("int x = 1;\nreturn x;") == Category.Code && Texts.CategoryOf("console.log(x);") == Category.Code
+                && Texts.CategoryOf("SELECT * FROM entries") == Category.Code && Texts.CategoryOf("Ciao; ci vediamo domani") == Category.Text
+                && Texts.CategoryOf("ssh admin@server") == Category.Text && Texts.CategoryOf("Dear Sai,\nthank you.\nBest") == Category.Text,
+                "a text is a web address, a piece of code, or any other text");
+            clips.AddText("for (int i = 0; i < 3; i++) {\n    go(i);\n}", notepad);
+            clips.AddText("https://example.com/sieve", explorer);
+            long notepadApp = (long)clips.Data.Value("SELECT id FROM apps WHERE path = ?1", notepad);
+            Sieve code = new Sieve(), link = new Sieve(), fromNotepad = new Sieve(), atTop = new Sieve();
+            code.Category = Category.Code;
+            link.Category = Category.Link;
+            fromNotepad.App = notepadApp;
+            atTop.Pinned = true;
+            Check(clips.Copied(10, code).Count == 1 && clips.Copied(10, code)[0].Category == Category.Code
+                && clips.CopiedCount(link) == 1 && clips.Copied(10, fromNotepad).Count == 1 && clips.CopiedCount(atTop) == 1
+                && clips.Copied(10, atTop)[0].Text == "two", "the copied entries of a category, of a program, those at the top");
+            List<Source> sources = clips.Sources();
+            Check(sources.Count == 2 && sources.TrueForAll(delegate(Source s) { return s.Count == 1 && s.Origin != null; }),
+                "the programs the copied entries come from, each with how many");
+            clips.Remove(clips.Copied(1, code)[0].Id);
+            clips.Remove(clips.Copied(1, link)[0].Id);
+
             // Pictures.
             using (Bitmap picture = new Bitmap(40, 30))
             {
@@ -752,6 +863,7 @@ static class TestProgram
             Check(clips.Saved().Exists(delegate(Entry e) { return e.Id == old; }), "a saved entry outlives every day");
             clips.Clean(0);
             Check(clips.CopiedCount() == 0 && clips.Saved().Count == 5, "cleaning everything leaves the saved ones");
+            Check(Equals(clips.Data.Value("SELECT count(*) FROM apps"), 0L), "and forgets the programs nothing comes from any more");
 
             // Folders: a tree, each before those inside it.
             long work = clips.AddFolder(0, "Lavoro"), servers = clips.AddFolder(work, "Server"), home = clips.AddFolder(0, "Casa");
@@ -989,6 +1101,9 @@ static class TestProgram
         RichTest();
         LanguagesTest();
         OcrTest();
+        using (Form own = new Form())
+            Check(string.Equals(Origin.ProgramOf(own.Handle), System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName,
+                StringComparison.OrdinalIgnoreCase) && Origin.ProgramOf(IntPtr.Zero) == null, "the program of a window is that of its process");
         return failed == 0 ? 0 : 1;
     }
 
@@ -1363,32 +1478,54 @@ static class TestProgram
             Application.DoEvents();
             Save(form, path + "-idle.png");
 
+            // All of it in one list: the copied entry at the top under its own name, then the others under the name of
+            // their day, the saved ones among them.
+            ListBox cards = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
+            List<Entry> shown = Cards(cards);
+            Console.WriteLine("[{0}] all the entries in one list, the one at the top first, then each day under its name: {1} rows",
+                shown.Count == 9 && shown[0].Pinned && cards.Items[0] is Heading && cards.Items[2] is Heading && cards.Items.Count == 11
+                ? "PASS" : "FAIL", cards.Items.Count);
             // Refilling the list (it happens at every clipboard change) must not move the selection.
-            ListBox recent = (ListBox)typeof(MainForm).GetField("recentList", hidden).GetValue(form);
-            ListBox saved = (ListBox)typeof(MainForm).GetField("savedList", hidden).GetValue(form);
-            Console.WriteLine("[{0}] copied and saved entries go to their own column: {1} and {2}",
-                recent.Items.Count == 5 && saved.Items.Count == 6 ? "PASS" : "FAIL", recent.Items.Count, saved.Items.Count);
-            saved.SelectedIndex = 2;
+            cards.SelectedIndex = 5;
+            Entry chosen = (Entry)cards.SelectedItem;
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
-            Console.WriteLine("[{0}] the selection survives a refill: saved {1}, copied {2}",
-                saved.SelectedIndex == 2 && recent.SelectedIndex < 0 ? "PASS" : "FAIL", saved.SelectedIndex, recent.SelectedIndex);
-            recent.SelectedIndex = 0;
-            Console.WriteLine("[{0}] selecting in a column clears the other", saved.SelectedIndex < 0 ? "PASS" : "FAIL");
+            Console.WriteLine("[{0}] the selection survives a refill", cards.SelectedItem is Entry && ((Entry)cards.SelectedItem).Id == chosen.Id
+                ? "PASS" : "FAIL");
+            cards.SelectedIndex = 0;
+            Console.WriteLine("[{0}] the name of a day is never selected", cards.SelectedIndex == 5 ? "PASS" : "FAIL");
 
-            // A closed folder hides the folders inside it too; a search shows the folders around what it finds.
+            // The places of the sidebar, and the tabs.
             Sample s = Sample.Current;
+            ListBox nav = (ListBox)typeof(MainForm).GetField("navList", hidden).GetValue(form);
+            Console.WriteLine("[{0}] the sidebar: all, pinned, saved with its folders, the programs: {1} rows", nav.Items.Count == 10
+                && ((Place)nav.Items[3]).Label == s.Home && ((Place)nav.Items[5]).Level == 2 && ((Place)nav.Items[6]).Kind == PlaceKind.Sources
+                && ((Place)nav.Items[7]).Origin != null ? "PASS" : "FAIL", nav.Items.Count);
+            GoTo(form, PlaceKind.Saved, null);
+            bool savedOnly = Cards(cards).Count == 4 && Cards(cards).TrueForAll(delegate(Entry e) { return e.Saved; }) && !(cards.Items[0] is Heading);
+            GoTo(form, PlaceKind.Folder, s.Work);
+            bool inWork = Cards(cards).Count == 2;
+            GoTo(form, PlaceKind.Pinned, null);
+            bool pinnedOnly = Cards(cards).Count == 1 && Cards(cards)[0].Pinned;
+            Console.WriteLine("[{0}] saved, a folder with those inside it, pinned", savedOnly && inWork && pinnedOnly ? "PASS" : "FAIL");
+            nav.SelectedIndex = 7;   // the first program, by name: Edge
+            bool fromEdge = Cards(cards).Count == 2;
+            GoTo(form, PlaceKind.All, null);
+            TabStrip tabs = (TabStrip)typeof(MainForm).GetField("tabs", hidden).GetValue(form);
+            tabs.Selected = 3;   // links
+            bool links = Cards(cards).Count == 1 && Cards(cards)[0].Category == Category.Link;
+            tabs.Selected = 0;
+            Console.WriteLine("[{0}] a program, and a category of the tabs", fromEdge && links ? "PASS" : "FAIL");
+
+            // A closed folder hides the folders inside it too, in the sidebar.
             List<Entry> sample = (List<Entry>)typeof(MainForm).GetField("entries", hidden).GetValue(form);
             Entry work = sample.Find(delegate(Entry e) { return e.IsGroup && e.Name == s.Work; });
             work.Open = false;
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
-            int closedRows = saved.Items.Count;
+            int closedRows = nav.Items.Count;
             work.Open = true;
+            typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
+            Console.WriteLine("[{0}] a closed folder hides those inside it: {1} rows", closedRows == 9 ? "PASS" : "FAIL", closedRows);
             TextBox search = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
-            search.Text = s.Probe;
-            Console.WriteLine("[{0}] a closed folder hides those inside it: {1} rows; a search shows the folders around a result: {2}",
-                closedRows == 3 && saved.Items.Count == 3 && ((Entry)saved.Items[0]).Name == s.Work && ((Entry)saved.Items[1]).Label == s.Servers
-                ? "PASS" : "FAIL", closedRows, saved.Items.Count);
-            search.Text = "";
 
             // The icon menu: the saved texts between the first item and the rest, each folder a submenu.
             ContextMenuStrip menu = new ContextMenuStrip();
@@ -1414,10 +1551,10 @@ static class TestProgram
             typeof(MainForm).GetMethod("Reload", hidden).Invoke(form, null);
             Application.DoEvents();
             Save(form, path + "-saved-picture.png");
-            Entry savedPicture = null;
-            foreach (Entry each in saved.Items) if (each.Picture) savedPicture = each;
-            Console.WriteLine("[{0}] a saved picture shows its preview and its name", savedPicture != null && savedPicture.Preview != null
-                && savedPicture.Label == s.Remote && recent.Items.Count == 4 ? "PASS" : "FAIL");
+            Entry savedPicture = Cards(cards).Find(delegate(Entry e) { return e.Picture; });
+            Console.WriteLine("[{0}] a saved picture shows its preview and its name", savedPicture != null && savedPicture.Saved
+                && savedPicture.Preview != null && savedPicture.Label == s.Remote
+                && Cards(cards).FindAll(delegate(Entry e) { return !e.Saved; }).Count == 4 ? "PASS" : "FAIL");
             FillSample(form);
 
             // The window of the options, never shown yet, follows a change of theme all the same.
@@ -1456,14 +1593,14 @@ static class TestProgram
             Application.DoEvents();
             Save(form, path + "-switched.png");
             Panel searchCard = (Panel)search.Parent;
-            Label count = (Label)typeof(MainForm).GetField("recentCount", hidden).GetValue(form);
+            Label count = (Label)typeof(MainForm).GetField("count", hidden).GetValue(form);
             Button typing = (Button)typeof(MainForm).GetField("typeButton", hidden).GetValue(form);
             Console.WriteLine("[{0}] a change of theme recolours the open window",
-                form.BackColor == Look.Back && form.ForeColor == Look.Ink && recent.BackColor == Look.Well && search.BackColor == Look.Well
+                form.BackColor == Look.Back && form.ForeColor == Look.Ink && cards.BackColor == Look.Well && search.BackColor == Look.Well
                 && searchCard.BackColor == Look.Well && count.ForeColor == Look.Muted && typing.BackColor == Look.Accent
                 && typing.FlatAppearance.BorderColor == Look.Accent ? "PASS" : "FAIL");
             Look.Switch(!Look.Dark);
-            Console.WriteLine("[{0}] and back", form.BackColor == Look.Back && recent.BackColor == Look.Well ? "PASS" : "FAIL");
+            Console.WriteLine("[{0}] and back", form.BackColor == Look.Back && cards.BackColor == Look.Well ? "PASS" : "FAIL");
             // A theme chosen in the options stays, whatever Windows says; "as Windows" follows it again.
             bool wasDark = Look.Dark;
             Look.Choose(Theme.Dark);
@@ -1488,7 +1625,7 @@ static class TestProgram
             Application.DoEvents();
             Save(form, path + "-full.png");
             Control banner = (Control)typeof(MainForm).GetField("banner", hidden).GetValue(form);
-            bool barred = banner.Visible && banner.Bottom <= status.Top && recent.Parent.Bottom <= banner.Top;
+            bool barred = banner.Visible && banner.Bottom <= status.Top && cards.Bottom <= banner.Top;
             Clips.PictureSpace = space;
             typeof(MainForm).GetMethod("ShowPictureRoom", hidden).Invoke(form, null);
             Console.WriteLine("[{0}] a red bar between the lists and the status line says the room of the pictures is full, and goes",
@@ -1499,10 +1636,10 @@ static class TestProgram
             Save(form, path + "-countdown.png");
 
             // The status line takes room only while it says something: silent, it leaves it to the lists.
-            int crowded = recent.Parent.Height;
+            int crowded = cards.Height;
             status.Text = "";
             Console.WriteLine("[{0}] a silent status line leaves its room to the lists: {1} then {2}",
-                recent.Parent.Height > crowded ? "PASS" : "FAIL", crowded, recent.Parent.Height);
+                cards.Height > crowded ? "PASS" : "FAIL", crowded, cards.Height);
 
             // The keys of a global hotkey: how they are named, which can be used, and how new ones are taken.
             BindingFlags shared = BindingFlags.NonPublic | BindingFlags.Static;
@@ -1584,16 +1721,16 @@ static class TestProgram
             // The folder of the database: moved elsewhere and back, the list going along; the setting saved at once.
             MethodInfo move = typeof(MainForm).GetMethod("MoveDataFolder", hidden);
             string elsewhere = System.IO.Path.Combine(sandbox, "elsewhere");
-            int savedRows = saved.Items.Count;
+            int savedRows = cards.Items.Count;
             move.Invoke(form, new object[] { elsewhere });
             string written;
             using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(TestKey))
                 written = key == null ? null : key.GetValue("DataFolder") as string;
             bool there = ClipsOf(form).FileName.StartsWith(elsewhere) && !System.IO.File.Exists(Clips.DefaultFile)
-                && saved.Items.Count == savedRows && written == elsewhere;
+                && cards.Items.Count == savedRows && written == elsewhere;
             move.Invoke(form, new object[] { "" });
             Console.WriteLine("[{0}] the database moves to another folder with the list, saying so at once, and back",
-                there && ClipsOf(form).FileName == Clips.DefaultFile && saved.Items.Count == savedRows
+                there && ClipsOf(form).FileName == Clips.DefaultFile && cards.Items.Count == savedRows
                 && !System.IO.File.Exists(System.IO.Path.Combine(elsewhere, System.IO.Path.GetFileName(Clips.DefaultFile))) ? "PASS" : "FAIL");
 
             Console.WriteLine("form {0}x{1}, client {2}x{3}, icon {4}", form.Width, form.Height,
@@ -1674,13 +1811,14 @@ static class TestProgram
             form.Show();
             form.BringToFront();
             Snap(form, path + "-real-list.png");
-            // The entry that does not fit its row, shown whole as when the pointer rests on it.
-            ListBox recent = (ListBox)typeof(MainForm).GetField("recentList", hidden).GetValue(form);
-            typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, 2, false });
+            // The entry that does not fit its card, shown whole as when the pointer rests on it.
+            ListBox recent = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
+            int longRow = RowOf(recent, delegate(Entry e) { return e.Text == Sample.Current.Long; });
+            typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, longRow, false });
             Form shownPeek = (Form)typeof(MainForm).GetField("peek", hidden).GetValue(form);
             Snap(form, path + "-real-peek.png");
             Console.WriteLine("[{0}] an entry cut by its row is shown whole, one that fits is not", shownPeek.Visible
-                && !(bool)typeof(MainForm).GetMethod("Cut", hidden).Invoke(form, new object[] { recent, new Entry(null, "ok"), recent.GetItemRectangle(0) })
+                && !(bool)typeof(MainForm).GetMethod("Cut", hidden).Invoke(form, new object[] { recent, new Entry(null, "ok"), recent.GetItemRectangle(longRow) })
                 ? "PASS" : "FAIL");
             // A long list, with the thin bar that scrolls it, moved a little way down.
             for (int i = 0; i < 40; i++) ClipsOf(form).Import(Sample.Current.Long + " " + i, DateTime.Today.AddMinutes(i), false);
@@ -1726,11 +1864,10 @@ static class TestProgram
                 menu.Close();
             }
             // The menu of a saved text with the numbers it can take, each beside the entry that has it.
-            ListBox saved = (ListBox)typeof(MainForm).GetField("savedList", hidden).GetValue(form);
+            ListBox saved = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
             ContextMenuStrip listMenu = (ContextMenuStrip)typeof(MainForm).GetField("listMenu", hidden).GetValue(form);
             // A text without a number, not a folder, which has no numbers to take.
-            for (int i = 0; i < saved.Items.Count; i++)
-                if (((Entry)saved.Items[i]).Label == Sample.Current.Address) saved.SelectedIndex = i;
+            saved.SelectedIndex = RowOf(saved, delegate(Entry e) { return e.Label == Sample.Current.Address; });
             listMenu.Show(saved, new Point(40, 60));
             foreach (ToolStripItem item in listMenu.Items)
             {
@@ -1742,10 +1879,10 @@ static class TestProgram
             SnapArea(new Rectangle(saved.PointToScreen(Point.Empty).X, form.Top + 100, 640, 420), path + "-real-number.png");
             listMenu.Close();
             ToolTip tips = (ToolTip)typeof(MainForm).GetField("tips", hidden).GetValue(form);
-            Button helpButton = (Button)typeof(MainForm).GetField("helpButton", hidden).GetValue(form);
-            tips.Show(tips.GetToolTip(helpButton), helpButton, -200, -40);
+            Control typing = (Control)typeof(MainForm).GetField("typeButton", hidden).GetValue(form);
+            tips.Show(tips.GetToolTip(typing), typing, -200, -40);
             SnapArea(Rectangle.Inflate(form.Bounds, 40, 40), path + "-real-tip.png");
-            tips.Hide(helpButton);
+            tips.Hide(typing);
             using (ShotHelp help = new ShotHelp())
             {
                 help.TopMost = true;
@@ -1796,8 +1933,8 @@ static class TestProgram
                 form.BringToFront();   // above the backdrop, which came later
                 Label status = (Label)typeof(MainForm).GetField("status", hidden).GetValue(form);
                 status.Text = "";
-                ListBox recent = (ListBox)typeof(MainForm).GetField("recentList", hidden).GetValue(form);
-                recent.SelectedIndex = 0;
+                ListBox recent = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
+                recent.SelectedIndex = RowOf(recent, delegate(Entry e) { return e.Pinned; });
                 SnapArea(area, System.IO.Path.Combine(pictures, "1-list.png"));
 
                 // Typing a password: the countdown, with the button that cancels it.
@@ -1809,7 +1946,7 @@ static class TestProgram
                 typeButton.Text = Strings.TypeButton;
 
                 // An entry the row cuts, shown whole.
-                typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, 2, false });
+                typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, RowOf(recent, delegate(Entry e) { return e.Text == Sample.Current.Long; }), false });
                 SnapArea(area, System.IO.Path.Combine(pictures, "3-preview.png"));
                 typeof(MainForm).GetMethod("HidePeek", hidden).Invoke(form, null);
 
@@ -1979,13 +2116,41 @@ static class TestProgram
         clips.Import(s.Long, morning.AddMinutes(-19), false);
         clips.Import(s.TwoLines, morning.AddMinutes(-33), false);
         clips.Import("https://github.com/giongy/SmartClip", morning.AddMinutes(-52), false);
+        // Each copied in a program every Windows has: the link and the picture in the browser, the command in the shell.
+        string system = Environment.SystemDirectory, edge = System.IO.Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ProgramFilesX86), @"Microsoft\Edge\Application\msedge.exe");
+        foreach (Entry entry in clips.Copied(10, new string[0]))
+            clips.Attribute(entry.Id, entry.Picture || entry.Text.StartsWith("http") ? edge
+                : entry.Text.StartsWith("ssh") ? System.IO.Path.Combine(system, @"WindowsPowerShell\v1.0\powershell.exe")
+                : System.IO.Path.Combine(system, "notepad.exe"));
         typeof(MainForm).GetMethod("Reload", hidden).Invoke(form, null);
-        // The window and its columns as designed (or wider by the same amount), not as the user left them: every
-        // picture the same.
+        // The window as designed (or wider by the given amount), not as the user left it: every picture the same.
         typeof(MainForm).GetField("savedSize", hidden).SetValue(form, wider == 0 ? Size.Empty
             : new Size((int)Math.Round(form.Width / Look.Zoom) + wider, (int)Math.Round(form.Height / Look.Zoom)));
-        typeof(MainForm).GetField("savedColumn", hidden).SetValue(form,
-            (int)typeof(MainForm).GetField("SavedWidth", BindingFlags.NonPublic | BindingFlags.Static).GetValue(null) + wider / 2);
+    }
+
+    // The entries of the cards, without the names of the days.
+    static List<Entry> Cards(ListBox cards)
+    {
+        List<Entry> found = new List<Entry>();
+        foreach (object row in cards.Items) if (row is Entry) found.Add((Entry)row);
+        return found;
+    }
+
+    // The row of the first card that matches, or -1.
+    static int RowOf(ListBox cards, Predicate<Entry> match)
+    {
+        for (int i = 0; i < cards.Items.Count; i++)
+            if (cards.Items[i] is Entry && match((Entry)cards.Items[i])) return i;
+        return -1;
+    }
+
+    // Shows a place of the sidebar, as a click on it does.
+    static void GoTo(MainForm form, PlaceKind kind, string path)
+    {
+        Place place = new Place(kind);
+        place.Path = path;
+        typeof(MainForm).GetMethod("Go", BindingFlags.NonPublic | BindingFlags.Instance).Invoke(form, new object[] { place });
     }
 
     // Something that looks like a screenshot: a window with a title bar on a coloured desktop.

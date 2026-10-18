@@ -8,6 +8,10 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows.Forms;
 
+// What an entry is, as the tabs above the list choose it: a text, a piece of a program, a web address, a picture.
+// The numbers are those the database keeps for the copied entries.
+enum Category { Text = 1, Code = 2, Link = 3, Picture = 4 }
+
 // What the list offers: something copied, a text or a picture, or an entry the user saved, which may have a name.
 // Also the row of a folder of saved entries (IsGroup), named by its path. Where they are kept: Clips.
 class Entry
@@ -29,12 +33,14 @@ class Entry
     // Of a formatted saved text (Rich), the HTML it is pasted as, and the RTF if it was copied with one; null for
     // the others. Text is its plain text, as it is typed and searched.
     public string Html, Rtf;
+    public Origin Origin;                // the program a copied entry was copied in: null if nobody knows, and for a saved one
     public readonly int Width, Height;   // of a picture
     public readonly Image Preview;       // null for a text
     public byte[] Png;                   // a picture just copied, as PNG
     public Func<byte[]> PngSource;       // where the whole picture is read when it is needed, once the database has it
     string line;   // what the list shows of a copied text, worked out once: rows are drawn often, and texts can be long
     string folded; // the text as the search compares it, worked out at the first search
+    Category? category;   // what it is, worked out once
 
     public Entry(string name, string text) : this(name, text, DateTime.Now)
     {
@@ -111,6 +117,15 @@ class Entry
         get { return folded ?? (folded = Texts.Fold(Text)); }
     }
 
+    public Category Category
+    {
+        get
+        {
+            if (!category.HasValue) category = Picture ? Category.Picture : Texts.CategoryOf(Text);
+            return category.Value;
+        }
+    }
+
     // How many folders it is inside of: zero for a folder or an entry outside them all.
     public int Level
     {
@@ -153,10 +168,11 @@ static class Texts
         {
             IDataObject data = Clipboard.GetDataObject();
             if (data == null || IsPrivate(data)) return false;
+            string program = Origin.Find();   // now, while the program that copied still owns the clipboard
             // Programs that copy both (a spreadsheet, a word processor) mean the text. Its formatting, if it has
             // some, stays in memory for a while, in case it is saved.
             string text = data.GetData(DataFormats.UnicodeText) as string;
-            if (text != null && clips.AddText(text))
+            if (text != null && clips.AddText(text, program))
             {
                 Rich.Remember(text, data);
                 return true;
@@ -164,7 +180,7 @@ static class Texts
             using (Image picture = data.GetData(DataFormats.Bitmap) as Image)
             {
                 if (picture == null) return false;
-                clips.AddPicture(picture);
+                clips.AddPicture(picture, program);
                 return true;
             }
         }
@@ -193,6 +209,62 @@ static class Texts
             MemoryStream value = data.GetData(format) as MemoryStream;
             if (value == null || value.Length < sizeof(int) || BitConverter.ToInt32(value.ToArray(), 0) == 0) return true;
         }
+        return false;
+    }
+
+    // What a text is: a web address alone, a piece of a program, or any other text.
+    public static Category CategoryOf(string text)
+    {
+        string bare = text.Trim();
+        if (IsLink(bare)) return Category.Link;
+        return LooksLikeCode(bare) ? Category.Code : Category.Text;
+    }
+
+    static readonly string[] LinkStarts = { "http://", "https://", "www." };
+
+    // An address and nothing else: no space in it.
+    static bool IsLink(string bare)
+    {
+        foreach (string start in LinkStarts)
+            if (bare.StartsWith(start, StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (char c in bare) if (char.IsWhiteSpace(c)) return false;
+                return true;
+            }
+        return false;
+    }
+
+    // How a line of a program often begins, in the languages most copied.
+    static readonly string[] CodeStarts =
+    {
+        "//", "/*", "#include", "#!/", "<?", "</", "def ", "function ", "class ", "import ", "from ", "using ", "namespace ",
+        "public ", "private ", "protected ", "static ", "return ", "var ", "let ", "const ", "if (", "if(", "for (", "for(",
+        "while (", "foreach (", "} else", "else {", "switch (", "try {", "catch (", "SELECT ", "INSERT ", "UPDATE ", "DELETE FROM ",
+        "CREATE ", "$ ", "@echo", "echo ", "Get-", "Set-"
+    };
+    static readonly string[] CodeSigns = { "=>", "==", "!=", "&&", "||", "->", "::", "();", ") {", "){" };
+
+    // A guess: most lines of the text end or begin as lines of programs do, or its one line does. Prose with
+    // semicolons, or a list in braces, can fool it.
+    static bool LooksLikeCode(string bare)
+    {
+        int filled = 0, code = 0;
+        foreach (string line in bare.Split('\n'))
+        {
+            string trimmed = line.Trim();
+            if (trimmed.Length == 0) continue;
+            filled++;
+            if (CodeLine(trimmed)) code++;
+        }
+        return filled == 1 ? code == 1 : code >= 2 && code * 5 >= filled * 2;   // two lines in five at least
+    }
+
+    static bool CodeLine(string line)
+    {
+        char last = line[line.Length - 1];
+        if (last == ';' || last == '{' || last == '}' || line == ")" || line == "];") return true;
+        foreach (string start in CodeStarts) if (line.StartsWith(start, StringComparison.Ordinal)) return true;
+        foreach (string sign in CodeSigns) if (line.IndexOf(sign, StringComparison.Ordinal) >= 0) return true;
         return false;
     }
 

@@ -354,12 +354,15 @@ class Card : Panel
 
     public bool Underline { get; set; }
 
+    // A card that holds a whole part of a window, not a field: its edge never changes.
+    public bool Quiet { get; set; }
+
     protected override void OnPaint(PaintEventArgs e)
     {
         Graphics g = e.Graphics;
         g.Clear(Parent.BackColor);
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        bool focus = ContainsFocus;
+        bool focus = ContainsFocus && !Quiet;
         using (GraphicsPath shape = Look.Rounded(new Rectangle(0, 0, Width - 1, Height - 1)))
         using (Brush fill = new SolidBrush(Look.Well))
         using (Pen edge = new Pen(focus && !Underline ? Look.Accent : Look.Border))
@@ -376,6 +379,113 @@ class Card : Panel
             }
         }
         base.OnPaint(e);
+    }
+}
+
+// A row of tabs over a page, as Windows 11 draws them (SelectorBar): their names, the chosen one in full ink with a
+// short line in the accent colour under it, the others in grey; the one under the pointer gets a faint shape.
+class TabStrip : Control
+{
+    const int Pad = 12;                    // at either side of a name, in pixels at 96 dpi
+    const int LineWidth = 16, LineHeight = 3;   // the line under the chosen one
+    const TextFormatFlags Flags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
+    readonly List<string> names = new List<string>();
+    int selected, hover = -1;
+
+    public event EventHandler SelectedChanged;
+
+    public TabStrip()
+    {
+        DoubleBuffered = true;
+        ResizeRedraw = true;
+        SetStyle(ControlStyles.Selectable, false);   // a click leaves the focus where it is
+    }
+
+    public void Add(string name)
+    {
+        names.Add(name);
+        Invalidate();
+    }
+
+    public int Count
+    {
+        get { return names.Count; }
+    }
+
+    public int Selected
+    {
+        get { return selected; }
+        set
+        {
+            if (value == selected) return;
+            selected = value;
+            Invalidate();
+            if (SelectedChanged != null) SelectedChanged(this, EventArgs.Empty);
+        }
+    }
+
+    // Where a tab is: its name with room at either side, one after the other from the left.
+    public Rectangle TabAt(int index)
+    {
+        int pad = (int)(Pad * Look.Zoom), left = 0;
+        for (int i = 0; ; i++)
+        {
+            int width = TextRenderer.MeasureText(names[i], Font, Size.Empty, Flags).Width + 2 * pad;
+            if (i == index) return new Rectangle(left, 0, width, Height - (int)(LineHeight * Look.Zoom) - 2);
+            left += width;
+        }
+    }
+
+    int IndexAt(Point where)
+    {
+        for (int i = 0; i < names.Count; i++) if (TabAt(i).Contains(where)) return i;
+        return -1;
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        int index = IndexAt(e.Location);
+        Cursor = index >= 0 ? Cursors.Hand : Cursors.Default;
+        if (index == hover) return;
+        hover = index;
+        Invalidate();
+    }
+
+    protected override void OnMouseLeave(EventArgs e)
+    {
+        base.OnMouseLeave(e);
+        hover = -1;
+        Invalidate();
+    }
+
+    protected override void OnMouseClick(MouseEventArgs e)
+    {
+        base.OnMouseClick(e);
+        int index = IndexAt(e.Location);
+        if (e.Button == MouseButtons.Left && index >= 0) Selected = index;
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        Graphics g = e.Graphics;
+        g.Clear(Parent.BackColor);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        for (int i = 0; i < names.Count; i++)
+        {
+            Rectangle tab = TabAt(i);
+            if (i == hover && i != selected)
+                using (GraphicsPath shape = Look.Rounded(tab))
+                using (Brush back = new SolidBrush(Look.Blend(Parent.BackColor, Look.Ink, 0.07f)))
+                    g.FillPath(back, shape);
+            TextRenderer.DrawText(g, names[i], Font, tab, i == selected || i == hover ? Look.Ink : Look.Muted,
+                Flags | TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter);
+            if (i != selected) continue;
+            float width = LineWidth * Look.Zoom, height = LineHeight * Look.Zoom;
+            using (GraphicsPath line = Look.Pill(new RectangleF(tab.Left + (tab.Width - width) / 2, Height - height - 1, width, height)))
+            using (Brush accent = new SolidBrush(Look.Accent))
+                g.FillPath(accent, line);
+        }
     }
 }
 
@@ -472,7 +582,7 @@ class RoundButton : Button
 // The small signs drawn beside entries, on buttons and beside the pages of the options: they are where the colour is.
 enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, Keys, Search, Help, Opened, Closed, Bolt, History, Up,
     Bold, Italic, Underline, Face, Size, Erase, Formatted, Folder, NewFolder, Move, Pause, Resume, Open, Exit, Show, Check, Paint,
-    Info, Done, Warning, Error, Paste }
+    Info, Done, Warning, Error, Paste, Code, Picture, Apps, More, Copy }
 
 // The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
 enum Theme { System, Light, Dark }
@@ -628,6 +738,7 @@ static class Look
     // The neutral part: a warm grey window, neither too dark nor white, with lighter areas where text is
     // written or listed; in the dark a neutral grey, the areas again a shade lighter, as in Windows 11.
     public static Color Back, Well, Soft, Border, Selected, Ink, Muted;
+    public static Color Raised;   // a card standing on an area: a shade lighter than it
     // The coloured part: the accent, the same blue in both, and the colours of the signs, brighter in the dark.
     public static Color Accent, Green, Amber, Red, Teal, Purple;
     public static bool Dark { get; private set; }   // what Windows draws (title bar, scroll bars, menus) follows
@@ -650,6 +761,7 @@ static class Look
         if (dark)
         {
             Back = Color.FromArgb(32, 32, 32); Well = Color.FromArgb(43, 43, 43); Soft = Color.FromArgb(56, 56, 56);
+            Raised = Color.FromArgb(50, 50, 50);
             Border = Color.FromArgb(68, 68, 68); Selected = Color.FromArgb(42, 56, 86);
             Ink = Color.FromArgb(238, 238, 238); Muted = Color.FromArgb(160, 160, 160);
             Accent = Color.FromArgb(70, 116, 224); Green = Color.FromArgb(72, 190, 132); Amber = Color.FromArgb(236, 168, 58);
@@ -658,6 +770,7 @@ static class Look
         else
         {
             Back = Color.FromArgb(232, 230, 225); Well = Color.FromArgb(247, 246, 243); Soft = Color.FromArgb(219, 216, 210);
+            Raised = Color.FromArgb(253, 252, 250);
             Border = Color.FromArgb(198, 194, 186); Selected = Color.FromArgb(214, 224, 244);
             Ink = Color.FromArgb(38, 40, 46); Muted = Color.FromArgb(108, 110, 116);
             Accent = Color.FromArgb(62, 108, 214); Green = Color.FromArgb(40, 158, 104); Amber = Color.FromArgb(222, 148, 30);
@@ -711,7 +824,7 @@ static class Look
     // Every colour of the palette, always in the same order: the old and the new are matched by place.
     static Color[] Palette
     {
-        get { return new Color[] { Back, Well, Soft, Border, Selected, Ink, Muted, Accent, Green, Amber, Red, Teal, Purple }; }
+        get { return new Color[] { Back, Well, Soft, Border, Selected, Ink, Muted, Raised, Accent, Green, Amber, Red, Teal, Purple }; }
     }
 
     // The theme chosen in the options: before the first window, from the settings, and then at once.
@@ -943,6 +1056,11 @@ static class Look
             case Sign.Warning: return "\uE7BA";                     // Warning
             case Sign.Error: return "\uEA39";                       // ErrorBadge
             case Sign.Paste: return "\uE77F";                       // Paste
+            case Sign.Code: return "\uE943";                        // Code
+            case Sign.Picture: return "\uE91B";                     // Photo
+            case Sign.Apps: return "\uE71D";                        // AllApps
+            case Sign.More: return "\uE712";                        // More
+            case Sign.Copy: return "\uE8C8";                        // Copy
             default: return "\uE81C";                               // History
         }
     }
@@ -953,8 +1071,11 @@ static class Look
         switch (sign)
         {
             case Sign.Text: case Sign.Search: case Sign.Keys: case Sign.Up: case Sign.Pause: case Sign.Resume: case Sign.Open:
-            case Sign.Show: case Sign.Check: case Sign.Info: case Sign.Paste:
+            case Sign.Show: case Sign.Check: case Sign.Info: case Sign.Paste: case Sign.Apps: case Sign.Copy:
                 return Accent;
+            case Sign.Code: return Purple;
+            case Sign.Picture: return Teal;
+            case Sign.More: return Muted;
             case Sign.Done: return Green;
             case Sign.Warning: return Amber;
             case Sign.Error: return Red;
@@ -1148,6 +1269,33 @@ static class Look
                     pen.Width = 1.4f * u;
                     g.DrawRectangle(pen, x + 3 * u, y + 2.5f * u, 10 * u, 12 * u);
                     g.DrawRectangle(pen, x + 6 * u, y + 1.5f * u, 4 * u, 2.5f * u);
+                    break;
+                case Sign.Code:   // two angle brackets
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 5.5f * u, y + 4 * u), new PointF(x + 1.5f * u, y + 8 * u),
+                        new PointF(x + 5.5f * u, y + 12 * u) });
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 10.5f * u, y + 4 * u), new PointF(x + 14.5f * u, y + 8 * u),
+                        new PointF(x + 10.5f * u, y + 12 * u) });
+                    break;
+                case Sign.Picture:   // a frame with a hill and the sun
+                    pen.Width = 1.4f * u;
+                    g.DrawRectangle(pen, x + 1.5f * u, y + 2.5f * u, 13 * u, 11 * u);
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 2 * u, y + 12 * u), new PointF(x + 6.5f * u, y + 7.5f * u),
+                        new PointF(x + 10 * u, y + 11 * u), new PointF(x + 14 * u, y + 8 * u) });
+                    g.FillEllipse(fill, x + 9.5f * u, y + 4 * u, 2.4f * u, 2.4f * u);
+                    break;
+                case Sign.Apps:   // four squares
+                    foreach (PointF corner in new PointF[] { new PointF(2, 2), new PointF(9, 2), new PointF(2, 9), new PointF(9, 9) })
+                        g.FillRectangle(fill, x + corner.X * u, y + corner.Y * u, 5 * u, 5 * u);
+                    break;
+                case Sign.More:   // three dots
+                    foreach (float dot in new float[] { 3.5f, 8, 12.5f })
+                        g.FillEllipse(fill, x + (dot - 1.2f) * u, y + 6.8f * u, 2.4f * u, 2.4f * u);
+                    break;
+                case Sign.Copy:   // two sheets, one over the other
+                    pen.Width = 1.4f * u;
+                    g.DrawRectangle(pen, x + 5 * u, y + 4.5f * u, 9 * u, 10 * u);
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 2.5f * u, y + 11.5f * u), new PointF(x + 2.5f * u, y + 1.5f * u),
+                        new PointF(x + 10.5f * u, y + 1.5f * u) });
                     break;
                 case Sign.Paint:   // a palette with its colours
                     pen.Width = 1.4f * u;
