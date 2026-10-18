@@ -805,11 +805,7 @@ partial class MainForm
             this.main = main;
             Text = string.Format(Strings.OptionsTitle, Program.AppName);
             FormBorderStyle = FormBorderStyle.FixedSingle;   // the pages have the room they need
-            MaximizeBox = false;
-            MinimizeBox = false;
-            ShowInTaskbar = false;
-            ShowIcon = false;
-            StartPosition = FormStartPosition.Manual;   // placed over the main window each time it opens
+            Secondary(FormStartPosition.Manual);   // placed over the main window each time it opens
 
             int bottom = main.pagePane.Bottom + Edge;
             closeButton.Text = Strings.Close;

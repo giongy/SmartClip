@@ -56,12 +56,12 @@ static partial class Strings
         NumberTaken = "«{0}» non ha più una scorciatoia.";
         Pasted = "Incollato in {1}: {0}.";
         PasteFocusLost = "Non incollato: la finestra è cambiata. La voce è negli appunti.";
-        OnClipboard = "Negli appunti: {0}. Incollalo con Ctrl+V.";
+        OnClipboard = "Negli appunti: {0}.\tIncollalo con Ctrl+V.";
         ReadingPicture = "Lettura del testo nell'immagine…";
         NoPictureText = "Windows non ha trovato testo nell'immagine.";
         NoRecognition = "Windows non sa leggere le immagini nelle tue lingue: installa il riconoscimento ottico dei caratteri "
             + "di una dalle sue opzioni, in Impostazioni > Ora e lingua.";
-        OnClipboardOrType = "Negli appunti: {0}. Incollalo con Ctrl+V o digitalo con {1}.";
+        OnClipboardOrType = "Negli appunti: {0}.\tIncollalo con Ctrl+V o digitalo con {1}.";
         AskReplace = "«{0}» esiste già. Vuoi sostituirlo?";
         SavedSay = "Salvato «{0}».";
         FolderNoSeparator = "Il nome di una cartella non può contenere «{0}».";

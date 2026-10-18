@@ -101,8 +101,9 @@ static partial class Strings
     public static string NumberTaken = "“{0}” no longer has a shortcut.";
     public static string Pasted = "Pasted into {1}: {0}.";
     public static string PasteFocusLost = "Not pasted: the window changed. The entry is on the clipboard.";
-    public static string OnClipboard = "On the clipboard: {0}. Paste it with Ctrl+V.";
-    public static string OnClipboardOrType = "On the clipboard: {0}. Paste it with Ctrl+V or type it with {1}.";
+    // After the tab, what to do next: the status line writes it at its right end (InfoBar.Apart).
+    public static string OnClipboard = "On the clipboard: {0}.\tPaste it with Ctrl+V.";
+    public static string OnClipboardOrType = "On the clipboard: {0}.\tPaste it with Ctrl+V or type it with {1}.";
     public static string ReadingPicture = "Reading the text in the picture…";
     public static string NoPictureText = "Windows found no text in the picture.";
     public static string NoRecognition = "Windows cannot read pictures in your languages: install the optical character recognition "

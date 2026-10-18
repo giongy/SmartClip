@@ -25,11 +25,7 @@ class HelpForm : Window
     public HelpForm()
     {
         Text = string.Format(Strings.HelpTitle, Program.AppName);
-        MaximizeBox = false;
-        MinimizeBox = false;
-        ShowInTaskbar = false;
-        ShowIcon = false;
-        StartPosition = FormStartPosition.Manual;   // placed over its owner when it loads; it stays above it
+        Secondary(FormStartPosition.Manual);   // placed over its owner when it loads; it stays above it
 
         // On the left the subjects, drawn like the rows of the main list; the arrows move among them.
         topics.BorderStyle = BorderStyle.None;

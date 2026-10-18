@@ -37,6 +37,17 @@ class Window : Form
         Look.Caption(this);
     }
 
+    // A window that belongs to another (a question, the guide, the options, the window of an entry): no button
+    // on the taskbar, no icon, nothing to make it larger or smaller.
+    protected void Secondary(FormStartPosition start)
+    {
+        MaximizeBox = false;
+        MinimizeBox = false;
+        ShowInTaskbar = false;
+        ShowIcon = false;
+        StartPosition = start;
+    }
+
     protected static Label NewLabel(string text, int left, int top)
     {
         Label label = new Label();
@@ -141,10 +152,12 @@ enum Notice { Info, Done, Warning, Error }
 
 // A message as Windows 11 shows one inside its windows (InfoBar): a rounded bar tinted with the colour of its kind,
 // with the sign of that kind before the text. Empty, it shows nothing. The kind goes with the text: Tell gives both,
-// a text given alone is information.
+// a text given alone is information. After a tab (Apart) a text can say what to do next, at the right end.
 class InfoBar : Label
 {
+    public const char Apart = '\t';     // between what happened and what to do next
     const int Inset = 10, SignGap = 8;   // around its text, and between the sign and the text, in pixels at 96 dpi
+    const int HintGap = 24;              // at least, between the two parts on one line
     const float Tint = 0.16f;            // how far the bar goes from the window towards the colour of its kind
     const TextFormatFlags Flags = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix;
     Notice next;                          // the kind of the text about to be given
@@ -183,8 +196,27 @@ class InfoBar : Label
     public int Fit(int width)
     {
         if (Text.Length == 0) return 0;
-        int lines = TextRenderer.MeasureText(Text, Font, new Size(width - TextLeft - (int)(Inset * Look.Zoom), 0), Flags).Height;
-        return Math.Max(lines, Side) + 2 * (int)(Inset * Look.Zoom * 0.6f);
+        string said, hint;
+        Rectangle first, second;
+        Place(width - TextLeft - (int)(Inset * Look.Zoom), out said, out hint, out first, out second);
+        return Math.Max(Math.Max(first.Bottom, second.Bottom), Side) + 2 * (int)(Inset * Look.Zoom * 0.6f);
+    }
+
+    // Where the text goes in 'width', from the top of its first line: what happened from the left; what to do next
+    // at the right end, on the same line when both fit there with air between, otherwise on lines of its own under it.
+    void Place(int width, out string said, out string hint, out Rectangle first, out Rectangle second)
+    {
+        int tab = Text.LastIndexOf(Apart);
+        said = tab < 0 ? Text : Text.Substring(0, tab);
+        hint = tab < 0 ? "" : Text.Substring(tab + 1);
+        first = new Rectangle(0, 0, width, TextRenderer.MeasureText(said, Font, new Size(width, 0), Flags).Height);
+        second = Rectangle.Empty;
+        if (hint.Length == 0) return;
+        // Each on one line, as wide as it is.
+        int saidWidth = TextRenderer.MeasureText(said, Font, Size.Empty, TextFormatFlags.NoPrefix).Width;
+        int hintWidth = TextRenderer.MeasureText(hint, Font, Size.Empty, TextFormatFlags.NoPrefix).Width;
+        second = saidWidth + (int)(HintGap * Look.Zoom) + hintWidth <= width ? new Rectangle(0, 0, width, first.Height)
+            : new Rectangle(0, first.Bottom, width, TextRenderer.MeasureText(hint, Font, new Size(width, 0), Flags).Height);
     }
 
     static Color Colour(Notice kind)
@@ -206,13 +238,18 @@ class InfoBar : Label
             g.FillPath(fill, shape);
             g.DrawPath(edge, shape);
         }
-        int inset = (int)(Inset * Look.Zoom), right = Width - inset;
-        Size text = TextRenderer.MeasureText(g, Text, Font, new Size(right - TextLeft, 0), Flags);
-        int top = Math.Max(0, (Height - text.Height) / 2);
+        int inset = (int)(Inset * Look.Zoom);
+        string said, hint;
+        Rectangle first, second;
+        Place(Width - inset - TextLeft, out said, out hint, out first, out second);
+        int top = Math.Max(0, (Height - Math.Max(first.Bottom, second.Bottom)) / 2);
         // The sign beside the first line.
         Look.Draw(g, Kind == Notice.Done ? Sign.Done : Kind == Notice.Warning ? Sign.Warning : Kind == Notice.Error ? Sign.Error : Sign.Info,
             new Rectangle(inset, top + (Font.Height - Side) / 2, Side, Side), colour);
-        TextRenderer.DrawText(g, Text, Font, Rectangle.FromLTRB(TextLeft, top, right, Height), Look.Ink, Flags);
+        first.Offset(TextLeft, top);
+        second.Offset(TextLeft, top);
+        TextRenderer.DrawText(g, said, Font, first, Look.Ink, Flags);
+        TextRenderer.DrawText(g, hint, Font, second, Look.Ink, Flags | TextFormatFlags.Right);
     }
 }
 
@@ -871,42 +908,42 @@ static class Look
     {
         switch (sign)
         {
-            case Sign.Text: return "";      // Document
-            case Sign.Link: return "";      // Link
-            case Sign.Star: return "";      // FavoriteStarFill
-            case Sign.Plus: return "";      // Add
-            case Sign.Edit: return "";      // Edit
-            case Sign.Delete: return "";    // Delete
-            case Sign.Options: return "";   // Settings
-            case Sign.Keys: return "";      // KeyboardClassic
-            case Sign.Search: return "";    // Search
-            case Sign.Help: return "";      // Help
-            case Sign.Opened: return "";    // ChevronDown
-            case Sign.Closed: return "";    // ChevronRight
-            case Sign.Bolt: return "";      // LightningBolt
-            case Sign.Up: return "";   // Up
-            case Sign.Bold: return "";      // Bold
-            case Sign.Italic: return "";    // Italic
-            case Sign.Underline: return ""; // Underline
-            case Sign.Face: case Sign.Formatted: return "";      // Font
-            case Sign.Size: return "";      // FontSize
-            case Sign.Erase: return "";     // EraseTool
-            case Sign.Folder: return "";      // Folder
-            case Sign.NewFolder: return "";   // NewFolder
-            case Sign.Move: return "";        // MoveToFolder
-            case Sign.Pause: return "";       // Pause
-            case Sign.Resume: return "";      // Play
-            case Sign.Open: return "";        // OpenInNewWindow
-            case Sign.Exit: return "";        // PowerButton
-            case Sign.Show: return "";        // View
-            case Sign.Check: return "";       // CheckMark
-            case Sign.Paint: return "\uE771";       // Personalize
-            case Sign.Info: return "\uE946";        // Info
-            case Sign.Done: return "\uE930";        // Completed
-            case Sign.Warning: return "\uE7BA";     // Warning
-            case Sign.Error: return "\uEA39";       // ErrorBadge
-            case Sign.Paste: return "\uE77F";       // Paste
-            default: return "";             // History
+            case Sign.Text: return "\uE8A5";                        // Document
+            case Sign.Link: return "\uE71B";                        // Link
+            case Sign.Star: return "\uE735";                        // FavoriteStarFill
+            case Sign.Plus: return "\uE710";                        // Add
+            case Sign.Edit: return "\uE70F";                        // Edit
+            case Sign.Delete: return "\uE74D";                      // Delete
+            case Sign.Options: return "\uE713";                     // Settings
+            case Sign.Keys: return "\uE765";                        // KeyboardClassic
+            case Sign.Search: return "\uE721";                      // Search
+            case Sign.Help: return "\uE897";                        // Help
+            case Sign.Opened: return "\uE70D";                      // ChevronDown
+            case Sign.Closed: return "\uE76C";                      // ChevronRight
+            case Sign.Bolt: return "\uE945";                        // LightningBolt
+            case Sign.Up: return "\uE74A";                          // Up
+            case Sign.Bold: return "\uE8DD";                        // Bold
+            case Sign.Italic: return "\uE8DB";                      // Italic
+            case Sign.Underline: return "\uE8DC";                   // Underline
+            case Sign.Face: case Sign.Formatted: return "\uE8D2";   // Font
+            case Sign.Size: return "\uE8E9";                        // FontSize
+            case Sign.Erase: return "\uE75C";                       // EraseTool
+            case Sign.Folder: return "\uE8B7";                      // Folder
+            case Sign.NewFolder: return "\uE8F4";                   // NewFolder
+            case Sign.Move: return "\uE8DE";                        // MoveToFolder
+            case Sign.Pause: return "\uE769";                       // Pause
+            case Sign.Resume: return "\uE768";                      // Play
+            case Sign.Open: return "\uE8A7";                        // OpenInNewWindow
+            case Sign.Exit: return "\uE7E8";                        // PowerButton
+            case Sign.Show: return "\uE890";                        // View
+            case Sign.Check: return "\uE73E";                       // CheckMark
+            case Sign.Paint: return "\uE771";                       // Personalize
+            case Sign.Info: return "\uE946";                        // Info
+            case Sign.Done: return "\uE930";                        // Completed
+            case Sign.Warning: return "\uE7BA";                     // Warning
+            case Sign.Error: return "\uEA39";                       // ErrorBadge
+            case Sign.Paste: return "\uE77F";                       // Paste
+            default: return "\uE81C";                               // History
         }
     }
 

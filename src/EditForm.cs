@@ -94,10 +94,7 @@ class EditForm : Window
     {
         Text = title;
         FormBorderStyle = FormBorderStyle.FixedDialog;
-        MaximizeBox = false;
-        MinimizeBox = false;
-        ShowInTaskbar = false;
-        StartPosition = FormStartPosition.CenterParent;   // and above it, as its owner
+        Secondary(FormStartPosition.CenterParent);   // and above it, as its owner
 
         Label nameLabel = NewLabel(description, Edge, Edge);
         nameBox.MaxLength = maxLength;

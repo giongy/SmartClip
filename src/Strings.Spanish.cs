@@ -57,12 +57,12 @@ static partial class Strings
         NumberTaken = "«{0}» ya no tiene atajo.";
         Pasted = "Pegado en {1}: {0}.";
         PasteFocusLost = "No se ha pegado: la ventana ha cambiado. La entrada está en el portapapeles.";
-        OnClipboard = "En el portapapeles: {0}. Pégalo con Ctrl+V.";
+        OnClipboard = "En el portapapeles: {0}.\tPégalo con Ctrl+V.";
         ReadingPicture = "Leyendo el texto de la imagen…";
         NoPictureText = "Windows no encontró texto en la imagen.";
         NoRecognition = "Windows no sabe leer imágenes en tus idiomas: instala el reconocimiento óptico de caracteres "
             + "de uno desde sus opciones, en Configuración > Hora e idioma.";
-        OnClipboardOrType = "En el portapapeles: {0}. Pégalo con Ctrl+V o tecléalo con {1}.";
+        OnClipboardOrType = "En el portapapeles: {0}.\tPégalo con Ctrl+V o tecléalo con {1}.";
         AskReplace = "«{0}» ya existe. ¿Quieres reemplazarlo?";
         SavedSay = "Guardado «{0}».";
         FolderNoSeparator = "El nombre de una carpeta no puede contener «{0}».";

@@ -17,11 +17,7 @@ class AskForm : Window
     {
         Text = Program.AppName;
         FormBorderStyle = FormBorderStyle.FixedDialog;
-        MaximizeBox = false;
-        MinimizeBox = false;
-        ShowInTaskbar = false;
-        ShowIcon = false;
-        StartPosition = FormStartPosition.CenterParent;   // and above it, as its owner
+        Secondary(FormStartPosition.CenterParent);   // and above it, as its owner
 
         // Measured as it will be drawn, then brought back to 96 dpi: the window scales everything itself.
         Size measured = TextRenderer.MeasureText(text, Font, new Size((int)(MaxTextWidth * Look.Zoom), 0), Flags);

@@ -59,12 +59,12 @@ static partial class Strings
         NumberTaken = "« {0} » n'a plus de raccourci.";
         Pasted = "Collé dans {1} : {0}.";
         PasteFocusLost = "Rien n'a été collé : la fenêtre a changé. L'élément est dans le presse-papiers.";
-        OnClipboard = "Dans le presse-papiers : {0}. Collez-le avec Ctrl+V.";
+        OnClipboard = "Dans le presse-papiers : {0}.\tCollez-le avec Ctrl+V.";
         ReadingPicture = "Lecture du texte de l'image…";
         NoPictureText = "Windows n'a trouvé aucun texte dans l'image.";
         NoRecognition = "Windows ne sait pas lire les images dans vos langues : installez la reconnaissance optique de caractères "
             + "de l'une d'elles depuis ses options, dans Paramètres > Heure et langue.";
-        OnClipboardOrType = "Dans le presse-papiers : {0}. Collez-le avec Ctrl+V ou saisissez-le avec {1}.";
+        OnClipboardOrType = "Dans le presse-papiers : {0}.\tCollez-le avec Ctrl+V ou saisissez-le avec {1}.";
         AskReplace = "« {0} » existe déjà. Voulez-vous le remplacer ?";
         SavedSay = "« {0} » enregistré.";
         FolderNoSeparator = "Le nom d'un dossier ne peut pas contenir « {0} ».";

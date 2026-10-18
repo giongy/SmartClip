@@ -53,6 +53,7 @@ condiviso su GitHub).
     `InfoBar` (un messaggio con il suo tipo, `Notice`), `EmptyNote` (ciò che dice una colonna vuota). Anche
     `Window`, la base di tutte le finestre tranne `Peek`: carattere e colori
     dell'interfaccia, barra del titolo (`Caption`), `Finish` alla fine del costruttore (la scala, vedi le trappole),
+    `Secondary` (le finestre che appartengono a un'altra: niente pulsante sulla barra, icona, ingrandisci e riduci),
     `NewLabel`, `PlaceOnScreen`, le misure dei pulsanti.
   - `Motion.cs` — ciò che si muove: `Fade` (un valore che va verso 0 o 1 a piccoli passi), `Glow` (la luce sotto
     il puntatore nelle righe di un elenco; `Glow.Row` è la riga sotto il puntatore), `RowList` (un `ListBox` con la
@@ -475,6 +476,9 @@ condiviso su GitHub).
     suo segno (`Notice`: informazione, fatto, avviso, errore). `status.Tell(testo, tipo)`; `Say` è «fatto», `Warn`
     un avviso, `ShowError` un errore, un testo assegnato da solo è informazione (conto alla rovescia, digitazione in
     corso); l'esito di una digitazione ha il tipo di `KindOf`. La finestra delle opzioni lo ripete con lo stesso tipo.
+    Dopo una tabulazione (`InfoBar.Apart`, `\t` nel testo) viene ciò che fare dopo, scritto all'estremità destra
+    (voluto dall'utente il 18/10/2026, per staccare «Negli appunti: …» da «Incollalo con Ctrl+V…»): sulla stessa riga
+    se tutti e due ci stanno con almeno `HintGap` in mezzo, altrimenti sulle righe sotto, sempre a destra (`Place`).
   - La tacca della riga selezionata scivola alla nuova (`RowList`, in tutti gli elenchi: colonne, pagine delle
     opzioni, argomenti della guida): prima il capo davanti, poi l'altro, così si allunga e si raccoglie, come in
     NavigationView. La forma della riga selezionata cambia subito.
