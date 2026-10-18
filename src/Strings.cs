@@ -200,26 +200,34 @@ static partial class Strings
 
     // --- Options ---
     public static string TypingTitle = "Typing", ProgramTitle = "Program", HotkeysTitle = "Hotkeys", HistoryTitle = "History";
-    public static string DelayOption = "Wait before typing (seconds):";
-    public static string UsOption = "The server uses a US English keyboard";
-    public static string EnterOption = "Press Enter at the end";
-    public static string ClearOption = "Clear the clipboard after typing";
-    public static string SlowOption = "Slow typing";
-    public static string AltCodeOption = "Alt codes for symbols with no key";
-    public static string LanguageOption = "Language:";
-    public static string ThemeOption = "Theme:", ThemeSystem = "Same as Windows", ThemeLight = "Light", ThemeDark = "Dark";
-    public static string FaceOption = "Font of the interface:", FaceSizeOption = "Size of the interface:";
-    public static string FontOption = "Font of the entries:", SizeOption = "Size of the entries:", Pixels = "{0} px";
-    public static string TrayOption = "Stay in the notification area (tray)";
-    public static string LeaveOption = "Hide when switching to another program";
-    public static string StartOption = "Start with Windows";
+    public static string AppearanceTitle = "Appearance";
+    public static string On = "On", Off = "Off";   // beside a switch of the options
+    // Each option has its name and, under it, what it does in a few words: the tooltip says the rest.
+    public static string DelayOption = "Wait before typing", DelayNote = "Seconds to click into the right field";
+    public static string UsOption = "The server uses a US English keyboard", UsNote = "Only if symbols arrive wrong";
+    public static string EnterOption = "Press Enter at the end", EnterNote = "Confirms the sign-in at once";
+    public static string ClearOption = "Clear the clipboard after typing", ClearNote = "Once typing has succeeded";
+    public static string SlowOption = "Slow typing", SlowNote = "If characters go missing or arrive out of order";
+    public static string AltCodeOption = "Alt codes for symbols with no key", AltCodeNote = "Only for servers that run Windows";
+    public static string LanguageOption = "Language", LanguageNote = "The program starts again in it";
+    public static string ThemeOption = "Theme", ThemeNote = "Light or dark colours";
+    public static string ThemeSystem = "Same as Windows", ThemeLight = "Light", ThemeDark = "Dark";
+    public static string FaceOption = "Font of the interface", FaceNote = "Buttons, options, menus: the program starts again";
+    public static string FontOption = "Font of the entries", FontNote = "What you copy and save: it changes at once";
+    public static string Pixels = "{0} px";
+    public static string TrayOption = "Stay in the notification area (tray)", TrayNote = "Closing the window leaves the program running";
+    public static string LeaveOption = "Hide when switching to another program", LeaveNote = "Back to the notification area";
+    public static string StartOption = "Start with Windows", StartNote = "Hidden in the notification area";
+    public static string BackupOption = "Export and import", BackupNote = "Your texts in a file that Notepad opens";
     public static string ExportButton = "Export…", ImportButton = "Import…";
-    public static string PickOption = "Open the list";
-    public static string QuickOption = "Paste by number";
-    public static string HistoryOption = "Remember copied texts and pictures";
-    public static string KeepOption = "Days kept (0: today only):";
+    public static string AboutNote = "Free software under the MIT license";
+    public static string TypeNote = "Types into the active window at once";
+    public static string PickOption = "Open the list", PickNote = "Brings this window up from any program";
+    public static string QuickOption = "Paste by number", QuickNote = "Pastes the entries that have a shortcut";
+    public static string HistoryOption = "Remember copied texts and pictures", HistoryNote = "What you copy while the program is open";
+    public static string KeepOption = "Days kept", KeepNote = "With 0, only what you copied today";
     public static string FolderLink = "Open the data folder";
-    public static string DataFolderOption = "Folder of the copied and saved entries:";
+    public static string DataFolderOption = "Folder of the copied and saved entries";
     public static string ChangeFolderButton = "Change…", DefaultFolderButton = "Default";
     public static string DatabaseSize = "Takes {0}; copied pictures: {1} of {2}.";
     public static string ChooseDataFolder = "The folder where {0} keeps what you copy and save.";
@@ -230,7 +238,7 @@ static partial class Strings
     public static string ListMoveFailed = "The list could not be moved, and stays where it was: {0}";
     public static string FolderUnavailable = "The folder of the list, {0}, cannot be reached: what you copy and save now is "
         + "lost when the program closes. In the options, under {1}, choose another folder or the default one.";
-    public static string SpareOption = "Keep the last days when cleaning (0: none):";
+    public static string SpareOption = "Clean the history", SpareNote = "Except the last days written beside; 0: none";
     public static string CleanButton = "Clean now…";
     public static string DelayTip = "How many seconds the target window must stay in the foreground\n"
         + "before typing starts: your time to click into the right field,\nor to cancel.";
@@ -456,6 +464,7 @@ static partial class Strings
             "Tab\tSwitches to the other column.",
             EnterKeyName + "\tChooses the entry and goes back to the window you came from.",
             "Esc\tGoes back to that window without choosing.",
+            Key(Keys.Control | MainForm.SearchKey) + "\tTakes the cursor to the search box.",
             Key(Keys.Control | MainForm.NewKey) + "\tNew saved text.",
             Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "\tNew folder.",
             Key(Keys.Control | MainForm.SaveKey) + "\tSaves the copied entry, or edits the saved one.",
@@ -491,9 +500,9 @@ static partial class Strings
             "- Turning the history off in the options empties the list and deletes from disk what you copied.",
 
             "# Options",
-            "The “" + Options + "” button opens them in a window of their own, which can stay open beside the list. Resting the "
-                + "pointer on an option shows its full explanation. They are in four pages, chosen from the column on the left as "
-                + "the subjects of this guide are:",
+            "The “" + Options + "” button opens them in a window of their own, which can stay open beside the list. Each option "
+                + "says in a few words what it does, under its name; resting the pointer on it shows its full explanation. They "
+                + "are in five pages, chosen from the column on the left as the subjects of this guide are:",
             "- " + TypingTitle + ": how many seconds to wait before typing (" + MainForm.MinDelay + " to "
                 + MainForm.MaxDelay + "), whether the server uses a US keyboard, whether to press Enter at the end, "
                 + "whether to clear the clipboard afterwards, slow typing and symbols composed with Alt codes.",
@@ -501,8 +510,11 @@ static partial class Strings
                 + "gives them other keys.",
             "- " + HistoryTitle + ": whether to remember what you copy, for how many days, the folder of the database "
                 + "(which can be changed) with the link that opens it, and the button that cleans the history at once.",
-            "- " + ProgramTitle + ": the language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of the interface (buttons, options, this guide: in pixels, they restart the program) and those of the entries (they change at once), whether to stay in the notification area and hide when you switch "
-                + "to another program, whether to start with Windows, and the buttons to export and import.",
+            "- " + AppearanceTitle + ": the language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of "
+                + "the interface (buttons, options, this guide: in pixels, they restart the program) and those of the entries "
+                + "(they change at once).",
+            "- " + ProgramTitle + ": whether to stay in the notification area and hide when you switch to another program, "
+                + "whether to start with Windows, the buttons to export and import, and the version of the program.",
 
             "# Export and import",
             "In the options, under “" + ProgramTitle + "”, two buttons take your texts out of the program and bring "

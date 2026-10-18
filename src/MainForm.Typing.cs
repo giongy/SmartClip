@@ -21,7 +21,7 @@ partial class MainForm
             string text = copied.Replace("\r\n", "\n").Replace('\r', '\n').TrimEnd('\n');
             if (text.Length == 0)
             {
-                status.Text = Strings.NoText;
+                Warn(Strings.NoText);
                 return;
             }
             if ((text.Length > UnusualLength || text.IndexOf('\n') >= 0) && !ConfirmUnusual(text))
@@ -34,7 +34,7 @@ partial class MainForm
             if (target == IntPtr.Zero) return;
             if ((Native.GetKeyState(Native.VK_CAPITAL) & 1) != 0)   // the low bit tells whether the lock is on
             {
-                status.Text = Strings.CapsLock;
+                Warn(Strings.CapsLock);
                 return;
             }
 
@@ -49,7 +49,7 @@ partial class MainForm
             {
                 return Typer.TypeText(text, target, options, delegate { return cancel; });
             });
-            status.Text = Describe(result, options);
+            status.Tell(Describe(result, options), KindOf(result));
 
             // Cleared only if the clipboard still holds the password just typed; the list forgets it too.
             if (result.Outcome == TypeOutcome.Done && clearBox.Checked
@@ -112,7 +112,7 @@ partial class MainForm
             }
             else if (now > ArmedSeconds)
             {
-                status.Text = Strings.TimeUp;
+                Warn(Strings.TimeUp);
                 return IntPtr.Zero;
             }
             else
@@ -181,6 +181,18 @@ partial class MainForm
             done += (result.Unicode == 1 ? Strings.UnicodeOne : string.Format(Strings.UnicodeMany, result.Unicode))
                 + (options.AltCodes ? "." : Strings.UnicodeHint);
         return done;
+    }
+
+    // What kind of message the outcome is: done, cancelled by the user, stopped by something else, blocked.
+    static Notice KindOf(TypeResult result)
+    {
+        switch (result.Outcome)
+        {
+            case TypeOutcome.Done: return Notice.Done;
+            case TypeOutcome.Cancelled: return Notice.Info;
+            case TypeOutcome.Blocked: return Notice.Error;
+            default: return Notice.Warning;
+        }
     }
 
     static string Count(int characters)

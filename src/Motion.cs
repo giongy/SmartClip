@@ -110,16 +110,79 @@ class Glow
     }
 }
 
-// A list drawn by hand, row by row: its rows light up under the pointer (Glow), and a Rail can stand over its
-// scroll bar, which it keeps told of where the rows are.
+// A list drawn by hand, row by row: its rows light up under the pointer (Glow), the mark of the selected one slides
+// to the row selected next, and a Rail can stand over its scroll bar, which it keeps told of where the rows are.
 class RowList : ListBox
 {
+    const int SlideSteps = 12;
     public readonly Glow Glow;
     public event EventHandler Scrolled;   // after anything that may have moved the rows
+    readonly Timer slide = new Timer();
+    RectangleF from, to;   // where the mark slides from and to, in the client area
+    int step = -1;         // how far it has gone, or -1 while it stays on the selected row
+    int marked = -1;       // the row the mark was last brought to
 
     public RowList()
     {
         Glow = new Glow(this);
+        slide.Interval = Fade.StepMs;
+        slide.Tick += delegate
+        {
+            Invalidate(Strip());
+            if (++step < SlideSteps) return;
+            step = -1;
+            slide.Stop();
+        };
+        Disposed += delegate { slide.Dispose(); };
+    }
+
+    // As in the lists of Windows 11 the mark goes from the row selected before to the new one: its leading end
+    // first, the other after it, so that it stretches and gathers again. Without a row before, or out of sight, it
+    // is simply there.
+    protected override void OnSelectedIndexChanged(EventArgs e)
+    {
+        base.OnSelectedIndexChanged(e);
+        int index = SelectedIndex;
+        bool known = marked >= 0 && marked < Items.Count;
+        RectangleF before = step >= 0 ? Mark() : known ? Look.MarkIn(GetItemRectangle(marked)) : RectangleF.Empty;
+        marked = index;
+        if (index < 0 || !known || !Visible || !IsHandleCreated)
+        {
+            step = -1;
+            slide.Stop();
+            return;
+        }
+        from = before;
+        to = Look.MarkIn(GetItemRectangle(index));
+        if (from == to) return;
+        step = 0;
+        Invalidate(Strip());
+        slide.Start();
+    }
+
+    // Where the mark is while it slides.
+    RectangleF Mark()
+    {
+        float done = (float)step / SlideSteps;
+        float lead = Ease(Math.Min(1, done * 1.5f)), trail = Ease(Math.Max(0, done * 1.5f - 0.5f));
+        bool down = to.Top > from.Top;
+        float top = from.Top + (to.Top - from.Top) * (down ? trail : lead);
+        float bottom = from.Bottom + (to.Bottom - from.Bottom) * (down ? lead : trail);
+        return RectangleF.FromLTRB(to.Left, top, to.Right, bottom);
+    }
+
+    // Fast at first, slow at the end.
+    static float Ease(float done)
+    {
+        float left = 1 - done;
+        return 1 - left * left * left;
+    }
+
+    // The band the mark slides along, to be drawn again.
+    Rectangle Strip()
+    {
+        RectangleF band = RectangleF.Union(from, to);
+        return Rectangle.FromLTRB(0, (int)band.Top - 2, (int)band.Right + 2, (int)Math.Ceiling(band.Bottom) + 2);
     }
 
     // Only the room below the last row is erased: each row paints its own background, and erasing under the rows
@@ -135,7 +198,8 @@ class RowList : ListBox
 
     // Each row is drawn out of sight and then put on the screen at once. Drawn there directly, it would show its
     // background alone for an instant before the rest, at every step of the light under the pointer: a flicker.
-    // Out of sight the row starts at the corner: the text of TextRenderer would not follow a moved origin.
+    // Out of sight the row starts at the corner: the text of TextRenderer would not follow a moved origin. Last
+    // comes the mark: on the selected row, or the part of it that is on this row while it slides.
     protected override void OnDrawItem(DrawItemEventArgs e)
     {
         if (e.Index < 0 || e.Bounds.Width <= 0 || e.Bounds.Height <= 0)
@@ -145,9 +209,19 @@ class RowList : ListBox
         }
         using (BufferedGraphics buffer = BufferedGraphicsManager.Current.Allocate(e.Graphics, e.Bounds))
         {
-            buffer.Graphics.ResetTransform();
-            base.OnDrawItem(new DrawItemEventArgs(buffer.Graphics, e.Font, new Rectangle(Point.Empty, e.Bounds.Size), e.Index,
-                e.State, e.ForeColor, e.BackColor));
+            Graphics g = buffer.Graphics;
+            g.ResetTransform();
+            Rectangle row = new Rectangle(Point.Empty, e.Bounds.Size);
+            base.OnDrawItem(new DrawItemEventArgs(g, e.Font, row, e.Index, e.State, e.ForeColor, e.BackColor));
+            if (step >= 0)
+            {
+                RectangleF mark = Mark();
+                mark.Offset(0, -e.Bounds.Top);
+                g.SetClip(row);
+                if (mark.IntersectsWith(row)) Look.DrawMark(g, mark);
+                g.ResetClip();
+            }
+            else if ((e.State & DrawItemState.Selected) != 0) Look.DrawMark(g, Look.MarkIn(row));
             buffer.Render(e.Graphics);
         }
     }

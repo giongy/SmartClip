@@ -35,7 +35,8 @@ partial class MainForm : Window
     const int Edge = 8, ContentWidth = 620;            // margin and usable width of the window, in pixels at 96 dpi
     const int AreaHeight = 437;                        // of the lists, and of the pages of the options in their window
     // The options are in pages, one per category, chosen from a column on the left as the subjects of the guide.
-    const int NavWidth = 170, NavGap = 20, PaneWidth = ContentWidth - NavWidth - NavGap;
+    // On a page each option is a card (Tile), with room for what it does under its name.
+    const int NavWidth = 170, NavGap = 20, PaneWidth = 500;
     const int NavInset = 12, NavPadding = 20;          // where a row of that column starts its sign; added to the text height for the row
     const int PageTop = 48;                            // under the name of a page, where its options begin
     const int SavedWidth = 250, TitleHeight = 20;      // the column of the saved texts, and the title above each column
@@ -44,33 +45,34 @@ partial class MainForm : Window
     const int RowPadding = 8;                          // added to the two lines of an entry to get its row: half above, half below
     const int PictureLines = 5;                        // lines of text a picture is as tall as, to make room for its preview
     const int PreviewMargin = 4;                       // around the preview, inside its row
-    const int RowHeight = 24;                          // distance between one option checkbox and the next
+    const int TileHeight = 52, TileGap = 4;            // the least a card of the options is tall, and between two cards
+    const int RowHeight = 22;                          // a line of text on the card of the folder of the database
+    const int NoteHeight = 18;                         // the same for a line of what it says, smaller
     const int NumberWidth = 56, NumberHeight = 26;     // the box of an option that is a number
-    const int NumberRow = 37;                          // distance between such an option and the next one
     const int OptionButtonWidth = 130;                 // a button among the options
+    const int SizeButtonWidth = 72;                    // the same for a size in pixels
     public const int MaxShown = 200;                   // copied entries listed at once
     const int SearchHeight = 30, GlyphWidth = 20;      // the search box, and the magnifying glass on its left
+    const int KeysWidth = 64, KeysPadding = 10;        // the frame of its keys on its right, and the air around them
     const int ListPadding = 3;                         // between the rounded edge of a column and its list
     const int CountWidth = 120;                        // room for the number of entries, right of a column title
     const int GroupIndent = 14;                        // of a saved text under its folder
     const int RowInset = 12, TimeGap = 8;              // of the text in a row, and around the time on its right
     const int NumberPadding = 2;                       // added to the text height for the width of the frame of a number
     const int Gap = 5;                                 // between neighbouring controls
-    const int BannerPadding = 8;                       // around the text of the red bar under the lists
-    const float BannerTint = 0.18f;                    // how far its background goes from the window's towards red
     const int ActionHeight = ButtonHeight, ActionWidth = 92;   // the buttons in the bottom row
     const int TypeWidth = 160;                         // the button that types the clipboard, in the same row
-    const int StatusHeight = 34;                       // two lines of text: the most the status line takes
+    const int StatusHeight = 44;                       // two lines of text in their bar: the room the status line starts with
     const int FadeMs = 6000;                           // how long a passing message stays in the status line
     const int RestMs = 600;                            // how long the pointer rests on a row before it is shown whole
     const int AskedMs = 15000;                         // how long a saved text stays in view once asked for
     public const Keys NewKey = Keys.N, SaveKey = Keys.S, DeleteKey = Keys.E, PinKey = Keys.P;   // in the list, all with Ctrl
+    public const Keys SearchKey = Keys.F;   // with Ctrl, anywhere in the window: to the search box
     const Keys NewKeys = Keys.Control | NewKey, GroupKeys = Keys.Control | Keys.Shift | NewKey, SaveKeys = Keys.Control | SaveKey,
-        DeleteKeys = Keys.Control | DeleteKey, PinKeys = Keys.Control | PinKey;
+        DeleteKeys = Keys.Control | DeleteKey, PinKeys = Keys.Control | PinKey, SearchKeys = Keys.Control | SearchKey;
     // What the list itself answers to: a global hotkey on the same keys would take them away from it.
-    static readonly Keys[] ListKeys = { NewKeys, GroupKeys, SaveKeys, DeleteKeys, PinKeys };
+    static readonly Keys[] ListKeys = { NewKeys, GroupKeys, SaveKeys, DeleteKeys, PinKeys, SearchKeys };
     const TextFormatFlags LineFlags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;   // one line of a row
-    const TextFormatFlags BannerFlags = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.VerticalCenter;   // the red bar
     // What a row says at its right end: when it was copied, how many texts a folder holds.
     const TextFormatFlags RightFlags = TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.SingleLine
         | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
@@ -98,9 +100,9 @@ partial class MainForm : Window
     readonly OptionsWindow options;   // the window of the options: made once, hidden when closed
     bool optionsAtStart;              // it opens as soon as this window shows
     readonly Label recentCount = new Label(), savedCount = new Label();   // how many entries each column lists
-    readonly Label recentEmpty = new Label(), savedEmpty = new Label();   // what a column says while it has none
-    readonly Label status = new Label();
-    readonly Panel banner = new Panel();   // red, under the lists: the room for copied pictures is full
+    readonly EmptyNote recentEmpty = new EmptyNote(), savedEmpty = new EmptyNote();   // what a column says while it has none
+    readonly InfoBar status = new InfoBar();   // what just happened, tinted by its kind
+    readonly InfoBar banner = new InfoBar();   // red, under the lists: the room for copied pictures is full
     bool bannerShown;                      // asked back, Visible would answer false while the window is hidden
     readonly TextBox search = new TextBox();
     readonly RowList recentList = new RowList(), savedList = new RowList();   // what was copied, and what was saved
@@ -129,7 +131,7 @@ partial class MainForm : Window
     readonly RowList pageList = new RowList();   // the categories of the options: each item is the page of one
     readonly Panel pagePane = new Panel();       // where the pages take turns
     Panel page;                                  // the page being filled, while the options are placed
-    Panel programPage;                           // where the language is: the options reopen there after changing it
+    Panel restartPage;                           // where the language is: the options reopen there after changing it
     readonly TextBox delayBox = new TextBox(), keepBox = new TextBox(), cleanBox = new TextBox();
     readonly RoundButton cleanButton = new RoundButton(), exportButton = new RoundButton(), importButton = new RoundButton();
     readonly RoundButton typeKeysButton = new RoundButton(), pickKeysButton = new RoundButton();   // show the keys of a hotkey, and take new ones
@@ -188,7 +190,7 @@ partial class MainForm : Window
     // 'hidden': started by Windows at sign-in, so the window does not show until asked.
     public MainForm(bool hidden)
     {
-        Text = Program.AppName + " " + Program.Version;
+        Text = Program.AppName;   // the version is in the options, at the end of the program page
         // The window can be made larger, never smaller than it starts, and keeps the size the user gave it (see
         // OnLoad).
         StartPosition = FormStartPosition.CenterScreen;
@@ -207,10 +209,13 @@ partial class MainForm : Window
         optionsButton.Click += delegate { OpenOptions(); };
         helpButton.Click += delegate { ShowHelp(); };
         Look.Style(typeButton, true);
-        foreach (Button button in new Button[] { optionsButton, helpButton, newButton, saveButton, deleteButton }) Look.Style(button, false);
+        // Beside it, the others are commands of a bar, quiet until the pointer reaches them.
+        foreach (RoundButton button in new RoundButton[] { optionsButton, helpButton, newButton, saveButton, deleteButton })
+        {
+            Look.Style(button, false);
+            button.Subtle = true;
+        }
 
-        status.UseMnemonic = false;
-        status.ForeColor = Look.Muted;
         // The status line takes the room of what it says. A message written with Say leaves after a while;
         // anything else stays until the next one. The window of the options says it too: what an option did must
         // not end up under it.
@@ -218,7 +223,7 @@ partial class MainForm : Window
         {
             fade.Stop();
             FitStatus();
-            if (options != null) options.Note = status.Text;
+            if (options != null) options.Note(status.Text, status.Kind);
         };
         fade.Interval = FadeMs;
         fade.Tick += delegate
@@ -226,10 +231,9 @@ partial class MainForm : Window
             fade.Stop();
             if (!busy) ShowIdle();
         };
-        // The red bar, placed with the status line (FitStatus) and drawn by hand, in the colours of the moment.
+        // The red bar, placed with the status line (FitStatus).
         banner.Visible = false;
-        banner.Text = string.Format(Strings.PicturesFull, Strings.Size(Clips.PictureSpace));
-        banner.Paint += DrawBanner;
+        banner.Tell(string.Format(Strings.PicturesFull, Strings.Size(Clips.PictureSpace)), Notice.Error);
 
         // The lists; under them the status line, then one row of small buttons. On the left those that act on the
         // selected entry, on the right typing, the options and the guide.
@@ -254,9 +258,9 @@ partial class MainForm : Window
         // The search box on top of the lists.
         search.SetBounds(Edge, Edge, ContentWidth, SearchHeight);
         Panel searchFrame = Look.Frame(search);
-        // A magnifying glass on the left of the box, which makes room for it.
+        // A magnifying glass on the left of the box, and its keys on the right: it makes room for them.
         search.Left += GlyphWidth;
-        search.Width -= GlyphWidth;
+        search.Width -= GlyphWidth + KeysWidth;
         searchFrame.Paint += DrawGlyph;
 
         // Two columns: on the left what was copied, which comes and goes, on the right what was saved. Above
@@ -351,9 +355,9 @@ partial class MainForm : Window
         ActiveControl = search;
 
         ContextMenuStrip trayMenu = new ContextMenuStrip();
-        trayMenu.Items.Add(Strings.Open, null, delegate { RestoreWindow(); });
+        Look.Mark(trayMenu.Items.Add(Strings.Open, null, delegate { RestoreWindow(); }), Sign.Open);
         pauseItems.Add(trayMenu.Items.Add("", null, delegate { Pause(!paused); }));
-        trayMenu.Items.Add(Strings.Exit, null, delegate { exiting = true; Close(); });
+        Look.Mark(trayMenu.Items.Add(Strings.Exit, null, delegate { exiting = true; Close(); }), Sign.Exit);
         trayMenu.Opening += delegate { ShowSaved(trayMenu); };
         ShowPause();
         tray.ContextMenuStrip = trayMenu;
@@ -383,7 +387,7 @@ partial class MainForm : Window
             Change(delegate { startBox.Checked = Startup.Enabled; });
             // Windows may say no: once the user, or the organisation, has turned it off in its Settings.
             if (done && startBox.Checked != wanted)
-                status.Text = Strings.StartupRefused;
+                Warn(Strings.StartupRefused);
             else if (done) Say(string.Format(wanted ? Strings.StartupOn : Strings.StartupOff, Program.AppName));
         };
         // Started at sign-in: hidden in the notification area, or minimised if that option is off.
@@ -486,7 +490,7 @@ partial class MainForm : Window
     void ShowError(Exception ex)
     {
         Log.Error(ex);
-        status.Text = string.Format(Strings.Error, ex.Message);
+        status.Tell(string.Format(Strings.Error, ex.Message), Notice.Error);
     }
 
     bool Ask(string question)
@@ -513,7 +517,11 @@ partial class MainForm : Window
     // Says whether the capture is paused where it shows: in the menus, above the column and on the icon.
     void ShowPause()
     {
-        foreach (ToolStripItem item in pauseItems) item.Text = paused ? Strings.Resume : Strings.Pause;
+        foreach (ToolStripItem item in pauseItems)
+        {
+            item.Text = paused ? Strings.Resume : Strings.Pause;
+            Look.Mark(item, paused ? Sign.Resume : Sign.Pause);
+        }
         recentTitle.Text = Strings.RecentTitle + (paused ? Strings.PausedSuffix : "");
         if (IsHandleCreated) ShowClipboardState();
     }
@@ -521,26 +529,29 @@ partial class MainForm : Window
     // A passing message: after a while it leaves the status line, and its room goes back to the lists.
     void Say(string text)
     {
-        status.Text = text;
+        status.Tell(text, Notice.Done);
         fade.Start();
     }
 
-    // Gives the status line the room of what it says, one line or two, and none while it is silent; above it the
-    // red bar, while it has something to say, as tall as its text; the lists take what is left.
+    // Something that went wrong, or may: it stays until the next message.
+    void Warn(string text)
+    {
+        status.Tell(text, Notice.Warning);
+    }
+
+    // Gives the status line the room of what it says, in its bar, and none while it is silent; above it the red bar,
+    // while it has something to say, as tall as its text; the lists take what is left.
     void FitStatus()
     {
         // Minimised, the window has no room and its controls are squeezed to nothing: placing them now would
         // leave them wrong when it comes back. OnResize calls again then.
         if (!shown || WindowState == FormWindowState.Minimized) return;
-        int full = (int)(StatusHeight * Zoom), gap = (int)(Gap * Zoom), bottom = typeButton.Top - gap;
-        int height = status.Text.Length == 0 ? 0 : TextRenderer.MeasureText(status.Text, status.Font, new Size(status.Width, 0),
-            TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix).Height > status.Font.Height * 3 / 2 ? full : full / 2;
+        int gap = (int)(Gap * Zoom), bottom = typeButton.Top - gap, height = status.Fit(status.Width);
         status.SetBounds(status.Left, bottom - height, status.Width, height);
         int end = status.Top - gap;   // where the lists end
         if (bannerShown)
         {
-            int padding = (int)(BannerPadding * Zoom);
-            int tall = TextRenderer.MeasureText(banner.Text, Font, new Size(status.Width - 2 * padding, 0), BannerFlags).Height + 2 * padding;
+            int tall = banner.Fit(status.Width);
             banner.SetBounds(status.Left, end - tall, status.Width, tall);
             end = banner.Top - gap;
         }
@@ -559,24 +570,6 @@ partial class MainForm : Window
         FitStatus();
     }
 
-    // The red bar: a rounded shape in a soft red with a red edge, the text in the colour of any other.
-    void DrawBanner(object sender, PaintEventArgs e)
-    {
-        Graphics g = e.Graphics;
-        g.Clear(Look.Back);   // around the rounded corners
-        g.SmoothingMode = SmoothingMode.AntiAlias;
-        Rectangle area = new Rectangle(0, 0, banner.Width - 1, banner.Height - 1);
-        using (GraphicsPath shape = Look.Rounded(area))
-        using (Brush fill = new SolidBrush(Look.Blend(Look.Back, Look.Red, BannerTint)))
-        using (Pen edge = new Pen(Look.Red))
-        {
-            g.FillPath(fill, shape);
-            g.DrawPath(edge, shape);
-        }
-        int padding = (int)(BannerPadding * Zoom);
-        TextRenderer.DrawText(g, banner.Text, Font, Rectangle.Inflate(area, -padding, 0), Look.Ink, BannerFlags);
-    }
-
     void Tip(string text, params Control[] controls)
     {
         foreach (Control control in controls) tips.SetToolTip(control, text);
@@ -587,7 +580,8 @@ partial class MainForm : Window
     // said always.
     void ShowIdle()
     {
-        status.Text = unavailable ?? "";
+        if (unavailable != null) Warn(unavailable);
+        else status.Text = "";
     }
 
     // Started hidden: the window that Application.Run wants to show stays invisible, but its handle is created
@@ -781,6 +775,7 @@ partial class MainForm : Window
             if (entry.IsGroup)
             {
                 ToolStripMenuItem folder = new ToolStripMenuItem(entry.Label);
+                Look.Mark(folder, Sign.Folder);
                 Look.Style((ToolStripDropDownMenu)folder.DropDown);
                 folders[entry.Name] = folder;
                 holder.DropDownItems.Add(folder);
@@ -788,6 +783,7 @@ partial class MainForm : Window
             else
             {
                 ToolStripMenuItem text = new ToolStripMenuItem(entry.Label, null, delegate { Use(entry); });
+                Look.Mark(text, SignOf(entry));   // what it is, as in the list
                 if (entry.Number > 0) text.ShortcutKeyDisplayString = NumberName(entry.Number);   // the keys that choose it from anywhere
                 holder.DropDownItems.Add(text);
             }

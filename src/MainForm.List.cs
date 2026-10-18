@@ -33,16 +33,25 @@ partial class MainForm
         ToolStripMenuItem moveItem = new ToolStripMenuItem(Strings.MoveTo);
         listMenu.Items.Add(moveItem);
         ToolStripItem deleteItem = listMenu.Items.Add(deleteButton.Text, null, delete);
-        listMenu.Items.Add(newButton.Text, null, create);
-        listMenu.Items.Add(Strings.NewFolder, null, delegate { EditGroup(null); });
+        ToolStripItem newItem = listMenu.Items.Add(newButton.Text, null, create);
+        ToolStripItem folderItem = listMenu.Items.Add(Strings.NewFolder, null, delegate { EditGroup(null); });
         listMenu.Items.Add(new ToolStripSeparator());
         pauseItems.Add(listMenu.Items.Add("", null, delegate { Pause(!paused); }));
+        // Each with its sign, as in the menus of Windows 11; the one that saves or changes takes that of its button.
+        Look.Mark(showItem, Sign.Show);
+        Look.Mark(pinItem, Sign.Up);
+        Look.Mark(numberItem, Sign.Keys);
+        Look.Mark(moveItem, Sign.Move);
+        Look.Mark(deleteItem, Sign.Delete);
+        Look.Mark(newItem, Sign.Plus);
+        Look.Mark(folderItem, Sign.NewFolder);
         // With nothing selected the menu still opens: a first folder can be made in an empty list.
         listMenu.Opening += delegate
         {
             HidePeek();
             Entry entry = Selected;
             changeItem.Text = saveButton.Text;
+            Look.Mark(changeItem, saveButton.Sign.Value);
             changeItem.Enabled = saveButton.Enabled;
             changeItem.Visible = deleteItem.Visible = entry != null;
             showItem.Visible = entry != null && entry.Saved && !entry.IsGroup && entry.Name != null && !entry.Picture;
@@ -325,7 +334,9 @@ partial class MainForm
         savedCount.Text = searching && found != saved ? string.Format(Strings.CountOf, found, saved) : saved.ToString();
         recentEmpty.Text = searching ? Strings.NoResults : !historyBox.Checked ? Strings.HistoryOffEmpty
             : paused ? Strings.PausedEmpty : Strings.CopyHint;
+        recentEmpty.Sign = searching ? Sign.Search : !historyBox.Checked ? Sign.History : paused ? Sign.Pause : Sign.Paste;
         savedEmpty.Text = searching ? Strings.NoResults : Strings.NoSaved;
+        savedEmpty.Sign = searching ? Sign.Search : Sign.Star;
         recentEmpty.Visible = recentList.Items.Count == 0;
         savedEmpty.Visible = savedList.Items.Count == 0;
     }
@@ -500,6 +511,18 @@ partial class MainForm
         Control frame = (Control)sender;
         int side = Font.Height;
         Look.Draw(e.Graphics, Sign.Search, new Rectangle(RowInset - 3, (frame.Height - side) / 2, side, side), null);
+        // At the right end, in a small frame, the keys that bring the cursor here from anywhere in the window.
+        const TextFormatFlags flags = TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine
+            | TextFormatFlags.NoPrefix;
+        string keys = NameOf(SearchKeys);
+        Size text = TextRenderer.MeasureText(e.Graphics, keys, Look.NoteFont, Size.Empty, flags);
+        int padding = (int)(KeysPadding * Zoom), width = text.Width + padding, height = text.Height + padding / 2;
+        Rectangle badge = new Rectangle(frame.Width - (int)(RowInset * Zoom) - width, (frame.Height - height) / 2, width, height);
+        e.Graphics.SmoothingMode = SmoothingMode.AntiAlias;
+        using (GraphicsPath shape = Look.Rounded(badge))
+        using (Pen edge = new Pen(Look.Border))
+            e.Graphics.DrawPath(edge, shape);
+        TextRenderer.DrawText(e.Graphics, keys, Look.NoteFont, badge, Look.Muted, flags);
     }
 
     // One star before the title of the saved texts says what the whole column is: its rows need none each.
@@ -634,20 +657,22 @@ partial class MainForm
         return list == recentList && index >= 0 && where.X >= PinArea(list.GetItemRectangle(index)).Left - TimeGap / 2;
     }
 
-    // The numbers an entry can be given, in its menu: the one it has cannot be chosen, and beside each that
-    // another entry has, that entry, which would lose it. Nothing for a folder.
+    // The numbers an entry can be given, in its menu: the one it has is ticked, and beside each that another entry
+    // has, that entry, which would lose it. Nothing for a folder.
     void ListNumbers(ToolStripMenuItem menu, Entry entry)
     {
         menu.DropDownItems.Clear();
         // Asked back, 'Visible' would answer false: the menu is not on screen yet.
         menu.Visible = entry != null && !entry.IsGroup;
         if (entry == null || entry.IsGroup) return;
-        menu.DropDownItems.Add(Strings.NoNumber, null, delegate { Number(entry, 0); }).Enabled = entry.Number > 0;
+        ToolStripMenuItem none = new ToolStripMenuItem(Strings.NoNumber, null, delegate { Number(entry, 0); });
+        none.Checked = entry.Number == 0;
+        menu.DropDownItems.Add(none);
         for (int each = 1; each <= MaxNumber; each++)
         {
             int number = each;   // a variable of its own for the delegate
             ToolStripMenuItem item = new ToolStripMenuItem(NumberName(number), null, delegate { Number(entry, number); });
-            item.Enabled = entry.Number != number;
+            item.Checked = entry.Number == number;
             Entry holder = Numbered(number);
             if (holder != null && holder.Id != entry.Id) item.ShortcutKeyDisplayString = Shorten(holder.Label);
             menu.DropDownItems.Add(item);
@@ -666,6 +691,7 @@ partial class MainForm
     // keeps it until its days are over. If another program has the keys of that number, Reload says so.
     void Number(Entry entry, int number)
     {
+        if (number == entry.Number) return;   // the one ticked in the menu: nothing changes
         if (!Change(delegate { clips.Number(entry.Id, number); })) return;
         Say(number > 0 ? string.Format(Strings.NumberGiven, NumberName(number), Shorten(entry.Label))
             : string.Format(Strings.NumberTaken, Shorten(entry.Label)));
@@ -924,6 +950,12 @@ partial class MainForm
         if (keyData == HelpKey)
         {
             ShowHelp();
+            return true;
+        }
+        if (keyData == SearchKeys)
+        {
+            search.Focus();
+            search.SelectAll();
             return true;
         }
         if (!(search.Focused || recentList.Focused || savedList.Focused)) return base.ProcessCmdKey(ref msg, keyData);

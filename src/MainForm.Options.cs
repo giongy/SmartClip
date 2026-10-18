@@ -10,8 +10,9 @@ using Microsoft.Win32;
 partial class MainForm
 {
     // The options, a page per category, chosen from a column on the left as the subjects of the guide are; the
-    // page comes in as those of Windows 11 do. Adding an option takes a single line under its page. Placed here,
-    // shown in a window of their own (OptionsWindow).
+    // page comes in as those of Windows 11 do. On the page each option is a card, as the settings of Windows 11 are:
+    // its name and what it does on the left, its controls on the right. Adding an option takes a single line under
+    // its page, and one for its tooltip. Placed here, shown in a window of their own (OptionsWindow).
     void PlaceOptions()
     {
         pageList.SetBounds(Edge, Edge, NavWidth, AreaHeight);
@@ -33,108 +34,93 @@ partial class MainForm
 
         int top = Page(Strings.TypingTitle, Sign.Keys);
         // Confirming a number brings what was written back within its limits.
-        Label delayLabel = PlaceNumber(delayBox, Strings.DelayOption, MaxDelay, delegate { Delay = Delay; }, ref top);
+        PlaceNumber(delayBox, Strings.DelayOption, Strings.DelayNote, MaxDelay, delegate { Delay = Delay; }, ref top);
         Delay = DefaultDelay;
-        PlaceOption(usBox, Strings.UsOption, ref top);
-        PlaceOption(enterBox, Strings.EnterOption, ref top);
-        PlaceOption(clearBox, Strings.ClearOption, ref top);
-        PlaceOption(slowBox, Strings.SlowOption, ref top);
-        PlaceOption(altCodeBox, Strings.AltCodeOption, ref top);
+        PlaceOption(usBox, Strings.UsOption, Strings.UsNote, ref top);
+        PlaceOption(enterBox, Strings.EnterOption, Strings.EnterNote, ref top);
+        PlaceOption(clearBox, Strings.ClearOption, Strings.ClearNote, ref top);
+        PlaceOption(slowBox, Strings.SlowOption, Strings.SlowNote, ref top);
+        PlaceOption(altCodeBox, Strings.AltCodeOption, Strings.AltCodeNote, ref top);
 
         top = Page(Strings.HotkeysTitle, Sign.Bolt);
-        PlaceHotkey(hotkeyBox, typeKeysButton, Strings.TypeButton, ref top);
+        PlaceHotkey(hotkeyBox, typeKeysButton, Strings.TypeButton, Strings.TypeNote, ref top);
         hotkeyBox.Checked = true;
-        PlaceHotkey(pickBox, pickKeysButton, Strings.PickOption, ref top);
+        PlaceHotkey(pickBox, pickKeysButton, Strings.PickOption, Strings.PickNote, ref top);
         pickBox.Checked = true;
-        PlaceHotkey(quickBox, quickKeysButton, Strings.QuickOption, ref top);
+        PlaceHotkey(quickBox, quickKeysButton, Strings.QuickOption, Strings.QuickNote, ref top);
         quickBox.Checked = true;   // nothing is taken from other programs until an entry has a number
 
         top = Page(Strings.HistoryTitle, Sign.History);
-        PlaceOption(historyBox, Strings.HistoryOption, ref top);
+        PlaceOption(historyBox, Strings.HistoryOption, Strings.HistoryNote, ref top);
         historyBox.Checked = true;
-        Label keepLabel = PlaceNumber(keepBox, Strings.KeepOption, Texts.MaxKeepDays,
+        PlaceNumber(keepBox, Strings.KeepOption, Strings.KeepNote, Texts.MaxKeepDays,
             delegate { Retention = Retention; ApplyHistory(); Reload(); }, ref top);
         Retention = Texts.DefaultKeepDays;
-        // Where the database is, and the buttons that take it elsewhere or back to the default folder.
-        Label folderLabel = NewLabel(Strings.DataFolderOption, 0, top);
-        page.Controls.Add(folderLabel);
-        top += RowHeight;
-        folderPath.SetBounds(0, top, PaneWidth, RowHeight);
-        folderPath.AutoEllipsis = true;
-        folderPath.UseMnemonic = false;
-        folderPath.ForeColor = Look.Muted;
-        page.Controls.Add(folderPath);
-        top += RowHeight;
-        databaseSize.SetBounds(0, top, PaneWidth, RowHeight);
-        databaseSize.AutoEllipsis = true;
-        databaseSize.ForeColor = Look.Muted;
-        page.Controls.Add(databaseSize);
-        top += RowHeight;
-        PlaceButton(changeFolderButton, Strings.ChangeFolderButton, ChangeDataFolder, 0, ref top);
-        top -= NumberRow;
-        PlaceButton(defaultFolderButton, Strings.DefaultFolderButton, delegate { MoveDataFolder(""); }, OptionButtonWidth + Gap, ref top);
-        LinkLabel folderLink = PlaceLink(Strings.FolderLink, OpenFolder, ref top);
-        folderTipped = new Control[] { folderLabel, folderPath, databaseSize, changeFolderButton, defaultFolderButton, folderLink };
-        // Not a setting: what to spare when the button below is pressed.
-        Label cleanLabel = PlaceNumber(cleanBox, Strings.SpareOption, Texts.MaxKeepDays, delegate { Spared = Spared; }, ref top);
-        Spared = 0;
-        PlaceButton(cleanButton, Strings.CleanButton, CleanHistory, 0, ref top);
+        PlaceFolder(ref top);
+        // Not a setting: what to spare when the button beside it is pressed.
+        Act(cleanButton, Strings.CleanButton, CleanHistory);
         cleanButton.Sign = Sign.Delete;
+        PlaceNumber(cleanBox, Strings.SpareOption, Strings.SpareNote, Texts.MaxKeepDays, delegate { Spared = Spared; }, ref top,
+            cleanButton);
+        Spared = 0;
+
+        // Each of these has a button that shows the choice in use and opens the others. The language by the name each
+        // gives itself; a font written in itself. The language and the font of the interface apply from a new start,
+        // which opens the options again on this page.
+        top = Page(Strings.AppearanceTitle, Sign.Paint);
+        restartPage = page;
+        Func<string, Font> itself = delegate(string name) { return new Font(name, Look.TextFont.SizeInPoints); };
+        PlaceTile(Strings.LanguageOption, Strings.LanguageNote, ref top, Picker(languageButton, Strings.Codes,
+            delegate(string code) { return Strings.Names[Array.IndexOf(Strings.Codes, code)]; },
+            delegate { return Strings.Code; }, ChangeLanguage, null));
+        // Unlike the language, the theme changes at once.
+        PlaceTile(Strings.ThemeOption, Strings.ThemeNote, ref top, Picker(themeButton, new Theme[] { Theme.System, Theme.Light, Theme.Dark },
+            ThemeName, delegate { return Look.Chosen; }, ChangeTheme, null));
+        // The font of the interface and its size in pixels: the windows are built for them, so they apply from a new start.
+        PlaceTile(Strings.FaceOption, Strings.FaceNote, ref top,
+            Picker(faceButton, Look.FontNames, Look.FontLabel, delegate { return Look.InterfaceFamily; },
+                delegate(string name) { ChangeInterface(name, Look.InterfaceSize); }, itself),
+            Picker(faceSizeButton, Look.InterfaceSizes, PixelsName, delegate { return Look.InterfaceSize; },
+                delegate(int size) { ChangeInterface(Look.InterfaceFamily, size); }, null));
+        // The font of the entries and its size: they change at once.
+        PlaceTile(Strings.FontOption, Strings.FontNote, ref top,
+            Picker(fontButton, Look.FontNames, Look.FontLabel, delegate { return Look.EntryFamily; },
+                delegate(string name) { UseEntryFont(name, Look.EntrySize); }, itself),
+            Picker(sizeButton, Look.EntrySizes, PixelsName, delegate { return Look.EntrySize; },
+                delegate(int size) { UseEntryFont(Look.EntryFamily, size); }, null));
 
         top = Page(Strings.ProgramTitle, Sign.Options);
-        programPage = page;
-        // Each of these has a button that shows the choice in use and opens the others, where that one cannot be
-        // chosen again. The language by the name each gives itself; a font written in itself.
-        Func<string, Font> itself = delegate(string name) { return new Font(name, Look.TextFont.SizeInPoints); };
-        Label languageLabel = PlacePicker(languageButton, Strings.LanguageOption, Strings.Codes,
-            delegate(string code) { return Strings.Names[Array.IndexOf(Strings.Codes, code)]; },
-            delegate { return Strings.Code; }, ChangeLanguage, null, ref top);
-        // Unlike the language, the theme changes at once.
-        Label themeLabel = PlacePicker(themeButton, Strings.ThemeOption, new Theme[] { Theme.System, Theme.Light, Theme.Dark },
-            ThemeName, delegate { return Look.Chosen; }, ChangeTheme, null, ref top);
-        // The font of the interface and its size in pixels: the windows are built for them, so they apply from a new start.
-        top += Gap;
-        Label faceLabel = PlacePicker(faceButton, Strings.FaceOption, Look.FontNames, Look.FontLabel,
-            delegate { return Look.InterfaceFamily; }, delegate(string name) { ChangeInterface(name, Look.InterfaceSize); }, itself, ref top);
-        Label faceSizeLabel = PlacePicker(faceSizeButton, Strings.FaceSizeOption, Look.InterfaceSizes, PixelsName,
-            delegate { return Look.InterfaceSize; }, delegate(int size) { ChangeInterface(Look.InterfaceFamily, size); }, null, ref top);
-        // The font of the entries and its size: they change at once.
-        top += Gap;
-        Label fontLabel = PlacePicker(fontButton, Strings.FontOption, Look.FontNames, Look.FontLabel,
-            delegate { return Look.EntryFamily; }, delegate(string name) { UseEntryFont(name, Look.EntrySize); }, itself, ref top);
-        Label sizeLabel = PlacePicker(sizeButton, Strings.SizeOption, Look.EntrySizes, PixelsName,
-            delegate { return Look.EntrySize; }, delegate(int size) { UseEntryFont(Look.EntryFamily, size); }, null, ref top);
-        PlaceOption(trayBox, Strings.TrayOption, ref top);
+        PlaceOption(trayBox, Strings.TrayOption, Strings.TrayNote, ref top);
         trayBox.Checked = true;
-        PlaceOption(leaveBox, Strings.LeaveOption, ref top);
+        PlaceOption(leaveBox, Strings.LeaveOption, Strings.LeaveNote, ref top);
         leaveBox.Checked = true;
-        PlaceOption(startBox, Strings.StartOption, ref top);
+        PlaceOption(startBox, Strings.StartOption, Strings.StartNote, ref top);
         // Side by side, each with its two choices: the saved texts alone, or what was copied too.
         ContextMenuStrip exportMenu = Choice(Export), importMenu = Choice(Import);
-        top += Gap;
-        PlaceButton(exportButton, Strings.ExportButton, delegate { exportMenu.Show(exportButton, 0, exportButton.Height); }, 0, ref top);
-        top -= NumberRow;
-        PlaceButton(importButton, Strings.ImportButton, delegate { importMenu.Show(importButton, 0, importButton.Height); },
-            OptionButtonWidth + Gap, ref top);
+        Act(exportButton, Strings.ExportButton, delegate { exportMenu.Show(exportButton, 0, exportButton.Height); });
+        Act(importButton, Strings.ImportButton, delegate { importMenu.Show(importButton, 0, importButton.Height); });
+        PlaceTile(Strings.BackupOption, Strings.BackupNote, ref top, exportButton, importButton);
+        PlaceTile(Program.AppName + " " + Program.Version, Strings.AboutNote, ref top);   // which version this is
         pageList.SelectedIndex = 0;
 
-        Tip(Strings.DelayTip, delayLabel, delayBox);
-        Tip(Strings.UsTip, usBox);
-        Tip(Strings.EnterTip, enterBox);
-        Tip(Strings.ClearTip, clearBox);
-        Tip(Strings.SlowTip, slowBox);
-        Tip(Strings.AltCodeTip, altCodeBox);
-        Tip(string.Format(Strings.LanguageTip, Program.AppName), languageLabel, languageButton);
-        Tip(string.Format(Strings.ThemeTip, Strings.ThemeSystem), themeLabel, themeButton);
-        Tip(string.Format(Strings.FaceTip, Program.AppName), faceLabel, faceButton);
-        Tip(string.Format(Strings.FaceSizeTip, PixelsName(Look.DefaultInterfaceSize), Program.AppName), faceSizeLabel, faceSizeButton);
-        Tip(Strings.FontTip, fontLabel, fontButton);
-        Tip(string.Format(Strings.SizeTip, PixelsName(Look.DefaultEntrySize)), sizeLabel, sizeButton);
-        Tip(Strings.HistoryTip, historyBox);
-        Tip(string.Format(Strings.KeepTip, MaxShown), keepLabel, keepBox);
-        Tip(Strings.CleanTip, cleanLabel, cleanBox, cleanButton);
-        Tip(string.Format(Strings.TrayTip, Strings.Exit), trayBox);
-        Tip(string.Format(Strings.StartTip, Program.AppName), startBox);
+        TipOption(Strings.DelayTip, delayBox);
+        TipOption(Strings.UsTip, usBox);
+        TipOption(Strings.EnterTip, enterBox);
+        TipOption(Strings.ClearTip, clearBox);
+        TipOption(Strings.SlowTip, slowBox);
+        TipOption(Strings.AltCodeTip, altCodeBox);
+        TipOption(string.Format(Strings.LanguageTip, Program.AppName), languageButton);
+        TipOption(string.Format(Strings.ThemeTip, Strings.ThemeSystem), themeButton);
+        TipOption(string.Format(Strings.FaceTip, Program.AppName), faceButton);
+        Tip(string.Format(Strings.FaceSizeTip, PixelsName(Look.DefaultInterfaceSize), Program.AppName), faceSizeButton);
+        TipOption(Strings.FontTip, fontButton);
+        Tip(string.Format(Strings.SizeTip, PixelsName(Look.DefaultEntrySize)), sizeButton);
+        TipOption(Strings.HistoryTip, historyBox);
+        TipOption(string.Format(Strings.KeepTip, MaxShown), keepBox);
+        TipOption(Strings.CleanTip, cleanBox);
+        Tip(Strings.CleanTip, cleanButton);
+        TipOption(string.Format(Strings.TrayTip, Strings.Exit), trayBox);
+        TipOption(string.Format(Strings.StartTip, Program.AppName), startBox);
         Tip(Strings.ExportTip, exportButton);
         Tip(Strings.ImportTip, importButton);
     }
@@ -156,6 +142,41 @@ partial class MainForm
         return PageTop;
     }
 
+    // Places an option on a card of its own, at 'top' of the page: its name and what it does ('note') on the left,
+    // its controls at the right end in the order given, each as large as it is, in the middle of the height. The card
+    // is as tall as its text needs, written in what the controls leave. Returns the card.
+    Tile PlaceTile(string name, string note, ref int top, params Control[] controls)
+    {
+        Tile tile = new Tile();
+        tile.Text = name;
+        tile.Note = note;
+        int right = PaneWidth - Tile.Inset, tallest = 0;
+        for (int i = controls.Length - 1; i >= 0; i--)
+        {
+            right -= controls[i].Width;
+            controls[i].Left = right;
+            right -= Tile.ControlGap;
+            tallest = Math.Max(tallest, controls[i].Height);
+        }
+        // The text is measured as the screen writes it, larger than designed by the scale.
+        int text = (int)Math.Ceiling(Tile.TextHeight(name, note, (int)((right - Tile.Inset) * Zoom)) / Zoom);
+        int height = Math.Max(TileHeight, Math.Max(text, tallest) + 2 * Tile.Air);
+        tile.SetBounds(0, top, PaneWidth, height);
+        foreach (Control control in controls) control.Top = (height - control.Height) / 2;
+        tile.Controls.AddRange(controls);
+        page.Controls.Add(tile);
+        top += height + TileGap;
+        return tile;
+    }
+
+    // The tooltip of an option, on its control and on its card.
+    void TipOption(string text, Control control)
+    {
+        Control tile = control;
+        while (tile != null && !(tile is Tile)) tile = tile.Parent;
+        Tip(text, control, tile);
+    }
+
     // Shows the page chosen on the left, which rises into place.
     void ShowPage()
     {
@@ -164,30 +185,28 @@ partial class MainForm
         if (pageList.SelectedItem != null) Entrance.Play((Control)pageList.SelectedItem, 0);
     }
 
-    // A row with something to choose from a menu: its description on the left, at the right edge of the page
-    // the button that shows the choice in use ('current') and opens the menu of all of them, each written by
-    // 'name', in a font of its own if 'font' gives one. The one in use cannot be chosen again. Returns the
-    // description, for its tooltip.
-    Label PlacePicker<T>(RoundButton button, string text, T[] choices, Func<T, string> name, Func<T> current, Action<T> choose,
-        Func<T, Font> font, ref int top)
+    // Something to choose from a menu: the button that shows the choice in use ('current') and opens the menu of all
+    // of them, each written by 'name', in a font of its own if 'font' gives one. The one in use is ticked: choosing it
+    // changes nothing. A choice of pixels needs a narrower button. Returns the button, for its card.
+    RoundButton Picker<T>(RoundButton button, T[] choices, Func<T, string> name, Func<T> current, Action<T> choose,
+        Func<T, Font> font)
     {
         ContextMenuStrip menu = new ContextMenuStrip();
         foreach (T each in choices)
         {
             T choice = each;   // a variable of its own for the delegate
-            ToolStripItem item = menu.Items.Add(name(choice), null, delegate { choose(choice); });
+            ToolStripItem item = menu.Items.Add(name(choice), null, delegate { if (!Equals(choice, current())) choose(choice); });
             item.Tag = choice;
             if (font != null) item.Font = font(choice);
         }
         menu.Opening += delegate
         {
-            foreach (ToolStripItem item in menu.Items) item.Enabled = !Equals(item.Tag, current());
+            foreach (ToolStripMenuItem item in menu.Items) item.Checked = Equals(item.Tag, current());
         };
         Look.Style(menu);
-        Label label = NewLabel(text, 0, top + 5);
-        page.Controls.Add(label);
-        PlaceButton(button, name(current()), delegate { menu.Show(button, 0, button.Height); }, PaneWidth - OptionButtonWidth, ref top);
-        return label;
+        Act(button, name(current()), delegate { menu.Show(button, 0, button.Height); });
+        if (typeof(T) == typeof(int)) button.Width = SizeButtonWidth;
+        return button;
     }
 
     // A size as the options write it: "14 px".
@@ -240,12 +259,10 @@ partial class MainForm
         });
     }
 
-    // A row with a number to write: its description on the left, its box at the right edge of the page.
-    // Returns the description, for its tooltip.
-    Label PlaceNumber(TextBox box, string text, int max, Action confirm, ref int top)
+    // An option with a number to write, in its box, followed by what else its card holds ('after').
+    void PlaceNumber(TextBox box, string text, string note, int max, Action confirm, ref int top, params Control[] after)
     {
-        Label label = NewLabel(text, 0, top + 5);
-        box.SetBounds(PaneWidth - NumberWidth, top, NumberWidth, NumberHeight);
+        box.SetBounds(0, 0, NumberWidth, NumberHeight);
         box.TextAlign = HorizontalAlignment.Center;
         box.MaxLength = max.ToString().Length;
         box.KeyPress += delegate(object sender, KeyPressEventArgs e)
@@ -255,47 +272,64 @@ partial class MainForm
             e.Handled = enter || !char.IsDigit(e.KeyChar) && !char.IsControl(e.KeyChar);
         };
         box.Leave += delegate { confirm(); };
-        top += NumberRow;
-        page.Controls.Add(label);
-        page.Controls.Add(Look.Frame(box));   // the frame of the box is what goes on the page
-        return label;
+        List<Control> controls = new List<Control>();
+        controls.Add(Look.Frame(box));   // the frame of the box is what goes on the card
+        controls.AddRange(after);
+        PlaceTile(text, note, ref top, controls.ToArray());
     }
 
-    // A row with a global hotkey: the switch that turns it on and, at the right edge of the page, the
-    // button that shows its keys and takes new ones.
-    void PlaceHotkey(CheckBox box, RoundButton keys, string text, ref int top)
+    // An option with a global hotkey: the button that shows its keys and takes new ones, and the switch that turns
+    // it on.
+    void PlaceHotkey(CheckBox box, RoundButton keys, string text, string note, ref int top)
     {
-        int row = top + 4;   // the switch level with the text of the button
-        PlaceOption(box, text, ref row);
-        PlaceButton(keys, "", delegate { AwaitKeys(box); }, PaneWidth - OptionButtonWidth, ref top);
+        Act(keys, "", delegate { AwaitKeys(box); });
+        PlaceTile(text, note, ref top, keys, Switch(box, text));
     }
 
-    // A row with a link, for something to open rather than to set.
-    LinkLabel PlaceLink(string text, Action open, ref int top)
+    // Where the database is and how much it takes, the buttons that take it elsewhere or back to the default folder,
+    // and the link that opens it, on a card of their own.
+    void PlaceFolder(ref int top)
     {
+        Tile tile = new Tile();
+        int line = Tile.Air;
+        Label name = NewLabel(Strings.DataFolderOption, Tile.Inset, line);
+        line += RowHeight;
+        foreach (Label label in new Label[] { folderPath, databaseSize })
+        {
+            label.SetBounds(Tile.Inset, line, PaneWidth - 2 * Tile.Inset, NoteHeight);
+            label.AutoEllipsis = true;
+            label.UseMnemonic = false;
+            label.Font = Look.NoteFont;
+            label.ForeColor = Look.Muted;
+            line += NoteHeight;
+        }
+        line += Gap;
+        Act(changeFolderButton, Strings.ChangeFolderButton, ChangeDataFolder);
+        Act(defaultFolderButton, Strings.DefaultFolderButton, delegate { MoveDataFolder(""); });
+        changeFolderButton.Location = new Point(Tile.Inset, line);
+        defaultFolderButton.Location = new Point(changeFolderButton.Right + Tile.ControlGap, line);
         LinkLabel link = new LinkLabel();
-        link.Text = text;
+        link.Text = Strings.FolderLink;
         link.AutoSize = true;
-        link.Location = new Point(0, top);
+        link.Location = new Point(defaultFolderButton.Right + 2 * Tile.ControlGap, line + 5);   // level with the text of the buttons
         link.LinkColor = Look.Accent;
         link.ActiveLinkColor = Look.Ink;
         link.LinkBehavior = LinkBehavior.AlwaysUnderline;   // or it would pass for a label
-        link.LinkClicked += delegate { open(); };
-        page.Controls.Add(link);
-        top += RowHeight;
-        return link;
+        link.LinkClicked += delegate { OpenFolder(); };
+        tile.SetBounds(0, top, PaneWidth, line + ActionHeight + Tile.Air);
+        tile.Controls.AddRange(new Control[] { name, folderPath, databaseSize, changeFolderButton, defaultFolderButton, link });
+        page.Controls.Add(tile);
+        top += tile.Height + TileGap;
+        folderTipped = new Control[] { tile, name, folderPath, databaseSize, changeFolderButton, defaultFolderButton, link };
     }
 
-    // A row with a small button, for something to do at once rather than to set. 'left' is where it starts on
-    // the page: buttons can stand side by side.
-    void PlaceButton(RoundButton button, string text, Action act, int left, ref int top)
+    // A small button, for something to do at once rather than to set, as wide as those of the options.
+    void Act(RoundButton button, string text, Action act)
     {
         button.Text = text;
-        button.SetBounds(left, top, OptionButtonWidth, ActionHeight);
+        button.Size = new Size(OptionButtonWidth, ActionHeight);
         Look.Style(button, false);
         button.Click += delegate { act(); };
-        page.Controls.Add(button);
-        top += NumberRow;
     }
 
     // The menu under the buttons that export and import: what to take, then on with it.
@@ -456,7 +490,7 @@ partial class MainForm
         {
             clips = ex.Back;
             Log.Error(ex);
-            status.Text = string.Format(Strings.ListMoveFailed, ex.Message);
+            status.Tell(string.Format(Strings.ListMoveFailed, ex.Message), Notice.Error);
             return;
         }
         catch (Exception ex)
@@ -496,13 +530,22 @@ partial class MainForm
         return false;
     }
 
-    void PlaceOption(CheckBox box, string text, ref int top)
+    // An option turned on and off.
+    void PlaceOption(CheckBox box, string text, string note, ref int top)
+    {
+        PlaceTile(text, note, ref top, Switch(box, text));
+    }
+
+    // A switch that says whether it is on, named 'text' for those who cannot see it, as large as it is drawn.
+    // Its font is that of the window, which it will inherit: until then it is measured with that one.
+    CheckBox Switch(CheckBox box, string text)
     {
         box.Text = text;
-        box.AutoSize = true;
-        box.Location = new Point(0, top);
-        page.Controls.Add(box);
-        top += RowHeight;
+        ((Toggle)box).SaysState = true;
+        box.Font = Look.TextFont;
+        Size size = box.GetPreferredSize(Size.Empty);
+        box.Size = new Size((int)Math.Ceiling(size.Width / Zoom), (int)Math.Ceiling(size.Height / Zoom));
+        return box;
     }
 
     // The program used to be called PasswordPaste: as long as its registry key exists, the settings and saved
@@ -743,7 +786,7 @@ partial class MainForm
     // as the window shows.
     public void ShowOptions()
     {
-        pageList.SelectedItem = programPage;
+        pageList.SelectedItem = restartPage;
         optionsAtStart = true;
     }
 
@@ -754,7 +797,7 @@ partial class MainForm
     sealed class OptionsWindow : Window
     {
         readonly MainForm main;
-        readonly Label note = new Label();
+        readonly InfoBar note = new InfoBar();
         readonly RoundButton closeButton = new RoundButton();
 
         public OptionsWindow(MainForm main)
@@ -775,10 +818,6 @@ partial class MainForm
             Look.Style(closeButton, true);
             CancelButton = closeButton;   // Esc too. No AcceptButton: Enter in a box confirms its number.
             note.SetBounds(Edge, bottom, closeButton.Left - Gap - Edge, StatusHeight);
-            note.UseMnemonic = false;
-            note.AutoEllipsis = true;
-            note.TextAlign = ContentAlignment.MiddleLeft;
-            note.ForeColor = Look.Muted;
             ClientSize = new Size(main.pagePane.Right + Edge, bottom + StatusHeight + Edge);
             Controls.AddRange(new Control[] { main.pageList.Parent, main.pagePane, note, closeButton });
             ActiveControl = main.pageList;
@@ -786,10 +825,10 @@ partial class MainForm
             Look.Keep(this);   // a change of theme recolours it even before it first shows
         }
 
-        // What the status line of the main window says.
-        public string Note
+        // What the status line of the main window says, of the same kind.
+        public void Note(string text, Notice kind)
         {
-            set { note.Text = value; }
+            note.Tell(text, kind);
         }
 
         // Shows it over its owner, as the guide opens, without leaving the screen; the page comes in.

@@ -157,26 +157,33 @@ static partial class Strings
             + "touches dans les options, ou d'autres numéros.";
 
         TypingTitle = "Saisie"; ProgramTitle = "Programme"; HotkeysTitle = "Raccourcis"; HistoryTitle = "Historique";
-        DelayOption = "Attente avant la saisie (secondes) :";
-        UsOption = "Le serveur a un clavier anglais (US)";
-        EnterOption = "Appuyer sur Entrée à la fin";
-        ClearOption = "Vider le presse-papiers après la saisie";
-        SlowOption = "Saisie lente";
-        AltCodeOption = "Codes Alt pour les symboles sans touche";
-        LanguageOption = "Langue (Language) :";
-        ThemeOption = "Thème :"; ThemeSystem = "Comme Windows"; ThemeLight = "Clair"; ThemeDark = "Sombre";
-        FaceOption = "Police de l'interface :"; FaceSizeOption = "Taille de l'interface :";
-        FontOption = "Police des éléments :"; SizeOption = "Taille des éléments :"; Pixels = "{0} px";
-        TrayOption = "Rester dans la zone de notification";
-        LeaveOption = "Masquer en passant à un autre programme";
-        StartOption = "Démarrer avec Windows";
+        AppearanceTitle = "Apparence";
+        On = "Activé"; Off = "Désactivé";
+        DelayOption = "Attente avant la saisie"; DelayNote = "Secondes pour cliquer dans le bon champ";
+        UsOption = "Le serveur a un clavier anglais (US)"; UsNote = "Seulement si les symboles arrivent faux";
+        EnterOption = "Appuyer sur Entrée à la fin"; EnterNote = "Valide aussitôt la connexion";
+        ClearOption = "Vider le presse-papiers après la saisie"; ClearNote = "Une fois la saisie réussie";
+        SlowOption = "Saisie lente"; SlowNote = "Si des caractères manquent ou arrivent dans le désordre";
+        AltCodeOption = "Codes Alt pour les symboles sans touche"; AltCodeNote = "Seulement pour les serveurs Windows";
+        LanguageOption = "Langue (Language)"; LanguageNote = "Le programme redémarre dans cette langue";
+        ThemeOption = "Thème"; ThemeNote = "Couleurs claires ou sombres";
+        ThemeSystem = "Comme Windows"; ThemeLight = "Clair"; ThemeDark = "Sombre";
+        FaceOption = "Police de l'interface"; FaceNote = "Boutons, options, menus : le programme redémarre";
+        FontOption = "Police des éléments"; FontNote = "Ce que vous copiez et enregistrez : change aussitôt";
+        Pixels = "{0} px";
+        TrayOption = "Rester dans la zone de notification"; TrayNote = "Fermer la fenêtre laisse le programme actif";
+        LeaveOption = "Masquer en passant à un autre programme"; LeaveNote = "Retour dans la zone de notification";
+        StartOption = "Démarrer avec Windows"; StartNote = "Masqué dans la zone de notification";
+        BackupOption = "Exporter et importer"; BackupNote = "Vos textes dans un fichier que le Bloc-notes ouvre";
         ExportButton = "Exporter…"; ImportButton = "Importer…";
-        PickOption = "Ouvrir la liste";
-        QuickOption = "Coller par numéro";
-        HistoryOption = "Mémoriser les textes et images copiés";
-        KeepOption = "Jours gardés (0 : aujourd'hui seul) :";
+        AboutNote = "Logiciel libre sous licence MIT";
+        TypeNote = "Saisit aussitôt dans la fenêtre active";
+        PickOption = "Ouvrir la liste"; PickNote = "Amène cette fenêtre au premier plan depuis tout programme";
+        QuickOption = "Coller par numéro"; QuickNote = "Colle les éléments qui ont un raccourci";
+        HistoryOption = "Mémoriser les textes et images copiés"; HistoryNote = "Ce que vous copiez pendant que le programme est ouvert";
+        KeepOption = "Jours gardés"; KeepNote = "Avec 0, seulement ce que vous avez copié aujourd'hui";
         FolderLink = "Ouvrir le dossier des données";
-        DataFolderOption = "Dossier des éléments copiés et enregistrés :";
+        DataFolderOption = "Dossier des éléments copiés et enregistrés";
         ChangeFolderButton = "Changer…"; DefaultFolderButton = "Par défaut";
         DatabaseSize = "Occupe {0} ; images copiées : {1} sur {2}.";
         ChooseDataFolder = "Le dossier où {0} garde ce que vous copiez et enregistrez.";
@@ -187,7 +194,7 @@ static partial class Strings
         ListMoveFailed = "La liste n'a pas pu être déplacée et reste où elle était : {0}";
         FolderUnavailable = "Le dossier de la liste, {0}, est inaccessible : ce que vous copiez et enregistrez maintenant "
             + "sera perdu à la fermeture du programme. Dans les options, sous {1}, choisissez un autre dossier ou celui par défaut.";
-        SpareOption = "Au nettoyage, garder les derniers jours :";
+        SpareOption = "Nettoyer l'historique"; SpareNote = "Sauf les derniers jours écrits à côté ; 0 : aucun";
         CleanButton = "Nettoyer…";
         DelayTip = "Combien de secondes la fenêtre cible doit rester au premier plan avant que\n"
             + "la saisie commence : le temps de cliquer dans le bon champ, ou d'annuler.";
@@ -425,6 +432,7 @@ static partial class Strings
             "Tab\tPasse à l'autre colonne.",
             EnterKeyName + "\tChoisit l'élément et revient à la fenêtre de départ.",
             "Échap\tRevient à la fenêtre de départ sans choisir.",
+            Key(Keys.Control | MainForm.SearchKey) + "\tAmène le curseur dans la zone de recherche.",
             Key(Keys.Control | MainForm.NewKey) + "\tNouveau texte enregistré.",
             Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "\tNouveau dossier.",
             Key(Keys.Control | MainForm.SaveKey) + "\tEnregistre l'élément copié, ou modifie l'élément enregistré.",
@@ -462,9 +470,10 @@ static partial class Strings
             "- Désactiver l'historique dans les options vide la liste et efface du disque ce que vous avez copié.",
 
             "# Les options",
-            "Le bouton « " + Options + " » les ouvre dans une fenêtre à part, qui peut rester ouverte à côté de la liste. En "
-                + "laissant le pointeur sur une option, son explication complète apparaît. Elles sont réparties en quatre pages, "
-                + "choisies dans la colonne de gauche comme les sujets de ce guide :",
+            "Le bouton « " + Options + " » les ouvre dans une fenêtre à part, qui peut rester ouverte à côté de la liste. "
+                + "Chaque option dit en quelques mots, sous son nom, ce qu'elle fait ; en laissant le pointeur dessus, son "
+                + "explication complète apparaît. Elles sont réparties en cinq pages, choisies dans la colonne de gauche comme "
+                + "les sujets de ce guide :",
             "- " + TypingTitle + " : combien de secondes attendre avant la saisie (de " + MainForm.MinDelay + " à "
                 + MainForm.MaxDelay + "), si le serveur a un clavier américain, s'il faut appuyer sur Entrée à la fin, "
                 + "s'il faut vider le presse-papiers ensuite, la saisie lente et les symboles composés avec des codes Alt.",
@@ -472,8 +481,11 @@ static partial class Strings
                 + ", et leur donne d'autres touches.",
             "- " + HistoryTitle + " : s'il faut mémoriser ce que vous copiez, pendant combien de jours, le dossier de la base de données "
                 + "(qu'on peut changer) avec le lien qui l'ouvre, et le bouton qui nettoie aussitôt l'historique.",
-            "- " + ProgramTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la taille de l'interface (boutons, options, ce guide : en pixels, elles redémarrent le programme) et celles des éléments (elles changent aussitôt), s'il faut rester dans la zone de notification et se masquer en passant "
-                + "à un autre programme, s'il faut démarrer avec Windows, et les boutons pour exporter et importer.",
+            "- " + AppearanceTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la "
+                + "taille de l'interface (boutons, options, ce guide : en pixels, elles redémarrent le programme) et celles des "
+                + "éléments (elles changent aussitôt).",
+            "- " + ProgramTitle + " : s'il faut rester dans la zone de notification et se masquer en passant à un autre "
+                + "programme, s'il faut démarrer avec Windows, les boutons pour exporter et importer, et la version du programme.",
 
             "# Exporter et importer",
             "Dans les options, sous « " + ProgramTitle + " », deux boutons sortent vos textes du programme et les "

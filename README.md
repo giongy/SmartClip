@@ -72,6 +72,7 @@ the list shows the content.
 | Typing | Filters both columns. Words can come in any order; case and accents are ignored. |
 | Up / Down | Moves through the column |
 | Tab | Switches to the other column |
+| Ctrl+F | Takes the cursor to the search box, from anywhere in the window |
 | Click | Puts the entry back on the clipboard; the window stays, so you can still save or delete it |
 | Enter, or a double click | Puts the entry back on the clipboard and returns to the window you came from |
 | Right click | Opens the menu of the entry |
@@ -147,14 +148,14 @@ together with any digit; the button says right away which of them another progra
 
 The **Options** button opens the options in a window of their own, like the guide, which can stay open beside the
 list; **Close** or Esc puts it away.
-The options are in four pages, **Typing**, **Hotkeys**, **History** and **Program**, chosen from a column on the left as in the Windows 11 Settings; each page slides into place. Resting the pointer
+The options are in five pages, **Typing**, **Hotkeys**, **History**, **Appearance** and **Program**, chosen from a column on the left as in the Windows 11 Settings; each page slides into place. As there, each option is a card with its name, a few words on what it does and its control on the right; switches say **On** or **Off**. Resting the pointer
 on an option shows its full explanation.
 
 ![The options](docs/screenshot-options.png)
 
 | Option | What it does |
 | --- | --- |
-| Wait before typing (seconds) | How long the target window must stay in the foreground before typing starts, 1 to 30 seconds. This is your time to click the right field, or to cancel. |
+| Wait before typing | How long the target window must stay in the foreground before typing starts, 1 to 30 seconds. This is your time to click the right field, or to cancel. |
 | The server uses a US English keyboard | Leave it off for ordinary remote desktops: the layout of this PC is used. Turn it on when symbols arrive wrong because the remote side assumes a US keyboard, as VMware consoles, iLO, iDRAC and some login screens do. |
 | Press Enter at the end | Press Enter after the last character. |
 | Clear the clipboard after typing | Clear the clipboard after a successful run. Windows clipboard history (Win+V) is not touched. |
@@ -164,15 +165,13 @@ on an option shows its full explanation.
 | Open the list, with a button showing **Ctrl+D** | Enable the global hotkey that brings up the window with the list. While it is on, those keys no longer reach other programs: change them with the button, or turn the hotkey off. |
 | Paste by number, with a button showing **Ctrl+Shift+1…9** | Enable the keys that paste the numbered entries. Only the keys of the numbers in use are taken from other programs. The button takes the keys to hold: press them with any digit; it says which of the nine another program already uses. Del goes back to Ctrl+Shift. |
 | Remember copied texts and pictures | Keep the copied texts and pictures in the list. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. Turning it off also deletes the history on disk. |
-| Days kept (0: today only) | For how many days, 0 to 365, what you copy stays in the history, also after the program closes, today being the first: with 0 only what was copied today stays. Entries kept at the top go too when their days are over; saved texts never do. |
+| Days kept | For how many days, 0 to 365, what you copy stays in the history, also after the program closes, today being the first: with 0 only what was copied today stays. Entries kept at the top go too when their days are over; saved texts never do. |
 | Folder of the copied and saved entries, with the buttons **Change…** and **Default** | Where the database is kept, with the error log (by default `%LOCALAPPDATA%\SmartClip`), and how much it takes, the copied pictures apart. **Change…** moves it to the folder you choose, checking the copy before deleting the old file, or uses the database already there; **Default** brings it back. A folder synchronised online or on the network asks first. It is not a way to share the list between PCs: saved texts can be read only by this Windows user on this PC. If the folder chosen cannot be reached at the start, no empty list is made in its place: the list works in memory and says so. |
-| Keep the last days when cleaning (0: none), with the button **Clean now…** | Deletes at once what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Entries kept at the top go too; saved texts are not touched. |
+| Clean the history, with a box of days and the button **Clean now…** | Deletes at once what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Entries kept at the top go too; saved texts are not touched. |
 | Language | English, Español, Français or Italiano. Changing it restarts SmartClip, which opens again at once on the options. |
 | Theme | Same as Windows (the mode it sets for apps, followed also when it changes), Light or Dark. Changes at once. |
-| Font of the interface | The font of the program itself, the same in every window: buttons, labels, options, the guide, menus and questions. Segoe UI Variable (the default where it is installed), Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, Cascadia Mono or Consolas, among those Windows has; each is written in itself in the menu. The program restarts to apply it. |
-| Size of the interface | From 12 to 16 px (13 px by default); the windows grow with the text. The program restarts to apply it. |
-| Font of the entries | The font of what you copied and saved: the rows of the lists, an entry shown whole and the content of a saved text, chosen among the same fonts. The rest of the program keeps the font of the interface. Changes at once. |
-| Size of the entries | From 11 to 20 px (14 px by default, the text of Windows 11), for the same entries. Changes at once. |
+| Font of the interface, with its size | The font of the program itself, the same in every window: buttons, labels, options, the guide, menus and questions. Segoe UI Variable (the default where it is installed), Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, Cascadia Mono or Consolas, among those Windows has; each is written in itself in the menu. The size goes from 12 to 16 px (13 px by default); the windows grow with the text. The program restarts to apply either. |
+| Font of the entries, with its size | The font of what you copied and saved: the rows of the lists, an entry shown whole and the content of a saved text, chosen among the same fonts. The rest of the program keeps the font of the interface. The size goes from 11 to 20 px (14 px by default, the text of Windows 11). Both change at once. |
 | Stay in the notification area (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Exit** to quit; the same menu lists the saved texts. |
 | Hide when switching to another program | With the option above on, the window also goes back to the notification area when you click another program; off, it simply stays open behind the others. Never while it waits and types, nor while a window of its own (a text being written, a question) is open. |
 | Start with Windows | Start SmartClip when you sign in, already hidden in the notification area (minimised, if the option above is off). It is the entry Windows shows in Task Manager > Startup apps: the switch reflects it, and follows the program if you move the `.exe`. |

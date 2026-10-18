@@ -150,26 +150,33 @@ static partial class Strings
             + "u otros números.";
 
         TypingTitle = "Escritura"; ProgramTitle = "Programa"; HotkeysTitle = "Atajos"; HistoryTitle = "Historial";
-        DelayOption = "Espera antes de teclear (segundos):";
-        UsOption = "El servidor usa teclado inglés (EE. UU.)";
-        EnterOption = "Pulsar Intro al final";
-        ClearOption = "Vaciar el portapapeles tras teclear";
-        SlowOption = "Tecleo lento";
-        AltCodeOption = "Códigos Alt para símbolos sin tecla";
-        LanguageOption = "Idioma (Language):";
-        ThemeOption = "Tema:"; ThemeSystem = "Como Windows"; ThemeLight = "Claro"; ThemeDark = "Oscuro";
-        FaceOption = "Fuente de la interfaz:"; FaceSizeOption = "Tamaño de la interfaz:";
-        FontOption = "Fuente de las entradas:"; SizeOption = "Tamaño de las entradas:"; Pixels = "{0} px";
-        TrayOption = "Seguir en el área de notificación";
-        LeaveOption = "Ocultar al cambiar a otro programa";
-        StartOption = "Iniciar con Windows";
+        AppearanceTitle = "Apariencia";
+        On = "Activado"; Off = "Desactivado";
+        DelayOption = "Espera antes de teclear"; DelayNote = "Segundos para hacer clic en el campo correcto";
+        UsOption = "El servidor usa teclado inglés (EE. UU.)"; UsNote = "Solo si los símbolos llegan mal";
+        EnterOption = "Pulsar Intro al final"; EnterNote = "Confirma enseguida el inicio de sesión";
+        ClearOption = "Vaciar el portapapeles tras teclear"; ClearNote = "Cuando el tecleo ha salido bien";
+        SlowOption = "Tecleo lento"; SlowNote = "Si faltan caracteres o llegan desordenados";
+        AltCodeOption = "Códigos Alt para símbolos sin tecla"; AltCodeNote = "Solo para servidores con Windows";
+        LanguageOption = "Idioma (Language)"; LanguageNote = "El programa se reinicia en ese idioma";
+        ThemeOption = "Tema"; ThemeNote = "Colores claros u oscuros";
+        ThemeSystem = "Como Windows"; ThemeLight = "Claro"; ThemeDark = "Oscuro";
+        FaceOption = "Fuente de la interfaz"; FaceNote = "Botones, opciones, menús: el programa se reinicia";
+        FontOption = "Fuente de las entradas"; FontNote = "Lo que copias y guardas: cambia enseguida";
+        Pixels = "{0} px";
+        TrayOption = "Seguir en el área de notificación"; TrayNote = "Al cerrar la ventana el programa sigue activo";
+        LeaveOption = "Ocultar al cambiar a otro programa"; LeaveNote = "Vuelve al área de notificación";
+        StartOption = "Iniciar con Windows"; StartNote = "Oculto en el área de notificación";
+        BackupOption = "Exportar e importar"; BackupNote = "Tus textos en un archivo que abre el Bloc de notas";
         ExportButton = "Exportar…"; ImportButton = "Importar…";
-        PickOption = "Abrir la lista";
-        QuickOption = "Pegar por número";
-        HistoryOption = "Recordar textos e imágenes copiados";
-        KeepOption = "Días que se guardan (0: solo hoy):";
+        AboutNote = "Software libre con licencia MIT";
+        TypeNote = "Teclea enseguida en la ventana activa";
+        PickOption = "Abrir la lista"; PickNote = "Trae esta ventana al frente desde cualquier programa";
+        QuickOption = "Pegar por número"; QuickNote = "Pega las entradas que tienen un atajo";
+        HistoryOption = "Recordar textos e imágenes copiados"; HistoryNote = "Lo que copias mientras el programa está abierto";
+        KeepOption = "Días que se guardan"; KeepNote = "Con 0, solo lo que copiaste hoy";
         FolderLink = "Abrir la carpeta de los datos";
-        DataFolderOption = "Carpeta de las entradas copiadas y guardadas:";
+        DataFolderOption = "Carpeta de las entradas copiadas y guardadas";
         ChangeFolderButton = "Cambiar…"; DefaultFolderButton = "Predeterminada";
         DatabaseSize = "Ocupa {0}; imágenes copiadas: {1} de {2}.";
         ChooseDataFolder = "La carpeta en la que {0} guarda lo que copias y guardas.";
@@ -180,7 +187,7 @@ static partial class Strings
         ListMoveFailed = "No se ha podido mover la lista, que se queda donde estaba: {0}";
         FolderUnavailable = "No se puede acceder a la carpeta de la lista, {0}: lo que copies y guardes ahora se pierde al "
             + "cerrar el programa. En las opciones, en {1}, elige otra carpeta o la predeterminada.";
-        SpareOption = "Al limpiar, conservar los últimos días:";
+        SpareOption = "Limpiar el historial"; SpareNote = "Salvo los últimos días escritos al lado; 0: ninguno";
         CleanButton = "Limpiar ahora…";
         DelayTip = "Cuántos segundos debe quedarse en primer plano la ventana de destino\n"
             + "antes de que empiece el tecleo: es el tiempo para hacer clic en el campo\ncorrecto, o para cancelar.";
@@ -412,6 +419,7 @@ static partial class Strings
             "Tab\tPasa a la otra columna.",
             EnterKeyName + "\tElige la entrada y vuelve a la ventana de partida.",
             "Esc\tVuelve a la ventana de partida sin elegir.",
+            Key(Keys.Control | MainForm.SearchKey) + "\tLleva el cursor al cuadro de búsqueda.",
             Key(Keys.Control | MainForm.NewKey) + "\tNuevo texto guardado.",
             Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "\tNueva carpeta.",
             Key(Keys.Control | MainForm.SaveKey) + "\tGuarda la entrada copiada, o edita la guardada.",
@@ -448,9 +456,9 @@ static partial class Strings
             "- Al desactivar el historial en las opciones se vacía la lista y se borra del disco lo que copiaste.",
 
             "# Las opciones",
-            "El botón «" + Options + "» las abre en una ventana aparte, que puede quedarse abierta junto a la lista. Si dejas el "
-                + "puntero sobre una opción aparece su explicación completa. Están en cuatro páginas, que se eligen en la "
-                + "columna de la izquierda como los temas de esta guía:",
+            "El botón «" + Options + "» las abre en una ventana aparte, que puede quedarse abierta junto a la lista. Cada "
+                + "opción dice en pocas palabras, bajo su nombre, qué hace; si dejas el puntero encima aparece su explicación "
+                + "completa. Están en cinco páginas, que se eligen en la columna de la izquierda como los temas de esta guía:",
             "- " + TypingTitle + ": cuántos segundos esperar antes de teclear (de " + MainForm.MinDelay + " a "
                 + MainForm.MaxDelay + "), si el servidor usa el teclado estadounidense, si pulsar Intro al final, si "
                 + "vaciar el portapapeles después, el tecleo lento y los símbolos compuestos con códigos Alt.",
@@ -458,8 +466,11 @@ static partial class Strings
                 + ", y les da otras teclas.",
             "- " + HistoryTitle + ": si recordar lo que copias, durante cuántos días, la carpeta de la base de datos "
                 + "(que se puede cambiar) con el enlace que la abre, y el botón que limpia enseguida el historial.",
-            "- " + ProgramTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño de la interfaz (botones, opciones, esta guía: en píxeles, reinician el programa) y los de las entradas (cambian enseguida), si seguir en el área de notificación y ocultarse al cambiar a otro "
-                + "programa, si iniciarse con Windows, y los botones para exportar e importar.",
+            "- " + AppearanceTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño "
+                + "de la interfaz (botones, opciones, esta guía: en píxeles, reinician el programa) y los de las entradas "
+                + "(cambian enseguida).",
+            "- " + ProgramTitle + ": si seguir en el área de notificación y ocultarse al cambiar a otro programa, si "
+                + "iniciarse con Windows, los botones para exportar e importar, y la versión del programa.",
 
             "# Exportar e importar",
             "En las opciones, bajo «" + ProgramTitle + "», dos botones sacan tus textos del programa y los recuperan, "

@@ -61,13 +61,13 @@ partial class MainForm
         typeKeysButton.Text = HotkeyName;
         pickKeysButton.Text = PickName;
         quickKeysButton.Text = NumbersName;
-        Tip(string.Format(Strings.HotkeyTip, HotkeyName, Strings.TypeButton) + Strings.ChangeKeysNote, hotkeyBox);
-        Tip(string.Format(Strings.PickTip, PickName, HotkeyName) + Strings.ChangeKeysNote, pickBox);
-        Tip(string.Format(Strings.QuickTip, NumbersName, Strings.NumberMenu) + Strings.ChangeKeysNote, quickBox);
+        TipOption(string.Format(Strings.HotkeyTip, HotkeyName, Strings.TypeButton) + Strings.ChangeKeysNote, hotkeyBox);
+        TipOption(string.Format(Strings.PickTip, PickName, HotkeyName) + Strings.ChangeKeysNote, pickBox);
+        TipOption(string.Format(Strings.QuickTip, NumbersName, Strings.NumberMenu) + Strings.ChangeKeysNote, quickBox);
         Tip(string.Format(Strings.KeysTip, Strings.ShiftName, Strings.DeleteKeyName), typeKeysButton, pickKeysButton);
         Tip(string.Format(Strings.QuickKeysTip, Strings.ShiftName, Strings.DeleteKeyName, NameOf(DefaultQuickKeys | Keys.D1)),
             quickKeysButton);
-        Tip(string.Format(Strings.LeaveTip, PickName), leaveBox);
+        TipOption(string.Format(Strings.LeaveTip, PickName), leaveBox);
         Tip(string.Format(Strings.TypeTip, HotkeyName), typeButton);
         Tip(string.Format(Strings.SearchTip, Strings.EnterKeyName, HotkeyName, NameOf(PinKeys), NameOf(GroupKeys),
             NumbersName, Strings.NumberMenu), search);
@@ -111,10 +111,10 @@ partial class MainForm
         bool typing = capturing == hotkeyBox;
         if (keys == Keys.Delete) keys = typing ? DefaultTypeKeys : DefaultPickKeys;
         if (!Usable(keys))
-            status.Text = string.Format(Strings.KeysUnusable, NameOf(keys));
+            Warn(string.Format(Strings.KeysUnusable, NameOf(keys)));
         // Nor the keys of the numbers, which would paste instead.
         else if (keys == (typing ? pickKeys : typeKeys) || Array.IndexOf(ListKeys, keys) >= 0 || NumberOf(keys, quickKeys) > 0)
-            status.Text = string.Format(Strings.KeysTaken, NameOf(keys));
+            Warn(string.Format(Strings.KeysTaken, NameOf(keys)));
         else
         {
             CheckBox box = capturing;
@@ -137,12 +137,12 @@ partial class MainForm
         if (keys != Keys.Delete && !(IsDigit(code) || code >= Keys.NumPad0 && code <= Keys.NumPad9)
             || !Usable(modifiers | Keys.D1))
         {
-            status.Text = string.Format(Strings.QuickUnusable, NameOf(keys));
+            Warn(string.Format(Strings.QuickUnusable, NameOf(keys)));
             return;
         }
         if (NumberOf(typeKeys, modifiers) > 0 || NumberOf(pickKeys, modifiers) > 0)
         {
-            status.Text = string.Format(Strings.KeysTaken, NameOf(modifiers | Keys.D1));
+            Warn(string.Format(Strings.KeysTaken, NameOf(modifiers | Keys.D1)));
             return;
         }
         // Tried one by one while all of ours are off: a number another program has refuses itself.
@@ -156,7 +156,7 @@ partial class MainForm
         quickKeys = modifiers;
         quickBox.Checked = true;
         EndCapture();
-        if (taken.Count > 0) status.Text = string.Format(Strings.QuickBusy, string.Join(", ", taken));
+        if (taken.Count > 0) Warn(string.Format(Strings.QuickBusy, string.Join(", ", taken)));
         else Say(string.Format(Strings.QuickNowWith, NumbersName));
     }
 
@@ -174,8 +174,8 @@ partial class MainForm
         numbersTaken = "";
         HookNumbers();   // says by itself which numbers another program has
         if (busy) return;
-        if (typeFailed) status.Text = string.Format(Strings.HotkeyBusyType, HotkeyName);
-        else if (pickFailed) status.Text = string.Format(Strings.HotkeyBusyPick, PickName);
+        if (typeFailed) Warn(string.Format(Strings.HotkeyBusyType, HotkeyName));
+        else if (pickFailed) Warn(string.Format(Strings.HotkeyBusyPick, PickName));
         else if (numbersTaken.Length == 0) ShowIdle();
     }
 
@@ -228,7 +228,7 @@ partial class MainForm
             if (!Hook(NumberId + number, NumberKeys(number))) taken.Add(NumberName(number));
         }
         string said = string.Join(", ", taken);
-        if (said.Length > 0 && said != numbersTaken && !busy) status.Text = string.Format(Strings.QuickBusy, said);
+        if (said.Length > 0 && said != numbersTaken && !busy) Warn(string.Format(Strings.QuickBusy, said));
         numbersTaken = said;
     }
 
@@ -247,9 +247,9 @@ partial class MainForm
             int delay = KeyDelay;
             TypeOutcome outcome = await Task.Run(delegate { return Typer.Paste(target, delay); });
             if (outcome == TypeOutcome.Done) Say(string.Format(Strings.Pasted, Shorten(entry.ToString()), WindowTitle(target)));
-            else if (outcome == TypeOutcome.KeysHeld) status.Text = Strings.KeysHeld;
-            else if (outcome == TypeOutcome.FocusLost) status.Text = Strings.PasteFocusLost;
-            else status.Text = string.Format(Strings.Blocked, Program.AppName);
+            else if (outcome == TypeOutcome.KeysHeld) Warn(Strings.KeysHeld);
+            else if (outcome == TypeOutcome.FocusLost) Warn(Strings.PasteFocusLost);
+            else status.Tell(string.Format(Strings.Blocked, Program.AppName), Notice.Error);
         }
         finally
         {

@@ -2,9 +2,12 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
+using System.IO;
 using System.Net;
 using System.Runtime.InteropServices;
+using ComTypes = System.Runtime.InteropServices.ComTypes;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
 // A piece of formatted text that looks the same all through. What it does not set is left to where it is pasted:
@@ -52,6 +55,8 @@ static class Rich
     const string HtmlHeader = "Version:0.9\r\nStartHTML:{0:D10}\r\nEndHTML:{1:D10}\r\nStartFragment:{2:D10}\r\nEndFragment:{3:D10}\r\n";
     public const int KeptCopies = 10; // the last copies whose formatting is kept in memory, to be saved with them
     const int DarkLimit = 64;         // a colour darker than this is the black text that is everyone's default
+    const int LightGrey = 160, GreySpread = 24;   // a grey this light, its channels this close, is text for a dark page
+    const int DarkBack = 96;          // a background darker than this belongs to a dark page
     const float BaseSize = 12;        // the size of text in a browser, in points, from which relative sizes start
     const float Step = 1.2f;          // from one size to the next larger, in CSS
     const string Monospace = "Courier New";
@@ -66,11 +71,113 @@ static class Rich
 
     // --- The clipboard ---
 
-    // The HTML the clipboard holds, the fragment that was copied without the page around it; or null.
+    // The HTML the clipboard holds, the fragment that was copied without the page around it; or null. Every program
+    // writes it in UTF-8, while Windows Forms would read it in the code page of Windows: an accented letter, or a
+    // space that does not break, became two letters, and the text no longer matched the plain one (Matches), so the
+    // formatting was dropped (found by the user on 18/10/2026, copying from VS Code). Read as the bytes it is.
     public static string Html(IDataObject data)
     {
-        string document = data.GetDataPresent(DataFormats.Html) ? data.GetData(DataFormats.Html) as string : null;
-        return document == null ? null : Fragment(document);
+        byte[] bytes = data.GetDataPresent(DataFormats.Html) ? Bytes(data, DataFormats.Html) : null;
+        return bytes == null ? null : Lighten(Fragment(Encoding.UTF8.GetString(bytes)));
+    }
+
+    // What was copied from a page in a dark theme, made fit for any page: its dark backgrounds go, and the light grey
+    // of its text, written for them, becomes the default. Copied from the chat of VS Code and pasted into Word, it
+    // came out light grey on black boxes (found by the user on 18/10/2026). Colours that are colours stay, and so do
+    // the darker greys of a signature. Only the declarations of the inline styles change: the rest is as it came.
+    public static string Lighten(string html)
+    {
+        return StyleAttribute.Replace(html, delegate(Match style)
+        {
+            List<string> kept = new List<string>();
+            foreach (string declaration in style.Groups[3].Value.Split(';'))
+            {
+                int colon = declaration.IndexOf(':');
+                string property = colon < 0 ? "" : declaration.Substring(0, colon).Trim().ToLowerInvariant();
+                string value = colon < 0 ? "" : declaration.Substring(colon + 1);
+                bool dark = false;
+                if (property == "background" || property == "background-color")
+                    foreach (Match token in ColourToken.Matches(value))
+                    {
+                        Run look = new Run();
+                        HtmlReader.Colour(token.Value, look);
+                        dark |= !look.Color.IsEmpty && Light(look.Color) < DarkBack;
+                    }
+                Run text = new Run();
+                if (property == "color") HtmlReader.Colour(value, text);
+                if (!dark && !(property == "color" && !text.Color.IsEmpty && Default(text.Color))) kept.Add(declaration);
+            }
+            return style.Groups[1].Value + style.Groups[2].Value + string.Join(";", kept) + style.Groups[2].Value;
+        });
+    }
+
+    static readonly Regex StyleAttribute = new Regex(@"(\bstyle\s*=\s*)([""'])(.*?)\2", RegexOptions.IgnoreCase | RegexOptions.Singleline);
+    static readonly Regex ColourToken = new Regex(@"rgba?\([^)]*\)|#[0-9a-f]{3,8}\b|\b[a-z]+\b", RegexOptions.IgnoreCase);
+
+    // How light a colour looks, from 0 to 255.
+    static double Light(Color colour)
+    {
+        return colour.R * 0.299 + colour.G * 0.587 + colour.B * 0.114;
+    }
+
+    // A colour that is the plain text of some page rather than a choice: black or nearly, which everyone has, or a
+    // grey light enough to have been written on a dark background. Kept as the default, it takes that of wherever it
+    // is pasted.
+    static bool Default(Color colour)
+    {
+        int spread = Math.Max(colour.R, Math.Max(colour.G, colour.B)) - Math.Min(colour.R, Math.Min(colour.G, colour.B));
+        return Light(colour) < DarkLimit || spread <= GreySpread && Light(colour) >= LightGrey;
+    }
+
+    // What a format holds, as the bytes written there, up to the zero that ends it; null if it cannot be read. Put by
+    // this program, it is a stream of those bytes; on the clipboard, they are asked of Windows.
+    static byte[] Bytes(IDataObject data, string format)
+    {
+        MemoryStream stream = data.GetData(format) as MemoryStream;
+        byte[] bytes = stream != null ? stream.ToArray() : Global(data as ComTypes.IDataObject, format);
+        if (bytes == null) return null;
+        int end = Array.IndexOf(bytes, (byte)0);
+        if (end >= 0) Array.Resize(ref bytes, end);
+        return bytes;
+    }
+
+    static byte[] Global(ComTypes.IDataObject data, string format)
+    {
+        if (data == null) return null;
+        ComTypes.FORMATETC wanted = new ComTypes.FORMATETC();
+        wanted.cfFormat = (short)DataFormats.GetFormat(format).Id;
+        wanted.dwAspect = ComTypes.DVASPECT.DVASPECT_CONTENT;
+        wanted.lindex = -1;
+        wanted.tymed = ComTypes.TYMED.TYMED_HGLOBAL;
+        ComTypes.STGMEDIUM medium;
+        try
+        {
+            data.GetData(ref wanted, out medium);
+        }
+        catch (COMException)
+        {
+            return null;
+        }
+        try
+        {
+            if (medium.tymed != ComTypes.TYMED.TYMED_HGLOBAL) return null;
+            IntPtr memory = Native.GlobalLock(medium.unionmember);
+            if (memory == IntPtr.Zero) return null;
+            try
+            {
+                byte[] bytes = new byte[(int)Native.GlobalSize(medium.unionmember)];
+                Marshal.Copy(memory, bytes, 0, bytes.Length);
+                return bytes;
+            }
+            finally
+            {
+                Native.GlobalUnlock(medium.unionmember);
+            }
+        }
+        finally
+        {
+            Native.ReleaseStgMedium(ref medium);
+        }
     }
 
     // The RTF the clipboard holds, or null.
@@ -79,10 +186,12 @@ static class Rich
         return data.GetDataPresent(DataFormats.Rtf) ? data.GetData(DataFormats.Rtf) as string : null;
     }
 
-    // Puts a formatted text on the clipboard beside its plain text: each program takes what it prefers.
+    // Puts a formatted text on the clipboard beside its plain text: each program takes what it prefers. The HTML as
+    // its bytes in UTF-8, as its header counts them and every program reads them: given as a string, Windows Forms
+    // would write it in the code page of Windows, and an accented letter would arrive as «�».
     public static void Put(DataObject data, string html, string rtf)
     {
-        if (html != null) data.SetData(DataFormats.Html, Document(html));
+        if (html != null) data.SetData(DataFormats.Html, new MemoryStream(Encoding.UTF8.GetBytes(Document(html) + "\0")));
         if (rtf != null) data.SetData(DataFormats.Rtf, rtf);
     }
 
@@ -173,14 +282,15 @@ static class Rich
     }
 
     // Runs as they are kept: neighbours that look the same joined, no empty ones, nothing blank at the two ends,
-    // spaces that must not break as plain spaces (they are written back where needed), black as the default.
+    // spaces that must not break as plain spaces (they are written back where needed), black and light grey as the
+    // default (Default).
     static List<Run> Tidy(List<Run> runs)
     {
         List<Run> tidy = new List<Run>();
         foreach (Run run in runs)
         {
             run.Text = run.Text.Replace("\r", "").Replace("\uFFFC", "").Replace('\u00A0', ' ');
-            if (!run.Color.IsEmpty && run.Color.R * 0.299 + run.Color.G * 0.587 + run.Color.B * 0.114 < DarkLimit) run.Color = Color.Empty;
+            if (!run.Color.IsEmpty && Default(run.Color)) run.Color = Color.Empty;
             if (run.Text.Length == 0) continue;
             Run last = tidy.Count > 0 ? tidy[tidy.Count - 1] : null;
             if (last != null && (last.Looks(run) || run.Text.Trim('\n').Length == 0)) last.Text += run.Text;
@@ -799,7 +909,7 @@ static class Rich
         }
 
         // A CSS colour: #rgb, #rrggbb, rgb(…) or a name. What is not understood leaves the colour as it was.
-        static void Colour(string value, Run look)
+        public static void Colour(string value, Run look)
         {
             value = value.Trim().ToLowerInvariant();
             int r, g, b;

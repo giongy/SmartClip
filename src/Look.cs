@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using Microsoft.Win32;
 
@@ -56,7 +57,9 @@ class Window : Form
 
 // A checkbox drawn as a switch in the colours of the window: the system one cannot be coloured. The knob is
 // on the right, on the accent colour, while it is on; it slides there when it changes, and grows a little
-// under the pointer, as the switches of Windows 11 do.
+// under the pointer, as the switches of Windows 11 do. On a card of the options (SaysState) it says instead,
+// before it, whether it is on, as those of the settings of Windows 11 do; its text is then only its name, for
+// those who cannot see it.
 class Toggle : CheckBox
 {
     const int TextGap = 8;        // between the switch and its text, in pixels at 96 dpi
@@ -70,12 +73,23 @@ class Toggle : CheckBox
         lit = new Fade(this);
     }
 
+    public bool SaysState { get; set; }
+
     int Side { get { return Font.Height; } }
     int Track { get { return (int)(Side * Stretch); } }
 
+    // What is written beside the switch.
+    string Shown
+    {
+        get { return SaysState ? (Checked ? Strings.On : Strings.Off) : Text; }
+    }
+
     public override Size GetPreferredSize(Size proposed)
     {
-        Size text = TextRenderer.MeasureText(Text, Font, Size.Empty, TextFormatFlags.NoPrefix);
+        // Saying its state, as wide as the longer of the two: it does not move when it changes.
+        Size text = TextRenderer.MeasureText(SaysState ? Strings.On : Text, Font, Size.Empty, TextFormatFlags.NoPrefix);
+        if (SaysState)
+            text.Width = Math.Max(text.Width, TextRenderer.MeasureText(Strings.Off, Font, Size.Empty, TextFormatFlags.NoPrefix).Width);
         return new Size(Track + TextGap + text.Width, Math.Max(Side, text.Height) + 2);
     }
 
@@ -102,7 +116,7 @@ class Toggle : CheckBox
         Graphics g = e.Graphics;
         g.Clear(Parent.BackColor);
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        Rectangle box = new Rectangle(0, (Height - Side) / 2, Track - 1, Side - 1);
+        Rectangle box = new Rectangle(SaysState ? Width - Track : 0, (Height - Side) / 2, Track - 1, Side - 1);
         // The knob travels between its two ends, its colours with it; the focus is shown only to the keyboard.
         float on = knob.Value, size = box.Height - 2 * KnobInset, grown = size + (Enabled ? 2 * lit.Value : 0);
         float x = box.Left + KnobInset + size / 2 + on * (box.Width - 2 * KnobInset - size), y = box.Top + box.Height / 2f;
@@ -116,9 +130,176 @@ class Toggle : CheckBox
             g.DrawPath(edge, shape);
             g.FillEllipse(dot, x - grown / 2, y - grown / 2, grown, grown);
         }
-        Rectangle text = Rectangle.FromLTRB(box.Right + 1 + TextGap, 0, Width, Height);
-        TextRenderer.DrawText(g, Text, Font, text, ForeColor,
-            TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix);
+        Rectangle text = SaysState ? Rectangle.FromLTRB(0, 0, box.Left - TextGap, Height) : Rectangle.FromLTRB(box.Right + 1 + TextGap, 0, Width, Height);
+        TextRenderer.DrawText(g, Shown, Font, text, ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine
+            | TextFormatFlags.NoPrefix | (SaysState ? TextFormatFlags.Right : 0));
+    }
+}
+
+// What a message is: plain information, something done, a warning, an error.
+enum Notice { Info, Done, Warning, Error }
+
+// A message as Windows 11 shows one inside its windows (InfoBar): a rounded bar tinted with the colour of its kind,
+// with the sign of that kind before the text. Empty, it shows nothing. The kind goes with the text: Tell gives both,
+// a text given alone is information.
+class InfoBar : Label
+{
+    const int Inset = 10, SignGap = 8;   // around its text, and between the sign and the text, in pixels at 96 dpi
+    const float Tint = 0.16f;            // how far the bar goes from the window towards the colour of its kind
+    const TextFormatFlags Flags = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix;
+    Notice next;                          // the kind of the text about to be given
+
+    public InfoBar()
+    {
+        UseMnemonic = false;
+        DoubleBuffered = true;
+        ResizeRedraw = true;
+    }
+
+    public Notice Kind { get; private set; }
+
+    public override string Text
+    {
+        get { return base.Text; }
+        set
+        {
+            Kind = next;
+            next = Notice.Info;
+            base.Text = value;
+            Invalidate();
+        }
+    }
+
+    public void Tell(string text, Notice kind)
+    {
+        next = kind;
+        Text = text;
+    }
+
+    int Side { get { return Font.Height; } }
+    int TextLeft { get { return (int)(Inset * Look.Zoom) + Side + (int)(SignGap * Look.Zoom); } }
+
+    // How tall it is with its text written in its width: the lines, and air above and below them.
+    public int Fit(int width)
+    {
+        if (Text.Length == 0) return 0;
+        int lines = TextRenderer.MeasureText(Text, Font, new Size(width - TextLeft - (int)(Inset * Look.Zoom), 0), Flags).Height;
+        return Math.Max(lines, Side) + 2 * (int)(Inset * Look.Zoom * 0.6f);
+    }
+
+    static Color Colour(Notice kind)
+    {
+        return kind == Notice.Done ? Look.Green : kind == Notice.Warning ? Look.Amber : kind == Notice.Error ? Look.Red : Look.Accent;
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        Graphics g = e.Graphics;
+        g.Clear(Parent.BackColor);
+        if (Text.Length == 0) return;
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        Color colour = Colour(Kind);
+        using (GraphicsPath shape = Look.Rounded(new Rectangle(0, 0, Width - 1, Height - 1)))
+        using (Brush fill = new SolidBrush(Look.Blend(Parent.BackColor, colour, Tint)))
+        using (Pen edge = new Pen(Look.Blend(Look.Border, colour, 0.3f)))
+        {
+            g.FillPath(fill, shape);
+            g.DrawPath(edge, shape);
+        }
+        int inset = (int)(Inset * Look.Zoom), right = Width - inset;
+        Size text = TextRenderer.MeasureText(g, Text, Font, new Size(right - TextLeft, 0), Flags);
+        int top = Math.Max(0, (Height - text.Height) / 2);
+        // The sign beside the first line.
+        Look.Draw(g, Kind == Notice.Done ? Sign.Done : Kind == Notice.Warning ? Sign.Warning : Kind == Notice.Error ? Sign.Error : Sign.Info,
+            new Rectangle(inset, top + (Font.Height - Side) / 2, Side, Side), colour);
+        TextRenderer.DrawText(g, Text, Font, Rectangle.FromLTRB(TextLeft, top, right, Height), Look.Ink, Flags);
+    }
+}
+
+// What an empty list says, in its place, as Windows 11 says it: a large faint sign of why it is empty, its words
+// under it, all in the middle.
+class EmptyNote : Label
+{
+    const float SignGrowth = 2.4f;   // how many times the height of the text the sign is
+    const int SignGap = 8;           // between the sign and the words, in pixels at 96 dpi
+    const TextFormatFlags Flags = TextFormatFlags.WordBreak | TextFormatFlags.HorizontalCenter | TextFormatFlags.NoPrefix;
+    Sign sign;
+
+    public EmptyNote()
+    {
+        UseMnemonic = false;
+        ResizeRedraw = true;
+    }
+
+    public Sign Sign
+    {
+        get { return sign; }
+        set { sign = value; Invalidate(); }
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        Graphics g = e.Graphics;
+        g.Clear(BackColor);
+        int margin = Font.Height, width = Math.Max(1, Width - 2 * margin), side = (int)(Font.Height * SignGrowth);
+        int gap = (int)(SignGap * Look.Zoom);
+        int words = TextRenderer.MeasureText(g, Text, Font, new Size(width, 0), Flags).Height;
+        int top = (Height - side - gap - words) / 2;
+        Look.Draw(g, sign, new Rectangle((Width - side) / 2, top, side, side), Look.Blend(BackColor, Look.Muted, 0.55f));
+        TextRenderer.DrawText(g, Text, Font, new Rectangle(margin, top + side + gap, width, words), ForeColor, Flags);
+    }
+}
+
+// One option as Windows 11 lists its settings: a rounded card a shade off the window, with its name and, under it
+// in grey, what it does (Note); its controls at the right end. A card without a name only holds controls, placed by
+// whoever fills it.
+class Tile : Panel
+{
+    public const int Inset = 14, Air = 9;   // around its text, in pixels at 96 dpi: at its sides, above and below
+    public const int ControlGap = 8;        // between its text and its controls, and between one control and the next
+
+    public Tile()
+    {
+        DoubleBuffered = true;
+        ResizeRedraw = true;
+        BackColor = Look.Well;
+    }
+
+    public string Note { get; set; }
+
+    const TextFormatFlags NameFlags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;
+    const TextFormatFlags NoteFlags = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix;
+
+    // How tall its name and note are, written 'width' pixels wide.
+    public static int TextHeight(string name, string note, int width)
+    {
+        int height = TextRenderer.MeasureText(name, Look.TextFont, Size.Empty, NameFlags).Height;
+        if (!string.IsNullOrEmpty(note))
+            height += TextRenderer.MeasureText(note, Look.NoteFont, new Size(width, 0), NoteFlags).Height;
+        return height;
+    }
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        Graphics g = e.Graphics;
+        g.Clear(Parent.BackColor);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        using (GraphicsPath shape = Look.Rounded(new Rectangle(0, 0, Width - 1, Height - 1)))
+        using (Brush fill = new SolidBrush(BackColor))
+        using (Pen edge = new Pen(Look.Border))
+        {
+            g.FillPath(fill, shape);
+            g.DrawPath(edge, shape);
+        }
+        if (Text.Length == 0) return;
+        // The text takes what the controls leave, in the middle of the height.
+        int inset = (int)(Inset * Look.Zoom), right = Width - inset;
+        foreach (Control control in Controls) right = Math.Min(right, control.Left - (int)(ControlGap * Look.Zoom));
+        int width = right - inset, top = (Height - TextHeight(Text, Note, width)) / 2;
+        int name = TextRenderer.MeasureText(g, Text, Look.TextFont, Size.Empty, NameFlags).Height;
+        TextRenderer.DrawText(g, Text, Look.TextFont, new Rectangle(inset, top, width, name), Look.Ink, NameFlags);
+        if (!string.IsNullOrEmpty(Note))
+            TextRenderer.DrawText(g, Note, Look.NoteFont, new Rectangle(inset, top + name, width, Height - top - name), Look.Muted, NoteFlags);
     }
 }
 
@@ -182,6 +363,10 @@ class RoundButton : Button
         set { sign = value; Invalidate(); }
     }
 
+    // A quiet button of a row of commands, as in the command bars of Windows 11: only its sign and text until the
+    // pointer brings up its shape.
+    public bool Subtle { get; set; }
+
     protected override void OnMouseEnter(EventArgs e)
     {
         base.OnMouseEnter(e);
@@ -210,14 +395,24 @@ class RoundButton : Button
         Color bottom = !Enabled ? Look.Border : coloured ? FlatAppearance.BorderColor
             : Look.Dark ? Look.Blend(Look.Border, fill, 0.3f) : Look.Blend(Look.Border, Look.Ink, 0.12f);
         Rectangle area = new Rectangle(0, 0, Width - 1, Height - 1);
-        using (GraphicsPath shape = Look.Rounded(area))
-        using (Brush back = new SolidBrush(fill))
-        using (Brush shade = new LinearGradientBrush(new Rectangle(0, -1, Width, Height + 1), top, bottom, 90f))
-        using (Pen edge = new Pen(shade))
+        if (Subtle && !coloured)
         {
-            g.FillPath(back, shape);
-            g.DrawPath(edge, shape);
+            // The shape comes up with the light, without an edge.
+            float light = pressed ? 1.7f : lit.Value;
+            if (Enabled && light > 0)
+                using (GraphicsPath shape = Look.Rounded(area))
+                using (Brush back = new SolidBrush(Look.Blend(Parent.BackColor, Look.Ink, 0.07f * light)))
+                    g.FillPath(back, shape);
         }
+        else
+            using (GraphicsPath shape = Look.Rounded(area))
+            using (Brush back = new SolidBrush(fill))
+            using (Brush shade = new LinearGradientBrush(new Rectangle(0, -1, Width, Height + 1), top, bottom, 90f))
+            using (Pen edge = new Pen(shade))
+            {
+                g.FillPath(back, shape);
+                g.DrawPath(edge, shape);
+            }
         if (Focused && ShowFocusCues)
             using (GraphicsPath ring = Look.Rounded(Rectangle.Inflate(area, -1, -1)))
             using (Pen pen = new Pen(coloured ? Color.White : Look.Ink, 2))
@@ -239,7 +434,8 @@ class RoundButton : Button
 
 // The small signs drawn beside entries, on buttons and beside the pages of the options: they are where the colour is.
 enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, Keys, Search, Help, Opened, Closed, Bolt, History, Up,
-    Bold, Italic, Underline, Face, Size, Erase, Formatted }
+    Bold, Italic, Underline, Face, Size, Erase, Formatted, Folder, NewFolder, Move, Pause, Resume, Open, Exit, Show, Check, Paint,
+    Info, Done, Warning, Error, Paste }
 
 // The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
 enum Theme { System, Light, Dark }
@@ -293,6 +489,8 @@ static class Look
     public static Font TextFont { get; private set; }
     public static Font StrongFont { get; private set; }
     public static Font TitleFont { get; private set; }
+    public static Font NoteFont { get; private set; }   // what an option does, under its name: smaller
+    const float NoteShare = 0.9f;                       // of the size of the interface
     public static string InterfaceFamily { get; private set; }   // one of FontNames
     public static int InterfaceSize { get; private set; }        // one of InterfaceSizes
 
@@ -345,6 +543,7 @@ static class Look
         TextFont = new Font(name, points);
         StrongFont = Heavy(name, points, false);
         TitleFont = Heavy(name, points * TitleGrowth, true);
+        NoteFont = new Font(name, Points((int)Math.Round(size * NoteShare)));
     }
 
     // Takes the font and the size of the entries: what is not known or not installed falls back to the defaults.
@@ -580,23 +779,38 @@ static class Look
         return path;
     }
 
-    // The background of a row of a list, as Windows 11 draws it: the selected one a rounded shape with a short
-    // mark in the accent colour on its left, the one under the pointer a fainter shape, which comes and goes
-    // with 'glow' (see Glow).
+    // The background of a row of a list, as Windows 11 draws it: the selected one a rounded shape, the one under the
+    // pointer a fainter shape, which comes and goes with 'glow' (see Glow). The short mark in the accent colour on the
+    // left of the selected one is drawn by its list (RowList), which slides it from row to row.
     public static void DrawRow(Graphics g, Rectangle bounds, Color back, bool selected, float glow)
     {
         using (Brush plain = new SolidBrush(back)) g.FillRectangle(plain, bounds);
         if (!selected && glow <= 0) return;
-        Rectangle row = Rectangle.FromLTRB(bounds.Left + 1, bounds.Top + 1, bounds.Right - 2, bounds.Bottom - 1);
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        using (GraphicsPath shape = Rounded(row))
+        using (GraphicsPath shape = Rounded(RowShape(bounds)))
         using (Brush fill = new SolidBrush(selected ? Selected : Blend(back, Soft, glow)))
             g.FillPath(fill, shape);
-        if (!selected) return;
+    }
+
+    static Rectangle RowShape(Rectangle bounds)
+    {
+        return Rectangle.FromLTRB(bounds.Left + 1, bounds.Top + 1, bounds.Right - 2, bounds.Bottom - 1);
+    }
+
+    // Where the mark of a selected row goes: on its left, in the middle of its height.
+    public static RectangleF MarkIn(Rectangle bounds)
+    {
+        Rectangle row = RowShape(bounds);
         float height = row.Height * MarkShare;
-        using (GraphicsPath mark = Pill(new RectangleF(row.Left + 3, row.Top + (row.Height - height) / 2, 3 * Zoom, height)))
+        return new RectangleF(row.Left + 3, row.Top + (row.Height - height) / 2, 3 * Zoom, height);
+    }
+
+    public static void DrawMark(Graphics g, RectangleF mark)
+    {
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        using (GraphicsPath shape = Pill(mark))
         using (Brush accent = new SolidBrush(Accent))
-            g.FillPath(accent, mark);
+            g.FillPath(accent, shape);
     }
 
     // Every other row of a long list, a shade apart, so the eye keeps to one row across it. Worked out while drawing,
@@ -677,7 +891,44 @@ static class Look
             case Sign.Face: case Sign.Formatted: return "";      // Font
             case Sign.Size: return "";      // FontSize
             case Sign.Erase: return "";     // EraseTool
+            case Sign.Folder: return "";      // Folder
+            case Sign.NewFolder: return "";   // NewFolder
+            case Sign.Move: return "";        // MoveToFolder
+            case Sign.Pause: return "";       // Pause
+            case Sign.Resume: return "";      // Play
+            case Sign.Open: return "";        // OpenInNewWindow
+            case Sign.Exit: return "";        // PowerButton
+            case Sign.Show: return "";        // View
+            case Sign.Check: return "";       // CheckMark
+            case Sign.Paint: return "\uE771";       // Personalize
+            case Sign.Info: return "\uE946";        // Info
+            case Sign.Done: return "\uE930";        // Completed
+            case Sign.Warning: return "\uE7BA";     // Warning
+            case Sign.Error: return "\uEA39";       // ErrorBadge
+            case Sign.Paste: return "\uE77F";       // Paste
             default: return "";             // History
+        }
+    }
+
+    // The colour a sign has of its own.
+    static Color Own(Sign sign)
+    {
+        switch (sign)
+        {
+            case Sign.Text: case Sign.Search: case Sign.Keys: case Sign.Up: case Sign.Pause: case Sign.Resume: case Sign.Open:
+            case Sign.Show: case Sign.Check: case Sign.Info: case Sign.Paste:
+                return Accent;
+            case Sign.Done: return Green;
+            case Sign.Warning: return Amber;
+            case Sign.Error: return Red;
+            case Sign.Link: case Sign.Opened: case Sign.Closed: case Sign.History: case Sign.Move:
+                return Teal;
+            case Sign.Star: case Sign.Edit: case Sign.Bolt: case Sign.Erase: case Sign.Folder: case Sign.NewFolder:
+                return Amber;
+            case Sign.Plus: return Green;
+            case Sign.Delete: return Red;
+            case Sign.Exit: return Muted;
+            default: return Letter(sign) != null && sign != Sign.Formatted ? Ink : Purple;
         }
     }
 
@@ -686,10 +937,7 @@ static class Look
     public static void Draw(Graphics g, Sign sign, Rectangle box, Color? colour)
     {
         float u = box.Width / 16f, x = box.Left, y = box.Top;
-        Color own = sign == Sign.Text || sign == Sign.Search || sign == Sign.Keys || sign == Sign.Up ? Accent
-            : sign == Sign.Link || sign == Sign.Opened || sign == Sign.Closed || sign == Sign.History ? Teal
-            : sign == Sign.Star || sign == Sign.Edit || sign == Sign.Bolt || sign == Sign.Erase ? Amber : sign == Sign.Plus ? Green
-            : sign == Sign.Delete ? Red : Letter(sign) != null && sign != Sign.Formatted ? Ink : Purple;
+        Color own = Own(sign);
         if (IconProbe != null)
         {
             Font icons;
@@ -790,6 +1038,86 @@ static class Look
                     g.DrawPolygon(pen, new PointF[] { new PointF(x + 2.5f * u, y + 10 * u), new PointF(x + 9 * u, y + 3.5f * u),
                         new PointF(x + 13.5f * u, y + 8 * u), new PointF(x + 8 * u, y + 13.5f * u), new PointF(x + 6 * u, y + 13.5f * u) });
                     break;
+                case Sign.Folder:
+                case Sign.NewFolder:   // a folder, and a plus on a new one
+                    pen.Width = 1.4f * u;
+                    g.DrawPolygon(pen, new PointF[] { new PointF(x + 1.5f * u, y + 3.5f * u), new PointF(x + 6 * u, y + 3.5f * u),
+                        new PointF(x + 7.5f * u, y + 5 * u), new PointF(x + 14.5f * u, y + 5 * u), new PointF(x + 14.5f * u, y + 13 * u),
+                        new PointF(x + 1.5f * u, y + 13 * u) });
+                    if (sign == Sign.NewFolder)
+                    {
+                        g.DrawLine(pen, x + 8 * u, y + 7 * u, x + 8 * u, y + 11 * u);
+                        g.DrawLine(pen, x + 6 * u, y + 9 * u, x + 10 * u, y + 9 * u);
+                    }
+                    break;
+                case Sign.Move:   // an arrow pointing right
+                    g.DrawLine(pen, x + 3 * u, y + 8 * u, x + 12.5f * u, y + 8 * u);
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 8 * u, y + 3.5f * u), new PointF(x + 12.5f * u, y + 8 * u),
+                        new PointF(x + 8 * u, y + 12.5f * u) });
+                    break;
+                case Sign.Pause:
+                    g.DrawLine(pen, x + 5.5f * u, y + 3 * u, x + 5.5f * u, y + 13 * u);
+                    g.DrawLine(pen, x + 10.5f * u, y + 3 * u, x + 10.5f * u, y + 13 * u);
+                    break;
+                case Sign.Resume:   // a triangle pointing right
+                    g.FillPolygon(fill, new PointF[] { new PointF(x + 4.5f * u, y + 2.5f * u), new PointF(x + 13 * u, y + 8 * u),
+                        new PointF(x + 4.5f * u, y + 13.5f * u) });
+                    break;
+                case Sign.Open:   // a window with its title bar
+                    pen.Width = 1.4f * u;
+                    g.DrawRectangle(pen, x + 2 * u, y + 3 * u, 12 * u, 10 * u);
+                    g.DrawLine(pen, x + 2 * u, y + 6 * u, x + 14 * u, y + 6 * u);
+                    break;
+                case Sign.Exit:   // the sign of a power button
+                    g.DrawArc(pen, x + 2.5f * u, y + 3 * u, 11 * u, 11 * u, -60, 300);
+                    g.DrawLine(pen, x + 8 * u, y + 1.5f * u, x + 8 * u, y + 7.5f * u);
+                    break;
+                case Sign.Show:   // an eye
+                    pen.Width = 1.4f * u;
+                    g.DrawEllipse(pen, x + 1.5f * u, y + 4.5f * u, 13 * u, 7 * u);
+                    g.FillEllipse(fill, x + 6 * u, y + 5.5f * u, 4 * u, 4 * u);
+                    break;
+                case Sign.Check:
+                    g.DrawLines(pen, new PointF[] { new PointF(x + 2.5f * u, y + 8.5f * u), new PointF(x + 6 * u, y + 12 * u),
+                        new PointF(x + 13.5f * u, y + 4 * u) });
+                    break;
+                case Sign.Info:
+                case Sign.Done:
+                case Sign.Error:   // in a circle: an i, a tick, a cross
+                    pen.Width = 1.4f * u;
+                    g.DrawEllipse(pen, x + 1.5f * u, y + 1.5f * u, 13 * u, 13 * u);
+                    if (sign == Sign.Info)
+                    {
+                        g.DrawLine(pen, x + 8 * u, y + 7 * u, x + 8 * u, y + 11.5f * u);
+                        g.FillEllipse(fill, x + 7.1f * u, y + 4 * u, 1.8f * u, 1.8f * u);
+                    }
+                    else if (sign == Sign.Done)
+                        g.DrawLines(pen, new PointF[] { new PointF(x + 5 * u, y + 8.2f * u), new PointF(x + 7.2f * u, y + 10.5f * u),
+                            new PointF(x + 11 * u, y + 5.8f * u) });
+                    else
+                    {
+                        g.DrawLine(pen, x + 5.5f * u, y + 5.5f * u, x + 10.5f * u, y + 10.5f * u);
+                        g.DrawLine(pen, x + 10.5f * u, y + 5.5f * u, x + 5.5f * u, y + 10.5f * u);
+                    }
+                    break;
+                case Sign.Warning:   // a triangle with an exclamation mark
+                    pen.Width = 1.4f * u;
+                    g.DrawPolygon(pen, new PointF[] { new PointF(x + 8 * u, y + 1.5f * u), new PointF(x + 15 * u, y + 14 * u),
+                        new PointF(x + 1 * u, y + 14 * u) });
+                    g.DrawLine(pen, x + 8 * u, y + 6 * u, x + 8 * u, y + 9.5f * u);
+                    g.FillEllipse(fill, x + 7.1f * u, y + 11 * u, 1.8f * u, 1.8f * u);
+                    break;
+                case Sign.Paste:   // a clipboard
+                    pen.Width = 1.4f * u;
+                    g.DrawRectangle(pen, x + 3 * u, y + 2.5f * u, 10 * u, 12 * u);
+                    g.DrawRectangle(pen, x + 6 * u, y + 1.5f * u, 4 * u, 2.5f * u);
+                    break;
+                case Sign.Paint:   // a palette with its colours
+                    pen.Width = 1.4f * u;
+                    g.DrawEllipse(pen, x + 1.5f * u, y + 2 * u, 13 * u, 12 * u);
+                    foreach (PointF dot in new PointF[] { new PointF(5, 6), new PointF(8.5f, 4.5f), new PointF(11, 7.5f) })
+                        g.FillEllipse(fill, x + (dot.X - 1.2f) * u, y + (dot.Y - 1.2f) * u, 2.4f * u, 2.4f * u);
+                    break;
                 default:   // the formatting of text: its letter, written as it says
                     using (Font letter = new Font(TextFont.FontFamily, box.Height * 0.8f, Letter(sign).Value, GraphicsUnit.Pixel))
                         TextRenderer.DrawText(g, sign == Sign.Size ? "aA" : sign == Sign.Face || sign == Sign.Formatted ? "A" : sign.ToString().Substring(0, 1),
@@ -848,8 +1176,9 @@ static class Look
         return card;
     }
 
-    // A menu as Windows 11 draws its own: rounded, roomy rows, a rounded shape under the pointer. Its colours
-    // are read as it paints, so it follows the light and the dark by itself.
+    // A menu as Windows 11 draws its own: rounded, roomy rows, a rounded shape under the pointer, a sign before
+    // the text of an entry that has one (Mark) and a tick before the one ticked. Its colours are read as it paints,
+    // so it follows the light and the dark by itself.
     public static void Style(ToolStripDropDownMenu menu)
     {
         menu.Renderer = new MenuLook();
@@ -859,15 +1188,50 @@ static class Look
         menu.Padding = new Padding(menu.Padding.Left, edge, menu.Padding.Right, edge);
         foreach (ToolStripItem item in menu.Items) Space(item);
         menu.ItemAdded += delegate(object sender, ToolStripItemEventArgs e) { Space(e.Item); };
-        // Windows rounds it once it exists, with an edge in the colour of the moment.
+        // The signs go in the margin a menu keeps for images, which it measures by itself: only where there are
+        // signs, as known once the entries are as they will be shown. Windows rounds the menu once it exists, with
+        // an edge in the colour of the moment.
+        int side = TextFont.Height;
+        menu.ImageScalingSize = new Size(side + 2 * (int)(MenuText * Zoom), side);   // with air on either side of the sign
+        menu.Opening += delegate
+        {
+            menu.ShowImageMargin = HasSigns(menu);
+            if (menu.IsHandleCreated) Corners(menu);
+        };
         menu.HandleCreated += delegate { Corners(menu); };
-        menu.Opening += delegate { if (menu.IsHandleCreated) Corners(menu); };
     }
 
     static void Space(ToolStripItem item)
     {
         int row = (int)(MenuRow * Zoom);
         if (!(item is ToolStripSeparator)) item.Padding = new Padding((int)(MenuText * Zoom), row, item.Padding.Right, row);
+    }
+
+    // The signs of menu entries, as Windows 11 has them before the text of its own.
+    static readonly ConditionalWeakTable<ToolStripItem, object> marks = new ConditionalWeakTable<ToolStripItem, object>();
+
+    // Gives a menu entry its sign.
+    public static void Mark(ToolStripItem item, Sign sign)
+    {
+        marks.Remove(item);
+        marks.Add(item, sign);
+        item.Invalidate();
+    }
+
+    // The sign of an entry: a tick if it is ticked, the one it was given, or none.
+    static Sign? MarkOf(ToolStripItem item)
+    {
+        ToolStripMenuItem entry = item as ToolStripMenuItem;
+        if (entry != null && entry.Checked) return Sign.Check;
+        object sign;
+        return marks.TryGetValue(item, out sign) ? (Sign)sign : (Sign?)null;
+    }
+
+    static bool HasSigns(ToolStrip menu)
+    {
+        foreach (ToolStripItem item in menu.Items)
+            if (MarkOf(item).HasValue) return true;
+        return false;
     }
 
     static bool roundedMenus;   // Windows rounds them and draws their edge (Windows 11)
@@ -905,13 +1269,28 @@ static class Look
         }
 
         // The menu leaves the room asked before the text (Space) at its end: the text moves into it, and what
-        // is written on the right of an entry (its keys) along with it, quieter.
+        // is written on the right of an entry (its keys) along with it, quieter. The sign of the entry, if it has
+        // one, goes in the margin before the text, which keeps the same distance from it.
         protected override void OnRenderItemText(ToolStripItemTextRenderEventArgs e)
         {
             Rectangle area = e.TextRectangle;
-            area.Offset((int)(MenuText * Zoom), 0);
-            TextRenderer.DrawText(e.Graphics, e.Text, e.TextFont, area,
-                !e.Item.Enabled ? Blend(Muted, Well, 0.35f) : e.Text != e.Item.Text ? Muted : Ink, e.TextFormat);
+            int before = (int)(MenuText * Zoom);
+            bool keys = e.Text != e.Item.Text;
+            Color faint = Blend(Muted, Well, 0.35f);
+            Sign? sign = MarkOf(e.Item);
+            if (sign.HasValue && !keys)
+            {
+                int side = TextFont.Height;
+                Draw(e.Graphics, sign.Value, new Rectangle(area.Left - side, (e.Item.Height - side) / 2, side, side),
+                    e.Item.Enabled ? (Color?)null : faint);
+            }
+            area.Offset(before, 0);
+            TextRenderer.DrawText(e.Graphics, e.Text, e.TextFont, area, !e.Item.Enabled ? faint : keys ? Muted : Ink, e.TextFormat);
+        }
+
+        // The tick of an entry is its sign (MarkOf).
+        protected override void OnRenderItemCheck(ToolStripItemImageRenderEventArgs e)
+        {
         }
 
         // The arrow of a submenu as the sign of a closed folder.

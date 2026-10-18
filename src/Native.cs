@@ -192,4 +192,17 @@ static class Native
 
     [DllImport("uxtheme.dll", EntryPoint = "#136")]
     public static extern void FlushMenuThemes();
+
+    // A clipboard format read as the bytes it holds (see Rich.Bytes).
+    [DllImport("kernel32.dll")]
+    public static extern IntPtr GlobalLock(IntPtr memory);
+
+    [DllImport("kernel32.dll")]
+    public static extern bool GlobalUnlock(IntPtr memory);
+
+    [DllImport("kernel32.dll")]
+    public static extern UIntPtr GlobalSize(IntPtr memory);
+
+    [DllImport("ole32.dll")]
+    public static extern void ReleaseStgMedium(ref System.Runtime.InteropServices.ComTypes.STGMEDIUM medium);
 }

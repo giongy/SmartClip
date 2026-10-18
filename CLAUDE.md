@@ -46,15 +46,18 @@ condiviso su GitHub).
     lingua dimentica resta in inglese. I testi con valori usano `{0}`, `{1}` e `string.Format`. Le date dei
     giorni (`DayFormat`) e le virgolette (`Quote`) cambiano con la lingua; i nomi dei tasti Maiusc/Canc/Invio
     sono quelli delle tastiere di ogni lingua (`ShiftName`, usato anche da `MainForm.NameOf`).
-  - `Look.cs` — colori chiari e scuri, caratteri (`Look.TextFont`, `StrongFont`, `TitleFont`, `EntryFont`), icone (`Draw`),
-    righe (`DrawRow`, `DrawTopic`), forme (`Rounded`, `Pill`), menu, suggerimenti e controlli disegnati: `Look`, `Card`,
-    `RoundButton`, `Toggle`. Anche `Window`, la base di tutte le finestre tranne `Peek`: carattere e colori
+  - `Look.cs` — colori chiari e scuri, caratteri (`Look.TextFont`, `StrongFont`, `TitleFont`, `NoteFont`, `EntryFont`),
+    icone (`Draw`, colore proprio in `Own`), righe (`DrawRow`, `DrawTopic`, la tacca `MarkIn`/`DrawMark`), forme
+    (`Rounded`, `Pill`), menu (con i segni delle voci, `Look.Mark`), suggerimenti e controlli disegnati: `Look`,
+    `Card`, `RoundButton` (anche `Subtle`), `Toggle` (anche `SaysState`), `Tile` (una scheda delle opzioni),
+    `InfoBar` (un messaggio con il suo tipo, `Notice`), `EmptyNote` (ciò che dice una colonna vuota). Anche
+    `Window`, la base di tutte le finestre tranne `Peek`: carattere e colori
     dell'interfaccia, barra del titolo (`Caption`), `Finish` alla fine del costruttore (la scala, vedi le trappole),
     `NewLabel`, `PlaceOnScreen`, le misure dei pulsanti.
   - `Motion.cs` — ciò che si muove: `Fade` (un valore che va verso 0 o 1 a piccoli passi), `Glow` (la luce sotto
     il puntatore nelle righe di un elenco; `Glow.Row` è la riga sotto il puntatore), `RowList` (un `ListBox` con la
-    sua `Glow`, che avvisa quando scorre; `RowAt` dice la riga sotto un punto, `LightUnderPointer` basta agli
-    elenchi che non chiedono altro),
+    sua `Glow`, che avvisa quando scorre e disegna la tacca della riga selezionata, facendola scivolare alla
+    nuova; `RowAt` dice la riga sotto un punto, `LightUnderPointer` basta agli elenchi che non chiedono altro),
     `Entrance` (una pagina che sale al suo posto), `Rail` (la barra di scorrimento sottile).
   - `AskForm.cs` — le domande e gli avvisi, al posto di `MessageBox` (`AskForm.Ask`, `AskForm.Tell`).
   - `Peek.cs` — il riquadro che mostra una voce per intero (`Peek`), accanto alla sua riga.
@@ -139,7 +142,8 @@ condiviso su GitHub).
   (`tests\test.cmd ci`, a ogni push, anche senza release: se falliscono la release non si fa), poi compila con
   `build.cmd` e crea la
   release `vX.Y.Z` solo se con quel numero non esiste ancora (scelta dell'utente, invece di una release a
-  ogni push). Il numero di versione sta solo lì; la finestra lo mostra nel titolo (`Program.Version`). La
+  ogni push). Il numero di versione sta solo lì; le opzioni lo mostrano in fondo alla pagina «Programma»
+  (`Program.Version`; fino alla 4.2.1 stava nel titolo della finestra, che ora dice solo «SmartClip»). La
   quarta cifra conta solo se non è zero: `2.1.0.0` è `v2.1.0`, `2.1.0.1` è `v2.1.0.1`.
 - `tests/Test.cs`, `tests/test.cmd` — controlli automatici (vedi sotto).
 - `LICENSE` — licenza MIT.
@@ -272,7 +276,7 @@ condiviso su GitHub).
   di altri; le altre due scorciatoie non possono essere modificatori + cifra (`NumberOf`). Impostazioni
   `QuickPaste` e `QuickKeys` (solo i modificatori). Si assegna e
   cambia da «Scorciatoia» nel menu del tasto destro (`ListNumbers`: «Nessuna» e i nove numeri, quello attuale
-  disattivato, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento a destra della prima linea della riga,
+  spuntato e senza effetto, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento a destra della prima linea della riga,
   prima della freccia (`NumberArea`), e nel menu del tray accanto al testo salvato
   (`ShortcutKeyDisplayString`, che `MenuLook` scrive in grigio). Un numero è di una voce sola: `Clips.Number` lo
   toglie prima a chi lo aveva, e lo schema lo vuole `UNIQUE`. **Un numero non salva una voce copiata** (deciso con
@@ -282,7 +286,7 @@ condiviso su GitHub).
 - «Pulisci ora…» nelle opzioni (voluto dall'utente): elimina subito ciò che è stato copiato prima degli ultimi
   N giorni scritti nella casella accanto (`Spared`, non è un'impostazione: riparte da 0, cioè tutto), dopo una
   conferma. `Clips.Clean` e la scadenza passano dallo stesso `Drop`; vanno anche le voci in alto, mai i salvati.
-  Il pulsante si mette con `PlaceButton`.
+  Casella e pulsante stanno sulla stessa scheda (`PlaceNumber` con il pulsante in fondo, fatto da `Act`).
 - Anche le immagini copiate entrano nel database, compresse in PNG, con una miniatura; il loro `Text` è la
   descrizione che si vede, e la ricerca le trova per misura. Se negli appunti c'è anche testo vince il testo.
   In memoria resta solo la miniatura: il PNG si legge quando serve (`Entry.LoadPng` → `PngSource` → `Clips.Png`).
@@ -294,8 +298,8 @@ condiviso su GitHub).
   PNG e miniature contati con `length()` senza leggerli (`PictureBytes`). Oltre il tetto `TrimPictures` toglie le
   più vecchie, anche con freccia o numero, dopo ogni immagine copiata e a ogni `Prune`; le salvate non contano.
   Nessuna domanda né avviso: finché un'altra immagine grande come la più grande non ci starebbe (`PicturesFull`),
-  sotto le colonne compare una barra rossa (`banner`, disegnata a mano in `DrawBanner`, messa a posto da
-  `FitStatus`, accesa da `ShowPictureRoom` a ogni `Filter`).
+  sotto le colonne compare una barra rossa (`banner`, una `InfoBar` di tipo errore come quelle della riga di
+  stato, messa a posto da `FitStatus`, accesa da `ShowPictureRoom` a ogni `Filter`).
   Nell'elenco occupano tre righe, con la miniatura (`Entry.Preview`). **Si salvano** come i testi (dopo la 4.0.0):
   `EditForm` mostra l'immagine al posto del contenuto e chiede solo nome e cartella; un'immagine salvata mostra
   **sempre** la miniatura, con accanto il nome se c'è (decisione dell'utente: per le immagini il nome non nasconde
@@ -415,7 +419,7 @@ condiviso su GitHub).
   caselle di testo) si scuriscono con `SetPreferredAppMode` di uxtheme, non documentata e chiamata per numero,
   solo da Windows 10 1903. I test fotografano l'uno o l'altro con `dark`/`light` in fondo agli argomenti, e
   `shot` prova il cambio a finestra aperta (`Look.Switch`).
-- Opzione «Tema» in «Programma», sotto la lingua (voluta dall'utente il 16/10/2026, dopo aver cercato invano
+- Opzione «Tema» in «Aspetto», sotto la lingua (voluta dall'utente il 16/10/2026, dopo aver cercato invano
   come cambiarlo): «Come Windows» (default), «Chiaro», «Scuro», con un pulsante e un menu come la lingua
   (`ChangeTheme`, `Look.Choose`, `Look.Chosen`, enum `Theme`). A differenza della lingua cambia subito, senza
   riavvio. Impostazione `Theme` (numero), letta da `Main` con `SavedTheme` prima di creare la finestra, che
@@ -440,6 +444,28 @@ condiviso su GitHub).
   testo della guida tengono la barra sempre (`ScrollAlwaysVisible`, `ForcedVertical`): le righe non cambiano mai
   larghezza e la rotaia ha sempre dove stare; la linea compare solo se c'è da scorrere. La tacca della riga
   selezionata è corta e arrotondata, come nella colonna di Impostazioni (`MarkShare`).
+- Più moderno ancora (voluto dall'utente il 18/10/2026, «restando nella filosofia della leggerezza»; scelto dal mio
+  piano: icone nei menu, opzioni come Impostazioni, riga di stato come InfoBar, tacca che scivola, rifiniture):
+  - Menu: un segno prima di ogni voce, come i menu di Windows 11 (`Look.Mark`, tenuti in una
+    `ConditionalWeakTable`; nel margine delle immagini del menu, acceso solo dove qualche voce ha un segno, perché
+    lì WinForms ne conta la larghezza). Nei menu di scelta (lingua, tema, caratteri, numero di una voce) quella in
+    uso ha la spunta (`Checked`, disegnata come segno `Check`) invece di essere disattivata, e sceglierla non fa niente.
+  - Opzioni come le Impostazioni di Windows 11: ogni opzione è una scheda (`Tile`, messa da `PlaceTile`) con il nome,
+    sotto in grigio e più piccola che cosa fa in poche parole (`…Note` in `Strings`; la spiegazione completa resta
+    nel suggerimento, su scheda e controllo: `TipOption`) e i controlli all'estremità destra; gli interruttori
+    dicono «Attivato/Disattivato» prima di sé (`Toggle.SaysState`, `Switch`). Carattere e dimensione stanno su una
+    scheda sola. Cinque pagine: è nata «Aspetto» (lingua, tema, caratteri), perché «Programma» non ci stava più.
+  - Riga di stato come l'InfoBar di Windows 11 (`InfoBar`): una barra arrotondata tinta del colore del tipo, con il
+    suo segno (`Notice`: informazione, fatto, avviso, errore). `status.Tell(testo, tipo)`; `Say` è «fatto», `Warn`
+    un avviso, `ShowError` un errore, un testo assegnato da solo è informazione (conto alla rovescia, digitazione in
+    corso); l'esito di una digitazione ha il tipo di `KindOf`. La finestra delle opzioni lo ripete con lo stesso tipo.
+  - La tacca della riga selezionata scivola alla nuova (`RowList`, in tutti gli elenchi: colonne, pagine delle
+    opzioni, argomenti della guida): prima il capo davanti, poi l'altro, così si allunga e si raccoglie, come in
+    NavigationView. La forma della riga selezionata cambia subito.
+  - Rifiniture: i pulsanti della fila in basso, tranne «Digita gli appunti», sono sottili (`RoundButton.Subtle`: solo
+    segno e testo finché il puntatore non ne fa comparire la forma); Ctrl+F porta il cursore nella ricerca, che lo
+    mostra in un riquadrino a destra (`SearchKeys`, tra i `ListKeys`); una colonna vuota ha sopra le parole un
+    segno grande e tenue del perché (`EmptyNote`); la versione è passata dal titolo alle opzioni.
 - Aspetto (`Look`): barra del titolo nel colore della finestra
   (`DwmSetWindowAttribute`, solo Windows 11: altrove fallisce senza danni), pulsanti piatti con un solo
   pulsante in colore d'accento, righe dell'elenco disegnate a mano (`DrawEntry`) con il segno in colonna: testo, indirizzo, testo formattato (`SignOf`); i salvati non hanno più ciascuno la stella (voluto dall'utente il 17/10/2026: «se sono salvati si sa»), che sta una volta sola prima del titolo «Salvati» (`DrawStar`, spazio fatto con `Padding` in `OnLoad`, dopo la scala).
@@ -452,7 +478,7 @@ condiviso su GitHub).
   dell'interfaccia» sotto.
 - Carattere e dimensione dell'interfaccia (voluti dall'utente il 16/10/2026: la guida gli sembrava piccola accanto
   alle voci, e voleva un carattere solo per tutto il programma, che «si distingua bene» da quello delle voci): in
-  «Programma», sotto il tema e separati da uno spazio, `faceButton` e `faceSizeButton` con menu come la lingua.
+  «Aspetto», sotto il tema, sulla stessa scheda `faceButton` e `faceSizeButton` con menu come la lingua.
   Caratteri: gli stessi delle voci (`FontNames`); dimensioni `Look.InterfaceSizes` in pixel a 96 dpi (12–16),
   default 13 (`DefaultInterfaceSize`, scelto dall'utente; prima era 12, la dimensione dei messaggi di Windows).
   Le finestre sono disegnate per 12 px (`DesignedSize`) e crescono con il testo: `Look.Zoom` è la scala dello
@@ -462,7 +488,7 @@ condiviso su GitHub).
   `InterfaceSize` (i vecchi `Font` e `TextSize` del primo tentativo della 3.9.3 non si leggono più).
 - Carattere e dimensione delle voci (voluti dall'utente il 16/10/2026: il testo di ciò che si copia più grande,
   e «il classico font select con 11px, 12px…»; prima ho fatto ingrandire tutta l'interfaccia, ma l'utente la
-  voleva com'era): in «Programma», sotto il tema, due pulsanti con menu come la lingua (`fontButton`,
+  voleva com'era): in «Aspetto», in fondo, due pulsanti sulla stessa scheda con menu come la lingua (`fontButton`,
   `sizeButton`; nel menu ogni carattere è scritto in se stesso, `Look.FontLabel` toglie «Text» a Segoe UI
   Variable). Valgono per le righe dei due elenchi, l'anteprima (`Peek`) e il contenuto in `EditForm`:
   `Look.EntryFont` e `StrongEntryFont` (per le cartelle). Caratteri: quelli di `Look.Families` che Windows ha
@@ -488,11 +514,11 @@ condiviso su GitHub).
   poi le colonne, sotto la riga di stato e un'unica fila di pulsanti piccoli: a sinistra quelli
   della voce selezionata, a destra «Digita gli appunti», «Opzioni» e il quadratino «?» della guida
   (una scritta «Guida» nella fila non ci sta).
-  La riga di stato occupa solo lo spazio di ciò che dice (`FitStatus`: nessuna, una o due righe; il resto va
-  alle colonne) e a riposo tace (`ShowIdle`): come si digita una password sta nel suggerimento del pulsante.
-  Le conferme si scrivono con `Say` e spariscono dopo `FadeMs`; avvisi, errori e ciò che riguarda la
-  digitazione si assegnano a `status.Text` e restano fino al messaggio dopo (l'esito di una digitazione fatta
-  a finestra nascosta deve potersi leggere riaprendola).
+  La riga di stato (una `InfoBar`) occupa solo lo spazio di ciò che dice (`FitStatus` con `InfoBar.Fit`: niente,
+  o le righe del testo nella loro barra; il resto va alle colonne) e a riposo tace (`ShowIdle`): come si digita
+  una password sta nel suggerimento del pulsante. Le conferme si scrivono con `Say` e spariscono dopo `FadeMs`;
+  avvisi (`Warn`), errori (`ShowError`) e ciò che riguarda la digitazione restano fino al messaggio dopo (l'esito
+  di una digitazione fatta a finestra nascosta deve potersi leggere riaprendola).
 
 - La finestra è ridimensionabile (voluto dall'utente), mai più piccola di come nasce (`MinimumSize` in
   `OnLoad`). Dimensione e posizione si ricordano (la dimensione dal 16/10/2026, voluta dall'utente: prima tornava
@@ -512,9 +538,10 @@ condiviso su GitHub).
 - Nessun valore duplicato: ogni default, nome o numero sta in un posto solo (costanti in cima a `MainForm`,
   costanti di Windows in `Native` con i nomi ufficiali, scorciatoia definita una volta sola).
 - Aggiungere un'opzione: il campo in cima a `MainForm`, una riga `PlaceOption` (`PlaceNumber` se è un numero,
-  `PlaceHotkey` se è una scorciatoia globale) in `PlaceOptions` sotto la sua pagina (`Page`), una in
-  `TransferSettings` e il suggerimento `Tip`, tutto in `MainForm.Options.cs`. Sulla pagina entra da sola.
-  Etichetta e suggerimento sono campi di `Strings` (inglese) tradotti nelle altre tre lingue.
+  `PlaceHotkey` se è una scorciatoia globale, `PlaceTile` con `Picker` se si sceglie da un menu) in `PlaceOptions`
+  sotto la sua pagina (`Page`), una in `TransferSettings` e il suggerimento `TipOption`, tutto in
+  `MainForm.Options.cs`. Sulla pagina entra da sola, su una scheda alta quanto serve al suo testo.
+  Nome, descrizione breve (`…Note`) e suggerimento sono campi di `Strings` (inglese) tradotti nelle altre tre lingue.
 - **Nessun testo visibile scritto nel codice**: ogni testo nuovo è un campo di `Strings.cs` in inglese e una riga
   in ciascuno dei tre file delle lingue, con gli stessi `{0}`. `tests.exe texts` controlla che nessuna traduzione
   chieda più valori dell'inglese (sarebbe un `FormatException` a programma avviato), che le guide abbiano gli
@@ -525,10 +552,11 @@ condiviso su GitHub).
   verticali, divise per argomento»; prima erano su due colonne, e prima ancora in un elenco unico, caotico): a
   sinistra la colonna delle pagine (`pageList`, disegnata come gli argomenti della guida con `Look.DrawTopic`, con
   l'icona di ciascuna), a destra la pagina scelta (`pagePane`, `ShowPage`), con il nome in grande in cima
-  (`PageTop`) e le opzioni in una colonna larga `PaneWidth`. Ordine: Digitazione, Scorciatoie, Cronologia,
-  Programma. Una pagina è un `Panel` con `Text` (il nome) e `Tag` (il segno), ed è lei l'elemento della colonna.
-  Il colore d'accento resta a ciò che si clicca (il link `PlaceLink` alla cartella della cronologia). Le pagine
-  sono alte `AreaHeight` (come l'elenco), e ci stanno con spazio avanzato.
+  (`PageTop`) e le schede delle opzioni (`Tile`) larghe `PaneWidth`, una sotto l'altra. Ordine: Digitazione,
+  Scorciatoie, Cronologia, Aspetto, Programma. Una pagina è un `Panel` con `Text` (il nome) e `Tag` (il segno), ed è
+  lei l'elemento della colonna. Il colore d'accento resta a ciò che si clicca (il link alla cartella dei dati, sulla
+  scheda della cartella, `PlaceFolder`). Le pagine sono alte `AreaHeight` (come l'elenco): in tutte e quattro le
+  lingue ci stanno (la pagina più piena è Digitazione, sei schede).
   Stanno in una finestra loro (`OptionsWindow`, dal 17/10/2026, voluta dall'utente «come la guida»): non modale,
   sopra la finestra principale che ne è proprietaria, centrata su di lei a ogni apertura (`OpenOptions`), Chiudi
   ed Esc. Le opzioni restano campi di `MainForm` (le leggono `TransferSettings`, la digitazione, il tray): la
@@ -540,14 +568,14 @@ condiviso su GitHub).
 
 ## Lingua
 
-- Scelta in «Program» con un pulsante che apre l'elenco delle lingue, ognuna con il proprio nome
-  (`PlacePicker`, `ChangeLanguage`); l'etichetta dice anche «Language» in ogni lingua, per chi ci arriva per
+- Scelta in «Appearance» con un pulsante che apre l'elenco delle lingue, ognuna con il proprio nome
+  (`Picker`, `ChangeLanguage`); l'etichetta dice anche «Language» in ogni lingua, per chi ci arriva per
   sbaglio. Impostazione `Language` (stringa, `LanguageSetting`), letta da `Main` con `SavedLanguage` prima di
   creare la finestra; senza impostazione vale l'inglese (voluto dall'utente).
 - Cambiare lingua **riavvia** il programma invece di riscrivere ogni testo al volo: `ChangeLanguage` lancia
   l'eseguibile con `/restart` (`Program.RestartArgument`) e si chiude salvando le impostazioni; il nuovo aspetta
   fino a dieci secondi che il vecchio liberi il mutex dell'istanza unica, poi si riapre sulle opzioni
-  (`ShowOptions`), alla pagina «Programma».
+  (`ShowOptions`), alla pagina «Aspetto» (`restartPage`), dove sono anche carattere e dimensione dell'interfaccia.
 - Le domande non usano `MessageBox`, i cui pulsanti Sì/No seguirebbero la lingua di Windows: `AskForm` scrive
   `Strings.Yes`, `No`, `Ok`. Restano nella lingua di Windows le finestre di scelta dei file.
 
@@ -590,6 +618,19 @@ condiviso su GitHub).
   le disegna in un `BufferedGraphics` e le copia in un colpo (`OnDrawItem`). Il buffer sposta l'origine con una
   trasformazione che `TextRenderer` (GDI) ignora: senza `ResetTransform` e la riga passata con l'origine a zero, testo
   e icone finivano fuori dal buffer. Per questo chi disegna una riga deve misurare tutto da `e.Bounds`.
+- WinForms di .NET Framework (compilato con il `csc` di Windows) legge e scrive «HTML Format» nella codepage di
+  Windows, mentre tutti i programmi lo scrivono e lo leggono in UTF-8, e la sua intestazione conta byte UTF-8.
+  Leggendo, una lettera accentata o uno spazio indivisibile diventava «Ã¨»/«Â », il testo non corrispondeva più a
+  quello semplice (`Rich.Matches`) e la formattazione si perdeva (trovato dall'utente il 18/10/2026 copiando dalla
+  chat di VS Code); scrivendo, «è» arrivava a Outlook o Word come «�». Per questo `Rich.Html` legge i byte veri
+  (`Rich.Bytes`: lo stream messo da noi, o l'HGLOBAL chiesto a Windows con `ComTypes.IDataObject`) e `Rich.Put`
+  scrive un `MemoryStream` di byte UTF-8. Un `DataObject` avvolto in un altro non passa da Windows: il percorso degli
+  appunti veri i test non lo vedono, provato a mano.
+- Ciò che si copia da una pagina in tema scuro (la chat di VS Code) porta con sé sfondi scuri e testo grigio chiaro:
+  conservato com'era e incollato in Word, usciva grigio su riquadri neri (trovato dall'utente il 18/10/2026). Ogni
+  HTML che entra dagli appunti passa da `Rich.Lighten`: via gli sfondi più scuri di `DarkBack` e i grigi più chiari
+  di `LightGrey`, che come il nero diventano il colore predefinito (`Rich.Default`, anche in `Tidy`); i colori veri e
+  i grigi medi delle firme restano.
 - `ListBox.IndexFromPoint` risponde la riga più vicina anche sotto l'ultima: per sapere su quale riga è il
   puntatore c'è `RowAt` (prima un clic nel vuoto sceglieva di nuovo la voce selezionata).
 - Nell'elenco Invio agisce al rilascio (`OnKeyUp`, con `enterDown`): alla pressione il tasto tenuto giù
@@ -722,3 +763,7 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - Il tema dal vivo: il cambio da Impostazioni di Windows a programma aperto (provati solo `Look.Switch` da
   `shot` e le immagini di `real` in chiaro e in scuro), il menu delle caselle di testo scurito da
   `SetPreferredAppMode`, l'interruttore che scorre, l'anello del focus, `AskForm` aperta dal programma vero.
+- Le novità del 18/10/2026 dal vivo: i segni nei menu visti solo nelle immagini di `real` (menu del tray e
+  dell'elenco), la tacca che scivola solo in quattro fotogrammi di un programmino usa e getta, mai le schede delle
+  opzioni cliccate davvero né Ctrl+F premuto, i pulsanti sottili sotto il puntatore, i tipi della riga di stato
+  durante una digitazione vera. Da Windows 10 (Segoe MDL2 Assets) i glifi nuovi non sono mai stati guardati.

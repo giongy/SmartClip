@@ -150,26 +150,33 @@ static partial class Strings
             + "opzioni, o altri numeri.";
 
         TypingTitle = "Digitazione"; ProgramTitle = "Programma"; HotkeysTitle = "Scorciatoie"; HistoryTitle = "Cronologia";
-        DelayOption = "Attesa prima di digitare (secondi):";
-        UsOption = "Il server usa la tastiera inglese (USA)";
-        EnterOption = "Premi Invio alla fine";
-        ClearOption = "Svuota gli appunti dopo aver digitato";
-        SlowOption = "Digitazione lenta";
-        AltCodeOption = "Alt+codice per i simboli che la tastiera non ha";
-        LanguageOption = "Lingua (Language):";
-        ThemeOption = "Tema:"; ThemeSystem = "Come Windows"; ThemeLight = "Chiaro"; ThemeDark = "Scuro";
-        FaceOption = "Carattere dell'interfaccia:"; FaceSizeOption = "Dimensione dell'interfaccia:";
-        FontOption = "Carattere delle voci:"; SizeOption = "Dimensione delle voci:"; Pixels = "{0} px";
-        TrayOption = "Resta attivo nell'area di notifica (tray)";
-        LeaveOption = "Nascondi passando a un altro programma";
-        StartOption = "Avvia insieme a Windows";
+        AppearanceTitle = "Aspetto";
+        On = "Attivato"; Off = "Disattivato";
+        DelayOption = "Attesa prima di digitare"; DelayNote = "Secondi per cliccare nel campo giusto";
+        UsOption = "Il server usa la tastiera inglese (USA)"; UsNote = "Solo se i simboli arrivano sbagliati";
+        EnterOption = "Premi Invio alla fine"; EnterNote = "Conferma subito l'accesso";
+        ClearOption = "Svuota gli appunti dopo aver digitato"; ClearNote = "Quando la digitazione è riuscita";
+        SlowOption = "Digitazione lenta"; SlowNote = "Se i caratteri si perdono o arrivano in disordine";
+        AltCodeOption = "Alt+codice per i simboli che la tastiera non ha"; AltCodeNote = "Solo per i server con Windows";
+        LanguageOption = "Lingua (Language)"; LanguageNote = "Il programma riparte nella lingua scelta";
+        ThemeOption = "Tema"; ThemeNote = "Colori chiari o scuri";
+        ThemeSystem = "Come Windows"; ThemeLight = "Chiaro"; ThemeDark = "Scuro";
+        FaceOption = "Carattere dell'interfaccia"; FaceNote = "Pulsanti, opzioni, menu: il programma riparte";
+        FontOption = "Carattere delle voci"; FontNote = "Ciò che copi e salvi: cambia subito";
+        Pixels = "{0} px";
+        TrayOption = "Resta attivo nell'area di notifica (tray)"; TrayNote = "Chiudendo la finestra il programma resta attivo";
+        LeaveOption = "Nascondi passando a un altro programma"; LeaveNote = "Torna nell'area di notifica";
+        StartOption = "Avvia insieme a Windows"; StartNote = "Nascosto nell'area di notifica";
+        BackupOption = "Esporta e importa"; BackupNote = "I tuoi testi in un file che si apre con il Blocco note";
         ExportButton = "Esporta…"; ImportButton = "Importa…";
-        PickOption = "Apri l'elenco";
-        QuickOption = "Incolla per numero";
-        HistoryOption = "Ricorda i testi e le immagini copiati";
-        KeepOption = "Giorni da tenere (0: solo oggi):";
+        AboutNote = "Software libero con licenza MIT";
+        TypeNote = "Digita subito nella finestra attiva";
+        PickOption = "Apri l'elenco"; PickNote = "Porta questa finestra in primo piano da ogni programma";
+        QuickOption = "Incolla per numero"; QuickNote = "Incolla le voci che hanno una scorciatoia";
+        HistoryOption = "Ricorda i testi e le immagini copiati"; HistoryNote = "Ciò che copi mentre il programma è aperto";
+        KeepOption = "Giorni da tenere"; KeepNote = "Con 0, solo ciò che hai copiato oggi";
         FolderLink = "Apri la cartella dei dati";
-        DataFolderOption = "Cartella delle voci copiate e salvate:";
+        DataFolderOption = "Cartella delle voci copiate e salvate";
         ChangeFolderButton = "Cambia…"; DefaultFolderButton = "Predefinita";
         DatabaseSize = "Occupa {0}; immagini copiate: {1} su {2}.";
         ChooseDataFolder = "La cartella in cui {0} tiene ciò che copi e salvi.";
@@ -180,7 +187,7 @@ static partial class Strings
         ListMoveFailed = "Non è stato possibile spostare l'elenco, che resta dov'era: {0}";
         FolderUnavailable = "La cartella dell'elenco, {0}, non è raggiungibile: ciò che copi e salvi ora si perde alla "
             + "chiusura del programma. Nelle opzioni, sotto {1}, scegli un'altra cartella o quella predefinita.";
-        SpareOption = "Pulendo, tieni gli ultimi giorni (0: niente):";
+        SpareOption = "Pulisci la cronologia"; SpareNote = "Tranne gli ultimi giorni scritti accanto; 0: nessuno";
         CleanButton = "Pulisci ora…";
         DelayTip = "Per quanti secondi la finestra di destinazione deve restare in primo piano\n"
             + "prima che parta la digitazione: è il tempo che hai per cliccare nel campo\ngiusto, o per annullare.";
@@ -404,6 +411,7 @@ static partial class Strings
             "Tab\tPassa all'altra colonna.",
             EnterKeyName + "\tSceglie la voce e torna alla finestra di partenza.",
             "Esc\tTorna alla finestra di partenza senza scegliere.",
+            Key(Keys.Control | MainForm.SearchKey) + "\tPorta il cursore nella casella di ricerca.",
             Key(Keys.Control | MainForm.NewKey) + "\tNuovo testo salvato.",
             Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "\tNuova cartella.",
             Key(Keys.Control | MainForm.SaveKey) + "\tSalva la voce copiata, o modifica quella salvata.",
@@ -440,9 +448,10 @@ static partial class Strings
             "- Spegnendo la cronologia nelle opzioni si svuota l'elenco e si elimina dal disco ciò che hai copiato.",
 
             "# Le opzioni",
-            "Il pulsante «" + Options + "» le apre in una finestra a parte, che può restare aperta accanto all'elenco. Fermando il "
-                + "puntatore su un'opzione ne compare la spiegazione completa. Stanno in quattro pagine, che si scelgono dalla "
-                + "colonna a sinistra come gli argomenti di questa guida:",
+            "Il pulsante «" + Options + "» le apre in una finestra a parte, che può restare aperta accanto all'elenco. Ogni "
+                + "opzione dice in poche parole, sotto il nome, che cosa fa; fermandoci sopra il puntatore ne compare la "
+                + "spiegazione completa. Stanno in cinque pagine, che si scelgono dalla colonna a sinistra come gli argomenti "
+                + "di questa guida:",
             "- " + TypingTitle + ": quanti secondi aspettare prima di digitare (da " + MainForm.MinDelay + " a "
                 + MainForm.MaxDelay + "), se il server usa la tastiera americana, se premere Invio alla fine, se "
                 + "svuotare gli appunti dopo, la digitazione lenta e i simboli composti con Alt+codice.",
@@ -450,8 +459,11 @@ static partial class Strings
                 + ", e dà loro altri tasti.",
             "- " + HistoryTitle + ": se ricordare ciò che copi, per quanti giorni, la cartella del database "
                 + "(che si può cambiare) con il collegamento che la apre, e il pulsante che pulisce subito la cronologia.",
-            "- " + ProgramTitle + ": la lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), il carattere e la dimensione dell'interfaccia (pulsanti, opzioni, questa guida: in pixel, riavviano il programma) e quelli delle voci (cambiano subito), se restare attivo nell'area di notifica e nascondersi passando a un "
-                + "altro programma, se partire insieme a Windows, e i pulsanti per esportare e importare.",
+            "- " + AppearanceTitle + ": la lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), il carattere e la "
+                + "dimensione dell'interfaccia (pulsanti, opzioni, questa guida: in pixel, riavviano il programma) e quelli "
+                + "delle voci (cambiano subito).",
+            "- " + ProgramTitle + ": se restare attivo nell'area di notifica e nascondersi passando a un altro programma, "
+                + "se partire insieme a Windows, i pulsanti per esportare e importare, e la versione del programma.",
 
             "# Esportare e importare",
             "Nelle opzioni, sotto «" + ProgramTitle + "», due pulsanti portano i tuoi testi fuori dal programma e li "

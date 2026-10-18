@@ -1035,6 +1035,25 @@ static class TestProgram
             "the HTML of the clipboard says in bytes where its fragment is, and the fragment comes back");
         Check(Rich.Fragment("<html><body><!--StartFragment--><i>a</i><!--EndFragment--></body></html>") == "<i>a</i>",
             "without a header the fragment is found by its markers");
+        // As the clipboard holds it: written by this program as bytes of UTF-8, which Windows Forms would write in the
+        // code page of Windows, and read back as such. Read from another program, through Windows, it is the same
+        // path (Rich.Bytes): tried by hand on the real clipboard, as the checks do not touch it.
+        DataObject put = new DataObject();
+        Rich.Put(put, fragment, null);
+        System.IO.MemoryStream written = put.GetData(DataFormats.Html) as System.IO.MemoryStream;
+        Check(written != null && Encoding.UTF8.GetString(written.ToArray()).TrimEnd('\0') == document && Rich.Html(put) == fragment,
+            "the HTML of the clipboard is written and read in UTF-8, accents included");
+        // Copied from a page in a dark theme (the chat of VS Code): its dark backgrounds and the light grey of its text
+        // go, colours that are colours and darker greys stay, as does a light background.
+        string dark = "<p style=\"color: rgb(191, 191, 191); font-family: &quot;Segoe UI&quot;, sans-serif; background-color: rgb(25, 26, 27);\">"
+            + "<b>A</b> <a style=\"color: rgb(72, 160, 199);\">B</a> <code style=\"color: #8c8c8c; background: none 0% 0% / auto rgb(38, 38, 38); "
+            + "padding: 2px\">C</code> <span style='color:#666;background-color:#fff'>D</span></p>";
+        string light = Rich.Lighten(dark);
+        List<Run> lit = Rich.FromHtml(light);
+        Check(!light.Contains("191") && !light.Contains("25, 26, 27") && !light.Contains("38, 38, 38") && light.Contains("72, 160, 199")
+            && light.Contains("#8c8c8c") && light.Contains("padding: 2px") && light.Contains("&quot;Segoe UI&quot;")
+            && light.Contains("color:#666;background-color:#fff") && Rich.FromHtml("<span style=\"color:#bfbfbf\">x</span>")[0].Color.IsEmpty
+            && Rich.TextOf(lit) == "A B C D", "what comes from a dark page loses its dark backgrounds and its light grey text");
 
         // A signature as a web mail copies it: inline styles, fonts, entities, a style sheet and a hidden part.
         string signature = "<div style=\"font-family:'No Such Face',serif\"><b><span style=\"font-size:20pt\">Sai&nbsp;Chavan</span></b></div>\r\n"
@@ -1402,7 +1421,7 @@ static class TestProgram
             typeof(MainForm).GetMethod("ShowPictureRoom", hidden).Invoke(form, null);
             Application.DoEvents();
             Save(form, path + "-full.png");
-            Panel banner = (Panel)typeof(MainForm).GetField("banner", hidden).GetValue(form);
+            Control banner = (Control)typeof(MainForm).GetField("banner", hidden).GetValue(form);
             bool barred = banner.Visible && banner.Bottom <= status.Top && recent.Parent.Bottom <= banner.Top;
             Clips.PictureSpace = space;
             typeof(MainForm).GetMethod("ShowPictureRoom", hidden).Invoke(form, null);
@@ -1628,9 +1647,9 @@ static class TestProgram
             // The menu of the icon with a folder open, and a tooltip, over the window.
             using (ContextMenuStrip menu = new ContextMenuStrip())
             {
-                menu.Items.Add(Strings.Open);
-                menu.Items.Add(Strings.Pause);
-                menu.Items.Add(Strings.Exit);
+                Look.Mark(menu.Items.Add(Strings.Open), Sign.Open);
+                Look.Mark(menu.Items.Add(Strings.Pause), Sign.Pause);
+                Look.Mark(menu.Items.Add(Strings.Exit), Sign.Exit);
                 Look.Style(menu);
                 typeof(MainForm).GetMethod("ShowSaved", hidden).Invoke(form, new object[] { menu });
                 menu.Show(new Point(form.Left + 60, form.Top + 120));
@@ -1733,7 +1752,7 @@ static class TestProgram
                 Sample s = Sample.Current;
                 string servers = Texts.Join(s.Work, s.Servers);
                 DataObject copiedSignature = new DataObject();
-                copiedSignature.SetData(DataFormats.Html, Rich.Document(SavedSample().Html));
+                Rich.Put(copiedSignature, SavedSample().Html, null);
                 Rich.Remember(s.SignatureText, copiedSignature);
                 using (ShotEdit edit = new ShotEdit(new Entry(null, s.SignatureText), servers, new List<string>(new string[] { s.Work, servers, s.Home })))
                 {
