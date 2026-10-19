@@ -31,6 +31,7 @@ class Heading
 class CardParts
 {
     public Rectangle Card, Body, Meta, Number, Pin;
+    public int Least;   // how tall what is on the right of the entry is, from the top of the entry
     public readonly Dictionary<Part, Rectangle> Buttons = new Dictionary<Part, Rectangle>();
 }
 
@@ -615,29 +616,42 @@ partial class MainForm
     {
         if (row is Heading) return Look.StrongFont.Height + (int)((HeadingAir + CardLineGap) * Zoom);
         Entry entry = (Entry)row;
-        int frame = 2 * (int)(CardInset * Zoom) + (int)(CardLineGap * Zoom) + Look.NoteFont.Height + (int)(CardGap * Zoom);
+        CardParts parts = Lay(entry, new Rectangle(0, 0, width, MaxRow));
         int body;
         if (entry.Picture) body = (int)(CardPicture * Zoom);
         else if (entry.Saved && entry.Name != null) body = Look.StrongEntryFont.Height;
         else
         {
-            int line = Look.EntryFont.Height, room = Lay(entry, new Rectangle(0, 0, width, MaxRow)).Body.Width;
-            int tall = TextRenderer.MeasureText(CardText(entry), Look.EntryFont, new Size(Math.Max(1, room), 0), BodyFlags).Height;
+            int line = Look.EntryFont.Height;
+            int tall = TextRenderer.MeasureText(CardText(entry), Look.EntryFont, new Size(Math.Max(1, parts.Body.Width), 0), BodyFlags).Height;
             body = Math.Max(1, Math.Min(BodyLines, (tall + line - 1) / line)) * line;
         }
-        return Math.Min(MaxRow, frame + body);
+        return Math.Min(MaxRow, 2 * (int)(CardPad * Zoom) + Math.Max(body, parts.Least) + (int)(CardGap * Zoom));
     }
 
+    // The small line under or beside the entry: the program it was copied in, or the folder of a saved one; when;
+    // what it is.
+    string MetaText(Entry entry)
+    {
+        string source = entry.Saved ? (entry.Group != null ? Texts.Display(entry.Group) : Strings.SavedTitle)
+            : entry.Origin != null ? entry.Origin.Name : null;
+        List<string> said = new List<string>();
+        foreach (string part in new string[] { source, When(entry), BadgeOf(entry) }) if (part != null) said.Add(part);
+        return string.Join(Dot, said.ToArray());
+    }
+
+    const TextFormatFlags MetaFlags = TextFormatFlags.VerticalCenter | LineFlags | TextFormatFlags.NoPadding;
+
     // The parts of the card of an entry in its row (see CardParts): the entry first, at the top left; at the right of
-    // its first line its number, its arrow and the small buttons; at the bottom the small line of where and when, which
-    // DrawEntry writes at its right end.
+    // its first line its number, its arrow and the small buttons; the small line of where and when right before them
+    // if the entry keeps most of the card, otherwise under them. DrawEntry writes that line at the right end of Meta.
     CardParts Lay(Entry entry, Rectangle row)
     {
-        int inset = (int)(CardInset * Zoom), gap = (int)(CardLineGap * Zoom), side = (int)(PartHeight * Zoom);
+        int inset = (int)(CardInset * Zoom), pad = (int)(CardPad * Zoom), gap = (int)(CardLineGap * Zoom), side = (int)(PartHeight * Zoom);
         int between = (int)(PartGap * Zoom) / 2;
         CardParts parts = new CardParts();
         parts.Card = Rectangle.FromLTRB(row.Left + 1, row.Top, row.Right - 2, row.Bottom - (int)(CardGap * Zoom));
-        int left = parts.Card.Left + inset, right = parts.Card.Right - inset, top = parts.Card.Top + inset;
+        int left = parts.Card.Left + inset, right = parts.Card.Right - inset, top = parts.Card.Top + pad;
         // The buttons in the middle of the first line of the entry.
         int middle = top + Look.EntryFont.Height / 2, end = right;
         for (int i = CardButtons.Length - 1; i >= 0; i--)
@@ -656,9 +670,21 @@ partial class MainForm
             parts.Number = new Rectangle(end - width, middle - high / 2, width, high);
             end = parts.Number.Left - between;
         }
-        int meta = Look.NoteFont.Height;
-        parts.Meta = new Rectangle(left, parts.Card.Bottom - inset - meta, right - left, meta);
-        parts.Body = Rectangle.FromLTRB(left, top, end - gap, parts.Meta.Top - gap);
+        int meta = Look.NoteFont.Height, room = right - left, bottom = Math.Max(top, parts.Card.Bottom - pad);
+        int wide = meta + (int)(PartGap * Zoom) + TextRenderer.MeasureText(MetaText(entry), Look.NoteFont, Size.Empty, MetaFlags & ~TextFormatFlags.EndEllipsis).Width;
+        if (end - 3 * gap - wide - left >= room * InlineShare)
+        {
+            parts.Meta = new Rectangle(end - gap - wide, middle - meta / 2, wide, meta);
+            parts.Body = Rectangle.FromLTRB(left, top, parts.Meta.Left - 2 * gap, bottom);
+            parts.Least = Look.EntryFont.Height;
+        }
+        else
+        {
+            int column = Math.Max(right - end, Math.Min(wide, (int)(room * ColumnShare)));
+            parts.Meta = new Rectangle(right - column, middle + side / 2, column, meta);
+            parts.Body = Rectangle.FromLTRB(left, top, right - column - gap, bottom);
+            parts.Least = parts.Meta.Bottom - top;
+        }
         return parts;
     }
 
@@ -751,28 +777,24 @@ partial class MainForm
                 parts.Body.Right, parts.Body.Bottom), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
         }
         else if (entry.Saved && entry.Name != null)
-            TextRenderer.DrawText(g, entry.Name, Look.StrongEntryFont, parts.Body, Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
+            TextRenderer.DrawText(g, entry.Name, Look.StrongEntryFont, new Rectangle(parts.Body.Left, parts.Body.Top, parts.Body.Width,
+                Look.StrongEntryFont.Height), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
         else
             TextRenderer.DrawText(g, CardText(entry), e.Font, parts.Body, Look.Ink, BodyFlags | TextFormatFlags.EndEllipsis);
 
-        // Under the buttons, at the right end, small and faint, so that the entry is what stands out: the program it was
-        // copied in with its icon, or the folder of a saved one; when; what it is.
-        string source = entry.Saved ? (entry.Group != null ? Texts.Display(entry.Group) : Strings.SavedTitle)
-            : entry.Origin != null ? entry.Origin.Name : null;
-        List<string> said = new List<string>();
-        foreach (string part in new string[] { source, When(entry), BadgeOf(entry) }) if (part != null) said.Add(part);
-        string meta = string.Join(Dot, said.ToArray());
-        const TextFormatFlags metaFlags = TextFormatFlags.VerticalCenter | LineFlags | TextFormatFlags.NoPadding;
+        // Before the buttons or under them, at the right end, small and faint, so that the entry is what stands out: the
+        // program it was copied in with its icon, or the folder of a saved one; when; what it is.
+        string meta = MetaText(entry);
         int side = parts.Meta.Height, gap = (int)(PartGap * Zoom);
         int width = Math.Min(parts.Meta.Width - side - gap, TextRenderer.MeasureText(g, meta, Look.NoteFont, Size.Empty,
-            metaFlags & ~TextFormatFlags.EndEllipsis).Width);
+            MetaFlags & ~TextFormatFlags.EndEllipsis).Width);
         Rectangle text = Rectangle.FromLTRB(parts.Meta.Right - width, parts.Meta.Top, parts.Meta.Right, parts.Meta.Bottom);
         Rectangle icon = new Rectangle(text.Left - gap - side, parts.Meta.Top, side, side);
         Color faint = Look.Blend(fill, Look.Muted, MetaShare);
         if (entry.Saved) Look.Draw(g, Sign.Star, icon, faint);
         else if (entry.Origin != null && entry.Origin.Icon != null) Look.DrawFaint(g, entry.Origin.Icon, icon, MetaShare);
         else Look.Draw(g, entry.Origin != null ? Sign.Apps : SignOf(entry), icon, faint);
-        TextRenderer.DrawText(g, meta, Look.NoteFont, text, faint, metaFlags);
+        TextRenderer.DrawText(g, meta, Look.NoteFont, text, faint, MetaFlags);
 
         // At the right of the first line: the number, the arrow and the small buttons, grey but on the card the pointer
         // is on, or the selected one.

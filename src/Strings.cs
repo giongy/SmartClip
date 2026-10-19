@@ -382,7 +382,7 @@ static partial class Strings
                 + "the top come before the others.",
             "- " + PinnedPlace + ": only the copied entries kept at the top.",
             "- " + SavedTitle + ": the saved texts, by name. Under it are their folders.",
-            "- " + SourcesPlace + ": the programs you copied in, each with its icon and how many entries come from it. A "
+            "- " + SourcesPlace + ": the programs you copied in, that of the latest copy first, each with its icon and how many entries come from it. A "
                 + "click on one shows only what you copied there; a click on " + SourcesPlace + " opens or closes the list. "
                 + "The programs of a Citrix server all take the name of Citrix on this PC, but each keeps its own icon.",
             "The button at the top of the sidebar reduces it to its icons, and gives it its names back: resting the pointer "
@@ -392,7 +392,7 @@ static partial class Strings
                 + PictureKinds + ") show one kind of entry only. " + CodeKinds + " is a guess from how the lines look: now "
                 + "and then a text ends up there, or a piece of code among the texts. When it guesses wrong, “" + KindMenu
                 + "”, in the menu of a text, says what it is: copied again or saved, it stays so.",
-            "Each card shows the entry first; at its bottom right, small and faint, the program it was copied in, with its icon (or the folder "
+            "Each card shows the entry first; on its right, before the buttons or under them, small and faint, the program it was copied in, with its icon (or the folder "
                 + "of a saved text), the time of the copy and what it is. On the right, small signs show it whole, copy it, "
                 + "save or edit it, delete it and open its menu: resting the pointer on one says what it does.",
             "- Type in the box at the top to search the cards of the place: words count in any order, ignoring case and accents.",

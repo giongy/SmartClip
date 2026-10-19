@@ -779,6 +779,7 @@ static class TestProgram
             List<Source> sources = clips.Sources();
             Check(sources.Count == 2 && sources.TrueForAll(delegate(Source s) { return s.Count == 1 && s.Origin != null; }),
                 "the programs the copied entries come from, each with how many");
+            Check(sources[0].Origin.Name == Origin.NameOf(explorer), "the program of the latest copy first");
             clips.Remove(clips.Copied(1, code)[0].Id);
             clips.Remove(clips.Copied(1, link)[0].Id);
             // The programs a remote one shows (Citrix): its name, and the icon of their window, one for each icon.
@@ -1585,8 +1586,10 @@ static class TestProgram
             GoTo(form, PlaceKind.Pinned, null);
             bool pinnedOnly = Cards(cards).Count == 1 && Cards(cards)[0].Pinned;
             Console.WriteLine("[{0}] saved, a folder with those inside it, pinned", savedOnly && inWork && pinnedOnly ? "PASS" : "FAIL");
-            nav.SelectedIndex = 7;   // the first program, by name: Edge
-            bool fromEdge = Cards(cards).Count == 2;
+            // The programs from that of the latest copy: PowerShell, then Edge.
+            bool byTime = ((Place)nav.Items[7]).Origin.Name.Contains("PowerShell");
+            nav.SelectedIndex = 8;
+            bool fromEdge = Cards(cards).Count == 2 && byTime;
             GoTo(form, PlaceKind.All, null);
             TabStrip tabs = (TabStrip)typeof(MainForm).GetField("tabs", hidden).GetValue(form);
             tabs.Selected = 3;   // links

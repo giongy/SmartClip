@@ -358,7 +358,7 @@ condiviso su GitHub).
   non c'è (vorrebbe leggerle tutte alla copia).
 - App di provenienza (voluta dall'utente il 18/10/2026: «serve per ogni voce copiata»): nella riga piccola sotto la scheda di ogni
   voce copiata, icona e nome del programma in cui è stata copiata (`DrawEntry`); nella barra laterale, sotto
-  «Provenienza», un posto per programma (`Clips.Sources`, con quante voci). `Texts.Remember`
+  «Provenienza», un posto per programma (`Clips.Sources`, con quante voci; prima quello della copia più recente, voluto dall'utente il 19/10/2026, prima erano per nome). `Texts.Remember`
   chiede a `Origin.Find` l'eseguibile del proprietario degli appunti (`GetClipboardOwner`; senza, o se è il servizio degli appunti di Windows in `svchost.exe`, `IsHost`; le voci che le versioni fino alla 4.3.2 gli avevano attribuito lo dimenticano a ogni `Prune`, `ForgetHosts`, la finestra in primo
   piano), con `QueryFullProcessImageName` (funziona anche con i programmi da amministratore). Il nome è la descrizione
   del file («Microsoft Edge»), o il prodotto, o il nome del file (`Origin.NameOf`); l'icona quella di
@@ -373,7 +373,7 @@ condiviso su GitHub).
   dell'icona della finestra (`WM_GETICON`, con `SendMessageTimeout`; mai l'icona della classe), e tiene l'icona per la
   sessione (`windowIcons`, che `IconOf` legge): così nella barra ci sono tante «Citrix HDX Engine» quante icone, il nome
   è sempre quello di Citrix (scelta dell'utente: «so che viene da lì, ma capisco da quale applicazione»), e lo schema
-  non cambia. A parità di nome `Sources` le ordina per id. Ricavare il nome vero dal titolo della finestra è stato
+  non cambia. Ricavare il nome vero dal titolo della finestra è stato
   scartato (Esplora file e gli emulatori di terminale danno il nome della cartella o «[62 x 160]»). Non si esporta, e la ricerca non trova le voci per programma (si potrebbe: ma
   «code» troverebbe tutto ciò che è copiato in VS Code). Le voci finte delle immagini (`FillSample`) vengono da Edge,
   PowerShell e Blocco note (`Clips.Attribute`).
@@ -447,7 +447,7 @@ condiviso su GitHub).
   meno): disegnata a mano in una riga di `cardList` (`OwnerDrawVariable`, `DrawEntry`), un po' più chiara del
   pannello (`Look.Raised`, nuovo colore delle due tavolozze) e con il bordo d'accento se selezionata (`RowList.Marked`
   falso: niente tacca). **Prima la voce**, grande (fino a `BodyLines` righe del testo, `CardText`; il nome di un
-  salvato con nome; una miniatura con la misura); in fondo a destra, sotto i pulsanti, piccola e tenue (`MetaShare`, anche l'icona semitrasparente, `Look.DrawFaint`; voluto dall'utente il 19/10/2026, «per rendere ancora più chiaro cosa è copiato»), una riga sola: icona e nome del programma
+  salvato con nome; una miniatura con la misura); a destra, piccola e tenue, prima dei pulsanti sulla stessa riga se alla voce resta almeno `InlineShare` della scheda, altrimenti sotto i pulsanti in una colonna larga al massimo `ColumnShare`, accanto alla voce e mai su una riga sua (`Lay`, `CardParts.Least`; schede compatte volute dall'utente il 19/10/2026, «molti spazi interni nelle celle»: margini `CardPad`, miniature di `CardPicture` 40 px; prima una scheda di testo era alta 73 px, ora 31 in una riga) (`MetaShare`, anche l'icona semitrasparente, `Look.DrawFaint`; voluto dall'utente il 19/10/2026, «per rendere ancora più chiaro cosa è copiato»), una riga sola: icona e nome del programma
   (o stella e cartella di un salvato) · ora (`When`) · tipo (`BadgeOf`). A destra della prima riga numero, freccia e
   piccoli segni senza testo: anteprima (l'occhio), copia, salva/modifica, elimina, «⋯» (`CardButtons`), grigi tranne
   sulla scheda sotto il puntatore o selezionata, con il nome in un suggerimento sotto il segno (`PartText`, mostrato a

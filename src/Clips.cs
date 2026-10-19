@@ -609,12 +609,13 @@ sealed class Clips : IDisposable
         return sql.ToString();
     }
 
-    // The programs the copied entries come from, by name, each with how many come from it. The remote programs of one
-    // server share their name (Origin.Within): those keep the order in which they were met.
+    // The programs the copied entries come from, each with how many come from it: that of the latest copy first, and
+    // so on (wanted by the user on 19/10/2026; they were by name).
     public List<Source> Sources()
     {
         List<Source> sources = new List<Source>();
-        using (Statement rows = data.Prepare("SELECT app_id, count(*) FROM entries WHERE saved = 0 AND app_id IS NOT NULL GROUP BY app_id"))
+        using (Statement rows = data.Prepare("SELECT app_id, count(*) FROM entries WHERE saved = 0 AND app_id IS NOT NULL"
+            + " GROUP BY app_id ORDER BY max(copied_at) DESC, app_id DESC"))
             while (rows.Step())
             {
                 Source source = new Source();
@@ -623,11 +624,6 @@ sealed class Clips : IDisposable
                 source.Origin = OriginOf(source.App);
                 if (source.Origin != null) sources.Add(source);
             }
-        sources.Sort(delegate(Source a, Source b)
-        {
-            int byName = StringComparer.CurrentCultureIgnoreCase.Compare(a.Origin.Name, b.Origin.Name);
-            return byName != 0 ? byName : a.App.CompareTo(b.App);
-        });
         return sources;
     }
 

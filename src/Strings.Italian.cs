@@ -324,7 +324,7 @@ static partial class Strings
                 + "in alto vengono prima delle altre.",
             "- «" + PinnedPlace + "»: solo le voci copiate tenute in alto.",
             "- «" + SavedTitle + "»: i testi salvati, per nome. Sotto ci sono le loro cartelle.",
-            "- «" + SourcesPlace + "»: i programmi in cui hai copiato, ognuno con la sua icona e quante voci vengono da "
+            "- «" + SourcesPlace + "»: i programmi in cui hai copiato, prima quello della copia più recente, ognuno con la sua icona e quante voci vengono da "
                 + "lui. Un clic su uno mostra solo ciò che hai copiato lì; un clic su «" + SourcesPlace + "» apre o chiude l'elenco. "
                 + "I programmi di un server Citrix prendono tutti il nome di Citrix su questo PC, ma ognuno tiene la sua icona.",
             "Il pulsante in cima alla barra laterale la riduce alle sue icone, e le ridà i nomi: fermando il puntatore su "
@@ -334,7 +334,7 @@ static partial class Strings
                 + PictureKinds + ") mostrano un solo tipo di voce. «" + CodeKinds + "» è un'ipotesi fatta dall'aspetto delle "
                 + "righe: ogni tanto ci finisce un testo, o un pezzo di codice tra i testi. Quando sbaglia, «" + KindMenu
                 + "», nel menu di un testo, dice che cos'è: copiato di nuovo o salvato, resta così.",
-            "Ogni scheda mostra prima la voce; in fondo a destra, in piccolo e tenue, il programma in cui è stata copiata, con la sua icona (o "
+            "Ogni scheda mostra prima la voce; a destra, prima dei pulsanti o sotto, in piccolo e tenue, il programma in cui è stata copiata, con la sua icona (o "
                 + "la cartella di un testo salvato), l'ora della copia e che cos'è. A destra, piccoli segni la mostrano per "
                 + "intero, la copiano, la salvano o la modificano, la eliminano e aprono il suo menu: fermando il puntatore su uno, dice che cosa fa.",
             "- Scrivi nella casella in alto per cercare tra le voci del posto: le parole valgono in qualsiasi "

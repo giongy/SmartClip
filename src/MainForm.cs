@@ -48,13 +48,16 @@ partial class MainForm : Window
     const int TitleRow = 34, TabsHeight = 32;          // the title of the place, and the tabs under the search
     const int ListHeight = 380;                        // the cards, as the window starts
     const int SideIndent = 16;                         // of a folder in the sidebar, for each folder it is inside of
-    // A card: the entry first, its buttons on the right of its first line, under it the program or folder; between
-    // the cards some air.
-    const int CardGap = 8, CardInset = 12, CardLineGap = 6;
-    const int PartHeight = 26, PartGap = 6;            // the buttons of a card, and the room between them
+    // A card: the entry first, its buttons on the right of its first line, before them or under them the program or
+    // folder; between the cards a little air. Compact, wanted by the user on 19/10/2026: "too much room in the cells".
+    const int CardGap = 5, CardInset = 12, CardPad = 6, CardLineGap = 4;   // CardInset at the sides, CardPad above and below
+    const int PartHeight = 24, PartGap = 6;            // the buttons of a card, and the room between them
     const int BodyLines = 2;                           // lines of text a card shows of its entry, at most
-    const int CardPicture = 72;                        // how tall a picture is shown in its card
-    const int HeadingAir = 12;                         // above the name of a day, among the cards
+    const int CardPicture = 40;                        // how tall a picture is shown in its card
+    const int HeadingAir = 6;                          // above the name of a day, among the cards
+    // The small line of where and when goes on the first line of a card, before the buttons, when the entry keeps at
+    // least this share of the card; otherwise under the buttons, taking at most the second share.
+    const float InlineShare = 0.5f, ColumnShare = 0.4f;
     const int MaxRow = 255;                            // the tallest row a list box of Windows can have, in pixels
     const int PreviewMargin = 4;                       // around the preview, inside its card
     const int TileHeight = 52, TileGap = 4;            // the least a card of the options is tall, and between two cards

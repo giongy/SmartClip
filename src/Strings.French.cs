@@ -334,7 +334,7 @@ static partial class Strings
                 + "les éléments gardés en haut passent avant les autres.",
             "- « " + PinnedPlace + " » : seulement les éléments copiés gardés en haut.",
             "- « " + SavedTitle + " » : les textes enregistrés, par nom. En dessous se trouvent leurs dossiers.",
-            "- « " + SourcesPlace + " » : les programmes dans lesquels vous avez copié, chacun avec son icône et le nombre "
+            "- « " + SourcesPlace + " » : les programmes dans lesquels vous avez copié, celui de la copie la plus récente d'abord, chacun avec son icône et le nombre "
                 + "d'éléments qui en viennent. Un clic sur l'un d'eux ne montre que ce que vous y avez copié ; un clic sur « "
                 + SourcesPlace + " » ouvre ou ferme la liste. Les programmes d'un serveur Citrix prennent tous le nom de Citrix "
                 + "sur ce PC, mais chacun garde son icône.",
@@ -346,7 +346,7 @@ static partial class Strings
                 + "l'allure des lignes : de temps en temps un texte s'y retrouve, ou un morceau de code parmi les textes. "
                 + "Quand elle se trompe, « " + KindMenu + " », dans le menu d'un texte, dit ce qu'il est : copié à "
                 + "nouveau ou enregistré, il le reste.",
-            "Chaque carte montre d'abord l'élément ; en bas à droite, en petit et discret, le programme dans lequel il a été copié, avec "
+            "Chaque carte montre d'abord l'élément ; à droite, avant les boutons ou dessous, en petit et discret, le programme dans lequel il a été copié, avec "
                 + "son icône (ou le dossier d'un texte enregistré), l'heure de la copie et ce qu'il est. À droite, de petits "
                 + "signes le montrent en entier, le copient, l'enregistrent ou le modifient, le suppriment et ouvrent son menu : en laissant le "
                 + "pointeur sur l'un d'eux, il dit ce qu'il fait.",

@@ -66,7 +66,7 @@ the edge of the sidebar to make it wider or narrower; the button at its top redu
   first.
 - **Pinned**: only the copied entries kept at the top.
 - **Saved**: the texts you saved, by name, which stay until you delete them. Their folders are under it.
-- **Source**: the programs you copied in, each with its icon and how many entries come from it; choose one to see
+- **Source**: the programs you copied in, that of your latest copy first, each with its icon and how many entries come from it; choose one to see
   only what you copied there. The programs of a Citrix server all go by the name of Citrix on your PC, each with
   its own icon.
 
@@ -74,7 +74,7 @@ Above the cards, tabs show one kind of entry only: **All**, **Text**, **Code**, 
 told from how the lines look, so now and then it guesses wrong: **Type**, in the menu of a text, says what it
 is, and it stays so, also copied again or saved.
 
-Each card shows the entry first, large; at its bottom right, under the buttons, small and faint, the program it was copied in with its icon (or
+Each card is compact: the entry first, large; on its right, before the buttons (or under them in a narrow window), small and faint, the program it was copied in with its icon (or
 the folder of a saved text), the time and what it is. On the right of the entry are its number, its arrow and small
 signs that show it whole, copy it, save or edit it, delete it and open its menu; their tooltips name them. Copied entries are texts and pictures
 (screenshots, for example), each picture with a small preview. They stay for the number of days set in the

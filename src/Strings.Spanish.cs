@@ -327,7 +327,7 @@ static partial class Strings
                 + "entradas mantenidas arriba van antes que las demás.",
             "- «" + PinnedPlace + "»: solo las entradas copiadas mantenidas arriba.",
             "- «" + SavedTitle + "»: los textos guardados, por nombre. Debajo están sus carpetas.",
-            "- «" + SourcesPlace + "»: los programas en los que copiaste, cada uno con su icono y cuántas entradas vienen "
+            "- «" + SourcesPlace + "»: los programas en los que copiaste, primero el de la copia más reciente, cada uno con su icono y cuántas entradas vienen "
                 + "de él. Un clic en uno muestra solo lo que copiaste allí; un clic en «" + SourcesPlace + "» abre o cierra la lista. "
                 + "Los programas de un servidor Citrix toman todos el nombre de Citrix en este PC, pero cada uno conserva su icono.",
             "El botón en lo alto de la barra lateral la reduce a sus iconos, y le devuelve los nombres: si dejas el puntero "
@@ -338,7 +338,7 @@ static partial class Strings
                 + "aspecto de las líneas: de vez en cuando acaba ahí un texto, o un trozo de código entre los textos. "
                 + "Cuando se equivoca, «" + KindMenu + "», en el menú de un texto, dice qué es: copiado de nuevo o "
                 + "guardado, se queda así.",
-            "Cada tarjeta muestra primero la entrada; abajo a la derecha, en pequeño y tenue, el programa en el que se copió, con su icono (o "
+            "Cada tarjeta muestra primero la entrada; a la derecha, antes de los botones o debajo, en pequeño y tenue, el programa en el que se copió, con su icono (o "
                 + "la carpeta de un texto guardado), la hora de la copia y qué es. A la derecha, pequeños signos la muestran "
                 + "entera, la copian, la guardan o la editan, la eliminan y abren su menú: dejando el puntero sobre uno, dice qué hace.",
             "- Escribe en la casilla de arriba para buscar entre las entradas del lugar: las palabras valen en cualquier "
