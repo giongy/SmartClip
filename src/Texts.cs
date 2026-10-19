@@ -21,7 +21,7 @@ class Entry
     public readonly string Name, Text;
     public readonly DateTime Time;   // when it was copied, or saved: DateTime.MinValue if nobody knows
     public readonly bool Picture;
-    public bool Pinned;              // a copied entry kept at the top of its column for a while: it goes with its days
+    public bool Pinned;              // a copied entry kept at the top of the list for a while: it goes with its days
     public int Number;               // the digit that pastes it from anywhere: 0 for none
     public string Group;             // the path of the folder a saved entry is in, or null
     public bool IsGroup, Open;       // not an entry but a folder of saved ones, named by its path; and whether it shows them

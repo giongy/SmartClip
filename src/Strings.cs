@@ -58,7 +58,7 @@ static partial class Strings
     public static string NoResults = "No results", HistoryOffEmpty = "The history is off",
         PausedEmpty = "Paused: what you copy is not remembered", CopyHint = "What you copy will appear here",
         NoSaved = "No saved texts";
-    public static string NewTip = "Writes a new text to keep, with its name ({0}).";
+    public static string NewTip = "Writes a new text to keep, with a name or without ({0}).";
     // The sidebar, the tabs above the list, and the cards of the entries.
     public static string AllPlace = "All", PinnedPlace = "Pinned", SourcesPlace = "Source", GuideItem = "Help";
     public static string AllKinds = "All", TextKinds = "Text", CodeKinds = "Code", LinkKinds = "Links", PictureKinds = "Images";
@@ -172,13 +172,12 @@ static partial class Strings
         + "“" + CopyButton + "”, {0} or a double click put the entry back on the clipboard: then paste it with\n"
         + "Ctrl+V or type it with {1}. With “" + CopyButton + "” the window stays open, with {0} or a double click\n"
         + "you go back where you were. A click only selects; right-click opens the entry's menu.\n"
-        + "Resting the pointer on a copied entry shows it whole.\n"
+        + "Resting the pointer on a card that cuts its text short shows it whole.\n"
         + "The arrow at the right of a copied entry ({2}) keeps it at the top of the list\n"
         + "for a while: it still goes when its days are over. What is to stay, save it.\n"
-        + "Saved texts never expire, are kept encrypted for your user, and only\n"
-        + "their name is shown. They can be gathered in folders: “New folder” is in the\n"
-        + "right-click menu ({3}); a text goes in by dragging it, or with “Move to”.\n"
-        + "A click on a folder opens and closes it.\n"
+        + "Saved texts never expire and are kept encrypted for your user; with a name, only\n"
+        + "the name is shown. Their folders are in the sidebar, with “" + NewFolder + "” ({3}) at\n"
+        + "its bottom: a text goes in by dragging it onto one, or with “" + MoveTo + "”.\n"
         + "“{5}”, in the right-click menu, gives an entry a number: then {4}\n"
         + "paste it wherever you are, without opening this window.";
     public static string PressKeys = "Press the keys…";
@@ -571,7 +570,7 @@ static partial class Strings
             "- Windows blocks the keystrokes: the remote desktop program runs as administrator. Start " + app
                 + " that way too.",
             "- A hotkey turns itself off: another program already uses it. Give it other keys in the options.",
-            "The line above the buttons says what just happened, and why. Confirmations go after a few seconds and "
+            "The line under the cards says what just happened, and why. Confirmations go after a few seconds and "
                 + "leave the room to the list; warnings and errors stay until the next message."
         };
     }

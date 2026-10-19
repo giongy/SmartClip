@@ -18,7 +18,7 @@ static partial class Strings
         NoResults = "Aucun résultat"; HistoryOffEmpty = "L'historique est désactivé";
         PausedEmpty = "En pause : ce que vous copiez n'est pas mémorisé"; CopyHint = "Ce que vous copiez apparaîtra ici";
         NoSaved = "Aucun texte enregistré";
-        NewTip = "Écrit un nouveau texte à garder, avec son nom ({0}).";
+        NewTip = "Écrit un nouveau texte à garder, avec ou sans nom ({0}).";
         AllPlace = "Tout"; PinnedPlace = "En haut"; SourcesPlace = "Provenance"; GuideItem = "Aide";
         AllKinds = "Tout"; TextKinds = "Texte"; CodeKinds = "Code"; LinkKinds = "Liens"; PictureKinds = "Images";
         TextBadge = "Texte"; CodeBadge = "Code"; LinkBadge = "Lien"; PictureBadge = "Image"; FormattedBadge = "Mis en forme";
@@ -128,13 +128,12 @@ static partial class Strings
             + "ensuite avec Ctrl+V ou saisissez-le avec {1}. Avec « " + CopyButton + " » la fenêtre reste ouverte, avec {0}\n"
             + "ou un double-clic vous revenez où vous étiez. Un clic sélectionne seulement ; le clic droit ouvre le menu\n"
             + "de l'élément.\n"
-            + "En laissant le pointeur sur un élément copié, vous le voyez en entier.\n"
+            + "En laissant le pointeur sur une carte qui coupe son texte, vous le voyez en entier.\n"
             + "La flèche à droite d'un élément copié ({2}) le garde un moment en haut de la liste :\n"
             + "il part quand même quand ses jours expirent. Ce qui doit rester, enregistrez-le.\n"
-            + "Les textes enregistrés n'expirent jamais, sont chiffrés pour votre utilisateur,\n"
-            + "et seul leur nom est visible. On peut les regrouper en dossiers : « Nouveau dossier » est\n"
-            + "dans le menu du clic droit ({3}) ; un texte y entre en le faisant glisser, ou avec\n"
-            + "« Déplacer vers ». Un clic sur le dossier l'ouvre et le ferme.\n"
+            + "Les textes enregistrés n'expirent jamais et sont chiffrés pour votre utilisateur ; avec un\n"
+            + "nom, seul le nom est visible. Leurs dossiers sont dans la barre latérale, avec « " + NewFolder + " »\n"
+            + "({3}) en bas : un texte y entre en le faisant glisser sur l'un d'eux, ou avec « " + MoveTo + " ».\n"
             + "« {5} », dans le menu du clic droit, donne un numéro à l'élément : ensuite {4}\n"
             + "le collent où que vous soyez, sans ouvrir cette fenêtre.";
         PressKeys = "Appuyez sur les touches…";
@@ -545,7 +544,7 @@ static partial class Strings
                 + "qu'administrateur. Lancez aussi " + app + " ainsi.",
             "- Un raccourci se désactive tout seul : un autre programme l'utilise déjà. Donnez-lui d'autres touches "
                 + "dans les options.",
-            "La ligne au-dessus des boutons dit ce qui vient de se passer, et pourquoi. Les confirmations disparaissent "
+            "La ligne sous les cartes dit ce qui vient de se passer, et pourquoi. Les confirmations disparaissent "
                 + "après quelques secondes et laissent la place à la liste ; les avertissements et les erreurs restent "
                 + "jusqu'au message suivant."
         };

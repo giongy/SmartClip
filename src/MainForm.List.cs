@@ -826,7 +826,7 @@ partial class MainForm
         Reload();
     }
 
-    // Keeps a copied entry at the top of its column for a while, or lets it go back among the others. Either way
+    // Keeps a copied entry at the top of the list for a while, or lets it go back among the others. Either way
     // it goes when its days are over: what is to stay is saved.
     void TogglePin(Entry entry)
     {

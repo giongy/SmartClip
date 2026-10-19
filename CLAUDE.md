@@ -228,8 +228,8 @@ condiviso su GitHub).
   da `WM_CLIPBOARDUPDATE`. Guarda solo se il formato testo è disponibile, senza aprire gli appunti. La versione
   grigia si genera all'avvio dall'icona normale (`Gray`).
 
-- La finestra principale è l'elenco, come Clipo (voluto dall'utente il 18/10/2026, con un'immagine di Clipo: «del
-  tutto simile», prima erano due colonne affiancate, copiati e salvati). A sinistra la barra laterale (`navList`,
+- La finestra principale è l'elenco, con una barra laterale e le voci in schede (voluto dall'utente il 18/10/2026;
+  prima erano due colonne affiancate, copiati e salvati). A sinistra la barra laterale (`navList`,
   `MainForm.Nav.cs`): «Tutti», «In alto» (i copiati con la freccia), «Salvati» con sotto l'albero delle cartelle,
   «Provenienza» con sotto i programmi (icona e quante voci), ognuno un `Place`; la freccia a destra di una riga apre
   e chiude ciò che ha sotto (Salvati e Provenienza nelle impostazioni `SavedOpen`, `SourcesOpen`; le cartelle nel
@@ -330,7 +330,7 @@ condiviso su GitHub).
   PNG e miniature contati con `length()` senza leggerli (`PictureBytes`). Oltre il tetto `TrimPictures` toglie le
   più vecchie, anche con freccia o numero, dopo ogni immagine copiata e a ogni `Prune`; le salvate non contano.
   Nessuna domanda né avviso: finché un'altra immagine grande come la più grande non ci starebbe (`PicturesFull`),
-  sotto le colonne compare una barra rossa (`banner`, una `InfoBar` di tipo errore come quelle della riga di
+  sotto le schede compare una barra rossa (`banner`, una `InfoBar` di tipo errore come quelle della riga di
   stato, messa a posto da `FitStatus`, accesa da `ShowPictureRoom` a ogni `Filter`).
   Nell'elenco occupano tre righe, con la miniatura (`Entry.Preview`). **Si salvano** come i testi (dopo la 4.0.0):
   `EditForm` mostra l'immagine al posto del contenuto e chiede solo nome e cartella; un'immagine salvata mostra
@@ -427,7 +427,7 @@ condiviso su GitHub).
   i copiati tornano con la loro ora e la freccia (`Clips.Import`), tranne quelli che l'elenco ha già, e quelli
   scaduti se ne vanno subito; con la cronologia spenta non si importano. Tutta l'importazione è una transazione
   (`Backup.Import`), e le cartelle nominate dal file si creano (`MakeFolder`).
-- Ogni voce è una scheda (dal 18/10/2026, come Clipo; scelta dell'utente: con i pulsanti, anche se se ne vedono
+- Ogni voce è una scheda (dal 18/10/2026; scelta dell'utente: con i pulsanti, anche se se ne vedono
   meno): disegnata a mano in una riga di `cardList` (`OwnerDrawVariable`, `DrawEntry`), un po' più chiara del
   pannello (`Look.Raised`, nuovo colore delle due tavolozze) e con il bordo d'accento se selezionata (`RowList.Marked`
   falso: niente tacca). **Prima la voce**, grande (fino a `BodyLines` righe del testo, `CardText`; il nome di un
@@ -435,7 +435,7 @@ condiviso su GitHub).
   (o stella e cartella di un salvato) · ora (`When`) · tipo (`BadgeOf`). A destra della prima riga numero, freccia e
   piccoli segni senza testo: copia, salva/modifica, elimina, «⋯» (`CardButtons`), grigi tranne sulla scheda sotto il
   puntatore o selezionata, con il nome nel suggerimento (`PartText`); «Mostra tutto» sta nel menu. Voluto
-  dall'utente il 18/10/2026: con il programma in grassetto in cima e una fila di pulsanti in fondo, come Clipo, «il
+  dall'utente il 18/10/2026: con il programma in grassetto in cima e una fila di pulsanti in fondo, «il
   vero contenuto si perde» (scelte proposte: icone a destra). Le parti si misurano in un posto solo (`Lay`, `CardParts`) che serve a disegno e clic (`PartAt`);
   quella sotto il puntatore si illumina (`hoverRow`, `hoverPart`). Un clic altrove sulla scheda la seleziona soltanto; il doppio clic fa come Invio (`Accept`).
   **Una riga di `ListBox` non supera 255 pixel** (`MaxRow`): `CardHeight` vi taglia la voce; le altezze si rifanno
@@ -500,8 +500,8 @@ condiviso su GitHub).
   basso; anello del focus solo usando la tastiera (`ShowFocusCues`). Mica non si usa: con i controlli GDI lo
   sfondo trasparente non regge (un finto Mica dallo sfondo del desktop è stato proposto e non scelto).
 - Ancora più Windows 11 (voluto dall'utente il 16/10/2026, «restando fedeli al progetto light»): le icone di
-  Windows al posto dei segni disegnati; caratteri seminegretti di Segoe UI Variable (`StrongFont` per titoli delle
-  colonne e cartelle, `TitleFont`, più grande, per il nome di una pagina delle opzioni e i titoli della guida; GDI
+  Windows al posto dei segni disegnati; caratteri seminegretti di Segoe UI Variable (`StrongFont` per i
+  giorni nell'elenco, «Provenienza» e i tasti della guida, `TitleFont`, più grande, per il nome di una pagina delle opzioni e i titoli della guida; GDI
   vede il Display Semibold con il nome tagliato a 31 lettere, «Segoe UI Variable Display Semib»; su Windows 10
   Segoe UI Semibold); righe e pulsanti che si illuminano e si spengono a piccoli passi (`Glow` nelle righe, `Fade`
   in `RoundButton` e `Toggle`); l'anteprima che compare in dissolvenza (`Peek.appear`, `Opacity`); le pagine delle
@@ -528,12 +528,12 @@ condiviso su GitHub).
     Dopo una tabulazione (`InfoBar.Apart`, `\t` nel testo) viene ciò che fare dopo, scritto all'estremità destra
     (voluto dall'utente il 18/10/2026, per staccare «Negli appunti: …» da «Incollalo con Ctrl+V…»): sulla stessa riga
     se tutti e due ci stanno con almeno `HintGap` in mezzo, altrimenti sulle righe sotto, sempre a destra (`Place`).
-  - La tacca della riga selezionata scivola alla nuova (`RowList`, in tutti gli elenchi: colonne, pagine delle
+  - La tacca della riga selezionata scivola alla nuova (`RowList`, in tutti gli elenchi: barra laterale, pagine delle
     opzioni, argomenti della guida): prima il capo davanti, poi l'altro, così si allunga e si raccoglie, come in
     NavigationView. La forma della riga selezionata cambia subito.
   - Rifiniture: i pulsanti della fila in basso, tranne «Digita gli appunti», sono sottili (`RoundButton.Subtle`: solo
     segno e testo finché il puntatore non ne fa comparire la forma); Ctrl+F porta il cursore nella ricerca, che lo
-    mostra in un riquadrino a destra (`SearchKeys`, tra i `ListKeys`); una colonna vuota ha sopra le parole un
+    mostra in un riquadrino a destra (`SearchKeys`, tra i `ListKeys`); un elenco vuoto ha sopra le parole un
     segno grande e tenue del perché (`EmptyNote`); la versione è passata dal titolo alle opzioni.
 - Aspetto (`Look`): barra del titolo nel colore della finestra
   (`DwmSetWindowAttribute`, solo Windows 11: altrove fallisce senza danni), pulsanti piatti con un solo
@@ -571,7 +571,7 @@ condiviso su GitHub).
   dell'interfaccia. `Restart` (riavvio con `/restart`) serve a `ChangeLanguage` e `ChangeInterface`.
   Barra del titolo e barre di scorrimento scure non compaiono nelle immagini di `tests.exe shot`: per
   vederle c'è `tests.exe real <prefisso>`, che mostra le finestre un attimo e fotografa lo schermo.
-  Forme arrotondate (l'utente trovava la finestra piatta e asettica, ma i colori vanno bene): ricerca, colonne
+  Forme arrotondate (l'utente trovava la finestra piatta e asettica, ma i colori vanno bene): ricerca, pannello
   e caselle stanno in un `Card` (bordo sottile, d'accento quando il contenuto ha il focus; `Look.Wrap`; attorno
   a una casella di testo invece, come in Windows 11, una riga d'accento sul fondo, `Card.Underline`), i
   pulsanti sono `RoundButton`, la riga selezionata è una forma arrotondata con una tacca d'accento e quella
@@ -579,7 +579,7 @@ condiviso su GitHub).
   (o il giorno, se non è oggi); accanto al titolo il numero di voci; un elenco vuoto dice perché (`emptyNote`).
   La descrizione sotto il pulsante deve stare in due righe: è il motivo della larghezza (`ContentWidth`).
 
-- Disposizione (dal 18/10/2026, come Clipo, vedi sopra): la barra laterale a sinistra, con in fondo Nuova cartella,
+- Disposizione (dal 18/10/2026, vedi sopra): la barra laterale a sinistra, con in fondo Nuova cartella,
   la pausa, Opzioni e Guida (`PlaceSidebar` la mette a posto quando la finestra ha la sua scala); a destra il pannello con
   titolo, ricerca, «Nuovo…» sottile e «Digita gli appunti» d'accento, schede dei tipi, voci e riga di stato in fondo.
   Prima la ricerca stava in cima e sotto le colonne c'era una fila di pulsanti piccoli.
@@ -798,7 +798,7 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   l'immagine di `shot`; mai una copia vera da Chrome, Office, un'app dello Store (il proprietario potrebbe essere
   `ApplicationFrameHost`, e l'icona del suo eseguibile quella generica), un desktop remoto (dovrebbe dire «Connessione
   Desktop remoto»), un programma da amministratore.
-- La finestra come Clipo (18/10/2026) dal vivo: viste le immagini di `shot` in chiaro e in scuro, provati da `shot`
+- La finestra con la barra laterale e le schede (18/10/2026) dal vivo: viste le immagini di `shot` in chiaro e in scuro, provati da `shot`
   posti, schede dei tipi, giorni e selezione; mai i clic veri sui pulsanti delle schede, sulle frecce della barra,
   il trascinamento sulla barra, il menu di una cartella, schermi oltre il 100% (le schede alte più di 255 pixel si
   tagliano), Windows 10. Le immagini dello Store e del README mostrano ancora le due colonne.

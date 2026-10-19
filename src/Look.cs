@@ -595,7 +595,6 @@ static class Look
     const int FramePadding = 6;   // between the edge of a framed text box and its text
     const int Radius = 6;         // of the rounded corners
     const float MarkShare = 0.45f;   // how much of the height of a selected row its mark takes
-    const float StripeShare = 0.9f; // how far every other row of the copied entries goes towards Soft
     const string ModernFont = "Segoe UI Variable Text";   // what Windows 11 writes its own windows in
     // Its heavier face, for what stands out in a list, and the one of the titles, larger: Windows writes the name
     // of that one cut at 31 letters. Where they are missing (Windows 10), the semibold face of the family.
@@ -961,13 +960,6 @@ static class Look
         using (GraphicsPath shape = Pill(mark))
         using (Brush accent = new SolidBrush(Accent))
             g.FillPath(accent, shape);
-    }
-
-    // Every other row of a long list, a shade apart, so the eye keeps to one row across it. Worked out while drawing,
-    // not a colour of the palette: in the dark it is a shade lighter.
-    public static Color Stripe(Color back)
-    {
-        return Blend(back, Soft, StripeShare);
     }
 
     // A subject in a column of subjects (the guide, the pages of the options): its sign if it has one, then

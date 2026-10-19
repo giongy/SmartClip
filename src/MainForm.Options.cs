@@ -365,7 +365,7 @@ partial class MainForm
         }
     }
 
-    // What goes into an exported file: the saved ones as their column has them, folders included, and with 'all' the
+    // What goes into an exported file: the saved ones in the order of the list, folders included, and with 'all' the
     // copied ones, all of them, not only those listed.
     List<Entry> Exported(bool all)
     {

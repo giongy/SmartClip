@@ -17,7 +17,7 @@ static partial class Strings
         NoResults = "Sin resultados"; HistoryOffEmpty = "El historial está desactivado";
         PausedEmpty = "En pausa: lo que copias no se recuerda"; CopyHint = "Lo que copies aparecerá aquí";
         NoSaved = "Ningún texto guardado";
-        NewTip = "Escribe un texto nuevo para conservar, con su nombre ({0}).";
+        NewTip = "Escribe un texto nuevo para conservar, con nombre o sin él ({0}).";
         AllPlace = "Todo"; PinnedPlace = "Arriba"; SourcesPlace = "Origen"; GuideItem = "Ayuda";
         AllKinds = "Todo"; TextKinds = "Texto"; CodeKinds = "Código"; LinkKinds = "Enlaces"; PictureKinds = "Imágenes";
         TextBadge = "Texto"; CodeBadge = "Código"; LinkBadge = "Enlace"; PictureBadge = "Imagen"; FormattedBadge = "Con formato";
@@ -124,13 +124,12 @@ static partial class Strings
             + "«" + CopyButton + "», {0} o un doble clic devuelven la entrada al portapapeles: luego la pegas\n"
             + "con Ctrl+V o la tecleas con {1}. Con «" + CopyButton + "» la ventana sigue abierta, con {0} o un doble\n"
             + "clic vuelves a donde estabas. Un clic solo selecciona; el clic derecho abre el menú de la entrada.\n"
-            + "Si dejas el puntero sobre una entrada copiada, la ves entera.\n"
+            + "Si dejas el puntero sobre una tarjeta que corta su texto, la ves entera.\n"
             + "La flecha a la derecha de una entrada copiada ({2}) la mantiene un tiempo arriba de la lista:\n"
             + "se va igualmente cuando vencen sus días. Lo que deba quedarse, guárdalo.\n"
-            + "Los textos guardados no vencen nunca, están cifrados para tu usuario, y\n"
-            + "solo se ve su nombre. Se pueden reunir en carpetas: «Nueva carpeta» está en el\n"
-            + "menú del clic derecho ({3}); un texto entra arrastrándolo, o con «Mover a».\n"
-            + "Un clic en la carpeta la abre y la cierra.\n"
+            + "Los textos guardados no vencen nunca y están cifrados para tu usuario; con un nombre,\n"
+            + "solo se ve el nombre. Sus carpetas están en la barra lateral, con «" + NewFolder + "» ({3})\n"
+            + "abajo: un texto entra arrastrándolo sobre una, o con «" + MoveTo + "».\n"
             + "«{5}», en el menú del clic derecho, da un número a la entrada: luego {4}\n"
             + "la pegan dondequiera que estés, sin abrir esta ventana.";
         PressKeys = "Pulsa las teclas…";
@@ -528,7 +527,7 @@ static partial class Strings
             "- Windows bloquea el envío de teclas: el programa de escritorio remoto se ejecuta como administrador. "
                 + "Inicia " + app + " de la misma forma.",
             "- Un atajo se desactiva solo: ya lo usa otro programa. Dale otras teclas en las opciones.",
-            "La línea encima de los botones dice qué acaba de pasar, y por qué. Las confirmaciones desaparecen tras "
+            "La línea bajo las tarjetas dice qué acaba de pasar, y por qué. Las confirmaciones desaparecen tras "
                 + "unos segundos y dejan el sitio a la lista; los avisos y errores se quedan hasta el siguiente mensaje."
         };
     }

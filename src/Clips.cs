@@ -17,7 +17,7 @@ class Folder
 // What the list offers, kept in one SQLite file: the texts and pictures copied, and those the user saved.
 //
 // One table holds both. A copied entry is temporary: it goes when its days are over, also if it is kept at the
-// top of its column (pinned), and it is stored as it is, unencrypted. A saved entry never goes by itself, can be
+// top of the list (pinned), and it is stored as it is, unencrypted. A saved entry never goes by itself, can be
 // in a folder and can have a name (the list then shows the name and hides the content); it is encrypted for the
 // Windows user (DPAPI), content and preview. A number from 1 to MainForm.MaxNumber chooses one entry of either
 // kind from anywhere. The database itself refuses what breaks these rules (the CHECKs of EntriesSchema).
@@ -621,7 +621,7 @@ sealed class Clips : IDisposable
         data.Execute("DELETE FROM entries WHERE hash = ?1 AND pinned = 0 AND number IS NULL", Hash(Encoding.UTF8.GetBytes(text)));
     }
 
-    // Keeps a copied entry at the top of its column, or lets it go back among the others. It goes all the same
+    // Keeps a copied entry at the top of the list, or lets it go back among the others. It goes all the same
     // when its days are over.
     public void Pin(long id, bool pinned)
     {

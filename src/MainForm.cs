@@ -46,9 +46,10 @@ partial class MainForm : Window
     const int TitleRow = 34, TabsHeight = 32;          // the title of the place, and the tabs under the search
     const int ListHeight = 380;                        // the cards, as the window starts
     const int SideIndent = 16;                         // of a folder in the sidebar, for each folder it is inside of
-    // A card: the program or folder on top, then the entry, then its buttons; between the cards some air.
+    // A card: the entry first, its buttons on the right of its first line, under it the program or folder; between
+    // the cards some air.
     const int CardGap = 8, CardInset = 12, CardLineGap = 6;
-    const int PartHeight = 26, PartGap = 6, PartPadding = 10;   // the buttons of a card, and the room around their text
+    const int PartHeight = 26, PartGap = 6;            // the buttons of a card, and the room between them
     const int BodyLines = 2;                           // lines of text a card shows of its entry, at most
     const int CardPicture = 72;                        // how tall a picture is shown in its card
     const int HeadingAir = 12;                         // above the name of a day, among the cards
@@ -63,7 +64,7 @@ partial class MainForm : Window
     public const int MaxShown = 200;                   // copied entries listed at once
     const int SearchHeight = 30, GlyphWidth = 20;      // the search box, and the magnifying glass on its left
     const int KeysWidth = 64, KeysPadding = 10;        // the frame of its keys on its right, and the air around them
-    const int ListPadding = 3;                         // between the rounded edge of a column and its list
+    const int ListPadding = 3;                         // between the rounded edge of the pages of the options and their list
     const int CountWidth = 120;                        // room for the number of entries, right of the title
     const int RowInset = 12, TimeGap = 8;              // of the text in a row, and around the time on its right
     const int NumberPadding = 2;                       // added to the text height for the width of the frame of a number
@@ -103,7 +104,6 @@ partial class MainForm : Window
     static readonly Point OffScreen = new Point(int.MinValue, int.MinValue);
 
     readonly RoundButton typeButton = new RoundButton();
-    readonly RoundButton optionsButton = new RoundButton(), helpButton = new RoundButton();
     HelpForm help;      // the guide, while it is open
     readonly OptionsWindow options;   // the window of the options: made once, hidden when closed
     bool optionsAtStart;              // it opens as soon as this window shows
@@ -482,11 +482,11 @@ partial class MainForm : Window
     {
         paused = pause;
         ShowPause();
-        Filter();   // an empty column says why
+        Filter();   // an empty list says why
         Say(pause ? Strings.PausedSay : Strings.ResumedSay);
     }
 
-    // Says whether the capture is paused where it shows: in the menus, above the column and on the icon.
+    // Says whether the capture is paused where it shows: in the menus, at the bottom of the sidebar, in the title and on the icon.
     void ShowPause()
     {
         foreach (ToolStripItem item in pauseItems)

@@ -17,7 +17,7 @@ static partial class Strings
         NoResults = "Nessun risultato"; HistoryOffEmpty = "La cronologia è spenta";
         PausedEmpty = "In pausa: quello che copi non viene ricordato"; CopyHint = "Quello che copi comparirà qui";
         NoSaved = "Nessun testo salvato";
-        NewTip = "Scrive un testo nuovo da tenere, con il suo nome ({0}).";
+        NewTip = "Scrive un testo nuovo da tenere, con un nome o senza ({0}).";
         AllPlace = "Tutti"; PinnedPlace = "In alto"; SourcesPlace = "Provenienza"; GuideItem = "Guida";
         AllKinds = "Tutti"; TextKinds = "Testo"; CodeKinds = "Codice"; LinkKinds = "Link"; PictureKinds = "Immagini";
         TextBadge = "Testo"; CodeBadge = "Codice"; LinkBadge = "Link"; PictureBadge = "Immagine"; FormattedBadge = "Formattato";
@@ -123,13 +123,12 @@ static partial class Strings
             + "«" + CopyButton + "», {0} o un doppio clic rimettono la voce negli appunti: poi la incolli\n"
             + "con Ctrl+V o la digiti con {1}. Con «" + CopyButton + "» la finestra resta aperta, con {0} o un\n"
             + "doppio clic torni dov'eri. Un clic seleziona soltanto; il tasto destro apre il menu della voce.\n"
-            + "Fermando il puntatore su una voce copiata la vedi per intero.\n"
+            + "Fermando il puntatore su una scheda che ne taglia il testo la vedi per intero.\n"
             + "La freccia a destra di una voce copiata ({2}) la tiene per un po' in cima all'elenco:\n"
             + "se ne va comunque quando scadono i suoi giorni. Ciò che deve restare, salvalo.\n"
-            + "I testi salvati non scadono mai, sono cifrati per il tuo utente, e\n"
-            + "se ne vede solo il nome. Si possono raccogliere in cartelle: «Nuova cartella» è nel\n"
-            + "menu del tasto destro ({3}); un testo ci entra trascinandolo, o con\n"
-            + "«Sposta in». Un clic sulla cartella la apre e la chiude.\n"
+            + "I testi salvati non scadono mai e sono cifrati per il tuo utente; con un nome, se ne\n"
+            + "vede solo il nome. Le loro cartelle stanno nella barra laterale, con «" + NewFolder + "» ({3})\n"
+            + "in fondo: un testo ci entra trascinandolo sopra una, o con «" + MoveTo + "».\n"
             + "«{5}», nel menu del tasto destro, dà un numero alla voce: poi {4}\n"
             + "la incollano ovunque tu sia, senza aprire questa finestra.";
         PressKeys = "Premi i tasti…";
@@ -522,7 +521,7 @@ static partial class Strings
             "- Windows blocca l'invio dei tasti: il programma di desktop remoto è avviato come amministratore. Avvia "
                 + "così anche " + app + ".",
             "- Una scorciatoia si spegne da sola: la sta già usando un altro programma. Dalle altri tasti nelle opzioni.",
-            "La riga sopra i pulsanti dice che cosa è appena successo, e perché. Le conferme spariscono dopo qualche "
+            "La riga sotto le schede dice che cosa è appena successo, e perché. Le conferme spariscono dopo qualche "
                 + "secondo e lasciano il posto all'elenco; avvisi ed errori restano fino al messaggio dopo."
         };
     }
