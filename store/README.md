@@ -116,8 +116,8 @@ Types the clipboard key by key where paste does not work: remote desktops, virtu
 Adjustable wait before typing, and typing stops if the window changes
 US keyboard on the server, and symbols composed with Alt codes
 History of copied texts and pictures, with instant search
-A sidebar like the apps of Windows 11, to widen or reduce to icons: all, pinned, saved texts in folders, the programs you copied in
-Entries as cards, the content first, with tabs for texts, code, links and pictures
+A sidebar like the apps of Windows 11, to widen or reduce to icons: all, pinned, saved texts in folders, the programs you copied in, latest first
+Compact cards, the content first, with tabs for texts, code, links and pictures
 List available from any program with a hotkey, and hotkeys of your choice
 Entries kept at the top for a while with an arrow
 Saved texts and copied entries pasted anywhere with Ctrl+Shift+1…9
@@ -149,13 +149,9 @@ paste blocked
 ### What's new in this version
 
 ```
-A new window, like the apps of Windows 11. On the left a sidebar with all your entries, those kept at the top, the saved texts with their folders and the programs you copied in: drag its edge to make it wider, or reduce it to icons with the button on top. On the right the entries as cards, the content first, with tabs for texts, code, links and pictures; if a text lands in the wrong tab, its menu tells SmartClip what it is.
+Compact cards: the program, the time and the kind of an entry sit on its first line, before the buttons, so you see about twice as many entries at once. Pictures have smaller previews.
 
-Each card says, small and faint, which program it was copied in. The eye on a card shows the entry whole; resting the pointer does it too, if you turn it on in the options.
-
-Ctrl+D always opens the list on All, unless you choose to reopen it where you left it.
-
-Fixed: after a copy, and when Ctrl+D opens the list, the latest copy is selected and in view (the card selected before used to keep it hidden). Programs from a Citrix server now each show their own icon, under the name of Citrix.
+Under Source, the programs come in the order of your copies: the one you copied in last is on top.
 ```
 
 ### Screenshot captions
@@ -214,8 +210,8 @@ Digita gli appunti tasto per tasto dove incollare non funziona: desktop remoti, 
 Attesa regolabile prima di digitare, e la digitazione si ferma se cambi finestra
 Tastiera americana sul server e simboli composti con Alt+codice
 Cronologia di testi e immagini copiati, con ricerca istantanea
-Una barra laterale come nelle app di Windows 11, da allargare o ridurre alle icone: tutti, in alto, salvati in cartelle, i programmi in cui hai copiato
-Voci come schede, prima il contenuto, con le schede per testi, codice, link e immagini
+Una barra laterale come nelle app di Windows 11, da allargare o ridurre alle icone: tutti, in alto, salvati in cartelle, i programmi in cui hai copiato, dal più recente
+Voci in schede compatte, prima il contenuto, con le schede per testi, codice, link e immagini
 Elenco richiamabile da qualsiasi programma con una scorciatoia, e scorciatoie a tua scelta
 Voci tenute in cima per un po' con una freccia
 Testi salvati e voci copiate incollati ovunque con Ctrl+Maiusc+1…9
@@ -247,13 +243,9 @@ digitare password
 ### Novità di questa versione
 
 ```
-Una finestra nuova, come le app di Windows 11. A sinistra una barra laterale con tutte le voci, quelle tenute in alto, i testi salvati con le loro cartelle e i programmi in cui hai copiato: trascinane il bordo per allargarla, o riducila alle icone con il pulsante in cima. A destra le voci come schede, prima il contenuto, con le schede per testi, codice, link e immagini; se un testo finisce nella scheda sbagliata, dal suo menu dici a SmartClip che cos'è.
+Schede compatte: il programma, l'ora e il tipo di una voce stanno sulla sua prima riga, prima dei pulsanti, così vedi circa il doppio delle voci insieme. Le immagini hanno miniature più piccole.
 
-Ogni scheda dice, in piccolo e tenue, in quale programma è stata copiata. L'occhio di una scheda mostra la voce per intero; lo fa anche il puntatore fermo, se lo attivi nelle opzioni.
-
-Ctrl+D apre sempre l'elenco su Tutti, a meno che tu non scelga di riaprirlo dove l'hai lasciato.
-
-Corretto: dopo una copia, e quando Ctrl+D apre l'elenco, l'ultima copia è selezionata e in vista (la scheda selezionata prima la teneva nascosta). I programmi di un server Citrix mostrano ora ognuno la propria icona, con il nome di Citrix.
+Sotto Provenienza i programmi seguono l'ordine delle copie: in cima quello in cui hai copiato per ultimo.
 ```
 
 ### Didascalie delle schermate
@@ -312,8 +304,8 @@ Teclea el portapapeles tecla por tecla donde pegar no funciona: escritorios remo
 Espera ajustable antes de teclear, y el tecleo se detiene si cambia la ventana
 Teclado estadounidense en el servidor y símbolos compuestos con códigos Alt
 Historial de textos e imágenes copiados, con búsqueda instantánea
-Una barra lateral como en las apps de Windows 11, para ensanchar o reducir a iconos: todo, arriba, guardados en carpetas, los programas donde copiaste
-Entradas como tarjetas, primero el contenido, con pestañas para textos, código, enlaces e imágenes
+Una barra lateral como en las apps de Windows 11, para ensanchar o reducir a iconos: todo, arriba, guardados en carpetas, los programas donde copiaste, del más reciente
+Entradas en tarjetas compactas, primero el contenido, con pestañas para textos, código, enlaces e imágenes
 Lista disponible desde cualquier programa con un atajo, y atajos a tu elección
 Entradas mantenidas arriba un tiempo con una flecha
 Textos guardados y entradas copiadas pegados en cualquier sitio con Ctrl+Mayús+1…9
@@ -345,13 +337,9 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Una ventana nueva, como las apps de Windows 11. A la izquierda una barra lateral con todas las entradas, las que mantienes arriba, los textos guardados con sus carpetas y los programas en los que copiaste: arrastra su borde para ensancharla, o redúcela a iconos con el botón de arriba. A la derecha las entradas como tarjetas, primero el contenido, con pestañas para textos, código, enlaces e imágenes; si un texto acaba en la pestaña equivocada, desde su menú le dices a SmartClip qué es.
+Tarjetas compactas: el programa, la hora y el tipo de una entrada están en su primera línea, antes de los botones, así ves casi el doble de entradas a la vez. Las imágenes tienen miniaturas más pequeñas.
 
-Cada tarjeta dice, en pequeño y tenue, en qué programa se copió. El ojo de una tarjeta muestra la entrada entera; también lo hace el puntero quieto, si lo activas en las opciones.
-
-Ctrl+D abre siempre la lista en Todo, salvo que elijas volver a abrirla donde la dejaste.
-
-Corregido: tras una copia, y cuando Ctrl+D abre la lista, la última copia queda seleccionada y a la vista (la tarjeta seleccionada antes la dejaba oculta). Los programas de un servidor Citrix muestran ahora cada uno su propio icono, con el nombre de Citrix.
+En Origen, los programas siguen el orden de tus copias: arriba el último en el que copiaste.
 ```
 
 ### Leyendas de las capturas
@@ -410,8 +398,8 @@ Saisit le presse-papiers touche par touche là où coller ne marche pas : bureau
 Attente réglable avant la saisie, qui s'arrête si la fenêtre change
 Clavier américain sur le serveur et symboles composés avec des codes Alt
 Historique des textes et images copiés, avec recherche instantanée
-Une barre latérale comme les apps de Windows 11, à élargir ou réduire aux icônes : tout, en haut, enregistrés en dossiers, les programmes où vous avez copié
-Éléments en cartes, le contenu d'abord, avec des onglets pour textes, code, liens et images
+Une barre latérale comme les apps de Windows 11, à élargir ou réduire aux icônes : tout, en haut, enregistrés en dossiers, les programmes où vous avez copié, du plus récent
+Éléments en cartes compactes, le contenu d'abord, avec des onglets pour textes, code, liens et images
 Liste accessible depuis n'importe quel programme avec un raccourci, et raccourcis à votre choix
 Éléments gardés un moment en haut avec une flèche
 Textes enregistrés et éléments copiés collés partout avec Ctrl+Maj+1…9
@@ -443,13 +431,9 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Une nouvelle fenêtre, comme les apps de Windows 11. À gauche une barre latérale avec tous les éléments, ceux gardés en haut, les textes enregistrés avec leurs dossiers et les programmes où vous avez copié : faites glisser son bord pour l'élargir, ou réduisez-la aux icônes avec le bouton du haut. À droite les éléments en cartes, le contenu d'abord, avec des onglets pour textes, code, liens et images ; si un texte arrive dans le mauvais onglet, son menu dit à SmartClip ce qu'il est.
+Cartes compactes : le programme, l'heure et le type d'un élément sont sur sa première ligne, avant les boutons, pour voir environ deux fois plus d'éléments à la fois. Les images ont des miniatures plus petites.
 
-Chaque carte indique, en petit et discret, dans quel programme l'élément a été copié. L'œil d'une carte montre l'élément en entier ; le pointeur arrêté le fait aussi, si vous l'activez dans les options.
-
-Ctrl+D ouvre toujours la liste sur Tout, sauf si vous choisissez de la rouvrir là où vous l'avez laissée.
-
-Corrigé : après une copie, et quand Ctrl+D ouvre la liste, la dernière copie est sélectionnée et visible (la carte sélectionnée avant la laissait cachée). Les programmes d'un serveur Citrix affichent maintenant chacun leur propre icône, sous le nom de Citrix.
+Dans Provenance, les programmes suivent l'ordre de vos copies : en haut celui où vous avez copié en dernier.
 ```
 
 ### Légendes des captures

@@ -2088,12 +2088,19 @@ static class TestProgram
                 status.Text = "";
                 typeButton.Text = Strings.TypeButton;
 
-                // A copied picture shown whole, larger, from the eye of its card: its card at the top, so that it fits under it.
+                // A copied picture shown whole, larger, from the eye of its card: its card at the top, so that it fits under
+                // it. The compact cards all fit in the list, which then cannot scroll: the tab of the pictures does it.
+                TabStrip kinds = (TabStrip)typeof(MainForm).GetField("tabs", hidden).GetValue(form);
+                kinds.Selected = Array.IndexOf((Category?[])typeof(MainForm).GetField("TabKinds", BindingFlags.NonPublic | BindingFlags.Static)
+                    .GetValue(null), (Category?)Category.Picture);
+                Application.DoEvents();
                 int pictureRow = RowOf(recent, delegate(Entry e) { return e.Picture; });
                 recent.TopIndex = pictureRow;
                 typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, pictureRow, true });
                 SnapArea(area, System.IO.Path.Combine(pictures, "3-preview.png"));
                 typeof(MainForm).GetMethod("HidePeek", hidden).Invoke(form, null);
+                kinds.Selected = 0;
+                Application.DoEvents();
                 recent.TopIndex = 0;
 
                 // A copied signature being saved under a name, into a folder, with its formatting: as just copied
