@@ -828,7 +828,7 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - La finestra con la barra laterale e le schede (18/10/2026) dal vivo: viste le immagini di `shot` in chiaro e in scuro, provati da `shot`
   posti, schede dei tipi, giorni e selezione; mai i clic veri sui pulsanti delle schede, sulle frecce della barra,
   il trascinamento sulla barra, il menu di una cartella, schermi oltre il 100% (le schede alte più di 255 pixel si
-  tagliano), Windows 10. Le immagini dello Store e del README mostrano ancora le due colonne.
+  tagliano), Windows 10.
 - L'avviso di SQLite mancante o troppo vecchio: nessun Windows a portata di mano ne è privo.
 - Il database con migliaia di voci (la ricerca, la scadenza, il file che si restringe): provato solo con le
   poche dei test. E dal pacchetto dello Store, dove sta in `LocalState`.

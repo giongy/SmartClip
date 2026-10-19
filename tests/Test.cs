@@ -1915,13 +1915,13 @@ static class TestProgram
             form.Show();
             form.BringToFront();
             Snap(form, path + "-real-list.png");
-            // The entry that does not fit its card, shown whole as when the pointer rests on it.
+            // An entry shown whole from the eye of its card; resting the pointer would show only one the card cuts.
             ListBox recent = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
             int longRow = RowOf(recent, delegate(Entry e) { return e.Text == Sample.Current.Long; });
-            typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, longRow, false });
+            typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, longRow, true });
             Form shownPeek = (Form)typeof(MainForm).GetField("peek", hidden).GetValue(form);
             Snap(form, path + "-real-peek.png");
-            Console.WriteLine("[{0}] an entry cut by its row is shown whole, one that fits is not", shownPeek.Visible
+            Console.WriteLine("[{0}] the eye shows an entry whole; resting on one that fits would not", shownPeek.Visible
                 && !(bool)typeof(MainForm).GetMethod("Cut", hidden).Invoke(form, new object[] { recent, new Entry(null, "ok"), recent.GetItemRectangle(longRow) })
                 ? "PASS" : "FAIL");
             // A long list, with the thin bar that scrolls it, moved a little way down.
@@ -2056,10 +2056,13 @@ static class TestProgram
                 status.Text = "";
                 typeButton.Text = Strings.TypeButton;
 
-                // An entry the row cuts, shown whole.
-                typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, RowOf(recent, delegate(Entry e) { return e.Text == Sample.Current.Long; }), false });
+                // A copied picture shown whole, larger, from the eye of its card: its card at the top, so that it fits under it.
+                int pictureRow = RowOf(recent, delegate(Entry e) { return e.Picture; });
+                recent.TopIndex = pictureRow;
+                typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, pictureRow, true });
                 SnapArea(area, System.IO.Path.Combine(pictures, "3-preview.png"));
                 typeof(MainForm).GetMethod("HidePeek", hidden).Invoke(form, null);
+                recent.TopIndex = 0;
 
                 // A copied signature being saved under a name, into a folder, with its formatting: as just copied
                 // from a mail, which the program remembers.

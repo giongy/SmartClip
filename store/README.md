@@ -112,11 +112,12 @@ SmartClip is open source, under the MIT license. It speaks English, Spanish, Fre
 ### Product features
 
 ```
-Types the clipboard key by key where paste does not work
-Made for remote desktops, virtual machine consoles and server management pages
+Types the clipboard key by key where paste does not work: remote desktops, virtual machine consoles, server management pages
 Adjustable wait before typing, and typing stops if the window changes
 US keyboard on the server, and symbols composed with Alt codes
 History of copied texts and pictures, with instant search
+A sidebar like the apps of Windows 11, to widen or reduce to icons: all, pinned, saved texts in folders, the programs you copied in
+Entries as cards, the content first, with tabs for texts, code, links and pictures
 List available from any program with a hotkey, and hotkeys of your choice
 Entries kept at the top for a while with an arrow
 Saved texts and copied entries pasted anywhere with Ctrl+Shift+1…9
@@ -124,8 +125,7 @@ Encrypted saved texts and pictures, with or without a name, in folders and subfo
 Formatted saved texts, such as mail signatures: bold, italic, fonts and sizes, pasted as they are
 Saved texts also in the tray icon menu, without opening the window
 Full preview of long texts and pictures, and the text in a picture copied with the text recognition of Windows
-Private copies from password managers are not remembered
-Pause capturing with one click
+Private copies from password managers are not remembered, and capturing pauses with one click
 Export and import to a text file, and the database in the folder you choose
 Starts with Windows, hidden in the notification area
 Built-in guide, organized by topic
@@ -149,18 +149,20 @@ paste blocked
 ### What's new in this version
 
 ```
-Copy the text of a picture. Right-click a screenshot, or any picture you copied or saved, and choose Copy the text: Windows reads it right on your PC, without the Internet, and the text goes to the clipboard and into the list like anything you copy.
+A new window, like the apps of Windows 11. On the left a sidebar with all your entries, those kept at the top, the saved texts with their folders and the programs you copied in: drag its edge to make it wider, or reduce it to icons with the button on top. On the right the entries as cards, the content first, with tabs for texts, code, links and pictures; if a text lands in the wrong tab, its menu tells SmartClip what it is.
 
-When an entry goes back on the clipboard, the message keeps it apart from how to paste it, which now sits at the right end of the bar.
+Each card says, small and faint, which program it was copied in. The eye on a card shows the entry whole; resting the pointer does it too, if you turn it on in the options.
+
+Ctrl+D always opens the list on All, unless you choose to reopen it where you left it.
 ```
 
 ### Screenshot captions
 
 | File | Caption |
 | --- | --- |
-| `1-list.png` | Recently copied items on the left, saved texts on the right: search, pick and paste. |
+| `1-list.png` | Everything in one list: places in the sidebar, kinds in the tabs, and the program each entry was copied in. |
 | `2-typing.png` | Where Ctrl+V does not work, SmartClip types the clipboard key by key, after giving you time to click the right field. |
-| `3-preview.png` | Rest the pointer on an entry to see all of it. |
+| `3-preview.png` | The eye on a card shows the entry whole: every line of a text, a larger picture. |
 | `4-save.png` | Save a text under a name, in its folder, formatted too: a mail signature keeps its bold and its fonts. |
 | `5-tray-menu.png` | Saved texts are also in the menu of the icon by the clock. |
 | `6-options.png` | Options like Windows Settings, one card each: typing, hotkeys, history, appearance and the program. |
@@ -206,11 +208,12 @@ SmartClip è open source, con licenza MIT. Parla italiano, inglese, spagnolo e f
 ### Caratteristiche del prodotto
 
 ```
-Digita gli appunti tasto per tasto dove incollare non funziona
-Pensato per desktop remoti, console di macchine virtuali e pagine di gestione dei server
+Digita gli appunti tasto per tasto dove incollare non funziona: desktop remoti, console di macchine virtuali, pagine di gestione dei server
 Attesa regolabile prima di digitare, e la digitazione si ferma se cambi finestra
 Tastiera americana sul server e simboli composti con Alt+codice
 Cronologia di testi e immagini copiati, con ricerca istantanea
+Una barra laterale come nelle app di Windows 11, da allargare o ridurre alle icone: tutti, in alto, salvati in cartelle, i programmi in cui hai copiato
+Voci come schede, prima il contenuto, con le schede per testi, codice, link e immagini
 Elenco richiamabile da qualsiasi programma con una scorciatoia, e scorciatoie a tua scelta
 Voci tenute in cima per un po' con una freccia
 Testi salvati e voci copiate incollati ovunque con Ctrl+Maiusc+1…9
@@ -218,8 +221,7 @@ Testi e immagini salvati cifrati, con o senza nome, in cartelle e sottocartelle
 Testi salvati formattati, come le firme di posta: grassetto, corsivo, caratteri e dimensioni, incollati così come sono
 Testi salvati anche nel menu dell'icona, senza aprire la finestra
 Anteprima completa di testi lunghi e immagini, e il testo di un'immagine copiato con il riconoscimento di Windows
-Le copie riservate dei gestori di password non vengono ricordate
-Cattura sospendibile con un clic
+Le copie riservate dei gestori di password non vengono ricordate, e la cattura si sospende con un clic
 Esportazione e importazione in un file di testo, e il database nella cartella che scegli
 Avvio con Windows, nascosto nell'area di notifica
 Guida integrata, divisa per argomenti
@@ -243,18 +245,20 @@ digitare password
 ### Novità di questa versione
 
 ```
-Copia il testo di un'immagine. Fai clic destro su una schermata, o su qualsiasi immagine copiata o salvata, e scegli Copia il testo: Windows lo legge direttamente sul tuo PC, senza Internet, e il testo va negli appunti e nell'elenco come ogni cosa che copi.
+Una finestra nuova, come le app di Windows 11. A sinistra una barra laterale con tutte le voci, quelle tenute in alto, i testi salvati con le loro cartelle e i programmi in cui hai copiato: trascinane il bordo per allargarla, o riducila alle icone con il pulsante in cima. A destra le voci come schede, prima il contenuto, con le schede per testi, codice, link e immagini; se un testo finisce nella scheda sbagliata, dal suo menu dici a SmartClip che cos'è.
 
-Quando una voce torna negli appunti, il messaggio la tiene separata da come incollarla, che ora sta all'estremità destra della barra.
+Ogni scheda dice, in piccolo e tenue, in quale programma è stata copiata. L'occhio di una scheda mostra la voce per intero; lo fa anche il puntatore fermo, se lo attivi nelle opzioni.
+
+Ctrl+D apre sempre l'elenco su Tutti, a meno che tu non scelga di riaprirlo dove l'hai lasciato.
 ```
 
 ### Didascalie delle schermate
 
 | File | Didascalia |
 | --- | --- |
-| `1-list.png` | Le cose copiate di recente a sinistra, i testi salvati a destra: cerca, scegli e incolla. |
+| `1-list.png` | Tutto in un elenco: i posti nella barra laterale, i tipi nelle schede e il programma in cui è stata copiata ogni voce. |
 | `2-typing.png` | Dove Ctrl+V non funziona, SmartClip digita gli appunti tasto per tasto, dopo averti dato il tempo di cliccare nel campo giusto. |
-| `3-preview.png` | Fermati su una voce per vederla per intero. |
+| `3-preview.png` | L'occhio di una scheda mostra la voce per intero: ogni riga di un testo, un'immagine più grande. |
 | `4-save.png` | Salva un testo con un nome, nella sua cartella, anche formattato: una firma di posta tiene grassetti e caratteri. |
 | `5-tray-menu.png` | I testi salvati anche nel menu dell'icona vicino all'orologio. |
 | `6-options.png` | Opzioni come in Impostazioni di Windows, una scheda ciascuna: digitazione, scorciatoie, cronologia, aspetto e programma. |
@@ -300,11 +304,12 @@ SmartClip es de código abierto, con licencia MIT. Habla español, inglés, fran
 ### Características del producto
 
 ```
-Teclea el portapapeles tecla por tecla donde pegar no funciona
-Pensado para escritorios remotos, consolas de máquinas virtuales y páginas de gestión de servidores
+Teclea el portapapeles tecla por tecla donde pegar no funciona: escritorios remotos, consolas de máquinas virtuales, páginas de gestión de servidores
 Espera ajustable antes de teclear, y el tecleo se detiene si cambia la ventana
 Teclado estadounidense en el servidor y símbolos compuestos con códigos Alt
 Historial de textos e imágenes copiados, con búsqueda instantánea
+Una barra lateral como en las apps de Windows 11, para ensanchar o reducir a iconos: todo, arriba, guardados en carpetas, los programas donde copiaste
+Entradas como tarjetas, primero el contenido, con pestañas para textos, código, enlaces e imágenes
 Lista disponible desde cualquier programa con un atajo, y atajos a tu elección
 Entradas mantenidas arriba un tiempo con una flecha
 Textos guardados y entradas copiadas pegados en cualquier sitio con Ctrl+Mayús+1…9
@@ -312,8 +317,7 @@ Textos e imágenes guardados cifrados, con o sin nombre, en carpetas y subcarpet
 Textos guardados con formato, como las firmas de correo: negrita, cursiva, fuentes y tamaños, pegados tal cual
 Textos guardados también en el menú del icono, sin abrir la ventana
 Vista previa completa de textos largos e imágenes, y el texto de una imagen copiado con el reconocimiento de Windows
-Las copias privadas de los gestores de contraseñas no se recuerdan
-Captura que se pausa con un clic
+Las copias privadas de los gestores de contraseñas no se recuerdan, y la captura se pausa con un clic
 Exportación e importación a un archivo de texto, y la base de datos en la carpeta que elijas
 Inicio con Windows, oculto en el área de notificación
 Guía integrada, dividida por temas
@@ -337,18 +341,20 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Copia el texto de una imagen. Haz clic derecho en una captura de pantalla, o en cualquier imagen copiada o guardada, y elige Copiar el texto: Windows lo lee directamente en tu PC, sin Internet, y el texto va al portapapeles y a la lista como todo lo que copias.
+Una ventana nueva, como las apps de Windows 11. A la izquierda una barra lateral con todas las entradas, las que mantienes arriba, los textos guardados con sus carpetas y los programas en los que copiaste: arrastra su borde para ensancharla, o redúcela a iconos con el botón de arriba. A la derecha las entradas como tarjetas, primero el contenido, con pestañas para textos, código, enlaces e imágenes; si un texto acaba en la pestaña equivocada, desde su menú le dices a SmartClip qué es.
 
-Cuando una entrada vuelve al portapapeles, el mensaje la separa de cómo pegarla, que ahora está en el extremo derecho de la barra.
+Cada tarjeta dice, en pequeño y tenue, en qué programa se copió. El ojo de una tarjeta muestra la entrada entera; también lo hace el puntero quieto, si lo activas en las opciones.
+
+Ctrl+D abre siempre la lista en Todo, salvo que elijas volver a abrirla donde la dejaste.
 ```
 
 ### Leyendas de las capturas
 
 | File | Leyenda |
 | --- | --- |
-| `1-list.png` | Lo copiado recientemente a la izquierda, los textos guardados a la derecha: busca, elige y pega. |
+| `1-list.png` | Todo en una lista: los lugares en la barra lateral, los tipos en las pestañas y el programa en el que se copió cada entrada. |
 | `2-typing.png` | Donde Ctrl+V no funciona, SmartClip teclea el portapapeles tecla por tecla, tras darte tiempo para hacer clic en el campo correcto. |
-| `3-preview.png` | Deja el puntero sobre una entrada para verla entera. |
+| `3-preview.png` | El ojo de una tarjeta muestra la entrada entera: cada línea de un texto, una imagen más grande. |
 | `4-save.png` | Guarda un texto con un nombre, en su carpeta, también con formato: una firma de correo conserva sus negritas y sus fuentes. |
 | `5-tray-menu.png` | Los textos guardados también están en el menú del icono junto al reloj. |
 | `6-options.png` | Opciones como en Configuración de Windows, una tarjeta cada una: tecleo, atajos, historial, apariencia y programa. |
@@ -394,11 +400,12 @@ SmartClip est open source, sous licence MIT. Il parle français, anglais, espagn
 ### Fonctionnalités du produit
 
 ```
-Saisit le presse-papiers touche par touche là où coller ne marche pas
-Conçu pour les bureaux à distance, les consoles de machines virtuelles et les pages d'administration des serveurs
+Saisit le presse-papiers touche par touche là où coller ne marche pas : bureaux à distance, consoles de machines virtuelles, pages d'administration
 Attente réglable avant la saisie, qui s'arrête si la fenêtre change
 Clavier américain sur le serveur et symboles composés avec des codes Alt
 Historique des textes et images copiés, avec recherche instantanée
+Une barre latérale comme les apps de Windows 11, à élargir ou réduire aux icônes : tout, en haut, enregistrés en dossiers, les programmes où vous avez copié
+Éléments en cartes, le contenu d'abord, avec des onglets pour textes, code, liens et images
 Liste accessible depuis n'importe quel programme avec un raccourci, et raccourcis à votre choix
 Éléments gardés un moment en haut avec une flèche
 Textes enregistrés et éléments copiés collés partout avec Ctrl+Maj+1…9
@@ -406,8 +413,7 @@ Textes et images enregistrés chiffrés, avec ou sans nom, dans des dossiers et 
 Textes enregistrés mis en forme, comme les signatures de courriel : gras, italique, polices et tailles, collés tels quels
 Textes enregistrés aussi dans le menu de l'icône, sans ouvrir la fenêtre
 Aperçu complet des textes longs et des images, et le texte d'une image copié grâce à la reconnaissance de Windows
-Les copies privées des gestionnaires de mots de passe ne sont pas mémorisées
-Capture suspendue en un clic
+Les copies privées des gestionnaires de mots de passe ne sont pas mémorisées, et la capture se suspend en un clic
 Export et import dans un fichier texte, et la base de données dans le dossier de votre choix
 Démarrage avec Windows, caché dans la zone de notification
 Guide intégré, organisé par sujet
@@ -431,18 +437,20 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Copiez le texte d'une image. Faites un clic droit sur une capture d'écran, ou sur toute image copiée ou enregistrée, et choisissez Copier le texte : Windows le lit directement sur votre PC, sans Internet, et le texte va dans le presse-papiers et dans la liste comme tout ce que vous copiez.
+Une nouvelle fenêtre, comme les apps de Windows 11. À gauche une barre latérale avec tous les éléments, ceux gardés en haut, les textes enregistrés avec leurs dossiers et les programmes où vous avez copié : faites glisser son bord pour l'élargir, ou réduisez-la aux icônes avec le bouton du haut. À droite les éléments en cartes, le contenu d'abord, avec des onglets pour textes, code, liens et images ; si un texte arrive dans le mauvais onglet, son menu dit à SmartClip ce qu'il est.
 
-Quand un élément revient dans le presse-papiers, le message le sépare de la façon de le coller, qui se trouve maintenant à l'extrémité droite de la barre.
+Chaque carte indique, en petit et discret, dans quel programme l'élément a été copié. L'œil d'une carte montre l'élément en entier ; le pointeur arrêté le fait aussi, si vous l'activez dans les options.
+
+Ctrl+D ouvre toujours la liste sur Tout, sauf si vous choisissez de la rouvrir là où vous l'avez laissée.
 ```
 
 ### Légendes des captures
 
 | File | Légende |
 | --- | --- |
-| `1-list.png` | Les éléments copiés récemment à gauche, les textes enregistrés à droite : cherchez, choisissez et collez. |
+| `1-list.png` | Tout dans une liste : les endroits dans la barre latérale, les types dans les onglets et le programme où chaque élément a été copié. |
 | `2-typing.png` | Là où Ctrl+V ne marche pas, SmartClip saisit le presse-papiers touche par touche, après vous avoir laissé le temps de cliquer dans le bon champ. |
-| `3-preview.png` | Laissez le pointeur sur un élément pour le voir en entier. |
+| `3-preview.png` | L'œil d'une carte montre l'élément en entier : chaque ligne d'un texte, une image plus grande. |
 | `4-save.png` | Enregistrez un texte sous un nom, dans son dossier, même mis en forme : une signature de courriel garde son gras et ses polices. |
 | `5-tray-menu.png` | Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge. |
 | `6-options.png` | Des options comme dans les Paramètres de Windows, une carte chacune : saisie, raccourcis, historique, apparence et programme. |
@@ -458,10 +466,10 @@ con le etichette dell'interfaccia inglese, quella che vedono al primo avvio:
 SmartClip is a clipboard manager that can also type the clipboard text as simulated key presses (SendInput), for sign-in screens of remote desktops and virtual machine consoles where paste is blocked. It is a .NET Framework 4 Windows Forms desktop app packaged as MSIX (runFullTrust). The user interface is in English by default, and also in Spanish, French and Italian (Options > Appearance > Language). No account, no network access, no purchases.
 
 How to test:
-1. Launch SmartClip and copy some text in any program: it appears under "Recently copied".
-2. Press Ctrl+D in any program: the window comes up with the list; type to search, Enter puts the entry back on the clipboard and returns to the previous window.
+1. Launch SmartClip and copy some text in any program: it appears at the top of the list (All), with the program it was copied in.
+2. Press Ctrl+D in any program: the window comes up with the list on All; type to search, Enter puts the entry back on the clipboard and returns to the previous window.
 3. Typing: copy a text, open Notepad, click "Type clipboard" in SmartClip, then click into Notepad within 15 seconds; after a 1-second wait the text is typed. Alternatively press Ctrl+Alt+V inside Notepad. Typing stops if the foreground window changes.
-4. Saved texts: "New..." creates one; right-click > "New folder..." creates a folder. Saved texts also appear in the menu of the tray icon (right-click), each folder a submenu.
+4. Saved texts: "New..." creates one; "New folder..." at the bottom of the sidebar creates a folder. Saved texts also appear in the menu of the tray icon (right-click), each folder a submenu.
 
 Global hotkeys: Ctrl+Alt+V (type the clipboard) and Ctrl+D (open the list), both configurable in Options > Hotkeys. By default clicking another program hides the window to the notification area; to exit, right-click the tray icon > "Exit". F1 opens the built-in guide. Changing the language restarts the app.
 ```
