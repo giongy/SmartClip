@@ -115,9 +115,9 @@ SmartClip is open source, under the MIT license. It speaks English, Spanish, Fre
 Types the clipboard key by key where paste does not work: remote desktops, virtual machine consoles, server management pages
 Adjustable wait before typing, and typing stops if the window changes
 US keyboard on the server, and symbols composed with Alt codes
-History of copied texts and pictures, with instant search
-A sidebar like the apps of Windows 11, to widen or reduce to icons: all, pinned, saved texts in folders, the programs you copied in, latest first
-Compact cards, the content first, with tabs for texts, code, links and pictures
+History of copied texts and pictures, with instant search that also finds saved texts and highlights the words found
+A sidebar like the apps of Windows 11, to widen or reduce to icons: history, pinned, shortcuts, saved texts in folders, the programs you copied in
+Compact cards, the content first and the buttons under the pointer, with tabs for texts, code, links and pictures
 List available from any program with a hotkey, and hotkeys of your choice
 Entries kept at the top for a while with an arrow
 Saved texts and copied entries pasted anywhere with Ctrl+Shift+1…9
@@ -149,16 +149,20 @@ paste blocked
 ### What's new in this version
 
 ```
-Compact cards: the program, the time and the kind of an entry sit on its first line, before the buttons, so you see about twice as many entries at once. Pictures have smaller previews.
+History: the list opens on what you copied, without the saved texts mixed in. A search finds them too, after your copies, and the words found are highlighted on the cards; a long text found further in shows that part of it.
 
-Under Source, the programs come in the order of your copies: the one you copied in last is on top.
+Cleaner cards: the buttons appear under the pointer, every card keeps its height, and the count sits beside the title.
+
+Shortcuts, a new place in the sidebar: every entry with a number in one list. A click on the number of a card changes it or takes it away.
+
+The window can be made narrower, down to the icons of the sidebar, where each folder now shows its initial.
 ```
 
 ### Screenshot captions
 
 | File | Caption |
 | --- | --- |
-| `1-list.png` | Everything in one list: places in the sidebar, kinds in the tabs, and the program each entry was copied in. |
+| `1-list.png` | The history of what you copy: places in the sidebar, kinds in the tabs, and the program each entry was copied in. |
 | `2-typing.png` | Where Ctrl+V does not work, SmartClip types the clipboard key by key, after giving you time to click the right field. |
 | `3-preview.png` | The eye on a card shows the entry whole: every line of a text, a larger picture. |
 | `4-save.png` | Save a text under a name, in its folder, formatted too: a mail signature keeps its bold and its fonts. |
@@ -209,9 +213,9 @@ SmartClip è open source, con licenza MIT. Parla italiano, inglese, spagnolo e f
 Digita gli appunti tasto per tasto dove incollare non funziona: desktop remoti, console di macchine virtuali, pagine di gestione dei server
 Attesa regolabile prima di digitare, e la digitazione si ferma se cambi finestra
 Tastiera americana sul server e simboli composti con Alt+codice
-Cronologia di testi e immagini copiati, con ricerca istantanea
-Una barra laterale come nelle app di Windows 11, da allargare o ridurre alle icone: tutti, in alto, salvati in cartelle, i programmi in cui hai copiato, dal più recente
-Voci in schede compatte, prima il contenuto, con le schede per testi, codice, link e immagini
+Cronologia di testi e immagini copiati, con una ricerca istantanea che trova anche i testi salvati ed evidenzia le parole trovate
+Una barra laterale come nelle app di Windows 11, da allargare o ridurre alle icone: cronologia, in alto, scorciatoie, salvati in cartelle, i programmi in cui hai copiato
+Voci in schede compatte, prima il contenuto e i pulsanti sotto il puntatore, con le schede per testi, codice, link e immagini
 Elenco richiamabile da qualsiasi programma con una scorciatoia, e scorciatoie a tua scelta
 Voci tenute in cima per un po' con una freccia
 Testi salvati e voci copiate incollati ovunque con Ctrl+Maiusc+1…9
@@ -243,16 +247,20 @@ digitare password
 ### Novità di questa versione
 
 ```
-Schede compatte: il programma, l'ora e il tipo di una voce stanno sulla sua prima riga, prima dei pulsanti, così vedi circa il doppio delle voci insieme. Le immagini hanno miniature più piccole.
+Cronologia: l'elenco si apre su ciò che hai copiato, senza i testi salvati mescolati. Una ricerca trova anche quelli, dopo le copie, e le parole trovate sono evidenziate sulle schede; un testo lungo trovato più avanti ne mostra quel punto.
 
-Sotto Provenienza i programmi seguono l'ordine delle copie: in cima quello in cui hai copiato per ultimo.
+Schede più pulite: i pulsanti compaiono sotto il puntatore, ogni scheda tiene la sua altezza e il conteggio sta accanto al titolo.
+
+Scorciatoie, un posto nuovo nella barra laterale: tutte le voci con un numero in un elenco. Un clic sul numero di una scheda lo cambia o lo toglie.
+
+La finestra si stringe di più, fino alle sole icone della barra laterale, dove ogni cartella mostra ora la sua iniziale.
 ```
 
 ### Didascalie delle schermate
 
 | File | Didascalia |
 | --- | --- |
-| `1-list.png` | Tutto in un elenco: i posti nella barra laterale, i tipi nelle schede e il programma in cui è stata copiata ogni voce. |
+| `1-list.png` | La cronologia di ciò che copi: i posti nella barra laterale, i tipi nelle schede e il programma in cui è stata copiata ogni voce. |
 | `2-typing.png` | Dove Ctrl+V non funziona, SmartClip digita gli appunti tasto per tasto, dopo averti dato il tempo di cliccare nel campo giusto. |
 | `3-preview.png` | L'occhio di una scheda mostra la voce per intero: ogni riga di un testo, un'immagine più grande. |
 | `4-save.png` | Salva un testo con un nome, nella sua cartella, anche formattato: una firma di posta tiene grassetti e caratteri. |
@@ -303,9 +311,9 @@ SmartClip es de código abierto, con licencia MIT. Habla español, inglés, fran
 Teclea el portapapeles tecla por tecla donde pegar no funciona: escritorios remotos, consolas de máquinas virtuales, páginas de gestión de servidores
 Espera ajustable antes de teclear, y el tecleo se detiene si cambia la ventana
 Teclado estadounidense en el servidor y símbolos compuestos con códigos Alt
-Historial de textos e imágenes copiados, con búsqueda instantánea
-Una barra lateral como en las apps de Windows 11, para ensanchar o reducir a iconos: todo, arriba, guardados en carpetas, los programas donde copiaste, del más reciente
-Entradas en tarjetas compactas, primero el contenido, con pestañas para textos, código, enlaces e imágenes
+Historial de textos e imágenes copiados, con una búsqueda instantánea que también encuentra los textos guardados y resalta las palabras encontradas
+Una barra lateral como en las apps de Windows 11, para ensanchar o reducir a iconos: historial, arriba, atajos, guardados en carpetas, los programas donde copiaste
+Entradas en tarjetas compactas, primero el contenido y los botones bajo el puntero, con pestañas para textos, código, enlaces e imágenes
 Lista disponible desde cualquier programa con un atajo, y atajos a tu elección
 Entradas mantenidas arriba un tiempo con una flecha
 Textos guardados y entradas copiadas pegados en cualquier sitio con Ctrl+Mayús+1…9
@@ -337,16 +345,20 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Tarjetas compactas: el programa, la hora y el tipo de una entrada están en su primera línea, antes de los botones, así ves casi el doble de entradas a la vez. Las imágenes tienen miniaturas más pequeñas.
+Historial: la lista se abre en lo que copiaste, sin los textos guardados mezclados. Una búsqueda también los encuentra, después de tus copias, y las palabras encontradas se resaltan en las tarjetas; un texto largo encontrado más adelante muestra esa parte.
 
-En Origen, los programas siguen el orden de tus copias: arriba el último en el que copiaste.
+Tarjetas más limpias: los botones aparecen bajo el puntero, cada tarjeta conserva su altura y el recuento está junto al título.
+
+Atajos, un lugar nuevo en la barra lateral: todas las entradas con un número en una lista. Un clic en el número de una tarjeta lo cambia o lo quita.
+
+La ventana se puede estrechar más, hasta los iconos de la barra lateral, donde cada carpeta muestra ahora su inicial.
 ```
 
 ### Leyendas de las capturas
 
 | File | Leyenda |
 | --- | --- |
-| `1-list.png` | Todo en una lista: los lugares en la barra lateral, los tipos en las pestañas y el programa en el que se copió cada entrada. |
+| `1-list.png` | El historial de lo que copias: los lugares en la barra lateral, los tipos en las pestañas y el programa en el que se copió cada entrada. |
 | `2-typing.png` | Donde Ctrl+V no funciona, SmartClip teclea el portapapeles tecla por tecla, tras darte tiempo para hacer clic en el campo correcto. |
 | `3-preview.png` | El ojo de una tarjeta muestra la entrada entera: cada línea de un texto, una imagen más grande. |
 | `4-save.png` | Guarda un texto con un nombre, en su carpeta, también con formato: una firma de correo conserva sus negritas y sus fuentes. |
@@ -397,9 +409,9 @@ SmartClip est open source, sous licence MIT. Il parle français, anglais, espagn
 Saisit le presse-papiers touche par touche là où coller ne marche pas : bureaux à distance, consoles de machines virtuelles, pages d'administration
 Attente réglable avant la saisie, qui s'arrête si la fenêtre change
 Clavier américain sur le serveur et symboles composés avec des codes Alt
-Historique des textes et images copiés, avec recherche instantanée
-Une barre latérale comme les apps de Windows 11, à élargir ou réduire aux icônes : tout, en haut, enregistrés en dossiers, les programmes où vous avez copié, du plus récent
-Éléments en cartes compactes, le contenu d'abord, avec des onglets pour textes, code, liens et images
+Historique des textes et images copiés, avec une recherche instantanée qui trouve aussi les textes enregistrés et surligne les mots trouvés
+Une barre latérale comme les apps de Windows 11, à élargir ou réduire aux icônes : historique, en haut, raccourcis, enregistrés en dossiers, les programmes où vous avez copié
+Éléments en cartes compactes, le contenu d'abord et les boutons sous le pointeur, avec des onglets pour textes, code, liens et images
 Liste accessible depuis n'importe quel programme avec un raccourci, et raccourcis à votre choix
 Éléments gardés un moment en haut avec une flèche
 Textes enregistrés et éléments copiés collés partout avec Ctrl+Maj+1…9
@@ -431,16 +443,20 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Cartes compactes : le programme, l'heure et le type d'un élément sont sur sa première ligne, avant les boutons, pour voir environ deux fois plus d'éléments à la fois. Les images ont des miniatures plus petites.
+Historique : la liste s'ouvre sur ce que vous avez copié, sans les textes enregistrés mélangés. Une recherche les trouve aussi, après vos copies, et les mots trouvés sont surlignés sur les cartes ; un long texte trouvé plus loin en montre ce passage.
 
-Dans Provenance, les programmes suivent l'ordre de vos copies : en haut celui où vous avez copié en dernier.
+Des cartes plus nettes : les boutons apparaissent sous le pointeur, chaque carte garde sa hauteur et le nombre est à côté du titre.
+
+Raccourcis, un nouvel endroit dans la barre latérale : tous les éléments avec un numéro dans une liste. Un clic sur le numéro d'une carte le change ou le retire.
+
+La fenêtre se rétrécit davantage, jusqu'aux seules icônes de la barre latérale, où chaque dossier montre maintenant son initiale.
 ```
 
 ### Légendes des captures
 
 | File | Légende |
 | --- | --- |
-| `1-list.png` | Tout dans une liste : les endroits dans la barre latérale, les types dans les onglets et le programme où chaque élément a été copié. |
+| `1-list.png` | L'historique de ce que vous copiez : les endroits dans la barre latérale, les types dans les onglets et le programme où chaque élément a été copié. |
 | `2-typing.png` | Là où Ctrl+V ne marche pas, SmartClip saisit le presse-papiers touche par touche, après vous avoir laissé le temps de cliquer dans le bon champ. |
 | `3-preview.png` | L'œil d'une carte montre l'élément en entier : chaque ligne d'un texte, une image plus grande. |
 | `4-save.png` | Enregistrez un texte sous un nom, dans son dossier, même mis en forme : une signature de courriel garde son gras et ses polices. |

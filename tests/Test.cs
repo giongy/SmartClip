@@ -2085,7 +2085,7 @@ static class TestProgram
             // Reduced to its signs, the sidebar says the name of the row the pointer rests on, on its right.
             ListBox side = (ListBox)typeof(MainForm).GetField("navList", hidden).GetValue(form);
             typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { true });
-            typeof(MainForm).GetMethod("RowTip", hidden).Invoke(form, new object[] { side, 3, Sample.Current.Home });
+            typeof(MainForm).GetMethod("RowTip", hidden).Invoke(form, new object[] { side, 4, Sample.Current.Home, false });
             for (DateTime until = DateTime.Now.AddSeconds(1); DateTime.Now < until; System.Threading.Thread.Sleep(20)) Application.DoEvents();
             Snap(form, path + "-real-narrow.png");
             typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { false });
