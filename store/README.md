@@ -154,6 +154,8 @@ A new window, like the apps of Windows 11. On the left a sidebar with all your e
 Each card says, small and faint, which program it was copied in. The eye on a card shows the entry whole; resting the pointer does it too, if you turn it on in the options.
 
 Ctrl+D always opens the list on All, unless you choose to reopen it where you left it.
+
+Fixed: after a copy, and when Ctrl+D opens the list, the latest copy is selected and in view (the card selected before used to keep it hidden). Programs from a Citrix server now each show their own icon, under the name of Citrix.
 ```
 
 ### Screenshot captions
@@ -250,6 +252,8 @@ Una finestra nuova, come le app di Windows 11. A sinistra una barra laterale con
 Ogni scheda dice, in piccolo e tenue, in quale programma è stata copiata. L'occhio di una scheda mostra la voce per intero; lo fa anche il puntatore fermo, se lo attivi nelle opzioni.
 
 Ctrl+D apre sempre l'elenco su Tutti, a meno che tu non scelga di riaprirlo dove l'hai lasciato.
+
+Corretto: dopo una copia, e quando Ctrl+D apre l'elenco, l'ultima copia è selezionata e in vista (la scheda selezionata prima la teneva nascosta). I programmi di un server Citrix mostrano ora ognuno la propria icona, con il nome di Citrix.
 ```
 
 ### Didascalie delle schermate
@@ -346,6 +350,8 @@ Una ventana nueva, como las apps de Windows 11. A la izquierda una barra lateral
 Cada tarjeta dice, en pequeño y tenue, en qué programa se copió. El ojo de una tarjeta muestra la entrada entera; también lo hace el puntero quieto, si lo activas en las opciones.
 
 Ctrl+D abre siempre la lista en Todo, salvo que elijas volver a abrirla donde la dejaste.
+
+Corregido: tras una copia, y cuando Ctrl+D abre la lista, la última copia queda seleccionada y a la vista (la tarjeta seleccionada antes la dejaba oculta). Los programas de un servidor Citrix muestran ahora cada uno su propio icono, con el nombre de Citrix.
 ```
 
 ### Leyendas de las capturas
@@ -442,6 +448,8 @@ Une nouvelle fenêtre, comme les apps de Windows 11. À gauche une barre latéra
 Chaque carte indique, en petit et discret, dans quel programme l'élément a été copié. L'œil d'une carte montre l'élément en entier ; le pointeur arrêté le fait aussi, si vous l'activez dans les options.
 
 Ctrl+D ouvre toujours la liste sur Tout, sauf si vous choisissez de la rouvrir là où vous l'avez laissée.
+
+Corrigé : après une copie, et quand Ctrl+D ouvre la liste, la dernière copie est sélectionnée et visible (la carte sélectionnée avant la laissait cachée). Les programmes d'un serveur Citrix affichent maintenant chacun leur propre icône, sous le nom de Citrix.
 ```
 
 ### Légendes des captures
