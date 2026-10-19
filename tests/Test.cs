@@ -781,6 +781,23 @@ static class TestProgram
                 "the programs the copied entries come from, each with how many");
             clips.Remove(clips.Copied(1, code)[0].Id);
             clips.Remove(clips.Copied(1, link)[0].Id);
+            // The programs a remote one shows (Citrix): its name, and the icon of their window, one for each icon.
+            using (Form first = new Form(), second = new Form())
+            {
+                first.Icon = SystemIcons.Application;
+                second.Icon = SystemIcons.Warning;
+                string shown = Origin.Within(notepad, first.Handle), other = Origin.Within(notepad, second.Handle);
+                clips.AddText("copied on the server", shown);
+                clips.AddText("copied on the server too", other);
+                clips.AddText("and once more", Origin.Within(notepad, first.Handle));
+                List<Source> remote = clips.Sources().FindAll(delegate(Source s) { return s.Origin.Name == Origin.NameOf(notepad); });
+                Check(shown != notepad && other != shown && remote.Count == 2 && remote[0].Count == 2 && remote[1].Count == 1
+                    && remote[0].Origin.Icon != null && !Origin.IsHost(shown) && Origin.NameOf(shown) == Origin.NameOf(notepad)
+                    && Origin.IconOf(shown) != null && !Equals(Convert.ToBase64String(Origin.IconOf(shown)), Convert.ToBase64String(Origin.IconOf(other))),
+                    "a program shown from a server goes by the name of the one here, one for each icon of its windows");
+                foreach (Entry made in clips.Copied(10, Texts.Words("server"))) clips.Remove(made.Id);
+                clips.Remove(clips.Copied(1, Texts.Words("once more"))[0].Id);
+            }
             // What versions before 4.3.3 said came from the clipboard service of Windows comes from no program.
             string host = System.IO.Path.Combine(Environment.SystemDirectory, "svchost.exe");
             clips.AddText("through the service", host);
@@ -1583,6 +1600,18 @@ static class TestProgram
             Place opened = (Place)typeof(MainForm).GetField("place", hidden).GetValue(form);
             Console.WriteLine("[{0}] the list hotkey opens on all of it", opened.Kind == PlaceKind.All && tabs.Selected == 0
                 && Cards(cards).Count == 9 && ((Place)nav.SelectedItem).Kind == PlaceKind.All ? "PASS" : "FAIL");
+            // It, and a copy, select the latest copy, with the top of the list in view: never the card selected before.
+            Entry latest = null;
+            foreach (Entry e in Cards(cards))
+                if (!e.Saved && (latest == null || e.Time > latest.Time)) latest = e;
+            cards.SelectedIndex = cards.Items.Count - 1;
+            typeof(MainForm).GetMethod("ShowAll", hidden).Invoke(form, null);
+            bool onOpening = ((Entry)cards.SelectedItem).Id == latest.Id;
+            cards.SelectedIndex = cards.Items.Count - 1;
+            typeof(MainForm).GetField("newest", hidden).SetValue(form, true);   // as a copy does
+            typeof(MainForm).GetMethod("ReloadCopied", hidden).Invoke(form, null);
+            Console.WriteLine("[{0}] the list hotkey and a copy select the latest copy, the top in view", onOpening
+                && ((Entry)cards.SelectedItem).Id == latest.Id && cards.TopIndex == 0 ? "PASS" : "FAIL");
 
             // A closed folder hides the folders inside it too, in the sidebar.
             List<Entry> sample = (List<Entry>)typeof(MainForm).GetField("entries", hidden).GetValue(form);

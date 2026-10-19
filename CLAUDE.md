@@ -257,8 +257,12 @@ condiviso su GitHub).
 - Ctrl+D (`OpenList`) porta la finestra in primo piano da qualsiasi programma; dopo la scelta con Invio o
   doppio clic `GoBack` restituisce il primo piano alla finestra di partenza e rinasconde la finestra se era
   nascosta. «Copia» no (voluto dall'utente: la finestra spariva e la voce non si poteva più salvare).
-  Ctrl+D apre sempre su «Tutti», scheda dei tipi «Tutti», ricerca vuota (`ShowAll`; voluto dall'utente il 19/10/2026);
-  con l'opzione «Riapri dove l'hai lasciato» (`whereLeftBox`, nelle Scorciatoie, spenta di default, impostazione
+  Ctrl+D apre sempre su «Tutti», scheda dei tipi «Tutti», ricerca vuota (`ShowAll`; voluto dall'utente il 19/10/2026),
+  con selezionata l'ultima copia e la cima dell'elenco in vista; lo stesso dopo ogni copia entrata (`newest`, letto da
+  `ShowRows`, anche se la copia è in alto sotto altre). Voluto dall'utente il 19/10/2026: la scheda selezionata prima
+  restava selezionata e l'elenco scorreva fino a lei, così la copia nuova restava fuori vista finché non si cambiava
+  scheda; e a elenco già su «Tutti» Ctrl+D non lo riempiva di nuovo. Le altre ricariche tengono la selezione.
+  Con l'opzione «Riapri dove l'hai lasciato» (`whereLeftBox`, nelle Scorciatoie, spenta di default, impostazione
   `OpenWhereLeft`) tiene posto e tipo. Vale solo per la scorciatoia: riaprire dal tray o con un secondo avvio lascia
   tutto com'era.
 - Copiati e salvati stanno in un solo database SQLite (dalla 4.0, `docs\piano-sqlite.md`; prima i salvati
@@ -362,7 +366,15 @@ condiviso su GitHub).
   di nuovo alla prima copia di ogni sessione, così un aggiornamento cambia nome e icona); quelli da cui non viene più
   nessun copiato se ne vanno con la scadenza (`DropApps`). Copiare di nuovo la stessa cosa altrove sposta la voce al
   programma nuovo; un programma sconosciuto lascia quello di prima. Salvare una voce la toglie (regola dello schema:
-  un salvato non dice niente di sé). Non si esporta, e la ricerca non trova le voci per programma (si potrebbe: ma
+  un salvato non dice niente di sé). I programmi di un server Citrix (voluto dall'utente il 19/10/2026: al lavoro
+  tutto risultava «Citrix HDX Engine»): per Windows ciò che vi si copia è di `wfica32.exe` (o `wfica.exe`,
+  `CDViewer.exe`, `Origin.Remote`), ma ogni sua finestra ha l'icona del programma remoto. Se il programma trovato è uno
+  di quelli ed è anche quello della finestra in primo piano, `Origin.Within` lo chiama eseguibile + `*` + impronta
+  dell'icona della finestra (`WM_GETICON`, con `SendMessageTimeout`; mai l'icona della classe), e tiene l'icona per la
+  sessione (`windowIcons`, che `IconOf` legge): così nella barra ci sono tante «Citrix HDX Engine» quante icone, il nome
+  è sempre quello di Citrix (scelta dell'utente: «so che viene da lì, ma capisco da quale applicazione»), e lo schema
+  non cambia. A parità di nome `Sources` le ordina per id. Ricavare il nome vero dal titolo della finestra è stato
+  scartato (Esplora file e gli emulatori di terminale danno il nome della cartella o «[62 x 160]»). Non si esporta, e la ricerca non trova le voci per programma (si potrebbe: ma
   «code» troverebbe tutto ciò che è copiato in VS Code). Le voci finte delle immagini (`FillSample`) vengono da Edge,
   PowerShell e Blocco note (`Clips.Attribute`).
 - I testi salvati (`Entry.Saved`) stanno nello stesso database, contenuto e miniatura cifrati con DPAPI per
@@ -822,6 +834,10 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   l'immagine di `shot`; mai una copia vera da Chrome, Office, un'app dello Store (il proprietario potrebbe essere
   `ApplicationFrameHost`, e l'icona del suo eseguibile quella generica), un desktop remoto (dovrebbe dire «Connessione
   Desktop remoto»), un programma da amministratore.
+- Citrix dal vivo (19/10/2026): provato `Origin.Within` solo su finestre dei test con icone diverse. Mai su Citrix vero:
+  se le finestre di `wfica32.exe` rispondono a `WM_GETICON` con l'icona del programma remoto (Gestione attività la
+  mostra), se l'impronta resta la stessa da una copia e da una sessione all'altra (altrimenti lo stesso programma
+  comparirebbe più volte), chi possiede gli appunti dopo una copia remota.
 - La barra laterale trascinata e ridotta (19/10/2026) dal vivo: provati da `shot` riduzione, ritorno e limiti della
   larghezza, vista l'immagine ridotta; mai il bordo trascinato con il mouse vero, il cursore ↔, i suggerimenti delle
   icone, il clic sul ☰.

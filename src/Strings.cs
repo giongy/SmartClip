@@ -383,7 +383,8 @@ static partial class Strings
             "- " + PinnedPlace + ": only the copied entries kept at the top.",
             "- " + SavedTitle + ": the saved texts, by name. Under it are their folders.",
             "- " + SourcesPlace + ": the programs you copied in, each with its icon and how many entries come from it. A "
-                + "click on one shows only what you copied there; a click on " + SourcesPlace + " opens or closes the list.",
+                + "click on one shows only what you copied there; a click on " + SourcesPlace + " opens or closes the list. "
+                + "The programs of a Citrix server all take the name of Citrix on this PC, but each keeps its own icon.",
             "The button at the top of the sidebar reduces it to its icons, and gives it its names back: resting the pointer "
                 + "on an icon says its name. Dragging the edge between the sidebar and the cards makes it wider or narrower; "
                 + "dragged narrower than it can be, it is reduced to its icons.",

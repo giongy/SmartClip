@@ -67,7 +67,8 @@ the edge of the sidebar to make it wider or narrower; the button at its top redu
 - **Pinned**: only the copied entries kept at the top.
 - **Saved**: the texts you saved, by name, which stay until you delete them. Their folders are under it.
 - **Source**: the programs you copied in, each with its icon and how many entries come from it; choose one to see
-  only what you copied there.
+  only what you copied there. The programs of a Citrix server all go by the name of Citrix on your PC, each with
+  its own icon.
 
 Above the cards, tabs show one kind of entry only: **All**, **Text**, **Code**, **Links**, **Images**. Code is
 told from how the lines look, so now and then it guesses wrong: **Type**, in the menu of a text, says what it
@@ -144,8 +145,8 @@ picture, puts on the clipboard the text in it, read by the text recognition buil
 comes into the list like any copy (from a saved picture it is marked private). Small screen text can come out with
 a few mistakes.
 
-Press **Ctrl+D** in any program to bring the window up on **All**, every kind, with the cursor in the search box
-(**Open where you left it**, among the hotkeys in the options, keeps the place and the kind instead). After you choose an
+Press **Ctrl+D** in any program to bring the window up on **All**, every kind, with your latest copy selected and the
+cursor in the search box (**Open where you left it**, among the hotkeys in the options, keeps the place and the kind instead). After you choose an
 entry the focus returns to the program you were in, and the window hides again if it was hidden. Esc goes back
 without choosing.
 

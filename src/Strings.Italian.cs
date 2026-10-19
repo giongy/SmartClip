@@ -325,7 +325,8 @@ static partial class Strings
             "- «" + PinnedPlace + "»: solo le voci copiate tenute in alto.",
             "- «" + SavedTitle + "»: i testi salvati, per nome. Sotto ci sono le loro cartelle.",
             "- «" + SourcesPlace + "»: i programmi in cui hai copiato, ognuno con la sua icona e quante voci vengono da "
-                + "lui. Un clic su uno mostra solo ciò che hai copiato lì; un clic su «" + SourcesPlace + "» apre o chiude l'elenco.",
+                + "lui. Un clic su uno mostra solo ciò che hai copiato lì; un clic su «" + SourcesPlace + "» apre o chiude l'elenco. "
+                + "I programmi di un server Citrix prendono tutti il nome di Citrix su questo PC, ma ognuno tiene la sua icona.",
             "Il pulsante in cima alla barra laterale la riduce alle sue icone, e le ridà i nomi: fermando il puntatore su "
                 + "un'icona ne leggi il nome. Trascinando il bordo tra la barra e le schede la allarghi o la stringi; "
                 + "stretta più di quanto può, si riduce alle icone.",

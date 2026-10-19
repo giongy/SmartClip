@@ -728,7 +728,10 @@ partial class MainForm : Window
             // Only the copied entries can have changed, and only if something was remembered: the saved ones are
             // not read again, nor the copied ones after a copy that is left out (paused, private, chosen in the list).
             if (historyBox.Checked && !paused && Native.GetClipboardSequenceNumber() != ownCopy && Texts.Remember(clips))
+            {
+                newest = true;   // what was just copied, selected and in view
                 ReloadCopied();
+            }
         }
         base.WndProc(ref m);
     }

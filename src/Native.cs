@@ -31,6 +31,8 @@ static class Native
     public const uint TOUNICODE_KEEP_STATE = 0x0004;
     public const int ASFW_ANY = -1;
     public const uint PROCESS_QUERY_LIMITED_INFORMATION = 0x1000;
+    public const int WM_GETICON = 0x007F, ICON_SMALL = 0, ICON_BIG = 1, ICON_SMALL2 = 2;
+    public const uint SMTO_ABORTIFHUNG = 0x0002;
     // The formatting of the characters in a rich edit box: of the selection, and which of it is the same throughout.
     public const int EM_GETCHARFORMAT = 0x043A, EM_SETCHARFORMAT = 0x0444, SCF_DEFAULT = 0x0000, SCF_SELECTION = 0x0001;
     public const uint CFM_BOLD = 0x00000001, CFM_ITALIC = 0x00000002, CFM_UNDERLINE = 0x00000004, CFM_STRIKEOUT = 0x00000008,
@@ -102,6 +104,10 @@ static class Native
 
     [DllImport("user32.dll")]
     public static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);
+
+    [DllImport("user32.dll")]
+    public static extern IntPtr SendMessageTimeout(IntPtr window, int message, IntPtr wParam, IntPtr lParam, uint flags, uint timeout,
+        out IntPtr result);
 
     [DllImport("user32.dll")]
     public static extern uint SendInput(uint count, INPUT[] inputs, int size);

@@ -43,6 +43,7 @@ partial class MainForm
     List<object> rows = new List<object>();   // what the cards show: entries, and the names of their days
     bool headed;                               // the cards are under the names of their days: each says its time only
     int lastCard = -1;                         // the card selected last, where a click on the name of a day leaves it
+    bool newest;                               // the next filling selects the latest copy, with the top of the list in view
 
     // What the cards answer to: buttons, right-click menu, mouse, dragging a saved text into a folder.
     void WireLists()
@@ -373,13 +374,17 @@ partial class MainForm
     }
 
     // Fills the cards with the rows of the place; the entry that was selected is selected again, and the list stays
-    // where it was scrolled to as far as that entry stays in view. Without one, the first entry is.
+    // where it was scrolled to as far as that entry stays in view. Without one, the first entry is. After a copy and
+    // the list hotkey (newest), the latest copied entry is, also when kept at the top under others, and the list
+    // shows its top (wanted by the user on 19/10/2026: the card selected before kept the new copy out of view).
     void ShowRows(Entry selected)
     {
+        bool toNewest = newest;
+        newest = false;
         int top = cardList.TopIndex;
         cardList.BeginUpdate();
         cardList.Items.Clear();
-        int found = -1, first = -1;
+        int found = -1, first = -1, latest = -1;
         foreach (object row in rows)
         {
             int index = cardList.Items.Add(row);
@@ -387,10 +392,19 @@ partial class MainForm
             if (entry == null) continue;
             if (first < 0) first = index;
             if (selected != null && entry.Id == selected.Id) found = index;
+            if (!entry.Saved && (latest < 0 || entry.Time > ((Entry)rows[latest]).Time)) latest = index;
         }
         lastCard = -1;
-        cardList.SelectedIndex = found >= 0 ? found : first;
-        if (found >= 0) Rescroll(cardList, top);
+        if (toNewest && latest >= 0)
+        {
+            cardList.SelectedIndex = latest;
+            Rescroll(cardList, 0);
+        }
+        else
+        {
+            cardList.SelectedIndex = found >= 0 ? found : first;
+            if (found >= 0) Rescroll(cardList, top);
+        }
         cardList.EndUpdate();
         cardList.Glow.Reset();   // the rows changed under the pointer
         hoverRow = -1;
@@ -990,12 +1004,12 @@ partial class MainForm
         search.Focus();
     }
 
-    // All the entries, of every kind: where the list hotkey opens, wanted by the user.
+    // All the entries, of every kind, from the latest copy: where the list hotkey opens, wanted by the user.
     void ShowAll()
     {
-        if (place.Kind == PlaceKind.All && tabs.Selected == 0) return;
         place = new Place(PlaceKind.All);
         cardList.ClearSelected();
+        newest = true;
         if (tabs.Selected != 0) tabs.Selected = 0;   // which fills the cards and the sidebar again
         else Filter();
     }

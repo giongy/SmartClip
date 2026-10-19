@@ -46,7 +46,7 @@ sealed class Clips : IDisposable
     const string AppsSchema =
         "CREATE TABLE apps ("
         + " id INTEGER PRIMARY KEY,"
-        + " path TEXT NOT NULL UNIQUE,"              // of its executable, as Windows gives it
+        + " path TEXT NOT NULL UNIQUE,"              // of its executable, as Windows gives it (of a remote one: Origin.Within)
         + " name TEXT NOT NULL,"
         + " icon BLOB);";                            // PNG; null if none could be read
     // The small columns first, the large ones last: SQLite keeps a large value in a chain of pages of its own, and
@@ -609,7 +609,8 @@ sealed class Clips : IDisposable
         return sql.ToString();
     }
 
-    // The programs the copied entries come from, by name, each with how many come from it.
+    // The programs the copied entries come from, by name, each with how many come from it. The remote programs of one
+    // server share their name (Origin.Within): those keep the order in which they were met.
     public List<Source> Sources()
     {
         List<Source> sources = new List<Source>();
@@ -622,7 +623,11 @@ sealed class Clips : IDisposable
                 source.Origin = OriginOf(source.App);
                 if (source.Origin != null) sources.Add(source);
             }
-        sources.Sort(delegate(Source a, Source b) { return StringComparer.CurrentCultureIgnoreCase.Compare(a.Origin.Name, b.Origin.Name); });
+        sources.Sort(delegate(Source a, Source b)
+        {
+            int byName = StringComparer.CurrentCultureIgnoreCase.Compare(a.Origin.Name, b.Origin.Name);
+            return byName != 0 ? byName : a.App.CompareTo(b.App);
+        });
         return sources;
     }
 

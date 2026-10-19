@@ -336,7 +336,8 @@ static partial class Strings
             "- « " + SavedTitle + " » : les textes enregistrés, par nom. En dessous se trouvent leurs dossiers.",
             "- « " + SourcesPlace + " » : les programmes dans lesquels vous avez copié, chacun avec son icône et le nombre "
                 + "d'éléments qui en viennent. Un clic sur l'un d'eux ne montre que ce que vous y avez copié ; un clic sur « "
-                + SourcesPlace + " » ouvre ou ferme la liste.",
+                + SourcesPlace + " » ouvre ou ferme la liste. Les programmes d'un serveur Citrix prennent tous le nom de Citrix "
+                + "sur ce PC, mais chacun garde son icône.",
             "Le bouton en haut de la barre latérale la réduit à ses icônes, et lui rend ses noms : en laissant le pointeur "
                 + "sur une icône, vous voyez son nom. En faisant glisser le bord entre la barre et les cartes, vous l'élargissez "
                 + "ou la rétrécissez ; plus étroite qu'elle ne peut l'être, elle se réduit à ses icônes.",
