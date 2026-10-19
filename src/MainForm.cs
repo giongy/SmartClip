@@ -139,7 +139,7 @@ partial class MainForm : Window
     int tipKey = -1;
     string tipText;
     Point tipAt;
-    Size leastSize;                               // the window as designed: it is never made smaller
+    Size leastSize;                               // the window as designed: it is never made less tall
     readonly ContextMenuStrip listMenu = new ContextMenuStrip();
     readonly ContextMenuStrip navMenu = new ContextMenuStrip();   // of a folder in the sidebar
     readonly Peek peek = new Peek();              // shows whole the entry of a card
@@ -605,7 +605,8 @@ partial class MainForm : Window
     {
         base.OnLoad(e);
         MinimumSize = leastSize = Size;   // as designed, at the scale of this screen
-        // The size the user left it at, never smaller than designed nor larger than the screen, which it stays on.
+        PlaceSidebar();   // which says how narrow the window can be, with the sidebar as wide as it was left
+        // The size the user left it at, never smaller than that nor larger than the screen, which it stays on.
         if (savedSize.Width > 0 && savedSize.Height > 0)
         {
             Screen screen = Screen.FromPoint(Location);

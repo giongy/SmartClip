@@ -329,6 +329,7 @@ class Rail : Control
         target.Parent.Controls.Add(rail);
         rail.BringToFront();
         target.Resize += delegate { rail.Place(); };
+        target.Move += delegate { rail.Place(); };
         target.HandleCreated += delegate { rail.Place(); };
         RowList rows = target as RowList;
         if (rows != null) rows.Scrolled += delegate { rail.Follow(); };
@@ -346,7 +347,10 @@ class Rail : Control
     {
         int bar = target.Width - target.ClientSize.Width;
         Bounds = new Rectangle(target.Right - bar, target.Top, bar, target.Height);
-        Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Right;
+        // Anchored as its control, by the side its right edge follows: always on the right, the rail of the sidebar,
+        // which stays where it is, went on with the edge of a window made wider, a dark band over the pane.
+        Anchor = (target.Anchor & (AnchorStyles.Top | AnchorStyles.Bottom))
+            | ((target.Anchor & AnchorStyles.Right) != 0 ? AnchorStyles.Right : AnchorStyles.Left);
         Follow();
         Invalidate();
     }

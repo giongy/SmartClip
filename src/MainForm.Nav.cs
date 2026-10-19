@@ -192,13 +192,23 @@ partial class MainForm
         int width = (int)((sideNarrow ? NarrowSideWidth : sideWidth) * Zoom);
         if (!sideNarrow)
         {
-            width = Math.Max((int)(MinSideWidth * Zoom), Math.Min(Math.Min((int)(MaxSideWidth * Zoom), ClientSize.Width - edge - least), width));
-            sideWidth = (int)Math.Round(width / Zoom);
+            sideWidth = Math.Max(MinSideWidth, Math.Min(MaxSideWidth, sideWidth));
+            width = (int)(sideWidth * Zoom);
+            // Dragged, its edge waits for a wider window, and it is as wide as it got. Given its names back, or at the
+            // start, it keeps the width the user gave it, and the window widens if it has to: a window left at its least
+            // would otherwise squeeze it for good.
+            if (sizingSide)
+            {
+                width = Math.Max((int)(MinSideWidth * Zoom), Math.Min(width, ClientSize.Width - edge - least));
+                sideWidth = (int)Math.Round(width / Zoom);
+            }
         }
         SuspendLayout();
+        // Never so narrow that the pane would go under its least width, which may be narrower than designed (wanted by
+        // the user on 19/10/2026: the window could not be made narrower than it starts); a narrower or reduced sidebar
+        // lets it narrow further. Never less tall than designed. Set first, as it may widen the window.
+        MinimumSize = new Size(Width - ClientSize.Width + width + least + edge, leastSize.Height);
         pane.SetBounds(width, pane.Top, ClientSize.Width - edge - width, pane.Height);
-        // Never so small that the pane would go under its least width; never smaller than designed either.
-        MinimumSize = new Size(Math.Max(leastSize.Width, Width - ClientSize.Width + width + least + edge), leastSize.Height);
         int row = navList.ItemHeight, height = footList.Items.Count * footList.ItemHeight;
         navList.Width = footList.Width = width - 2 * edge;
         // The button with its sign above those of the rows.

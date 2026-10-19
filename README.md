@@ -97,7 +97,7 @@ only the name and the content stays hidden, which suits a password; without, the
 | Right click, or the three dots on the right | Opens the menu of the entry |
 | The eye on the right of a card (**Preview**), also in the menu | Shows the entry whole in a small box for a few seconds: every line of a text, a larger picture; of a saved text with a name, its content. With **Preview when the pointer rests** on, resting the pointer on a card cut short does the same |
 | Dragging a saved card, or a folder of the sidebar | Onto a folder of the sidebar moves it there; onto **Saved** takes it out of the folders |
-| Resizing the window | The cards take the room; size and position are remembered for the next start, never smaller than the starting size |
+| Resizing the window | The cards take the room; size and position are remembered for the next start. It can be made narrower than it starts, down to the room the cards need, and narrower still with the sidebar narrower or reduced to its icons |
 | The arrow on the right of a copied entry, or Ctrl+P | Keeps the entry at the top for a while: it still goes when its days are over. What is to stay, save it |
 | Ctrl+Shift+1 … Ctrl+Shift+9, in any program | Pastes the entry with that number into the active window, without opening SmartClip (see below) |
 | F1, or **Help** at the bottom of the sidebar | Opens the guide: everything the program does, by topic |

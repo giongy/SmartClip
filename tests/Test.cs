@@ -1733,14 +1733,51 @@ static class TestProgram
             sideWidth.SetValue(form, 0);
             placeSide.Invoke(form, null);
             bool atLeast = (int)sideWidth.GetValue(form) == least && nav.Right < pane.Left;
+            // Dragged as wide as it can be, it waits for a wider window.
+            FieldInfo sizing = typeof(MainForm).GetField("sizingSide", hidden);
+            sizing.SetValue(form, true);
             sideWidth.SetValue(form, 10000);
             placeSide.Invoke(form, null);
+            sizing.SetValue(form, false);
             int slack = (int)typeof(MainForm).GetField("PaneSlack", constant).GetValue(null);
             bool atMost = pane.Right == right && pane.Width >= wide - (int)(slack * Look.Zoom) - 2 && pane.Width < wide;
             sideWidth.SetValue(form, typeof(MainForm).GetField("SideWidth", constant).GetValue(null));
             placeSide.Invoke(form, null);
             Console.WriteLine("[{0}] the sidebar reduced to its signs and back, its names in tooltips, dragged as narrow and as wide as it can be",
                 narrowed && waits && back && atLeast && atMost && pane.Width == wide ? "PASS" : "FAIL");
+            // The window narrower than designed, as far as the pane allows: further with the sidebar reduced.
+            Size designed = form.Size;
+            int leastPane = (int)(((int)typeof(MainForm).GetField("PaneInset", constant).GetValue(null) * 2
+                + (int)typeof(MainForm).GetField("ContentWidth", constant).GetValue(null) - slack) * Look.Zoom);
+            form.Width = 1;
+            Application.DoEvents();
+            Save(form, path + "-least.png");
+            bool narrower = form.Width < designed.Width && pane.Width >= leastPane - 1 && pane.Width <= leastPane + 1;
+            string steps = string.Format("names {0}/{1} pane {2} least {3}", form.Width, form.MinimumSize.Width, pane.Width, leastPane);
+            // The thin bar over the scroll bar of the sidebar stays on it, whatever the width of the window.
+            Control navRail = null;
+            foreach (Control each in form.Controls) if (each is Rail && each.Top == nav.Top) navRail = each;
+            narrower &= navRail != null && navRail.Right == nav.Right;
+            steps += string.Format(", its rail ends at {0}, the sidebar at {1}", navRail == null ? -1 : navRail.Right, nav.Right);
+            int withNames = form.Width;
+            typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { true });
+            form.Width = 1;
+            Application.DoEvents();
+            Save(form, path + "-least-narrow.png");
+            narrower &= form.Width < withNames && pane.Width >= leastPane - 1;
+            steps += string.Format("; reduced {0}/{1} pane {2}", form.Width, form.MinimumSize.Width, pane.Width);
+            // Given its names back in a window at its least, the sidebar keeps its width: the window widens.
+            typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { false });
+            narrower &= (int)sideWidth.GetValue(form) == (int)typeof(MainForm).GetField("SideWidth", constant).GetValue(null)
+                && form.Width >= withNames - 1;
+            steps += string.Format("; names again {0}, sidebar {1}", form.Width, sideWidth.GetValue(form));
+            form.Size = designed;
+            placeSide.Invoke(form, null);
+            Application.DoEvents();
+            narrower &= navRail.Right == nav.Right;
+            steps += string.Format("; its rail ends at {0}, the sidebar at {1}", navRail.Right, nav.Right);
+            Console.WriteLine("[{0}] the window narrower than designed, down to the least pane: {1}; back to {2}, pane {3} of {4}",
+                narrower && pane.Width == wide ? "PASS" : "FAIL", steps, form.Width, pane.Width, wide);
             TextBox search = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
 
             // The icon menu: the saved texts between the first item and the rest, each folder a submenu.

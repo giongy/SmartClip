@@ -635,7 +635,8 @@ condiviso su GitHub).
   avvisi (`Warn`), errori (`ShowError`) e ciò che riguarda la digitazione restano fino al messaggio dopo (l'esito
   di una digitazione fatta a finestra nascosta deve potersi leggere riaprendola).
 
-- La finestra è ridimensionabile (voluto dall'utente), mai più piccola di come nasce (`MinimumSize` in
+- La finestra è ridimensionabile (voluto dall'utente), mai meno alta di come nasce; larga almeno quanto la barra laterale
+  più il pannello più stretto (vedi sotto: dal 19/10/2026, voluto dall'utente, anche meno di come nasce) (`MinimumSize` in
   `OnLoad`). Dimensione e posizione si ricordano (la dimensione dal 16/10/2026, voluta dall'utente: prima tornava
   ogni volta quella di default): impostazioni `Width` e `Height`, in pixel a 96 dpi, applicate in
   `OnLoad` (`savedSize`), mai sotto la minima né oltre lo schermo, sul quale la finestra viene riportata. Le
@@ -654,7 +655,12 @@ condiviso su GitHub).
   schede: Windows mostra il suggerimento di un controllo una volta sola finché il puntatore non ne esce, e passando
   da un'icona all'altra non ricompariva (trovato dall'utente il 19/10/2026). Il pannello cede alla barra al massimo `PaneSlack` della sua
   larghezza disegnata: oltre, per allargare la barra si allarga prima la finestra, e la finestra non si stringe più
-  di così (`MinimumSize` rifatta da `PlaceSidebar`, mai sotto `leastSize`, la misura con cui nasce). Impostazioni
+  di così (`MinimumSize` rifatta da `PlaceSidebar`; `leastSize`, la misura con cui nasce, conta solo per l'altezza).
+  Così la finestra si stringe sotto la misura con cui nasce, e di più con la barra stretta o ridotta. Solo trascinando
+  il bordo la barra aspetta una finestra più larga; ridata con i nomi a finestra stretta, tiene la sua larghezza e la
+  finestra si allarga (prima la barra restava schiacciata per sempre). La `Rail` di un elenco ne prende l'ancoraggio
+  (prima sempre a destra: quella della barra laterale seguiva il bordo destro della finestra, una striscia scura sul
+  pannello, trovata dall'utente il 19/10/2026). Impostazioni
   `SideWidth` (pixel a 96 dpi) e `SideNarrow`. Lo spazio trascinabile tra le due colonne di prima (`SavedWidth`) non
   c'era più dal 18/10/2026.
 
