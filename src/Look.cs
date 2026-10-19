@@ -581,8 +581,8 @@ class RoundButton : Button
 
 // The small signs drawn beside entries, on buttons and beside the pages of the options: they are where the colour is.
 enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, Keys, Search, Help, Opened, Closed, Bolt, History, Up,
-    Bold, Italic, Underline, Face, Size, Erase, Formatted, Folder, NewFolder, Move, Pause, Resume, Open, Exit, Show, Check, Paint,
-    Info, Done, Warning, Error, Paste, Code, Picture, Apps, More, Copy, Menu }
+    Bold, Italic, Underline, Erase, Formatted, Folder, NewFolder, Move, Pause, Resume, Open, Exit, Show, Check, Paint,
+    Info, Done, Warning, Error, Paste, Code, Picture, Apps, More, Copy, Menu, FullFolder }
 
 // The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
 enum Theme { System, Light, Dark }
@@ -1043,10 +1043,10 @@ static class Look
             case Sign.Bold: return "\uE8DD";                        // Bold
             case Sign.Italic: return "\uE8DB";                      // Italic
             case Sign.Underline: return "\uE8DC";                   // Underline
-            case Sign.Face: case Sign.Formatted: return "\uE8D2";   // Font
-            case Sign.Size: return "\uE8E9";                        // FontSize
+            case Sign.Formatted: return "\uE8D2";                   // Font
             case Sign.Erase: return "\uE75C";                       // EraseTool
             case Sign.Folder: return "\uE8B7";                      // Folder
+            case Sign.FullFolder: return "\uE8D5";                  // FolderFill
             case Sign.NewFolder: return "\uE8F4";                   // NewFolder
             case Sign.Move: return "\uE8DE";                        // MoveToFolder
             case Sign.Pause: return "\uE769";                       // Pause
@@ -1072,7 +1072,7 @@ static class Look
     }
 
     // The colour a sign has of its own.
-    static Color Own(Sign sign)
+    public static Color Own(Sign sign)
     {
         switch (sign)
         {
@@ -1087,7 +1087,7 @@ static class Look
             case Sign.Error: return Red;
             case Sign.Link: case Sign.Opened: case Sign.Closed: case Sign.History: case Sign.Move:
                 return Teal;
-            case Sign.Star: case Sign.Edit: case Sign.Bolt: case Sign.Erase: case Sign.Folder: case Sign.NewFolder:
+            case Sign.Star: case Sign.Edit: case Sign.Bolt: case Sign.Erase: case Sign.Folder: case Sign.FullFolder: case Sign.NewFolder:
                 return Amber;
             case Sign.Plus: return Green;
             case Sign.Delete: return Red;
@@ -1215,6 +1215,11 @@ static class Look
                         g.DrawLine(pen, x + 6 * u, y + 9 * u, x + 10 * u, y + 9 * u);
                     }
                     break;
+                case Sign.FullFolder:   // the same, filled
+                    g.FillPolygon(fill, new PointF[] { new PointF(x + 1 * u, y + 3 * u), new PointF(x + 6.2f * u, y + 3 * u),
+                        new PointF(x + 7.7f * u, y + 4.5f * u), new PointF(x + 15 * u, y + 4.5f * u), new PointF(x + 15 * u, y + 13.5f * u),
+                        new PointF(x + 1 * u, y + 13.5f * u) });
+                    break;
                 case Sign.Move:   // an arrow pointing right
                     g.DrawLine(pen, x + 3 * u, y + 8 * u, x + 12.5f * u, y + 8 * u);
                     g.DrawLines(pen, new PointF[] { new PointF(x + 8 * u, y + 3.5f * u), new PointF(x + 12.5f * u, y + 8 * u),
@@ -1316,7 +1321,7 @@ static class Look
                     break;
                 default:   // the formatting of text: its letter, written as it says
                     using (Font letter = new Font(TextFont.FontFamily, box.Height * 0.8f, Letter(sign).Value, GraphicsUnit.Pixel))
-                        TextRenderer.DrawText(g, sign == Sign.Size ? "aA" : sign == Sign.Face || sign == Sign.Formatted ? "A" : sign.ToString().Substring(0, 1),
+                        TextRenderer.DrawText(g, sign == Sign.Formatted ? "A" : sign.ToString().Substring(0, 1),
                             letter, box, colour ?? own, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter
                             | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding | TextFormatFlags.NoClipping);
                     break;
@@ -1334,7 +1339,7 @@ static class Look
             case Sign.Bold: return FontStyle.Bold;
             case Sign.Italic: return FontStyle.Italic;
             case Sign.Underline: return FontStyle.Underline;
-            case Sign.Face: case Sign.Size: case Sign.Formatted: return FontStyle.Regular;
+            case Sign.Formatted: return FontStyle.Regular;
             default: return null;
         }
     }

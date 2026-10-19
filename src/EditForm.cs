@@ -206,8 +206,9 @@ class EditForm : Window
         Button erase = Tool(Sign.Erase, Strings.PlainTip, Edge + FieldWidth, top);
         Clicked(erase, delegate { contentBox.Plain(); });
         int right = erase.Left - GroupGap;
-        right = Opens(Tool(Sign.Size, Strings.PointsTip, right, top), sizes).Left - ToolGap;
-        right = Opens(Tool(Sign.Face, Strings.TypefaceTip, right, top), faces).Left - GroupGap;
+        // Font and size by their names: as two signs they looked the same.
+        right = Opens(Named(Strings.PointsTip, right, top), sizes).Left - ToolGap;
+        right = Opens(Named(Strings.TypefaceTip, right, top), faces).Left - GroupGap;
         foreach (FontStyle each in new FontStyle[] { FontStyle.Underline, FontStyle.Italic, FontStyle.Bold })
         {
             FontStyle style = each;
@@ -234,6 +235,19 @@ class EditForm : Window
         tool.SetBounds(right - ButtonHeight, top, ButtonHeight, ButtonHeight);
         Look.Style(tool, false);
         tips.SetToolTip(tool, tip);
+        Controls.Add(tool);
+        return tool;
+    }
+
+    // A button with a word, as wide as the word, ending at 'right'.
+    Button Named(string text, int right, int top)
+    {
+        RoundButton tool = new RoundButton();
+        tool.Text = text;
+        tool.TabStop = false;
+        int width = (int)Math.Ceiling(TextRenderer.MeasureText(text, Font).Width / Look.Zoom) + ButtonPadding;   // as designed: the window is scaled later
+        tool.SetBounds(right - width, top, width, ButtonHeight);
+        Look.Style(tool, false);
         Controls.Add(tool);
         return tool;
     }

@@ -1,11 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Globalization;
 using System.Windows.Forms;
 
 // What the sidebar lists: all the entries, those kept at the top, the saved ones and their folders, the programs
 // things were copied in.
-enum PlaceKind { All, Pinned, Saved, Folder, Sources, Source }
+enum PlaceKind { History, Pinned, Saved, Folder, Sources, Source }
 
 // A row of the sidebar. Sources only gathers the programs under it: it opens and closes, and shows nothing itself.
 class Place
@@ -34,7 +35,7 @@ class Place
         {
             switch (Kind)
             {
-                case PlaceKind.All: return Strings.AllPlace;
+                case PlaceKind.History: return Strings.HistoryPlace;
                 case PlaceKind.Pinned: return Strings.PinnedPlace;
                 case PlaceKind.Saved: return Strings.SavedTitle;
                 case PlaceKind.Folder: return Texts.Leaf(Path);
@@ -56,7 +57,7 @@ class Place
         {
             switch (Kind)
             {
-                case PlaceKind.All: return Sign.History;
+                case PlaceKind.History: return Sign.History;
                 case PlaceKind.Pinned: return Sign.Up;
                 case PlaceKind.Saved: return Sign.Star;
                 case PlaceKind.Folder: return Sign.Folder;
@@ -65,15 +66,16 @@ class Place
         }
     }
 
-    // Whether the place lists copied entries, saved ones, or both.
+    // Whether the place lists copied entries or saved ones. History has the saved ones too, but only those a search
+    // finds (see Filter).
     public bool HasCopied
     {
-        get { return Kind == PlaceKind.All || Kind == PlaceKind.Pinned || Kind == PlaceKind.Source; }
+        get { return Kind == PlaceKind.History || Kind == PlaceKind.Pinned || Kind == PlaceKind.Source; }
     }
 
     public bool HasSaved
     {
-        get { return Kind == PlaceKind.All || Kind == PlaceKind.Saved || Kind == PlaceKind.Folder; }
+        get { return Kind == PlaceKind.Saved || Kind == PlaceKind.Folder; }
     }
 }
 
@@ -86,6 +88,9 @@ partial class MainForm
     // The commands at the bottom of the sidebar: a new folder, the pause of the capture, the options, the guide.
     static readonly Sign[] FootSigns = { Sign.NewFolder, Sign.Pause, Sign.Options, Sign.Help };
     const int PauseRow = 1;
+    // Reduced, the first letter of a folder inside its sign: how tall, of the sign, and how far below its middle, where
+    // the body of the folder is under its tab.
+    const float InitialShare = 0.55f, InitialDrop = 0.1f;
 
     void WireSidebar()
     {
@@ -105,7 +110,8 @@ partial class MainForm
             int row = navList.RowAt(e.Location);
             navList.Cursor = row >= 0 ? Cursors.Hand : Cursors.Default;
             navList.Glow.Set(row);
-            RowTip(navList, row, row < 0 ? null : ((Place)navList.Items[row]).Title);   // a folder by its whole path
+            // A folder by its whole path; with the names, only one cut short.
+            RowTip(navList, row, row < 0 ? null : ((Place)navList.Items[row]).Title, row >= 0 && NameCut(row));
         };
         navList.MouseLeave += delegate
         {
@@ -156,7 +162,7 @@ partial class MainForm
         footList.MouseMove += delegate(object sender, MouseEventArgs e)
         {
             int row = footList.RowAt(e.Location);
-            RowTip(footList, row, row < 0 ? null : (string)footList.Items[row]);
+            RowTip(footList, row, row < 0 ? null : (string)footList.Items[row], false);
         };
         footList.MouseLeave += delegate { HideHoverTip(); };
         footList.MouseDown += delegate { HideHoverTip(); };
@@ -216,10 +222,10 @@ partial class MainForm
     }
 
     // Reduced, the name of the row under the pointer shows on its right once the pointer rests there, as in the
-    // NavigationView of Windows 11.
-    void RowTip(RowList list, int row, string text)
+    // NavigationView of Windows 11; with the names, only a name the row cuts short ('cut').
+    void RowTip(RowList list, int row, string text, bool cut)
     {
-        if (!sideNarrow || row < 0)
+        if (!sideNarrow && !cut || row < 0)
         {
             HideHoverTip();
             return;
@@ -260,7 +266,9 @@ partial class MainForm
         hoverTipWait.Tick += delegate
         {
             hoverTipWait.Stop();
-            if (tipOwner != null) hoverTips.Show(tipText, tipOwner, tipAt);
+            if (tipOwner == null) return;
+            tips.Hide(tipOwner);   // the tooltip of the whole control, if it has one, would stand over this one
+            hoverTips.Show(tipText, tipOwner, tipAt);
         };
     }
 
@@ -372,8 +380,8 @@ partial class MainForm
             sources = clips.Sources();
         });
 
-        Place all = new Place(PlaceKind.All);
-        all.Count = copied + saved;
+        Place all = new Place(PlaceKind.History);
+        all.Count = copied;
         Place kept = new Place(PlaceKind.Pinned);
         kept.Count = pinned;
         Place savedRow = new Place(PlaceKind.Saved);
@@ -443,8 +451,9 @@ partial class MainForm
     }
 
     // A row of the sidebar: its sign or the icon of its program, its name, how many entries it has and, if it has
-    // rows under it, the arrow that opens and closes them. Sources stands as the title of the programs. Reduced, only
-    // the sign or the icon, in the middle.
+    // rows under it, the arrow that opens and closes them. Reduced, only the sign or the icon, in the middle, and a
+    // thin line over Saved and over Sources, so that the folders and the programs, whose signs alone look alike, are
+    // told apart.
     void DrawPlace(object sender, DrawItemEventArgs e)
     {
         if (e.Index < 0) return;
@@ -453,34 +462,67 @@ partial class MainForm
         // Fully lit, the folder a dragged text would be dropped into.
         float glow = dropPlace != null && dropPlace.Is(at) ? 1 : navList.Glow.Of(e.Index);
         Look.DrawRow(e.Graphics, e.Bounds, navList.BackColor, selected, glow);
-        int inset = (int)(NavInset * Zoom), side = e.Font.Height;
-        int left = e.Bounds.Left + inset + (int)(SideIndent * Zoom) * at.Level, right = e.Bounds.Right - inset / 2;
-        Rectangle box = sideNarrow ? SignAlone(e.Bounds, side) : new Rectangle(left, e.Bounds.Top + (e.Bounds.Height - side) / 2, side, side);
-        if (at.Kind != PlaceKind.Source) Look.Draw(e.Graphics, at.Sign, box, null);
+        Rectangle box, number, name;
+        PlaceParts(at, e.Bounds, out box, out number, out name);
+        // Reduced, a folder is filled, with the first letter of its name cut out of it in the colour of the row: alike as
+        // signs alone, the folders could not be told apart without resting the pointer on each (wanted by the user on
+        // 19/10/2026; in an empty folder the letter touched its edges).
+        bool lettered = sideNarrow && at.Kind == PlaceKind.Folder && at.Label.Length > 0;
+        if (at.Kind != PlaceKind.Source) Look.Draw(e.Graphics, lettered ? Sign.FullFolder : at.Sign, box, null);
         else if (at.Origin.Icon != null)
         {
             e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
             e.Graphics.DrawImage(at.Origin.Icon, box);
         }
-        if (sideNarrow) return;
+        if (sideNarrow)
+        {
+            if (lettered)
+                using (Font letter = new Font(Look.StrongFont.FontFamily, box.Height * InitialShare, FontStyle.Bold, GraphicsUnit.Pixel))
+                    TextRenderer.DrawText(e.Graphics, StringInfo.GetNextTextElement(at.Label).ToUpper(Strings.Culture), letter,
+                        new Rectangle(box.Left, box.Top + (int)(box.Height * InitialDrop), box.Width, box.Height),
+                        selected ? Look.Selected : Look.Blend(navList.BackColor, Look.Soft, glow),   // as DrawRow fills it
+                        TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine
+                        | TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix | TextFormatFlags.NoClipping);
+            if (e.Index > 0 && (at.Kind == PlaceKind.Saved || at.Kind == PlaceKind.Sources))
+                using (Pen line = new Pen(Look.Border))
+                    e.Graphics.DrawLine(line, e.Bounds.Left + box.Width / 2, e.Bounds.Top, e.Bounds.Right - box.Width / 2, e.Bounds.Top);
+            return;
+        }
         if (at.Opens)
         {
             Rectangle chevron = ChevronArea(e.Bounds);
-            int small = side * 3 / 4;
+            int small = box.Width * 3 / 4;
             Look.Draw(e.Graphics, at.Open ? Sign.Opened : Sign.Closed, new Rectangle(chevron.Left + (chevron.Width - small) / 2,
                 e.Bounds.Top + (e.Bounds.Height - small) / 2, small, small), Look.Muted);
-            right = chevron.Left;
         }
+        if (!number.IsEmpty) TextRenderer.DrawText(e.Graphics, at.Count.ToString(), e.Font, number, Look.Muted, RightFlags);
+        TextRenderer.DrawText(e.Graphics, at.Label, e.Font, name, Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
+    }
+
+    // Where the parts of a row of the sidebar go: its sign, how many entries it has, its name between them.
+    void PlaceParts(Place at, Rectangle row, out Rectangle box, out Rectangle number, out Rectangle name)
+    {
+        int inset = (int)(NavInset * Zoom), side = navList.Font.Height;
+        int left = row.Left + inset + (int)(SideIndent * Zoom) * at.Level, right = row.Right - inset / 2;
+        box = sideNarrow ? SignAlone(row, side) : new Rectangle(left, row.Top + (row.Height - side) / 2, side, side);
+        if (at.Opens) right = ChevronArea(row).Left;
+        number = Rectangle.Empty;
         if (at.Kind != PlaceKind.Sources && at.Count > 0)
         {
-            string number = at.Count.ToString();
-            int width = TextRenderer.MeasureText(e.Graphics, number, e.Font, Size.Empty, TextFormatFlags.NoPadding).Width;
-            TextRenderer.DrawText(e.Graphics, number, e.Font, Rectangle.FromLTRB(right - width, e.Bounds.Top, right, e.Bounds.Bottom),
-                Look.Muted, RightFlags);
+            int width = TextRenderer.MeasureText(at.Count.ToString(), navList.Font, Size.Empty, TextFormatFlags.NoPadding).Width;
+            number = Rectangle.FromLTRB(right - width, row.Top, right, row.Bottom);
             right -= width + (int)(TimeGap * Zoom);
         }
-        TextRenderer.DrawText(e.Graphics, at.Label, at.Kind == PlaceKind.Sources ? Look.StrongFont : e.Font,
-            Rectangle.FromLTRB(box.Right + inset, e.Bounds.Top, right, e.Bounds.Bottom), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
+        name = Rectangle.FromLTRB(box.Right + inset, row.Top, right, row.Bottom);
+    }
+
+    // Whether the name of a row is cut short: its tooltip says it whole.
+    bool NameCut(int row)
+    {
+        Place at = (Place)navList.Items[row];
+        Rectangle box, number, name;
+        PlaceParts(at, navList.GetItemRectangle(row), out box, out number, out name);
+        return TextRenderer.MeasureText(at.Label, navList.Font, Size.Empty, LineFlags & ~TextFormatFlags.EndEllipsis).Width > name.Width;
     }
 
     // Where the arrow of a row that opens is: at its right end.

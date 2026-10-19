@@ -19,7 +19,7 @@ static partial class Strings
         PausedEmpty = "En pause : ce que vous copiez n'est pas mémorisé"; CopyHint = "Ce que vous copiez apparaîtra ici";
         NoSaved = "Aucun texte enregistré";
         NewTip = "Écrit un nouveau texte à garder, avec ou sans nom ({0}).";
-        AllPlace = "Tout"; PinnedPlace = "En haut"; SourcesPlace = "Provenance"; GuideItem = "Aide";
+        HistoryPlace = "Historique"; PinnedPlace = "En haut"; SourcesPlace = "Provenance"; GuideItem = "Aide";
         AllKinds = "Tout"; TextKinds = "Texte"; CodeKinds = "Code"; LinkKinds = "Liens"; PictureKinds = "Images";
         TextBadge = "Texte"; CodeBadge = "Code"; LinkBadge = "Lien"; PictureBadge = "Image"; FormattedBadge = "Mis en forme";
         CopyButton = "Copier"; ShowFull = "Aperçu"; MoreItem = "Plus";
@@ -125,7 +125,8 @@ static partial class Strings
             + "copiez le mot de passe, appuyez ici et cliquez dans le champ de la fenêtre distante.\n"
             + "Ou appuyez sur {0} directement dans le champ.";
         SearchTip = "Tapez pour chercher parmi les éléments de l'endroit : mots dans n'importe quel ordre, sans tenir\n"
-            + "compte des majuscules ni des accents. Les flèches parcourent les éléments.\n"
+            + "compte des majuscules ni des accents. Dans « " + HistoryPlace + " », les textes enregistrés aussi,\n"
+            + "après ce que vous avez copié. Les flèches parcourent les éléments.\n"
             + "« " + CopyButton + " », {0} ou un double-clic remettent l'élément dans le presse-papiers : collez-le\n"
             + "ensuite avec Ctrl+V ou saisissez-le avec {1}. Avec « " + CopyButton + " » la fenêtre reste ouverte, avec {0}\n"
             + "ou un double-clic vous revenez où vous étiez. Un clic sélectionne seulement ; le clic droit ouvre le menu\n"
@@ -190,8 +191,8 @@ static partial class Strings
         AboutNote = "Logiciel libre sous licence MIT";
         TypeNote = "Saisit aussitôt dans la fenêtre active";
         PickOption = "Ouvrir la liste"; PickNote = "Amène cette fenêtre au premier plan depuis tout programme";
-        WhereLeftOption = "Rouvrir là où vous l'avez laissée"; WhereLeftNote = "Sinon la liste s'ouvre sur " + AllPlace;
-        WhereLeftTip = "Désactivée, le raccourci de la liste l'ouvre toujours sur " + AllPlace + ", de tous les types, avec la recherche vide.\n"
+        WhereLeftOption = "Rouvrir là où vous l'avez laissée"; WhereLeftNote = "Sinon la liste s'ouvre sur " + HistoryPlace;
+        WhereLeftTip = "Désactivée, le raccourci de la liste l'ouvre toujours sur " + HistoryPlace + ", de tous les types, avec la recherche vide.\n"
             + "Activée, il montre l'endroit et le type où vous l'avez laissée.";
         QuickOption = "Coller par numéro"; QuickNote = "Colle les éléments qui ont un raccourci";
         HistoryOption = "Mémoriser les textes et images copiés"; HistoryNote = "Ce que vous copiez pendant que le programme est ouvert";
@@ -330,7 +331,7 @@ static partial class Strings
 
             "# La liste",
             "À gauche la barre latérale, à droite les cartes des éléments de l'endroit choisi dans celle-ci :",
-            "- « " + AllPlace + " » : tout, copié et enregistré, du plus récent au plus ancien, chaque jour sous son nom ; "
+            "- « " + HistoryPlace + " » : ce que vous avez copié, du plus récent au plus ancien, chaque jour sous son nom ; "
                 + "les éléments gardés en haut passent avant les autres.",
             "- « " + PinnedPlace + " » : seulement les éléments copiés gardés en haut.",
             "- « " + SavedTitle + " » : les textes enregistrés, par nom. En dessous se trouvent leurs dossiers.",
@@ -339,19 +340,22 @@ static partial class Strings
                 + SourcesPlace + " » ouvre ou ferme la liste. Les programmes d'un serveur Citrix prennent tous le nom de Citrix "
                 + "sur ce PC, mais chacun garde son icône.",
             "Le bouton en haut de la barre latérale la réduit à ses icônes, et lui rend ses noms : en laissant le pointeur "
-                + "sur une icône, vous voyez son nom. En faisant glisser le bord entre la barre et les cartes, vous l'élargissez "
+                + "sur une icône, vous voyez son nom, et chaque dossier montre l'initiale de son nom. En faisant glisser le bord entre la barre et les cartes, vous l'élargissez "
                 + "ou la rétrécissez ; plus étroite qu'elle ne peut l'être, elle se réduit à ses icônes.",
             "Les onglets au-dessus des cartes (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") ne montrent qu'un type d'élément. « " + CodeKinds + " » est une supposition faite d'après "
                 + "l'allure des lignes : de temps en temps un texte s'y retrouve, ou un morceau de code parmi les textes. "
                 + "Quand elle se trompe, « " + KindMenu + " », dans le menu d'un texte, dit ce qu'il est : copié à "
                 + "nouveau ou enregistré, il le reste.",
-            "Chaque carte montre d'abord l'élément ; à droite, avant les boutons ou dessous, en petit et discret, le programme dans lequel il a été copié, avec "
-                + "son icône (ou le dossier d'un texte enregistré), l'heure de la copie et ce qu'il est. À droite, de petits "
-                + "signes le montrent en entier, le copient, l'enregistrent ou le modifient, le suppriment et ouvrent son menu : en laissant le "
+            "Chaque carte montre d'abord l'élément ; à droite, en petit et discret, le programme dans lequel il a été copié, avec "
+                + "son icône (ou le dossier d'un texte enregistré), l'heure de la copie et ce qu'il est, si ce n'est pas un texte "
+                + "simple. Avec le pointeur sur la carte, de petits signes prennent leur place : ils le gardent en haut, le montrent "
+                + "en entier, le copient, l'enregistrent ou le modifient, le suppriment et ouvrent son menu ; en laissant le "
                 + "pointeur sur l'un d'eux, il dit ce qu'il fait.",
             "- Tapez dans la case du haut pour chercher parmi les éléments de l'endroit : les mots comptent dans "
-                + "n'importe quel ordre, sans tenir compte des majuscules ni des accents.",
+                + "n'importe quel ordre, sans tenir compte des majuscules ni des accents. Dans « " + HistoryPlace + " » "
+                + "viennent aussi les textes enregistrés qui correspondent, après ce que vous avez copié, sous « " + SavedTitle + " ». "
+                + "Les mots trouvés sont surlignés sur les cartes ; trouvés loin dans un long texte, la carte en montre ce passage.",
             "- Un clic sur une carte la sélectionne. Le signe de copie (« " + CopyButton + " ») met l'élément dans le presse-papiers et laisse la "
                 + "fenêtre ouverte, pour que vous puissiez encore l'enregistrer ou le supprimer.",
             "- " + EnterKeyName + " ou un double-clic le mettent dans le presse-papiers et, si vous aviez ouvert la "
@@ -456,7 +460,7 @@ static partial class Strings
             "- rien n'est saisi tant que Verr. Maj est activé : désactivez-le d'abord.",
 
             "# Les touches",
-            pick + "\tOuvre la liste sur " + AllPlace + ", depuis n'importe quel programme.",
+            pick + "\tOuvre la liste sur " + HistoryPlace + ", depuis n'importe quel programme.",
             type + "\tSaisit aussitôt le presse-papiers dans la fenêtre active.",
             MainForm.NumbersName + "\tColle dans la fenêtre active l'élément qui a ce numéro.",
             "F1\tOuvre ce guide.",

@@ -1123,6 +1123,15 @@ static class TestProgram
         Check(Texts.Matches(city, "riga seconda torino"), "name and text are both searched");
         Check(!Texts.Matches(city, "torino milano"), "every word must be there");
         Check(Texts.Matches(new Entry(null, "perché"), "perche"), "a copied text has no name and still matches");
+        // Where the words found are, to be marked on the cards: in the text itself, its accents too.
+        List<CharacterRange> marks = Texts.Find("Città di Torino, città", Texts.Words("CITTA torino"));
+        Check(marks.Count == 3 && marks[0].First == 0 && marks[0].Length == 5 && marks[1].First == 9 && marks[1].Length == 6
+            && marks[2].First == 17, "the words found, where they are in the text");
+        marks = Texts.Find("perché no", Texts.Words("perché"));
+        Check(marks.Count == 1 && marks[0].Length == 7, "an accent written apart goes with its letter");
+        marks = Texts.Find("abcdef", Texts.Words("abc cde x"));
+        Check(marks.Count == 1 && marks[0].First == 0 && marks[0].Length == 5, "overlapping words are marked as one");
+        Check(Texts.Find("abc", new string[0]).Count == 0 && Texts.Find("", Texts.Words("a")).Count == 0, "nothing searched, nothing marked");
         Check(city.ToString().IndexOf("riga") < 0, "the list shows only the name of a saved text");
         Check(new Entry(null, " a\r\nb\tc ").ToString() == "a  b c", "a copied text is shown on one line");
         Check(Texts.Within(@"a\b\c", "a") && Texts.Within("a", "A") && !Texts.Within("a 2", "a") && Texts.Parent("a") == null
@@ -1557,13 +1566,43 @@ static class TestProgram
             Application.DoEvents();
             Save(form, path + "-idle.png");
 
-            // All of it in one list: the copied entry at the top under its own name, then the others under the name of
-            // their day, the saved ones among them.
+            // Under the pointer a card shows its buttons in the place of the program and the time, and is as tall as
+            // without them; the saved texts with a name, one line each, are all as tall.
+            RowList hovered = (RowList)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
+            int hoverAt = RowOf(hovered, delegate(Entry e) { return e.Category == Category.Link; });
+            int restHeight = hovered.GetItemHeight(hoverAt);
+            hovered.Glow.Set(hoverAt);
+            typeof(MainForm).GetField("hoverRow", hidden).SetValue(form, hoverAt);
+            typeof(MainForm).GetField("hoverPart", hidden).SetValue(form, Part.Copy);
+            for (int i = 0; i < 100 && hovered.Glow.Of(hoverAt) < 1; i++)
+            {
+                System.Threading.Thread.Sleep(10);
+                Application.DoEvents();
+            }
+            hovered.Invalidate();
+            Application.DoEvents();
+            Save(form, path + "-hover.png");
+            bool steady = hovered.GetItemHeight(hoverAt) == restHeight;
+            hovered.Glow.Set(-1);
+            typeof(MainForm).GetField("hoverRow", hidden).SetValue(form, -1);
+            GoTo(form, PlaceKind.Saved, null);
+            List<int> named = new List<int>();
+            for (int i = 0; i < hovered.Items.Count; i++)
+            {
+                Entry each = hovered.Items[i] as Entry;
+                if (each != null && each.Name != null && !each.Picture && !named.Contains(hovered.GetItemHeight(i))) named.Add(hovered.GetItemHeight(i));
+            }
+            GoTo(form, PlaceKind.History, null);
+            Console.WriteLine("[{0}] a card is as tall under the pointer, and the saved texts with a name are all as tall: {1}",
+                steady && named.Count == 1 ? "PASS" : "FAIL", string.Join(", ", named.ConvertAll(delegate(int h) { return h.ToString(); }).ToArray()));
+
+            // The history: the copied entry at the top under its own name, then the others under the name of their day; the
+            // saved ones are not there.
             ListBox cards = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
             List<Entry> shown = Cards(cards);
-            Console.WriteLine("[{0}] all the entries in one list, the one at the top first, then each day under its name: {1} rows",
-                shown.Count == 9 && shown[0].Pinned && cards.Items[0] is Heading && cards.Items[2] is Heading && cards.Items.Count == 11
-                ? "PASS" : "FAIL", cards.Items.Count);
+            Console.WriteLine("[{0}] the history, the one at the top first, then each day under its name, nothing saved: {1} rows",
+                shown.Count == 5 && shown[0].Pinned && cards.Items[0] is Heading && cards.Items[2] is Heading && cards.Items.Count == 7
+                && !shown.Exists(delegate(Entry e) { return e.Saved; }) ? "PASS" : "FAIL", cards.Items.Count);
             // Refilling the list (it happens at every clipboard change) must not move the selection.
             cards.SelectedIndex = 5;
             Entry chosen = (Entry)cards.SelectedItem;
@@ -1590,7 +1629,7 @@ static class TestProgram
             bool byTime = ((Place)nav.Items[7]).Origin.Name.Contains("PowerShell");
             nav.SelectedIndex = 8;
             bool fromEdge = Cards(cards).Count == 2 && byTime;
-            GoTo(form, PlaceKind.All, null);
+            GoTo(form, PlaceKind.History, null);
             TabStrip tabs = (TabStrip)typeof(MainForm).GetField("tabs", hidden).GetValue(form);
             tabs.Selected = 3;   // links
             bool links = Cards(cards).Count == 1 && Cards(cards)[0].Category == Category.Link;
@@ -1599,22 +1638,47 @@ static class TestProgram
             // The list hotkey opens on All, every kind, wherever the list was left (unless an option says otherwise).
             GoTo(form, PlaceKind.Folder, s.Work);
             tabs.Selected = 3;
-            typeof(MainForm).GetMethod("ShowAll", hidden).Invoke(form, null);
+            typeof(MainForm).GetMethod("ShowHistory", hidden).Invoke(form, null);
             Place opened = (Place)typeof(MainForm).GetField("place", hidden).GetValue(form);
-            Console.WriteLine("[{0}] the list hotkey opens on all of it", opened.Kind == PlaceKind.All && tabs.Selected == 0
-                && Cards(cards).Count == 9 && ((Place)nav.SelectedItem).Kind == PlaceKind.All ? "PASS" : "FAIL");
+            Console.WriteLine("[{0}] the list hotkey opens on the history", opened.Kind == PlaceKind.History && tabs.Selected == 0
+                && Cards(cards).Count == 5 && ((Place)nav.SelectedItem).Kind == PlaceKind.History ? "PASS" : "FAIL");
             // It, and a copy, select the latest copy, with the top of the list in view: never the card selected before.
             Entry latest = null;
             foreach (Entry e in Cards(cards))
                 if (!e.Saved && (latest == null || e.Time > latest.Time)) latest = e;
             cards.SelectedIndex = cards.Items.Count - 1;
-            typeof(MainForm).GetMethod("ShowAll", hidden).Invoke(form, null);
+            typeof(MainForm).GetMethod("ShowHistory", hidden).Invoke(form, null);
             bool onOpening = ((Entry)cards.SelectedItem).Id == latest.Id;
             cards.SelectedIndex = cards.Items.Count - 1;
             typeof(MainForm).GetField("newest", hidden).SetValue(form, true);   // as a copy does
             typeof(MainForm).GetMethod("ReloadCopied", hidden).Invoke(form, null);
             Console.WriteLine("[{0}] the list hotkey and a copy select the latest copy, the top in view", onOpening
                 && ((Entry)cards.SelectedItem).Id == latest.Id && cards.TopIndex == 0 ? "PASS" : "FAIL");
+            // A search in the history finds the saved texts too, after the copied ones, under a name of their own: the list
+            // hotkey, a name and Enter still choose a saved password.
+            TextBox find = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
+            find.Text = s.ServerPassword;
+            Heading over = cards.Items.Count < 2 ? null : cards.Items[cards.Items.Count - 2] as Heading;
+            Entry selectedFound = cards.SelectedItem as Entry;
+            bool searched = over != null && over.Text == Strings.SavedTitle && selectedFound != null && selectedFound.Saved
+                && selectedFound.Label == s.ServerPassword;
+            // The words found are marked on the cards, in the name of a saved text too; found far in a long text, its card
+            // shows that part of it, after an ellipsis.
+            MethodInfo markedText = typeof(MainForm).GetMethod("MarkedText", hidden);
+            bool nameMarked = selectedFound != null && markedText.Invoke(form, new object[] { selectedFound, 400 }) != null;
+            string lastWord = s.Long.Substring(s.Long.LastIndexOf(' ') + 1);
+            find.Text = lastWord;
+            Application.DoEvents();
+            Save(form, path + "-search.png");
+            int longAt = RowOf(cards, delegate(Entry e) { return e.Text == s.Long; });
+            Marked further = longAt < 0 ? null : (Marked)markedText.Invoke(form, new object[] { cards.Items[longAt], 120 });
+            Marked plain = longAt < 0 ? null : (Marked)markedText.Invoke(form, new object[] { cards.Items[longAt], 4000 });
+            Console.WriteLine("[{0}] the words found are marked, and a card shows where they are in a long text", nameMarked
+                && further != null && further.Text.StartsWith("…") && further.Found[0].First < further.Shown
+                && plain != null && !plain.Text.StartsWith("…") && plain.Lines.Count == 1 && !plain.Cut ? "PASS" : "FAIL");
+            find.Text = "";
+            Console.WriteLine("[{0}] a search in the history finds the saved texts too, under their name, and nothing saved without one",
+                searched && !Cards(cards).Exists(delegate(Entry e) { return e.Saved; }) ? "PASS" : "FAIL");
 
             // A closed folder hides the folders inside it too, in the sidebar.
             List<Entry> sample = (List<Entry>)typeof(MainForm).GetField("entries", hidden).GetValue(form);
@@ -1641,14 +1705,18 @@ static class TestProgram
             // Reduced, the name of a row waits for the pointer to rest, and goes when it leaves; with the names, never.
             MethodInfo rowTip = typeof(MainForm).GetMethod("RowTip", hidden);
             System.Windows.Forms.Timer tipWait = (System.Windows.Forms.Timer)typeof(MainForm).GetField("hoverTipWait", hidden).GetValue(form);
-            rowTip.Invoke(form, new object[] { nav, 3, s.Home });
+            rowTip.Invoke(form, new object[] { nav, 3, s.Home, false });
             bool waits = tipWait.Enabled && (string)typeof(MainForm).GetField("tipText", hidden).GetValue(form) == s.Home;
             typeof(MainForm).GetMethod("HideHoverTip", hidden).Invoke(form, null);
             waits &= !tipWait.Enabled;
             typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { false });
             bool back = pane.Width == wide && pane.Right == right;
-            rowTip.Invoke(form, new object[] { nav, 3, s.Home });
+            rowTip.Invoke(form, new object[] { nav, 3, s.Home, false });
             waits &= !tipWait.Enabled;
+            // With the names, a name cut short says itself whole all the same.
+            rowTip.Invoke(form, new object[] { nav, 3, s.Home, true });
+            waits &= tipWait.Enabled;
+            typeof(MainForm).GetMethod("HideHoverTip", hidden).Invoke(form, null);
             int least = (int)typeof(MainForm).GetField("MinSideWidth", constant).GetValue(null);
             sideWidth.SetValue(form, 0);
             placeSide.Invoke(form, null);
@@ -1685,12 +1753,14 @@ static class TestProgram
             long pictureId = sampleClips.Copied(10, new string[0]).Find(delegate(Entry e) { return e.Picture; }).Id;
             sampleClips.Save(pictureId, s.Remote, 0);
             typeof(MainForm).GetMethod("Reload", hidden).Invoke(form, null);
+            int copiedLeft = Cards(cards).FindAll(delegate(Entry e) { return !e.Saved; }).Count;   // gone from the history
+            GoTo(form, PlaceKind.Saved, null);
             Application.DoEvents();
             Save(form, path + "-saved-picture.png");
             Entry savedPicture = Cards(cards).Find(delegate(Entry e) { return e.Picture; });
             Console.WriteLine("[{0}] a saved picture shows its preview and its name", savedPicture != null && savedPicture.Saved
-                && savedPicture.Preview != null && savedPicture.Label == s.Remote
-                && Cards(cards).FindAll(delegate(Entry e) { return !e.Saved; }).Count == 4 ? "PASS" : "FAIL");
+                && savedPicture.Preview != null && savedPicture.Label == s.Remote && copiedLeft == 4 ? "PASS" : "FAIL");
+            GoTo(form, PlaceKind.History, null);
             FillSample(form);
 
             // The window of the options, never shown yet, follows a change of theme all the same.
@@ -1762,10 +1832,12 @@ static class TestProgram
             Save(form, path + "-full.png");
             Control banner = (Control)typeof(MainForm).GetField("banner", hidden).GetValue(form);
             bool barred = banner.Visible && banner.Bottom <= status.Top && cards.Bottom <= banner.Top;
+            string where = string.Format("shown {0}, cards end {1}, bar {2}-{3}, status from {4}", banner.Visible, cards.Bottom,
+                banner.Top, banner.Bottom, status.Top);
             Clips.PictureSpace = space;
             typeof(MainForm).GetMethod("ShowPictureRoom", hidden).Invoke(form, null);
-            Console.WriteLine("[{0}] a red bar between the lists and the status line says the room of the pictures is full, and goes",
-                barred && !banner.Visible ? "PASS" : "FAIL");
+            Console.WriteLine("[{0}] a red bar between the lists and the status line says the room of the pictures is full, and goes: {1}",
+                barred && !banner.Visible ? "PASS" : "FAIL", where);
 
             status.Text = string.Format(Strings.Countdown, 3, string.Format(Strings.Quote, s.Remote));
             Application.DoEvents();
@@ -2009,7 +2081,8 @@ static class TestProgram
             // The menu of a saved text with the numbers it can take, each beside the entry that has it.
             ListBox saved = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
             ContextMenuStrip listMenu = (ContextMenuStrip)typeof(MainForm).GetField("listMenu", hidden).GetValue(form);
-            // A text without a number, not a folder, which has no numbers to take.
+            // A text without a number, not a folder, which has no numbers to take: among the saved ones, not in the history.
+            GoTo(form, PlaceKind.Saved, null);
             saved.SelectedIndex = RowOf(saved, delegate(Entry e) { return e.Label == Sample.Current.Address; });
             listMenu.Show(saved, new Point(40, 60));
             foreach (ToolStripItem item in listMenu.Items)
@@ -2021,6 +2094,7 @@ static class TestProgram
             }
             SnapArea(new Rectangle(saved.PointToScreen(Point.Empty).X, form.Top + 100, 640, 420), path + "-real-number.png");
             listMenu.Close();
+            GoTo(form, PlaceKind.History, null);
             ToolTip tips = (ToolTip)typeof(MainForm).GetField("tips", hidden).GetValue(form);
             Control typing = (Control)typeof(MainForm).GetField("typeButton", hidden).GetValue(form);
             tips.Show(tips.GetToolTip(typing), typing, -200, -40);

@@ -230,19 +230,34 @@ condiviso su GitHub).
 
 - La finestra principale è l'elenco, con una barra laterale e le voci in schede (voluto dall'utente il 18/10/2026;
   prima erano due colonne affiancate, copiati e salvati). A sinistra la barra laterale (`navList`,
-  `MainForm.Nav.cs`): «Tutti», «In alto» (i copiati con la freccia), «Salvati» con sotto l'albero delle cartelle,
-  «Provenienza» con sotto i programmi (icona e quante voci), ognuno un `Place`; la freccia a destra di una riga apre
+  `MainForm.Nav.cs`): «Cronologia» (`PlaceKind.History`, fino alla 4.3.5 «Tutti»), «In alto» (i copiati con la
+  freccia), «Salvati» con sotto l'albero delle cartelle, «Provenienza» con sotto i programmi (icona e quante voci),
+  ognuno un `Place`; la freccia a destra di una riga apre
   e chiude ciò che ha sotto (Salvati e Provenienza nelle impostazioni `SavedOpen`, `SourcesOpen`; le cartelle nel
-  database), un clic su «Provenienza» pure. Sotto, `footList`: Nuova cartella, Sospendi/Riprendi la cattura, Opzioni, Guida. A destra, su un
-  pannello più chiaro (`pane`, un `Card` `Quiet`): titolo del posto e conteggio, ricerca con «Nuovo…» e «Digita gli
+  database), un clic su «Provenienza» pure. Ridotta, una linea sottile sopra «Salvati» e sopra «Provenienza» separa
+  cartelle e programmi, che con le sole icone si confondevano, e ogni cartella è piena (`Sign.FullFolder`) con
+  l'iniziale del nome ritagliata nel colore della riga (`InitialShare`, `InitialDrop`; voluto dall'utente il 19/10/2026:
+  tutte uguali, non si distinguevano; nella cartella vuota la lettera toccava i bordi); con i nomi, un nome tagliato compare intero nel
+  suggerimento (`NameCut`, `RowTip`; `PlaceParts` misura la riga per disegno e suggerimento). Sotto, `footList`: Nuova cartella, Sospendi/Riprendi la cattura, Opzioni, Guida. A destra, su un
+  pannello più chiaro (`pane`, un `Card` `Quiet`): titolo del posto con accanto, piccolo e grigio, il conteggio (`PlaceTitle`,
+  sulla stessa linea di base; prima stava all'altro capo del pannello), ricerca con «Nuovo…» e «Digita gli
   appunti», le schede dei tipi (`tabs`, `TabStrip`: Tutti, Testo, Codice, Link, Immagini, scelte dell'utente),
-  l'elenco delle schede delle voci (`cardList`), la riga di stato. «Tutti» mescola copiati e salvati per ora, con i
-  copiati in alto prima e il nome del giorno sopra ogni giorno (`Heading`, mai selezionabile); «Salvati» e una
+  l'elenco delle schede delle voci (`cardList`), la riga di stato. «Cronologia» mostra solo i copiati (voluto
+  dall'utente il 19/10/2026: prima mescolava copiati e salvati, e una password salvata mesi fa finiva in fondo tra le
+  copie vecchie), quelli in alto prima e il nome del giorno sopra ogni giorno (`Heading`, mai selezionabile); **cercando**
+  vi compaiono anche i salvati che corrispondono, dopo i copiati, per nome sotto un `Heading` «Salvati» (scelta
+  dell'utente: Ctrl+D, il nome e Invio devono continuare a trovare una password salvata). Le parole trovate sono
+  evidenziate sulle schede, nel testo e nel nome di un salvato (voluto dall'utente il 19/10/2026: una scheda trovata
+  per una parola alla quinta riga non diceva perché c'era): `Texts.Find` dice dove stanno nel testo vero, accenti
+  compresi; il testo segnato si dispone a mano (`MarkedText`, `LayMarked`, `Fit`, con gli stessi a capo di Windows) e si
+  scrive a pezzi su una forma tinta d'accento (`DrawMarked`, `MarkTint`); trovate oltre ciò che la scheda mostra, la
+  scheda parte da poco prima della prima (`MarkContext`) dopo «…». Si ricorda per scheda fino alla ricerca dopo
+  (`marks`); senza ricerca, e per le immagini, la scheda si scrive come sempre. «Salvati» e una
   cartella (con le sue sottocartelle) mostrano i salvati per nome, senza giorni. I copiati li filtra il database
   (`Clips.Copied` con un `Sieve`: parole, tipo, programma, solo in alto; al massimo `MaxShown`), i salvati la memoria
   (`Texts.Matches`: parole in qualsiasi ordine, senza maiuscole né accenti). `Filter` rifà anche la barra (`FillNav`,
   i conteggi cambiano a ogni copia); un posto che sparisce (cartella eliminata, programma senza più voci) lascia
-  «Tutti». Il
+  «Cronologia». Il
   testo di ogni voce si prepara una volta sola senza accenti e in minuscolo (`Texts.Fold`, `Entry.Folded`) e poi si
   confronta ordinalmente: dieci volte più veloce del confronto culturale con `IgnoreNonSpace` (misurato: 45 → 4,6 ms
   su 5000 voci), che però trovava anche «ae» in «æ». Il
@@ -257,11 +272,11 @@ condiviso su GitHub).
 - Ctrl+D (`OpenList`) porta la finestra in primo piano da qualsiasi programma; dopo la scelta con Invio o
   doppio clic `GoBack` restituisce il primo piano alla finestra di partenza e rinasconde la finestra se era
   nascosta. «Copia» no (voluto dall'utente: la finestra spariva e la voce non si poteva più salvare).
-  Ctrl+D apre sempre su «Tutti», scheda dei tipi «Tutti», ricerca vuota (`ShowAll`; voluto dall'utente il 19/10/2026),
+  Ctrl+D apre sempre su «Cronologia», scheda dei tipi «Tutti», ricerca vuota (`ShowHistory`; voluto dall'utente il 19/10/2026),
   con selezionata l'ultima copia e la cima dell'elenco in vista; lo stesso dopo ogni copia entrata (`newest`, letto da
   `ShowRows`, anche se la copia è in alto sotto altre). Voluto dall'utente il 19/10/2026: la scheda selezionata prima
   restava selezionata e l'elenco scorreva fino a lei, così la copia nuova restava fuori vista finché non si cambiava
-  scheda; e a elenco già su «Tutti» Ctrl+D non lo riempiva di nuovo. Le altre ricariche tengono la selezione.
+  scheda; e a elenco già su «Tutti» (oggi «Cronologia») Ctrl+D non lo riempiva di nuovo. Le altre ricariche tengono la selezione.
   Con l'opzione «Riapri dove l'hai lasciato» (`whereLeftBox`, nelle Scorciatoie, spenta di default, impostazione
   `OpenWhereLeft`) tiene posto e tipo. Vale solo per la scorciatoia: riaprire dal tray o con un secondo avvio lascia
   tutto com'era.
@@ -317,7 +332,7 @@ condiviso su GitHub).
   `QuickPaste` e `QuickKeys` (solo i modificatori). Si assegna e
   cambia da «Scorciatoia» nel menu del tasto destro (`ListNumbers`: «Nessuna» e i nove numeri, quello attuale
   spuntato e senza effetto, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento a destra della prima riga,
-  prima della freccia (`CardParts.Number`), e nel menu del tray accanto al testo salvato
+  prima della riga piccola e dei pulsanti, sempre, anche senza il puntatore (`CardParts.Number`), e nel menu del tray accanto al testo salvato
   (`ShortcutKeyDisplayString`, che `MenuLook` scrive in grigio). Un numero è di una voce sola: `Clips.Number` lo
   toglie prima a chi lo aveva, e lo schema lo vuole `UNIQUE`. **Un numero non salva una voce copiata** (deciso con
   l'utente): resta finché la voce non scade, e se ne va con lei. `Numbered` lo chiede al database, perché una
@@ -382,7 +397,7 @@ condiviso su GitHub).
   ricerca né impronta, che li tradirebbero. Non scadono mai. L'elenco li tiene in memoria decifrati (`entries`,
   `LoadSaved`, rifatto da `Reload` solo quando cambiano) e la ricerca li scorre lì (`Texts.Matches`). La scheda
   ne mostra in cima la cartella (o «Salvati») e il nome, in basso il giorno in cui sono stati salvati (sotto il nome
-  di un giorno solo l'ora; quelli salvati prima che si tenesse il giorno restano senza, in «Tutti» sotto «Prima»).
+  di un giorno solo l'ora; quelli salvati prima che si tenesse il giorno restano senza).
   Una voce si riconosce dal suo `Id`, non più dal nome.
 - Cartelle dei testi salvati (volute dall'utente), anche una dentro l'altra (sottocartelle volute dopo, dalla
   3.8). Nel codice si chiamano «group». Nel database sono un albero (`folders`, `parent_id`, `Folder`), ma la
@@ -415,7 +430,8 @@ condiviso su GitHub).
   così salvare una copia recente la salva formattata. `Use` mette negli appunti testo, «HTML Format» (con
   l'intestazione in byte, `Rich.Document`) e RTF. In `EditForm` il contenuto è una `RichBox`: si mostra dai `Run`
   (`Rich.ToRtf`, nei colori del tema: il nero o quasi si legge come predefinito, `DarkLimit`), i pulsanti sopra (B, I,
-  U, carattere e dimensione da un menu con «Predefinito», la gomma) usano `EM_SETCHARFORMAT` sulla selezione, Ctrl+B/I/U
+  U, «Carattere» e «Dimensione» scritti per nome, ognuno con un menu con «Predefinito», la gomma; come due icone si
+  somigliavano troppo) usano `EM_SETCHARFORMAT` sulla selezione, Ctrl+B/I/U
   pure, l'incolla tiene la formattazione (RTF prima, poi HTML) e i tasti di RichEdit per i paragrafi non fanno
   niente. La formattazione vale solo se dice lo stesso testo del testo semplice (`Rich.Matches`, solo lettere e
   cifre): copiando dalla barra degli indirizzi, Chrome ed Edge danno l'indirizzo come testo e come HTML un link con
@@ -447,10 +463,17 @@ condiviso su GitHub).
   meno): disegnata a mano in una riga di `cardList` (`OwnerDrawVariable`, `DrawEntry`), un po' più chiara del
   pannello (`Look.Raised`, nuovo colore delle due tavolozze) e con il bordo d'accento se selezionata (`RowList.Marked`
   falso: niente tacca). **Prima la voce**, grande (fino a `BodyLines` righe del testo, `CardText`; il nome di un
-  salvato con nome; una miniatura con la misura); a destra, piccola e tenue, prima dei pulsanti sulla stessa riga se alla voce resta almeno `InlineShare` della scheda, altrimenti sotto i pulsanti in una colonna larga al massimo `ColumnShare`, accanto alla voce e mai su una riga sua (`Lay`, `CardParts.Least`; schede compatte volute dall'utente il 19/10/2026, «molti spazi interni nelle celle»: margini `CardPad`, miniature di `CardPicture` 40 px; prima una scheda di testo era alta 73 px, ora 31 in una riga) (`MetaShare`, anche l'icona semitrasparente, `Look.DrawFaint`; voluto dall'utente il 19/10/2026, «per rendere ancora più chiaro cosa è copiato»), una riga sola: icona e nome del programma
-  (o stella e cartella di un salvato) · ora (`When`) · tipo (`BadgeOf`). A destra della prima riga numero, freccia e
-  piccoli segni senza testo: anteprima (l'occhio), copia, salva/modifica, elimina, «⋯» (`CardButtons`), grigi tranne
-  sulla scheda sotto il puntatore o selezionata, con il nome in un suggerimento sotto il segno (`PartText`, mostrato a
+  salvato con nome; una miniatura con la misura); all'estremità destra della prima riga, piccola e tenue, sempre lì (`Lay`, `CardParts.Least`; schede compatte volute dall'utente il 19/10/2026, «molti spazi interni nelle celle»: margini `CardPad`, miniature di `CardPicture` 40 px; prima una scheda di testo era alta 73 px, ora 31 in una riga) (`MetaShare`, anche l'icona semitrasparente, `Look.DrawFaint`; voluto dall'utente il 19/10/2026, «per rendere ancora più chiaro cosa è copiato»), una riga sola: icona e nome del programma
+  (o stella e cartella di un salvato) · ora (`When`) · tipo (`BadgeOf`; niente per un testo semplice, che detto su
+  quasi ogni scheda non diceva niente). **Sotto il puntatore** i piccoli segni senza testo prendono il suo posto,
+  l'una che sfuma mentre gli altri compaiono con la luce della scheda (`Glow`): la freccia (solo dei copiati, colorata se
+  la tiene in alto), anteprima (l'occhio), copia, salva/modifica, elimina, «⋯» (`CardButtons`, `CopiedButtons`). Voluto
+  dall'utente il 19/10/2026: sempre lì su ogni scheda, l'elenco sembrava una barra degli strumenti; non sulla scheda
+  selezionata, che così dice programma e ora (Ctrl+D seleziona proprio l'ultima copia). Lo spazio è largo quanto il
+  più largo dei due (la riga si taglia oltre `MetaRoom` della scheda), così la scheda non cambia altezza sotto il
+  puntatore e tutte hanno la riga sulla prima riga: prima andava accanto ai pulsanti o sotto, secondo lo spazio, e le
+  schede dello stesso tipo avevano altezze diverse (il controllo è in `shot`). Prima della riga, sempre, il numero.
+  Ogni segno ha il nome in un suggerimento sotto di sé (`PartText`, mostrato a
   mano da `HoverTip` come i nomi della barra ridotta: cambiare il testo dell'unico suggerimento della lista non lo
   faceva ricomparire, trovato dall'utente il 19/10/2026). Voluto
   dall'utente il 18/10/2026: con il programma in grassetto in cima e una fila di pulsanti in fondo, «il
@@ -522,7 +545,7 @@ condiviso su GitHub).
   sfondo trasparente non regge (un finto Mica dallo sfondo del desktop è stato proposto e non scelto).
 - Ancora più Windows 11 (voluto dall'utente il 16/10/2026, «restando fedeli al progetto light»): le icone di
   Windows al posto dei segni disegnati; caratteri seminegretti di Segoe UI Variable (`StrongFont` per i
-  giorni nell'elenco, «Provenienza» e i tasti della guida, `TitleFont`, più grande, per il nome di una pagina delle opzioni e i titoli della guida; GDI
+  giorni nell'elenco e i tasti della guida, `TitleFont`, più grande, per il nome di una pagina delle opzioni e i titoli della guida; GDI
   vede il Display Semibold con il nome tagliato a 31 lettere, «Segoe UI Variable Display Semib»; su Windows 10
   Segoe UI Semibold); righe e pulsanti che si illuminano e si spengono a piccoli passi (`Glow` nelle righe, `Fade`
   in `RoundButton` e `Toggle`); l'anteprima che compare in dissolvenza (`Peek.appear`, `Opacity`); le pagine delle
@@ -650,7 +673,8 @@ condiviso su GitHub).
   quattro (francese e spagnolo sono i più a rischio).
   Le opzioni stanno in pagine, una per categoria (voluto dall'utente il 16/10/2026: «fatte come la guida, schede
   verticali, divise per argomento»; prima erano su due colonne, e prima ancora in un elenco unico, caotico): a
-  sinistra la colonna delle pagine (`pageList`, disegnata come gli argomenti della guida con `Look.DrawTopic`, con
+  sinistra la colonna delle pagine (`pageList`, disegnata come gli argomenti della guida con `Look.DrawTopic`, in un
+  `Card` `Quiet` come quella della guida: con il bordo d'accento quando aveva il focus spiccava più della pagina; con
   l'icona di ciascuna), a destra la pagina scelta (`pagePane`, `ShowPage`), con il nome in grande in cima
   (`PageTop`) e le schede delle opzioni (`Tile`) larghe `PaneWidth`, una sotto l'altra. Ordine: Digitazione,
   Scorciatoie, Cronologia, Aspetto, Programma. Una pagina è un `Panel` con `Text` (il nome) e `Tag` (il segno), ed è
@@ -713,6 +737,9 @@ condiviso su GitHub).
   si riscrivono in `NameHotkeys`. Impostazioni `HotkeyKeys` e `PickKeys`.
 - `TextRenderer.MeasureText` con `EndEllipsis` e nessuna larghezza proposta risponde la larghezza dei soli
   puntini: per sapere se un testo sta nella riga (`Cut`) si misura senza.
+- `TextRenderer.MeasureText` **senza** un `Graphics` ignora `NoPadding` e conta lo spazio che Windows lascia attorno
+  al testo («x»: 15 pixel invece di 6, misurato il 19/10/2026): i pezzi del testo segnato dalla ricerca si misurano su
+  un `Graphics` (`Wide`, `measurer`), altrimenti gli spazi tra un pezzo e l'altro venivano larghi.
 - Le righe degli elenchi disegnate direttamente sullo schermo sfarfallavano a ogni passo della luce sotto il
   puntatore (prima lo sfondo, poi il resto; notato dall'utente sulle cartelle dei salvati il 17/10/2026): `RowList`
   le disegna in un `BufferedGraphics` e le copia in un colpo (`OnDrawItem`). Il buffer sposta l'origine con una
@@ -797,7 +824,8 @@ cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
   AltGr, Unicode, Alt+codice, Tab, Invio; poi verifica che finestra sbagliata e annullamento blocchino tutto.
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.
 - `tests.exe shot <prefisso>` — non è in `test.cmd`: salva immagini PNG della finestra (elenco con voci
-  finte, opzioni con ogni pagina in `-options-1`…`-4`, stati lunghi) per controllare l'aspetto senza mostrarla.
+  finte, una scheda sotto il puntatore in `-hover`, una ricerca con la parola evidenziata in `-search`, opzioni con ogni pagina in `-options-1`…`-5`, stati lunghi) per
+  controllare l'aspetto senza mostrarla.
 - `tests.exe store <cartella> <lingua>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno
   sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>` (in scuro, che sullo Store fa più effetto, tranne l'ultima, `8-light`; lo sfondo si scurisce con il tema), e
   l'icona 300 × 300 in `<cartella>`. Mostra le finestre qualche secondo; a programma chiuso, come `real`, perché le
@@ -838,6 +866,9 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   se le finestre di `wfica32.exe` rispondono a `WM_GETICON` con l'icona del programma remoto (Gestione attività la
   mostra), se l'impronta resta la stessa da una copia e da una sessione all'altra (altrimenti lo stesso programma
   comparirebbe più volte), chi possiede gli appunti dopo una copia remota.
+- I pulsanti delle schede solo sotto il puntatore (19/10/2026) dal vivo: vista l'immagine di `shot` con la luce portata
+  a mano a 1 e provato che l'altezza non cambia; mai la dissolvenza vera tra riga piccola e pulsanti, né il clic su un
+  segno appena comparso. Nemmeno il suggerimento di un nome tagliato nella barra laterale con i nomi.
 - La barra laterale trascinata e ridotta (19/10/2026) dal vivo: provati da `shot` riduzione, ritorno e limiti della
   larghezza, vista l'immagine ridotta; mai il bordo trascinato con il mouse vero, il cursore ↔, i suggerimenti delle
   icone, il clic sul ☰.

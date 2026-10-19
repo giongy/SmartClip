@@ -60,7 +60,7 @@ static partial class Strings
         NoSaved = "No saved texts";
     public static string NewTip = "Writes a new text to keep, with a name or without ({0}).";
     // The sidebar, the tabs above the list, and the cards of the entries.
-    public static string AllPlace = "All", PinnedPlace = "Pinned", SourcesPlace = "Source", GuideItem = "Help";
+    public static string HistoryPlace = "History", PinnedPlace = "Pinned", SourcesPlace = "Source", GuideItem = "Help";
     public static string AllKinds = "All", TextKinds = "Text", CodeKinds = "Code", LinkKinds = "Links", PictureKinds = "Images";
     public static string TextBadge = "Text", CodeBadge = "Code", LinkBadge = "Link", PictureBadge = "Image", FormattedBadge = "Formatted";
     public static string CopyButton = "Copy", ShowFull = "Preview", MoreItem = "More";
@@ -170,6 +170,7 @@ static partial class Strings
         + "copy the password, press here and click into the field of the remote window.\n"
         + "Or press {0} right in the field.";
     public static string SearchTip = "Type to search the cards of the place: words in any order, ignoring case and accents.\n"
+        + "In " + HistoryPlace + " the saved texts too, after what you copied.\n"
         + "The arrows move through the cards.\n"
         + "“" + CopyButton + "”, {0} or a double click put the entry back on the clipboard: then paste it with\n"
         + "Ctrl+V or type it with {1}. With “" + CopyButton + "” the window stays open, with {0} or a double click\n"
@@ -235,8 +236,8 @@ static partial class Strings
     public static string AboutNote = "Free software under the MIT license";
     public static string TypeNote = "Types into the active window at once";
     public static string PickOption = "Open the list", PickNote = "Brings this window up from any program";
-    public static string WhereLeftOption = "Open where you left it", WhereLeftNote = "Otherwise the list opens on " + AllPlace;
-    public static string WhereLeftTip = "Off, the hotkey of the list always opens it on " + AllPlace + ", every kind, with the search empty.\n"
+    public static string WhereLeftOption = "Open where you left it", WhereLeftNote = "Otherwise the list opens on " + HistoryPlace;
+    public static string WhereLeftTip = "Off, the hotkey of the list always opens it on " + HistoryPlace + ", every kind, with the search empty.\n"
         + "On, it shows the place and the kind you left it on.";
     public static string QuickOption = "Paste by number", QuickNote = "Pastes the entries that have a shortcut";
     public static string HistoryOption = "Remember copied texts and pictures", HistoryNote = "What you copy while the program is open";
@@ -378,24 +379,27 @@ static partial class Strings
 
             "# The list",
             "On the left the sidebar, on the right the cards of the place chosen there:",
-            "- " + AllPlace + ": everything, copied and saved, newest first, each day under its name; the entries kept at "
-                + "the top come before the others.",
+            "- " + HistoryPlace + ": what you copied, newest first, each day under its name; the entries kept at the top come "
+                + "before the others.",
             "- " + PinnedPlace + ": only the copied entries kept at the top.",
             "- " + SavedTitle + ": the saved texts, by name. Under it are their folders.",
             "- " + SourcesPlace + ": the programs you copied in, that of the latest copy first, each with its icon and how many entries come from it. A "
                 + "click on one shows only what you copied there; a click on " + SourcesPlace + " opens or closes the list. "
                 + "The programs of a Citrix server all take the name of Citrix on this PC, but each keeps its own icon.",
             "The button at the top of the sidebar reduces it to its icons, and gives it its names back: resting the pointer "
-                + "on an icon says its name. Dragging the edge between the sidebar and the cards makes it wider or narrower; "
+                + "on an icon says its name, and each folder shows the first letter of its name. Dragging the edge between the sidebar and the cards makes it wider or narrower; "
                 + "dragged narrower than it can be, it is reduced to its icons.",
             "The tabs above the cards (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") show one kind of entry only. " + CodeKinds + " is a guess from how the lines look: now "
                 + "and then a text ends up there, or a piece of code among the texts. When it guesses wrong, “" + KindMenu
                 + "”, in the menu of a text, says what it is: copied again or saved, it stays so.",
-            "Each card shows the entry first; on its right, before the buttons or under them, small and faint, the program it was copied in, with its icon (or the folder "
-                + "of a saved text), the time of the copy and what it is. On the right, small signs show it whole, copy it, "
-                + "save or edit it, delete it and open its menu: resting the pointer on one says what it does.",
-            "- Type in the box at the top to search the cards of the place: words count in any order, ignoring case and accents.",
+            "Each card shows the entry first; on its right, small and faint, the program it was copied in, with its icon (or the folder "
+                + "of a saved text), the time of the copy and what it is, unless it is a plain text. With the pointer on the card, "
+                + "small signs take their place: they keep it at the top, show it whole, copy it, save or edit it, delete it and "
+                + "open its menu; resting the pointer on one says what it does.",
+            "- Type in the box at the top to search the cards of the place: words count in any order, ignoring case and accents. "
+                + "In " + HistoryPlace + " the saved texts that match come too, after what you copied, under " + SavedTitle + ". "
+                + "The words found are highlighted on the cards; found far into a long text, its card shows that part of it.",
             "- A click on a card selects it. The copy sign (“" + CopyButton + "”) puts the entry on the clipboard and leaves the "
                 + "window open, so that you can still save or delete it.",
             "- " + EnterKeyName + " or a double click put it on the clipboard and, if you opened the list with " + pick
@@ -488,7 +492,7 @@ static partial class Strings
             "- nothing is typed while Caps Lock is on: turn it off first.",
 
             "# Keys",
-            pick + "\tOpens the list on " + AllPlace + ", from any program.",
+            pick + "\tOpens the list on " + HistoryPlace + ", from any program.",
             type + "\tTypes the clipboard into the active window at once.",
             MainForm.NumbersName + "\tPastes the entry with that number into the active window.",
             "F1\tOpens this guide.",

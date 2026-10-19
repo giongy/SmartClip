@@ -43,21 +43,21 @@ partial class MainForm : Window
     // place, the search with its buttons, the tabs of the categories, the cards of the entries and the status line.
     // The sidebar, its margin on the left included: as it starts, how narrow and how wide its edge drags it, and
     // reduced to its signs. The pane beside it gives up at most PaneSlack of its width to it.
-    const int SideWidth = 210, MinSideWidth = 160, MaxSideWidth = 400, NarrowSideWidth = 72, PaneSlack = 120;
+    const int SideWidth = 230, MinSideWidth = 160, MaxSideWidth = 400, NarrowSideWidth = 72, PaneSlack = 120;
     const int PaneInset = 16;                          // inside the pane, around what it holds
     const int TitleRow = 34, TabsHeight = 32;          // the title of the place, and the tabs under the search
     const int ListHeight = 380;                        // the cards, as the window starts
     const int SideIndent = 16;                         // of a folder in the sidebar, for each folder it is inside of
-    // A card: the entry first, its buttons on the right of its first line, before them or under them the program or
-    // folder; between the cards a little air. Compact, wanted by the user on 19/10/2026: "too much room in the cells".
+    // A card: the entry first, on the right of its first line the program or folder, in whose place its buttons show
+    // under the pointer; between the cards a little air. Compact, wanted by the user on 19/10/2026: "too much room in
+    // the cells".
     const int CardGap = 5, CardInset = 12, CardPad = 6, CardLineGap = 4;   // CardInset at the sides, CardPad above and below
     const int PartHeight = 24, PartGap = 6;            // the buttons of a card, and the room between them
     const int BodyLines = 2;                           // lines of text a card shows of its entry, at most
     const int CardPicture = 40;                        // how tall a picture is shown in its card
     const int HeadingAir = 6;                          // above the name of a day, among the cards
-    // The small line of where and when goes on the first line of a card, before the buttons, when the entry keeps at
-    // least this share of the card; otherwise under the buttons, taking at most the second share.
-    const float InlineShare = 0.5f, ColumnShare = 0.4f;
+    // The most of a card the small line of where and when takes, beside the entry, unless the buttons need more.
+    const float MetaRoom = 0.45f;
     const int MaxRow = 255;                            // the tallest row a list box of Windows can have, in pixels
     const int PreviewMargin = 4;                       // around the preview, inside its card
     const int TileHeight = 52, TileGap = 4;            // the least a card of the options is tall, and between two cards
@@ -70,7 +70,6 @@ partial class MainForm : Window
     const int SearchHeight = 30, GlyphWidth = 20;      // the search box, and the magnifying glass on its left
     const int KeysWidth = 64, KeysPadding = 10;        // the frame of its keys on its right, and the air around them
     const int ListPadding = 3;                         // between the rounded edge of the pages of the options and their list
-    const int CountWidth = 120;                        // room for the number of entries, right of the title
     const int RowInset = 12, TimeGap = 8;              // of the text in a row, and around the time on its right
     const int NumberPadding = 2;                       // added to the text height for the width of the frame of a number
     const int Gap = 5;                                 // between neighbouring controls
@@ -124,7 +123,7 @@ partial class MainForm : Window
     readonly RowList cardList = new RowList();    // the entries of the place, as cards, with the names of the days among them
     readonly RowList navList = new RowList();     // the sidebar: the places (see Place)
     readonly RowList footList = new RowList();    // under it: a new folder, the options, the guide
-    Place place = new Place(PlaceKind.All);       // the place shown
+    Place place = new Place(PlaceKind.History);       // the place shown
     bool savedOpen = true, sourcesOpen = true;    // the sidebar shows the folders, and the programs
     bool fillingNav;                              // the sidebar is being filled: its selection is not the user's
     readonly RoundButton sideButton = new RoundButton();   // on top of the sidebar: reduces it to its signs, and back
@@ -274,14 +273,16 @@ partial class MainForm : Window
         int paneWidth = PaneInset + ContentWidth + PaneInset;
         pane.Quiet = true;
         pane.BackColor = Look.Well;
-        title.SetBounds(PaneInset, PaneInset, ContentWidth - CountWidth, TitleRow);
+        // The two as wide as what they say, the count right after the name (PlaceTitle).
+        title.SetBounds(PaneInset, PaneInset, ContentWidth, TitleRow);
         title.Font = Look.TitleFont;
         title.UseMnemonic = false;
         title.AutoEllipsis = true;
         title.TextAlign = ContentAlignment.MiddleLeft;
-        count.SetBounds(PaneInset + ContentWidth - CountWidth, PaneInset, CountWidth, TitleRow);
-        count.TextAlign = ContentAlignment.MiddleRight;
+        count.SetBounds(PaneInset, PaneInset, 0, TitleRow);
+        count.TextAlign = ContentAlignment.MiddleLeft;
         count.ForeColor = Look.Muted;
+        pane.Resize += delegate { PlaceTitle(); };
         int searchTop = title.Bottom + Gap;
         search.SetBounds(PaneInset, searchTop, ContentWidth - TypeWidth - ActionWidth - 2 * Gap, SearchHeight);
         Panel searchFrame = Look.Frame(search);
@@ -326,8 +327,8 @@ partial class MainForm : Window
         // When the window grows, the pane and its cards take the room; the sidebar stays as wide as it is.
         const AnchorStyles toTop = AnchorStyles.Top, toBottom = AnchorStyles.Bottom, toLeft = AnchorStyles.Left, toRight = AnchorStyles.Right;
         pane.Anchor = cardList.Anchor = emptyNote.Anchor = toTop | toBottom | toLeft | toRight;
-        title.Anchor = searchFrame.Anchor = tabs.Anchor = toTop | toLeft | toRight;
-        count.Anchor = newButton.Anchor = typeButton.Anchor = toTop | toRight;
+        searchFrame.Anchor = tabs.Anchor = toTop | toLeft | toRight;
+        newButton.Anchor = typeButton.Anchor = toTop | toRight;
         status.Anchor = banner.Anchor = toBottom | toLeft | toRight;
         navList.Anchor = toTop | toBottom | toLeft;
         footList.Anchor = toBottom | toLeft;
@@ -613,6 +614,7 @@ partial class MainForm : Window
             PlaceOnScreen(Location, screen);
         }
         PlaceSidebar();   // at the width it was left at, once the window has its size
+        PlaceTitle();     // measured with the fonts of the screen, once the window has its scale
         shown = true;
         FitStatus();
     }

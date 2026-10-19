@@ -26,13 +26,35 @@ class Heading
 }
 
 // Where the parts of a card are, in its row: the card itself, with air under it; the entry, first; at the right of
-// its first line its number, its arrow and the small buttons; at the bottom the small line of where, when and what,
-// drawn at its right end, under the buttons.
+// its first line its number, then the small line of where, when and what, drawn at its right end, in whose room the
+// small buttons show while the pointer is on the card.
 class CardParts
 {
-    public Rectangle Card, Body, Meta, Number, Pin;
+    public Rectangle Card, Body, Meta, Number;
     public int Least;   // how tall what is on the right of the entry is, from the top of the entry
     public readonly Dictionary<Part, Rectangle> Buttons = new Dictionary<Part, Rectangle>();
+}
+
+// The text of a card laid out by hand, so that the words a search found can be marked in it: what it shows (its
+// beginning, or a little before the first word found when that would be out of view), where those words are in it,
+// and its lines.
+class Marked
+{
+    public string Text;
+    public List<CharacterRange> Found, Lines;
+    public bool Cut;     // there is more after its last line, which ends with an ellipsis
+    public int Width;    // what it was laid out for
+    public Font Font;
+
+    // Where what its lines show ends.
+    public int Shown
+    {
+        get
+        {
+            CharacterRange last = Lines[Lines.Count - 1];
+            return last.First + last.Length;
+        }
+    }
 }
 
 // The entries of the place chosen in the sidebar, as cards: filling them, drawing them, what a click on each part
@@ -45,6 +67,9 @@ partial class MainForm
     bool headed;                               // the cards are under the names of their days: each says its time only
     int lastCard = -1;                         // the card selected last, where a click on the name of a day leaves it
     bool newest;                               // the next filling selects the latest copy, with the top of the list in view
+    string[] searched = new string[0];         // the words of the search the cards were filled with, marked on them
+    readonly Dictionary<Entry, Marked> marks = new Dictionary<Entry, Marked>();   // how each card writes them, until the next filling
+    static Graphics measurer;                  // what their pieces are measured on (see Wide)
 
     // What the cards answer to: buttons, right-click menu, mouse, dragging a saved text into a folder.
     void WireLists()
@@ -177,8 +202,7 @@ partial class MainForm
                 HideHoverTip();
                 return;
             }
-            CardParts parts = Lay(entry, cardList.GetItemRectangle(index));
-            Rectangle button = part == Part.Pin ? parts.Pin : parts.Buttons[part];
+            Rectangle button = Lay(entry, cardList.GetItemRectangle(index)).Buttons[part];
             HoverTip(cardList, index * 16 + (int)part, text, new Point(button.Left + (button.Width - Look.TipSize(text).Width) / 2,
                 button.Bottom + (int)(Gap * Zoom)));
         };
@@ -280,6 +304,8 @@ partial class MainForm
         Entry selected = Selected;
         HidePeek();   // the card it belongs to may be about to move
         string[] words = Texts.Words(search.Text);   // taken from the box once, not for each entry
+        searched = words;
+        marks.Clear();
         Category? kind = TabKinds[tabs.Selected];
         List<Entry> copied = new List<Entry>();
         int total = 0;
@@ -296,8 +322,10 @@ partial class MainForm
                 total = clips.CopiedCount(sieve);
             });
         }
+        // In History only those a search finds (wanted by the user on 19/10/2026: what is saved is not history, but the list
+        // hotkey, a name and Enter must still find a saved password).
         List<Entry> saved = new List<Entry>();
-        if (place.HasSaved)
+        if (place.HasSaved || place.Kind == PlaceKind.History && words.Length > 0)
             foreach (Entry entry in entries)
                 if (!entry.IsGroup && (place.Kind != PlaceKind.Folder || Texts.Within(entry.Group, place.Path))
                     && (!kind.HasValue || entry.Category == kind.Value) && Texts.Matches(entry, words))
@@ -309,6 +337,7 @@ partial class MainForm
         ShowTitle();
         int shownCount = copied.Count + saved.Count;
         count.Text = shownCount == total ? total.ToString() : string.Format(Strings.CountOf, shownCount, total);
+        PlaceTitle();
         // What the copied pictures take may have changed: in the red bar, and in the options if they are open.
         ShowPictureRoom();
         if (options.Visible) ShowSize();
@@ -318,21 +347,22 @@ partial class MainForm
             : place.Kind == PlaceKind.Folder ? Strings.EmptyFolder : place.Kind == PlaceKind.Saved ? Strings.NoSaved
             : !historyBox.Checked ? Strings.HistoryOffEmpty : paused ? Strings.PausedEmpty : Strings.CopyHint;
         emptyNote.Sign = searching ? Sign.Search : kind.HasValue ? Sign.Search : place.Kind == PlaceKind.Pinned ? Sign.Up
-            : place.HasSaved && place.Kind != PlaceKind.All ? Sign.Star
+            : place.HasSaved ? Sign.Star
             : !historyBox.Checked ? Sign.History : paused ? Sign.Pause : Sign.Paste;
         emptyNote.Visible = shownCount == 0;
         FillNav();   // the counts of the sidebar, and the programs, may have changed
     }
 
     // The cards in their order. In Saved and its folders the texts by name; elsewhere those kept at the top first,
-    // then the others from the newest, each day under its name.
+    // then the others from the newest, each day under its name, and last, by name under their own, the saved texts a
+    // search in History found.
     List<object> Arrange(List<Entry> copied, List<Entry> saved)
     {
         List<object> arranged = new List<object>();
         headed = place.HasCopied;
+        saved.Sort(delegate(Entry a, Entry b) { return StringComparer.CurrentCultureIgnoreCase.Compare(a.Label, b.Label); });
         if (!headed)
         {
-            saved.Sort(delegate(Entry a, Entry b) { return StringComparer.CurrentCultureIgnoreCase.Compare(a.Label, b.Label); });
             arranged.AddRange(saved.ToArray());
             return arranged;
         }
@@ -346,8 +376,7 @@ partial class MainForm
             }
             else rest.Add(entry);
         }
-        rest.AddRange(saved);
-        // The newest first; those nobody knows the day of last. Sorted as a whole, the order of equal times by row.
+        // The newest first. Sorted as a whole, the order of equal times by row.
         rest.Sort(delegate(Entry a, Entry b)
         {
             int byTime = b.Time.CompareTo(a.Time);
@@ -361,6 +390,9 @@ partial class MainForm
             day = name;
             arranged.Add(entry);
         }
+        if (saved.Count == 0) return arranged;
+        arranged.Add(new Heading(Strings.SavedTitle));
+        arranged.AddRange(saved.ToArray());
         return arranged;
     }
 
@@ -415,6 +447,25 @@ partial class MainForm
     void ShowTitle()
     {
         title.Text = place.Title + (paused && place.HasCopied ? Strings.PausedSuffix : "");
+        PlaceTitle();
+    }
+
+    // The name of the place, and right after it, smaller and grey, how many entries it lists, on the same baseline: at
+    // the other end of the pane it was far from what it counts. The name gives way to the count when there is no room.
+    void PlaceTitle()
+    {
+        int gap = (int)(Gap * Zoom), counted = TextRenderer.MeasureText(count.Text, count.Font).Width;
+        int named = TextRenderer.MeasureText(title.Text, title.Font).Width;
+        title.Width = Math.Max(0, Math.Min(named, typeButton.Right - title.Left - gap - counted));
+        count.SetBounds(title.Right + gap, title.Top + (count.Font.Height - title.Font.Height) / 2 + Ascent(title.Font) - Ascent(count.Font),
+            counted, title.Height);
+    }
+
+    // How far below the top of its line a font writes the foot of its letters.
+    static int Ascent(Font font)
+    {
+        FontFamily family = font.FontFamily;
+        return font.Height * family.GetCellAscent(font.Style) / family.GetLineSpacing(font.Style);
     }
 
     // Whether what a folder holds is in view: that folder and every one it is inside of are open. Null is
@@ -493,13 +544,13 @@ partial class MainForm
             BodyFlags).Height > body.Height;
     }
 
-    // When, as a card says it at the right end of its buttons: under the name of its day only the time; otherwise
-    // of a copied entry the time today and the day before that, of a saved text always the day it was saved. The
-    // year only when it is not this one. Null if nobody knows.
+    // When, as a card says it at the right end of its first line: of a copied entry under the name of its day only the
+    // time, otherwise the time today and the day before that; of a saved text always the day it was saved. The year
+    // only when it is not this one. Null if nobody knows.
     string When(Entry entry)
     {
         if (!Dated(entry)) return null;
-        return entry.Time.ToString(headed || !entry.Saved && entry.Time.Date == DateTime.Today ? "HH:mm"
+        return entry.Time.ToString(!entry.Saved && (headed || entry.Time.Date == DateTime.Today) ? "HH:mm"
             : entry.Time.Year == DateTime.Today.Year ? Strings.DayFormat : Strings.YearDayFormat, Strings.Culture);
     }
 
@@ -544,10 +595,11 @@ partial class MainForm
     }
 
     // What a card says the entry is, at the right end of its top line: a formatted text says so, unless the user
-    // said what it is.
+    // said what it is. Nothing for a plain text, which most are: said on every card, it would say nothing.
     static string BadgeOf(Entry entry)
     {
-        return entry.Html != null && !entry.Chosen ? Strings.FormattedBadge : KindName(entry.Category);
+        if (entry.Html != null && !entry.Chosen) return Strings.FormattedBadge;
+        return entry.Category == Category.Text ? null : KindName(entry.Category);
     }
 
     static string KindName(Category category)
@@ -598,16 +650,169 @@ partial class MainForm
     const int MaxBody = 600;   // of a long text, what a card takes to show its first lines
     const string Dot = " · ";  // between the parts of the small line under the entry
     const float MetaShare = 0.6f;   // how far that line goes from the card towards Muted, and how opaque its icon is
-    // The small buttons at the right of a card, from the left: they are signs alone, named by their tooltips.
+    // The small buttons at the right of a card, from the left: they are signs alone, named by their tooltips. A copied
+    // entry has its arrow first.
     static readonly Part[] CardButtons = { Part.Show, Part.Copy, Part.Save, Part.Delete, Part.More };
+    static readonly Part[] CopiedButtons = { Part.Pin, Part.Show, Part.Copy, Part.Save, Part.Delete, Part.More };
 
     // What the card shows of an entry: of a saved one with a name only the name, so that a password never appears;
     // of a text its beginning, its lines kept.
     static string CardText(Entry entry)
     {
         if (entry.Saved && entry.Name != null || entry.Picture) return entry.Label;
-        string text = entry.Text.Trim().Replace("\r\n", "\n").Replace('\t', ' ');
+        string text = Plain(entry.Text);
         return text.Length > MaxBody ? text.Substring(0, MaxBody) : text;
+    }
+
+    // A text as a card writes it: its lines kept, a tab a space.
+    static string Plain(string text)
+    {
+        return text.Trim().Replace("\r\n", "\n").Replace('\t', ' ');
+    }
+
+    // --- The words a search found, marked on the cards ---
+
+    const string Ellipsis = "…";
+    const int MarkContext = 30;       // of a text found further in, how much of it the card shows before the first word found
+    const int MaxMarked = 100000;     // how much of a long text is looked through for it
+    const float MarkTint = 0.35f;     // how far the shape under a word found goes from the card towards the accent colour
+    const TextFormatFlags MarkFlags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
+
+    // The text of a card laid out with the words the search found marked in it, or null if it shows none of them, or
+    // nothing is searched: then the card writes it as usual. Of a saved text with a name, its name on one line; of a
+    // text its lines, from a little before the first word found if from its beginning that one would be out of view
+    // (wanted by the user on 19/10/2026: a card found by a word in its fifth line did not say why it was there). A
+    // picture is found by its size, which its card says anyway.
+    Marked MarkedText(Entry entry, int width)
+    {
+        if (searched.Length == 0 || entry.Picture || width <= 0) return null;
+        bool named = entry.Saved && entry.Name != null;
+        Font font = named ? Look.StrongEntryFont : Look.EntryFont;
+        Marked marked;
+        if (marks.TryGetValue(entry, out marked) && marked.Width == width && marked.Font == font)
+            return marked.Found.Count > 0 ? marked : null;
+        int most = named ? 1 : BodyLines;
+        string text = named ? entry.Name : CardText(entry);
+        marked = LayMarked(text, Texts.Find(text, searched), font, width, most);
+        if (!named && (marked.Found.Count == 0 || marked.Found[0].First >= marked.Shown))
+        {
+            string whole = Plain(entry.Text);
+            if (whole.Length > MaxMarked) whole = whole.Substring(0, MaxMarked);
+            List<CharacterRange> found = Texts.Find(whole, searched);
+            if (found.Count > 0 && found[0].First >= marked.Shown)
+            {
+                // At the start of a word, if one starts in that little before.
+                int first = found[0].First, start = Math.Max(0, first - MarkContext);
+                int space = whole.IndexOfAny(new char[] { ' ', '\n' }, start);
+                if (start > 0 && space >= 0 && space < first) start = space + 1;
+                string part = Ellipsis + whole.Substring(start, Math.Min(MaxBody, whole.Length - start));
+                marked = LayMarked(part, Texts.Find(part, searched), font, width, most);
+                // On a narrow card that little before can take all the lines: then from the word itself.
+                if (marked.Found.Count == 0 || marked.Found[0].First >= marked.Shown)
+                {
+                    part = Ellipsis + whole.Substring(first, Math.Min(MaxBody, whole.Length - first));
+                    marked = LayMarked(part, Texts.Find(part, searched), font, width, most);
+                }
+            }
+        }
+        marked.Width = width;
+        marked.Font = font;
+        marks[entry] = marked;
+        return marked.Found.Count > 0 ? marked : null;
+    }
+
+    // Lays a text out as a card writes it, in at most 'most' lines 'width' wide: a line breaks after a space, or inside
+    // a word alone wider than it; the last one ends with an ellipsis if there is more.
+    static Marked LayMarked(string text, List<CharacterRange> found, Font font, int width, int most)
+    {
+        Marked marked = new Marked();
+        marked.Text = text;
+        marked.Found = found;
+        marked.Lines = new List<CharacterRange>();
+        int at = 0;
+        bool done = false;
+        while (!done && marked.Lines.Count < most)
+        {
+            int paragraph = text.IndexOf('\n', at);
+            if (paragraph < 0) paragraph = text.Length;
+            int end = Fit(text, at, paragraph, font, width), last = end;
+            while (last > at && text[last - 1] == ' ') last--;
+            marked.Lines.Add(new CharacterRange(at, last - at));
+            at = end;
+            while (at < paragraph && text[at] == ' ') at++;
+            if (at == paragraph)
+            {
+                done = paragraph == text.Length;
+                at = paragraph + 1;
+            }
+        }
+        marked.Cut = !done;
+        if (marked.Cut)
+        {
+            // Room for the ellipsis, the line giving up its last letters.
+            int line = marked.Lines.Count - 1;
+            CharacterRange cut = marked.Lines[line];
+            int length = cut.Length;
+            while (length > 0 && Wide(text.Substring(cut.First, length) + Ellipsis, font) > width) length--;
+            marked.Lines[line] = new CharacterRange(cut.First, length);
+        }
+        return marked;
+    }
+
+    // Where a line that starts at 'start' ends, in a paragraph that ends at 'stop': after the last space that lets it
+    // fit, or else after as many letters of its first word as fit, one at least.
+    static int Fit(string text, int start, int stop, Font font, int width)
+    {
+        int best = -1;
+        for (int i = start; i <= stop; i++)
+        {
+            if (i < stop && text[i] != ' ') continue;
+            if (Wide(text.Substring(start, i - start), font) > width) break;
+            if (i == stop) return stop;
+            best = i;
+        }
+        if (best > start) return best;
+        int end = Math.Min(stop, start + 1);
+        while (end < stop && Wide(text.Substring(start, end + 1 - start), font) <= width) end++;
+        return end;
+    }
+
+    // How wide a piece of text is written, without the room Windows leaves around it. Measured on a Graphics: without
+    // one, MeasureText counts that room whatever the flags say ("x": 15 pixels instead of 6).
+    static int Wide(string text, Font font)
+    {
+        if (text.Length == 0) return 0;
+        if (measurer == null) measurer = Graphics.FromImage(new Bitmap(1, 1));
+        return TextRenderer.MeasureText(measurer, text, font, Size.Empty, MarkFlags).Width;
+    }
+
+    // Writes a text laid out by LayMarked in the body of a card, a faint shape of the accent colour under each word found.
+    void DrawMarked(Graphics g, Marked marked, Font font, Rectangle body, Color fill)
+    {
+        // Where Windows would start it, with the room it leaves before a text.
+        int lead = (TextRenderer.MeasureText(g, "x", font).Width - Wide("x", font)) / 2, y = body.Top, k = 0;
+        List<CharacterRange> found = marked.Found;
+        using (Brush tint = new SolidBrush(Look.Blend(fill, Look.Accent, MarkTint)))
+            for (int i = 0; i < marked.Lines.Count; i++, y += font.Height)
+            {
+                CharacterRange line = marked.Lines[i];
+                int x = body.Left + lead, at = line.First, end = line.First + line.Length;
+                while (at < end)
+                {
+                    while (k < found.Count && found[k].First + found[k].Length <= at) k++;
+                    bool inside = k < found.Count && found[k].First <= at;
+                    int stop = Math.Min(end, inside ? found[k].First + found[k].Length : k < found.Count ? found[k].First : end);
+                    string piece = marked.Text.Substring(at, stop - at);
+                    int wide = Wide(piece, font);
+                    if (inside)
+                        using (GraphicsPath shape = Look.Rounded(new Rectangle(x - 1, y, wide + 2, font.Height - 1)))
+                            g.FillPath(tint, shape);
+                    TextRenderer.DrawText(g, piece, font, new Point(x, y), Look.Ink, MarkFlags);
+                    x += wide;
+                    at = stop;
+                }
+                if (marked.Cut && i == marked.Lines.Count - 1) TextRenderer.DrawText(g, Ellipsis, font, new Point(x, y), Look.Ink, MarkFlags);
+            }
     }
 
     // How tall the row of a card is, its air included, or that of the name of a day: never taller than a list box
@@ -623,7 +828,9 @@ partial class MainForm
         else
         {
             int line = Look.EntryFont.Height;
-            int tall = TextRenderer.MeasureText(CardText(entry), Look.EntryFont, new Size(Math.Max(1, parts.Body.Width), 0), BodyFlags).Height;
+            Marked marked = MarkedText(entry, parts.Body.Width);
+            int tall = marked != null ? marked.Lines.Count * line
+                : TextRenderer.MeasureText(CardText(entry), Look.EntryFont, new Size(Math.Max(1, parts.Body.Width), 0), BodyFlags).Height;
             body = Math.Max(1, Math.Min(BodyLines, (tall + line - 1) / line)) * line;
         }
         return Math.Min(MaxRow, 2 * (int)(CardPad * Zoom) + Math.Max(body, parts.Least) + (int)(CardGap * Zoom));
@@ -642,9 +849,12 @@ partial class MainForm
 
     const TextFormatFlags MetaFlags = TextFormatFlags.VerticalCenter | LineFlags | TextFormatFlags.NoPadding;
 
-    // The parts of the card of an entry in its row (see CardParts): the entry first, at the top left; at the right of
-    // its first line its number, its arrow and the small buttons; the small line of where and when right before them
-    // if the entry keeps most of the card, otherwise under them. DrawEntry writes that line at the right end of Meta.
+    // The parts of the card of an entry in its row (see CardParts): the entry first, at the top left; at the right end
+    // of its first line the small line of where and when, and the small buttons in the same room, which is as wide as
+    // the wider of the two, the line cut short if the entry would keep less than its share; before them its number.
+    // The same whether the pointer is on the card or not, so that no card changes height under it, and every card
+    // has its line on its first line (wanted by the user on 19/10/2026: beside the buttons or under them as there was
+    // room, the cards of the same kind were of different heights). DrawEntry writes that line at the right end of Meta.
     CardParts Lay(Entry entry, Rectangle row)
     {
         int inset = (int)(CardInset * Zoom), pad = (int)(CardPad * Zoom), gap = (int)(CardLineGap * Zoom), side = (int)(PartHeight * Zoom);
@@ -654,37 +864,25 @@ partial class MainForm
         int left = parts.Card.Left + inset, right = parts.Card.Right - inset, top = parts.Card.Top + pad;
         // The buttons in the middle of the first line of the entry.
         int middle = top + Look.EntryFont.Height / 2, end = right;
-        for (int i = CardButtons.Length - 1; i >= 0; i--)
+        Part[] buttons = entry.Saved ? CardButtons : CopiedButtons;
+        for (int i = buttons.Length - 1; i >= 0; i--)
         {
-            parts.Buttons[CardButtons[i]] = new Rectangle(end - side, middle - side / 2, side, side);
+            parts.Buttons[buttons[i]] = new Rectangle(end - side, middle - side / 2, side, side);
             end -= side + between;
         }
-        if (!entry.Saved)
-        {
-            parts.Pin = new Rectangle(end - side, middle - side / 2, side, side);
-            end = parts.Pin.Left - between;
-        }
+        int meta = Look.NoteFont.Height, room = right - left;
+        int wide = meta + (int)(PartGap * Zoom) + TextRenderer.MeasureText(MetaText(entry), Look.NoteFont, Size.Empty, MetaFlags & ~TextFormatFlags.EndEllipsis).Width;
+        int area = Math.Max(right - end - between, Math.Min(wide, (int)(room * MetaRoom)));
+        parts.Meta = new Rectangle(right - area, middle - meta / 2, area, meta);
+        end = parts.Meta.Left - gap;
         if (entry.Number > 0)
         {
             int high = Font.Height, width = high + NumberPadding;
             parts.Number = new Rectangle(end - width, middle - high / 2, width, high);
             end = parts.Number.Left - between;
         }
-        int meta = Look.NoteFont.Height, room = right - left, bottom = Math.Max(top, parts.Card.Bottom - pad);
-        int wide = meta + (int)(PartGap * Zoom) + TextRenderer.MeasureText(MetaText(entry), Look.NoteFont, Size.Empty, MetaFlags & ~TextFormatFlags.EndEllipsis).Width;
-        if (end - 3 * gap - wide - left >= room * InlineShare)
-        {
-            parts.Meta = new Rectangle(end - gap - wide, middle - meta / 2, wide, meta);
-            parts.Body = Rectangle.FromLTRB(left, top, parts.Meta.Left - 2 * gap, bottom);
-            parts.Least = Look.EntryFont.Height;
-        }
-        else
-        {
-            int column = Math.Max(right - end, Math.Min(wide, (int)(room * ColumnShare)));
-            parts.Meta = new Rectangle(right - column, middle + side / 2, column, meta);
-            parts.Body = Rectangle.FromLTRB(left, top, right - column - gap, bottom);
-            parts.Least = parts.Meta.Bottom - top;
-        }
+        parts.Body = Rectangle.FromLTRB(left, top, end - 2 * gap, Math.Max(top, parts.Card.Bottom - pad));
+        parts.Least = Look.EntryFont.Height;
         return parts;
     }
 
@@ -717,6 +915,7 @@ partial class MainForm
             case Part.Copy: return Sign.Copy;
             case Part.Save: return entry.Saved ? Sign.Edit : Sign.Star;
             case Part.Delete: return Sign.Delete;
+            case Part.Pin: return Sign.Up;
             default: return Sign.More;
         }
     }
@@ -729,7 +928,6 @@ partial class MainForm
         CardParts parts = Lay(entry, cardList.GetItemRectangle(index));
         foreach (KeyValuePair<Part, Rectangle> button in parts.Buttons)
             if (button.Value.Contains(where)) return button.Key;
-        if (!entry.Saved && parts.Pin.Contains(where)) return Part.Pin;
         return parts.Card.Contains(where) ? Part.Body : Part.None;
     }
 
@@ -776,28 +974,40 @@ partial class MainForm
             TextRenderer.DrawText(g, entry.Label, e.Font, Rectangle.FromLTRB(parts.Body.Left + size.Width + 2 * PreviewMargin, parts.Body.Top,
                 parts.Body.Right, parts.Body.Bottom), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
         }
-        else if (entry.Saved && entry.Name != null)
-            TextRenderer.DrawText(g, entry.Name, Look.StrongEntryFont, new Rectangle(parts.Body.Left, parts.Body.Top, parts.Body.Width,
-                Look.StrongEntryFont.Height), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
         else
-            TextRenderer.DrawText(g, CardText(entry), e.Font, parts.Body, Look.Ink, BodyFlags | TextFormatFlags.EndEllipsis);
+        {
+            // With what a search found in it marked, laid out by hand (MarkedText); otherwise as Windows writes it.
+            Marked marked = MarkedText(entry, parts.Body.Width);
+            bool named = entry.Saved && entry.Name != null;
+            if (marked != null) DrawMarked(g, marked, named ? Look.StrongEntryFont : e.Font, parts.Body, fill);
+            else if (named)
+                TextRenderer.DrawText(g, entry.Name, Look.StrongEntryFont, new Rectangle(parts.Body.Left, parts.Body.Top, parts.Body.Width,
+                    Look.StrongEntryFont.Height), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
+            else TextRenderer.DrawText(g, CardText(entry), e.Font, parts.Body, Look.Ink, BodyFlags | TextFormatFlags.EndEllipsis);
+        }
 
-        // Before the buttons or under them, at the right end, small and faint, so that the entry is what stands out: the
-        // program it was copied in with its icon, or the folder of a saved one; when; what it is.
-        string meta = MetaText(entry);
-        int side = parts.Meta.Height, gap = (int)(PartGap * Zoom);
-        int width = Math.Min(parts.Meta.Width - side - gap, TextRenderer.MeasureText(g, meta, Look.NoteFont, Size.Empty,
-            MetaFlags & ~TextFormatFlags.EndEllipsis).Width);
-        Rectangle text = Rectangle.FromLTRB(parts.Meta.Right - width, parts.Meta.Top, parts.Meta.Right, parts.Meta.Bottom);
-        Rectangle icon = new Rectangle(text.Left - gap - side, parts.Meta.Top, side, side);
-        Color faint = Look.Blend(fill, Look.Muted, MetaShare);
-        if (entry.Saved) Look.Draw(g, Sign.Star, icon, faint);
-        else if (entry.Origin != null && entry.Origin.Icon != null) Look.DrawFaint(g, entry.Origin.Icon, icon, MetaShare);
-        else Look.Draw(g, entry.Origin != null ? Sign.Apps : SignOf(entry), icon, faint);
-        TextRenderer.DrawText(g, meta, Look.NoteFont, text, faint, MetaFlags);
+        // At the right end of the first line, small and faint, so that the entry is what stands out: the program it was
+        // copied in with its icon, or the folder of a saved one; when; what it is. Under the pointer the small buttons
+        // take its place, the one going as the other comes (wanted by the user on 19/10/2026: always there on every
+        // card, they made the list look like a toolbar).
+        float buttons = Math.Max(0, Math.Min(1, 2 * glow - 1)), written = Math.Max(0, 1 - 2 * glow);
+        if (written > 0)
+        {
+            string meta = MetaText(entry);
+            int side = parts.Meta.Height, gap = (int)(PartGap * Zoom);
+            int width = Math.Min(parts.Meta.Width - side - gap, TextRenderer.MeasureText(g, meta, Look.NoteFont, Size.Empty,
+                MetaFlags & ~TextFormatFlags.EndEllipsis).Width);
+            Rectangle text = Rectangle.FromLTRB(parts.Meta.Right - width, parts.Meta.Top, parts.Meta.Right, parts.Meta.Bottom);
+            Rectangle icon = new Rectangle(text.Left - gap - side, parts.Meta.Top, side, side);
+            Color faint = Look.Blend(fill, Look.Muted, MetaShare * written);
+            if (entry.Saved) Look.Draw(g, Sign.Star, icon, faint);
+            else if (entry.Origin != null && entry.Origin.Icon != null) Look.DrawFaint(g, entry.Origin.Icon, icon, MetaShare * written);
+            else Look.Draw(g, entry.Origin != null ? Sign.Apps : SignOf(entry), icon, faint);
+            TextRenderer.DrawText(g, meta, Look.NoteFont, text, faint, MetaFlags);
+        }
 
-        // At the right of the first line: the number, the arrow and the small buttons, grey but on the card the pointer
-        // is on, or the selected one.
+        // Before them, always, the number; then the buttons in their own colours, the arrow faint unless it keeps the
+        // entry at the top (which the name over the cards says too), "more" grey.
         if (entry.Number > 0)
         {
             // The digit that pastes it from anywhere, in a rounded frame in the accent colour.
@@ -807,13 +1017,15 @@ partial class MainForm
             TextRenderer.DrawText(g, entry.Number.ToString(), Font, parts.Number, Look.Accent, TextFormatFlags.HorizontalCenter
                 | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
         }
-        bool awake = selected || glow > 0.5f;
-        Color quiet = Look.Blend(fill, Look.Muted, 0.8f);
-        // The arrow that keeps the entry at the top for a while: in colour if it does, faint otherwise.
-        if (!entry.Saved) DrawPart(g, e.Index, Part.Pin, parts.Pin, Sign.Up, entry.Pinned ? (Color?)null : Look.Blend(fill, Look.Muted, 0.5f), fill);
+        if (buttons <= 0) return;
         foreach (KeyValuePair<Part, Rectangle> button in parts.Buttons)
-            DrawPart(g, e.Index, button.Key, button.Value, PartSignOf(button.Key, entry),
-                awake && button.Key != Part.More || IsHovered(e.Index, button.Key) ? (Color?)null : quiet, fill);
+        {
+            Sign sign = PartSignOf(button.Key, entry);
+            bool hovered = IsHovered(e.Index, button.Key);
+            Color colour = button.Key == Part.More ? (hovered ? Look.Ink : Look.Blend(fill, Look.Muted, 0.8f))
+                : button.Key == Part.Pin && !entry.Pinned && !hovered ? Look.Blend(fill, Look.Muted, 0.5f) : Look.Own(sign);
+            DrawPart(g, hovered, button.Value, sign, Look.Blend(fill, colour, buttons), fill);
+        }
     }
 
     bool IsHovered(int index, Part part)
@@ -821,16 +1033,15 @@ partial class MainForm
         return index == hoverRow && part == hoverPart;
     }
 
-    // A small button of a card: its sign, in its own colour or the one given, on a faint shape under the pointer.
-    void DrawPart(Graphics g, int index, Part part, Rectangle area, Sign sign, Color? colour, Color fill)
+    // A small button of a card: its sign in the colour given, on a faint shape under the pointer.
+    void DrawPart(Graphics g, bool hovered, Rectangle area, Sign sign, Color colour, Color fill)
     {
-        if (IsHovered(index, part))
+        if (hovered)
             using (GraphicsPath path = Look.Rounded(Rectangle.FromLTRB(area.Left, area.Top, area.Right - 1, area.Bottom - 1)))
             using (Brush brush = new SolidBrush(Look.Blend(fill, Look.Ink, 0.08f)))
                 g.FillPath(brush, path);
         int side = Font.Height * 4 / 5;
-        Look.Draw(g, sign, new Rectangle(area.Left + (area.Width - side) / 2, area.Top + (area.Height - side) / 2, side, side),
-            part == Part.More && IsHovered(index, part) ? Look.Ink : colour);
+        Look.Draw(g, sign, new Rectangle(area.Left + (area.Width - side) / 2, area.Top + (area.Height - side) / 2, side, side), colour);
     }
 
     // The numbers an entry can be given, in its menu: the one it has is ticked, and beside each that another entry
@@ -1020,16 +1231,16 @@ partial class MainForm
             wasHidden = !Visible;
         }
         search.Clear();
-        if (!whereLeftBox.Checked) ShowAll();   // unless the option keeps where the list was left
+        if (!whereLeftBox.Checked) ShowHistory();   // unless the option keeps where the list was left
         options.Hide();   // above the list, it would cover it
         RestoreWindow();
         search.Focus();
     }
 
     // All the entries, of every kind, from the latest copy: where the list hotkey opens, wanted by the user.
-    void ShowAll()
+    void ShowHistory()
     {
-        place = new Place(PlaceKind.All);
+        place = new Place(PlaceKind.History);
         cardList.ClearSelected();
         newest = true;
         if (tabs.Selected != 0) tabs.Selected = 0;   // which fills the cards and the sidebar again

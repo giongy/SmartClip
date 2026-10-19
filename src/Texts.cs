@@ -356,6 +356,46 @@ static class Texts
         return where != null && where.IndexOf(word, StringComparison.Ordinal) >= 0;
     }
 
+    // Where the words of a search are in a text, as the search finds them: "citta" in "Città". Ranges of the text
+    // itself, in order, those that touch or overlap joined into one. Empty without words.
+    public static List<CharacterRange> Find(string text, string[] words)
+    {
+        List<CharacterRange> found = new List<CharacterRange>();
+        if (string.IsNullOrEmpty(text) || words.Length == 0) return found;
+        // The text folded a character at a time, each folded one remembering the character it comes from: an accent
+        // that Fold takes away belongs to the letter before it.
+        StringBuilder folded = new StringBuilder(text.Length);
+        List<int> from = new List<int>(text.Length + 1);
+        for (int i = 0; i < text.Length; )
+        {
+            int length = char.IsHighSurrogate(text[i]) && i + 1 < text.Length && char.IsLowSurrogate(text[i + 1]) ? 2 : 1;
+            string piece = text[i] < 0x80 ? char.ToLowerInvariant(text[i]).ToString() : Fold(text.Substring(i, length));
+            foreach (char c in piece)
+            {
+                folded.Append(c);
+                from.Add(i);
+            }
+            i += length;
+        }
+        from.Add(text.Length);
+        string plain = folded.ToString();
+        List<CharacterRange> each = new List<CharacterRange>();
+        foreach (string word in words)
+            for (int at = plain.IndexOf(word, StringComparison.Ordinal); at >= 0 && word.Length > 0;
+                at = plain.IndexOf(word, at + word.Length, StringComparison.Ordinal))
+                each.Add(new CharacterRange(from[at], Math.Max(1, from[at + word.Length] - from[at])));
+        each.Sort(delegate(CharacterRange a, CharacterRange b) { return a.First.CompareTo(b.First); });
+        foreach (CharacterRange range in each)
+        {
+            int last = found.Count - 1;
+            if (last >= 0 && range.First <= found[last].First + found[last].Length)
+                found[last] = new CharacterRange(found[last].First,
+                    Math.Max(found[last].First + found[last].Length, range.First + range.Length) - found[last].First);
+            else found.Add(range);
+        }
+        return found;
+    }
+
     // A text as the search compares it: without accents and in small letters, "Città" as "citta". Done once per
     // text, it makes the search many times faster than comparing while ignoring them.
     public static string Fold(string text)

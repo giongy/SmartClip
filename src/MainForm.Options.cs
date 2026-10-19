@@ -29,7 +29,9 @@ partial class MainForm
         };
         pageList.SelectedIndexChanged += delegate { ShowPage(); };
         pageList.LightUnderPointer();
-        Look.Wrap(pageList, ListPadding);   // the window of the options takes the card it is in
+        // The window of the options takes the card it is in, whose edge stays grey: in the accent colour whenever the
+        // column had the focus, it stood out more than the page.
+        Look.Wrap(pageList, ListPadding).Quiet = true;
         pagePane.SetBounds(Edge + NavWidth + NavGap, Edge, PaneWidth, AreaHeight);
 
         int top = Page(Strings.TypingTitle, Sign.Keys);

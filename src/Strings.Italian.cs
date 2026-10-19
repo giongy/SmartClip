@@ -18,7 +18,7 @@ static partial class Strings
         PausedEmpty = "In pausa: quello che copi non viene ricordato"; CopyHint = "Quello che copi comparirà qui";
         NoSaved = "Nessun testo salvato";
         NewTip = "Scrive un testo nuovo da tenere, con un nome o senza ({0}).";
-        AllPlace = "Tutti"; PinnedPlace = "In alto"; SourcesPlace = "Provenienza"; GuideItem = "Guida";
+        HistoryPlace = "Cronologia"; PinnedPlace = "In alto"; SourcesPlace = "Provenienza"; GuideItem = "Guida";
         AllKinds = "Tutti"; TextKinds = "Testo"; CodeKinds = "Codice"; LinkKinds = "Link"; PictureKinds = "Immagini";
         TextBadge = "Testo"; CodeBadge = "Codice"; LinkBadge = "Link"; PictureBadge = "Immagine"; FormattedBadge = "Formattato";
         CopyButton = "Copia"; ShowFull = "Anteprima"; MoreItem = "Altro";
@@ -121,7 +121,8 @@ static partial class Strings
             + "copia la password, premi qui e clicca nel campo della finestra remota.\n"
             + "Oppure premi {0} direttamente nel campo.";
         SearchTip = "Scrivi per cercare tra le voci del posto: parole in qualsiasi ordine, senza badare a\n"
-            + "maiuscole e accenti. Le frecce scorrono le voci.\n"
+            + "maiuscole e accenti. In «" + HistoryPlace + "» anche i testi salvati, dopo ciò che hai copiato.\n"
+            + "Le frecce scorrono le voci.\n"
             + "«" + CopyButton + "», {0} o un doppio clic rimettono la voce negli appunti: poi la incolli\n"
             + "con Ctrl+V o la digiti con {1}. Con «" + CopyButton + "» la finestra resta aperta, con {0} o un\n"
             + "doppio clic torni dov'eri. Un clic seleziona soltanto; il tasto destro apre il menu della voce.\n"
@@ -183,8 +184,8 @@ static partial class Strings
         AboutNote = "Software libero con licenza MIT";
         TypeNote = "Digita subito nella finestra attiva";
         PickOption = "Apri l'elenco"; PickNote = "Porta questa finestra in primo piano da ogni programma";
-        WhereLeftOption = "Riapri dove l'hai lasciato"; WhereLeftNote = "Altrimenti l'elenco si apre su " + AllPlace;
-        WhereLeftTip = "Spenta, la scorciatoia dell'elenco lo apre sempre su " + AllPlace + ", di ogni tipo, con la ricerca vuota.\n"
+        WhereLeftOption = "Riapri dove l'hai lasciato"; WhereLeftNote = "Altrimenti l'elenco si apre su " + HistoryPlace;
+        WhereLeftTip = "Spenta, la scorciatoia dell'elenco lo apre sempre su " + HistoryPlace + ", di ogni tipo, con la ricerca vuota.\n"
             + "Attiva, mostra il posto e il tipo su cui l'hai lasciato.";
         QuickOption = "Incolla per numero"; QuickNote = "Incolla le voci che hanno una scorciatoia";
         HistoryOption = "Ricorda i testi e le immagini copiati"; HistoryNote = "Ciò che copi mentre il programma è aperto";
@@ -320,7 +321,7 @@ static partial class Strings
 
             "# L'elenco",
             "A sinistra c'è la barra laterale, a destra le schede delle voci del posto scelto lì:",
-            "- «" + AllPlace + "»: tutto, copiato e salvato, dal più nuovo, ogni giorno sotto il suo nome; le voci tenute "
+            "- «" + HistoryPlace + "»: ciò che hai copiato, dal più nuovo, ogni giorno sotto il suo nome; le voci tenute "
                 + "in alto vengono prima delle altre.",
             "- «" + PinnedPlace + "»: solo le voci copiate tenute in alto.",
             "- «" + SavedTitle + "»: i testi salvati, per nome. Sotto ci sono le loro cartelle.",
@@ -328,17 +329,20 @@ static partial class Strings
                 + "lui. Un clic su uno mostra solo ciò che hai copiato lì; un clic su «" + SourcesPlace + "» apre o chiude l'elenco. "
                 + "I programmi di un server Citrix prendono tutti il nome di Citrix su questo PC, ma ognuno tiene la sua icona.",
             "Il pulsante in cima alla barra laterale la riduce alle sue icone, e le ridà i nomi: fermando il puntatore su "
-                + "un'icona ne leggi il nome. Trascinando il bordo tra la barra e le schede la allarghi o la stringi; "
+                + "un'icona ne leggi il nome, e ogni cartella mostra l'iniziale del suo nome. Trascinando il bordo tra la barra e le schede la allarghi o la stringi; "
                 + "stretta più di quanto può, si riduce alle icone.",
             "Le schede sopra le voci (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") mostrano un solo tipo di voce. «" + CodeKinds + "» è un'ipotesi fatta dall'aspetto delle "
                 + "righe: ogni tanto ci finisce un testo, o un pezzo di codice tra i testi. Quando sbaglia, «" + KindMenu
                 + "», nel menu di un testo, dice che cos'è: copiato di nuovo o salvato, resta così.",
-            "Ogni scheda mostra prima la voce; a destra, prima dei pulsanti o sotto, in piccolo e tenue, il programma in cui è stata copiata, con la sua icona (o "
-                + "la cartella di un testo salvato), l'ora della copia e che cos'è. A destra, piccoli segni la mostrano per "
-                + "intero, la copiano, la salvano o la modificano, la eliminano e aprono il suo menu: fermando il puntatore su uno, dice che cosa fa.",
+            "Ogni scheda mostra prima la voce; a destra, in piccolo e tenue, il programma in cui è stata copiata, con la sua icona (o "
+                + "la cartella di un testo salvato), l'ora della copia e che cos'è, se non è un testo semplice. Con il puntatore "
+                + "sulla scheda, al loro posto compaiono piccoli segni: la tengono in alto, la mostrano per intero, la copiano, la "
+                + "salvano o la modificano, la eliminano e aprono il suo menu; fermando il puntatore su uno, dice che cosa fa.",
             "- Scrivi nella casella in alto per cercare tra le voci del posto: le parole valgono in qualsiasi "
-                + "ordine, senza badare a maiuscole e accenti.",
+                + "ordine, senza badare a maiuscole e accenti. In «" + HistoryPlace + "» vengono anche i testi salvati che "
+                + "corrispondono, dopo ciò che hai copiato, sotto «" + SavedTitle + "». Le parole trovate sono evidenziate "
+                + "sulle schede; trovate molto avanti in un testo lungo, la scheda ne mostra quel punto.",
             "- Un clic su una scheda la seleziona. Il segno della copia («" + CopyButton + "») mette la voce negli appunti e lascia la "
                 + "finestra aperta, così puoi ancora salvarla o eliminarla.",
             "- " + EnterKeyName + " o un doppio clic la mettono negli appunti e, se avevi aperto l'elenco con " + pick
@@ -437,7 +441,7 @@ static partial class Strings
             "- con Bloc Maiusc attivo non si digita: va spento prima.",
 
             "# I tasti",
-            pick + "\tApre l'elenco su " + AllPlace + ", da qualsiasi programma.",
+            pick + "\tApre l'elenco su " + HistoryPlace + ", da qualsiasi programma.",
             type + "\tDigita subito gli appunti nella finestra attiva.",
             MainForm.NumbersName + "\tIncolla nella finestra attiva la voce con quel numero.",
             "F1\tApre questa guida.",

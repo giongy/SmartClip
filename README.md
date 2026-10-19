@@ -62,8 +62,8 @@ window. A remote desktop client running full screen usually captures every short
 The main window looks like the apps of Windows 11: a sidebar on the left, the entries as cards on the right. Drag
 the edge of the sidebar to make it wider or narrower; the button at its top reduces it to its icons.
 
-- **All**: everything, copied and saved, newest first, each day under its name. The entries kept at the top come
-  first.
+- **History**: what you copied, newest first, each day under its name. The entries kept at the top come first.
+  Searching, the saved texts that match come after them, under **Saved**.
 - **Pinned**: only the copied entries kept at the top.
 - **Saved**: the texts you saved, by name, which stay until you delete them. Their folders are under it.
 - **Source**: the programs you copied in, that of your latest copy first, each with its icon and how many entries come from it; choose one to see
@@ -74,9 +74,10 @@ Above the cards, tabs show one kind of entry only: **All**, **Text**, **Code**, 
 told from how the lines look, so now and then it guesses wrong: **Type**, in the menu of a text, says what it
 is, and it stays so, also copied again or saved.
 
-Each card is compact: the entry first, large; on its right, before the buttons (or under them in a narrow window), small and faint, the program it was copied in with its icon (or
-the folder of a saved text), the time and what it is. On the right of the entry are its number, its arrow and small
-signs that show it whole, copy it, save or edit it, delete it and open its menu; their tooltips name them. Copied entries are texts and pictures
+Each card is compact: the entry first, large; on its right its number, if it has one, and small and faint the
+program it was copied in with its icon (or the folder of a saved text), the time and what it is, unless it is plain
+text. With the pointer on the card, small signs take their place: they keep it at the top, show it whole, copy it,
+save or edit it, delete it and open its menu; their tooltips name them. Copied entries are texts and pictures
 (screenshots, for example), each picture with a small preview. They stay for the number of days set in the
 options, also across restarts; the list shows the 200 most recent, and the search reaches the rest. Copied
 pictures take at most 200 MB: beyond that the oldest go, even before their days are over, and a red bar under the
@@ -85,7 +86,7 @@ only the name and the content stays hidden, which suits a password; without, the
 
 | Key | Action |
 | --- | --- |
-| Typing | Filters the cards of the place. Words can come in any order; case and accents are ignored. |
+| Typing | Filters the cards of the place, and in **History** finds the saved texts too. Words can come in any order; case and accents are ignored. The words found are highlighted on the cards; found far into a long text, the card shows that part of it |
 | Up / Down | Moves through the cards |
 | Ctrl+F | Takes the cursor to the search box, from anywhere in the window |
 | Click | Selects the card |
@@ -145,7 +146,7 @@ picture, puts on the clipboard the text in it, read by the text recognition buil
 comes into the list like any copy (from a saved picture it is marked private). Small screen text can come out with
 a few mistakes.
 
-Press **Ctrl+D** in any program to bring the window up on **All**, every kind, with your latest copy selected and the
+Press **Ctrl+D** in any program to bring the window up on **History**, every kind, with your latest copy selected and the
 cursor in the search box (**Open where you left it**, among the hotkeys in the options, keeps the place and the kind instead). After you choose an
 entry the focus returns to the program you were in, and the window hides again if it was hidden. Esc goes back
 without choosing.
@@ -184,7 +185,7 @@ on an option shows its full explanation.
 | Alt codes for symbols with no key | Type symbols that your keyboard has no key for with Alt+numpad codes instead of Unicode input. Works only when the remote machine runs Windows. |
 | Type clipboard, with a button showing **Ctrl+Alt+V** | Enable the global hotkey that types the clipboard. The button shows its keys: click it and press the new ones to change them. |
 | Open the list, with a button showing **Ctrl+D** | Enable the global hotkey that brings up the window with the list. While it is on, those keys no longer reach other programs: change them with the button, or turn the hotkey off. |
-| Open where you left it | Off by default: Ctrl+D always opens the list on **All**, every kind, with the search empty. On, it shows the place and the kind you left it on. |
+| Open where you left it | Off by default: Ctrl+D always opens the list on **History**, every kind, with the search empty. On, it shows the place and the kind you left it on. |
 | Paste by number, with a button showing **Ctrl+Shift+1…9** | Enable the keys that paste the numbered entries. Only the keys of the numbers in use are taken from other programs. The button takes the keys to hold: press them with any digit; it says which of the nine another program already uses. Del goes back to Ctrl+Shift. |
 | Remember copied texts and pictures | Keep the copied texts and pictures in the list. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. Turning it off also deletes the history on disk. |
 | Days kept | For how many days, 0 to 365, what you copy stays in the history, also after the program closes, today being the first: with 0 only what was copied today stays. Entries kept at the top go too when their days are over; saved texts never do. |

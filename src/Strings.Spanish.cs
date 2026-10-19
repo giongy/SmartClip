@@ -18,7 +18,7 @@ static partial class Strings
         PausedEmpty = "En pausa: lo que copias no se recuerda"; CopyHint = "Lo que copies aparecerá aquí";
         NoSaved = "Ningún texto guardado";
         NewTip = "Escribe un texto nuevo para conservar, con nombre o sin él ({0}).";
-        AllPlace = "Todo"; PinnedPlace = "Arriba"; SourcesPlace = "Origen"; GuideItem = "Ayuda";
+        HistoryPlace = "Historial"; PinnedPlace = "Arriba"; SourcesPlace = "Origen"; GuideItem = "Ayuda";
         AllKinds = "Todo"; TextKinds = "Texto"; CodeKinds = "Código"; LinkKinds = "Enlaces"; PictureKinds = "Imágenes";
         TextBadge = "Texto"; CodeBadge = "Código"; LinkBadge = "Enlace"; PictureBadge = "Imagen"; FormattedBadge = "Con formato";
         CopyButton = "Copiar"; ShowFull = "Vista previa"; MoreItem = "Más";
@@ -122,7 +122,8 @@ static partial class Strings
             + "copia la contraseña, pulsa aquí y haz clic en el campo de la ventana remota.\n"
             + "O pulsa {0} directamente en el campo.";
         SearchTip = "Escribe para buscar entre las entradas del lugar: palabras en cualquier orden, sin importar\n"
-            + "mayúsculas ni acentos. Las flechas recorren las entradas.\n"
+            + "mayúsculas ni acentos. En «" + HistoryPlace + "» también los textos guardados, después de lo copiado.\n"
+            + "Las flechas recorren las entradas.\n"
             + "«" + CopyButton + "», {0} o un doble clic devuelven la entrada al portapapeles: luego la pegas\n"
             + "con Ctrl+V o la tecleas con {1}. Con «" + CopyButton + "» la ventana sigue abierta, con {0} o un doble\n"
             + "clic vuelves a donde estabas. Un clic solo selecciona; el clic derecho abre el menú de la entrada.\n"
@@ -183,8 +184,8 @@ static partial class Strings
         AboutNote = "Software libre con licencia MIT";
         TypeNote = "Teclea enseguida en la ventana activa";
         PickOption = "Abrir la lista"; PickNote = "Trae esta ventana al frente desde cualquier programa";
-        WhereLeftOption = "Abrir donde la dejaste"; WhereLeftNote = "Si no, la lista se abre en " + AllPlace;
-        WhereLeftTip = "Desactivada, el atajo de la lista la abre siempre en " + AllPlace + ", de todos los tipos, con la búsqueda vacía.\n"
+        WhereLeftOption = "Abrir donde la dejaste"; WhereLeftNote = "Si no, la lista se abre en " + HistoryPlace;
+        WhereLeftTip = "Desactivada, el atajo de la lista la abre siempre en " + HistoryPlace + ", de todos los tipos, con la búsqueda vacía.\n"
             + "Activada, muestra el lugar y el tipo en que la dejaste.";
         QuickOption = "Pegar por número"; QuickNote = "Pega las entradas que tienen un atajo";
         HistoryOption = "Recordar textos e imágenes copiados"; HistoryNote = "Lo que copias mientras el programa está abierto";
@@ -323,7 +324,7 @@ static partial class Strings
 
             "# La lista",
             "A la izquierda está la barra lateral, a la derecha las tarjetas de las entradas del lugar elegido en ella:",
-            "- «" + AllPlace + "»: todo, copiado y guardado, de lo más nuevo a lo más antiguo, cada día bajo su nombre; las "
+            "- «" + HistoryPlace + "»: lo que copiaste, de lo más nuevo a lo más antiguo, cada día bajo su nombre; las "
                 + "entradas mantenidas arriba van antes que las demás.",
             "- «" + PinnedPlace + "»: solo las entradas copiadas mantenidas arriba.",
             "- «" + SavedTitle + "»: los textos guardados, por nombre. Debajo están sus carpetas.",
@@ -331,18 +332,21 @@ static partial class Strings
                 + "de él. Un clic en uno muestra solo lo que copiaste allí; un clic en «" + SourcesPlace + "» abre o cierra la lista. "
                 + "Los programas de un servidor Citrix toman todos el nombre de Citrix en este PC, pero cada uno conserva su icono.",
             "El botón en lo alto de la barra lateral la reduce a sus iconos, y le devuelve los nombres: si dejas el puntero "
-                + "sobre un icono, ves su nombre. Arrastrando el borde entre la barra y las tarjetas la ensanchas o la "
+                + "sobre un icono, ves su nombre, y cada carpeta muestra la inicial de su nombre. Arrastrando el borde entre la barra y las tarjetas la ensanchas o la "
                 + "estrechas; más estrecha de lo que puede, se reduce a los iconos.",
             "Las pestañas sobre las tarjetas (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") muestran un solo tipo de entrada. «" + CodeKinds + "» es una suposición hecha por el "
                 + "aspecto de las líneas: de vez en cuando acaba ahí un texto, o un trozo de código entre los textos. "
                 + "Cuando se equivoca, «" + KindMenu + "», en el menú de un texto, dice qué es: copiado de nuevo o "
                 + "guardado, se queda así.",
-            "Cada tarjeta muestra primero la entrada; a la derecha, antes de los botones o debajo, en pequeño y tenue, el programa en el que se copió, con su icono (o "
-                + "la carpeta de un texto guardado), la hora de la copia y qué es. A la derecha, pequeños signos la muestran "
-                + "entera, la copian, la guardan o la editan, la eliminan y abren su menú: dejando el puntero sobre uno, dice qué hace.",
+            "Cada tarjeta muestra primero la entrada; a la derecha, en pequeño y tenue, el programa en el que se copió, con su icono (o "
+                + "la carpeta de un texto guardado), la hora de la copia y qué es, si no es un texto simple. Con el puntero sobre "
+                + "la tarjeta, en su lugar aparecen pequeños signos: la mantienen arriba, la muestran entera, la copian, la "
+                + "guardan o la editan, la eliminan y abren su menú; dejando el puntero sobre uno, dice qué hace.",
             "- Escribe en la casilla de arriba para buscar entre las entradas del lugar: las palabras valen en cualquier "
-                + "orden, sin importar mayúsculas ni acentos.",
+                + "orden, sin importar mayúsculas ni acentos. En «" + HistoryPlace + "» aparecen también los textos guardados "
+                + "que coinciden, después de lo copiado, bajo «" + SavedTitle + "». Las palabras encontradas se resaltan "
+                + "en las tarjetas; encontradas muy adelante en un texto largo, la tarjeta muestra esa parte.",
             "- Un clic en una tarjeta la selecciona. El signo de copiar («" + CopyButton + "») pone la entrada en el portapapeles y deja la "
                 + "ventana abierta, para que aún puedas guardarla o eliminarla.",
             "- " + EnterKeyName + " o un doble clic la ponen en el portapapeles y, si habías abierto la lista con "
@@ -442,7 +446,7 @@ static partial class Strings
             "- con Bloq Mayús activado no se teclea: hay que desactivarlo antes.",
 
             "# Teclas",
-            pick + "\tAbre la lista en " + AllPlace + ", desde cualquier programa.",
+            pick + "\tAbre la lista en " + HistoryPlace + ", desde cualquier programa.",
             type + "\tTeclea enseguida el portapapeles en la ventana activa.",
             MainForm.NumbersName + "\tPega en la ventana activa la entrada con ese número.",
             "F1\tAbre esta guía.",

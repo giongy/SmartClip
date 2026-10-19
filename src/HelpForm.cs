@@ -35,7 +35,9 @@ class HelpForm : Window
             if (Is(Lines[i], Heading)) topics.Items.Add(i);
         topics.SetBounds(Edge, Edge, TopicsWidth, TextHeight);
         Look.Field(topics);
-        Panel topicsCard = Look.Wrap(topics, TextPadding / 2);
+        // Its edge, and that of the text, stay grey: in the accent colour with the focus, they stood out more than the text.
+        Card topicsCard = Look.Wrap(topics, TextPadding / 2);
+        topicsCard.Quiet = true;
         topics.DrawItem += delegate(object sender, DrawItemEventArgs e)
         {
             if (e.Index >= 0)
@@ -52,7 +54,8 @@ class HelpForm : Window
         text.TabStop = false;
         text.SetBounds(topicsCard.Right + Gap, Edge, TextWidth, TextHeight);
         Look.Field(text);
-        Panel card = Look.Wrap(text, TextPadding);
+        Card card = Look.Wrap(text, TextPadding);
+        card.Quiet = true;
         Rail.Over(text);
 
         int buttonTop = card.Bottom + Edge;
