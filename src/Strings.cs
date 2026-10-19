@@ -69,6 +69,10 @@ static partial class Strings
         NoneOfKind = "Nothing of this kind";
     public static string SourcesTip = "The programs you copied in: choose one to see only what you copied there.";
     public static string PinnedTip = "Copied entries kept at the top for a while: they still go when their days are over.";
+    public static string ShortcutsPlace = "Shortcuts";
+    public static string ShortcutsTip = "Entries with a number, which pastes them from anywhere: a click on the number changes it or takes it away.";
+    public static string NoShortcuts = "No shortcuts: “{0}”, in the menu of an entry, gives it a number that pastes it from anywhere with {1}";
+    public static string NumberTip = "{0} pastes it from anywhere: click to change it or take it away";
     public static string NarrowSideTip = "Reduces the sidebar to its icons. Its edge can also be dragged, to make it wider or narrower.";
     public static string WideSideTip = "Shows the names in the sidebar again.";
     public static string Error = "Error: {0}";
@@ -382,6 +386,8 @@ static partial class Strings
             "- " + HistoryPlace + ": what you copied, newest first, each day under its name; the entries kept at the top come "
                 + "before the others.",
             "- " + PinnedPlace + ": only the copied entries kept at the top.",
+            "- " + ShortcutsPlace + ": the entries with a number, copied and saved, by number. A click on the number of a card "
+                + "changes it or takes it away, here and everywhere else.",
             "- " + SavedTitle + ": the saved texts, by name. Under it are their folders.",
             "- " + SourcesPlace + ": the programs you copied in, that of the latest copy first, each with its icon and how many entries come from it. A "
                 + "click on one shows only what you copied there; a click on " + SourcesPlace + " opens or closes the list. "

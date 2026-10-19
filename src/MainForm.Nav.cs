@@ -4,9 +4,9 @@ using System.Drawing;
 using System.Globalization;
 using System.Windows.Forms;
 
-// What the sidebar lists: all the entries, those kept at the top, the saved ones and their folders, the programs
-// things were copied in.
-enum PlaceKind { History, Pinned, Saved, Folder, Sources, Source }
+// What the sidebar lists: the history, those kept at the top, those with a number, the saved ones and their folders,
+// the programs things were copied in.
+enum PlaceKind { History, Pinned, Shortcuts, Saved, Folder, Sources, Source }
 
 // A row of the sidebar. Sources only gathers the programs under it: it opens and closes, and shows nothing itself.
 class Place
@@ -37,6 +37,7 @@ class Place
             {
                 case PlaceKind.History: return Strings.HistoryPlace;
                 case PlaceKind.Pinned: return Strings.PinnedPlace;
+                case PlaceKind.Shortcuts: return Strings.ShortcutsPlace;
                 case PlaceKind.Saved: return Strings.SavedTitle;
                 case PlaceKind.Folder: return Texts.Leaf(Path);
                 case PlaceKind.Sources: return Strings.SourcesPlace;
@@ -59,6 +60,7 @@ class Place
             {
                 case PlaceKind.History: return Sign.History;
                 case PlaceKind.Pinned: return Sign.Up;
+                case PlaceKind.Shortcuts: return Sign.Keys;
                 case PlaceKind.Saved: return Sign.Star;
                 case PlaceKind.Folder: return Sign.Folder;
                 default: return Sign.Apps;
@@ -207,7 +209,7 @@ partial class MainForm
         ResumeLayout();
         // Reduced, the rows say their names one at a time (RowTip); with the names, the list has a tooltip of its own.
         HideHoverTip();
-        tips.SetToolTip(navList, sideNarrow ? null : Strings.PinnedTip + "\n" + Strings.SourcesTip);
+        tips.SetToolTip(navList, sideNarrow ? null : Strings.PinnedTip + "\n" + Strings.ShortcutsTip + "\n" + Strings.SourcesTip);
         Tip(sideNarrow ? Strings.WideSideTip : Strings.NarrowSideTip, sideButton);
         navList.Invalidate();
         footList.Invalidate();
@@ -369,7 +371,7 @@ partial class MainForm
                 held[group] = count + 1;
             }
         }
-        int copied = 0, pinned = 0;
+        int copied = 0, pinned = 0, numbered = 0;
         List<Source> sources = new List<Source>();
         Change(delegate
         {
@@ -378,6 +380,7 @@ partial class MainForm
             atTop.Pinned = true;
             pinned = clips.CopiedCount(atTop);
             sources = clips.Sources();
+            numbered = clips.Numbers().Count;
         });
 
         Place all = new Place(PlaceKind.History);
@@ -386,7 +389,9 @@ partial class MainForm
         kept.Count = pinned;
         Place savedRow = new Place(PlaceKind.Saved);
         savedRow.Count = saved;
-        rows.AddRange(new Place[] { all, kept, savedRow });
+        Place shortcuts = new Place(PlaceKind.Shortcuts);
+        shortcuts.Count = numbered;
+        rows.AddRange(new Place[] { all, kept, shortcuts, savedRow });
         // The folders, each under the one it is in; those inside a closed one are not there.
         List<Entry> folders = entries.FindAll(delegate(Entry e) { return e.IsGroup; });
         savedRow.Opens = folders.Count > 0;

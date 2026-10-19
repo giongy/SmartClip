@@ -27,6 +27,10 @@ static partial class Strings
         NoneOfKind = "Niente di questo tipo";
         SourcesTip = "I programmi in cui hai copiato: scegline uno per vedere solo ciò che hai copiato lì.";
         PinnedTip = "Le voci copiate tenute in alto per un po': se ne vanno comunque quando scadono i loro giorni.";
+        ShortcutsPlace = "Scorciatoie";
+        ShortcutsTip = "Le voci con un numero, che le incolla da ovunque: un clic sul numero lo cambia o lo toglie.";
+        NoShortcuts = "Nessuna scorciatoia: «{0}», nel menu di una voce, le dà un numero che la incolla da ovunque con {1}";
+        NumberTip = "{0} la incolla da ovunque: clic per cambiarlo o toglierlo";
         NarrowSideTip = "Riduce la barra laterale alle sue icone. Se ne può anche trascinare il bordo, per allargarla o stringerla.";
         WideSideTip = "Mostra di nuovo i nomi nella barra laterale.";
         Error = "Errore: {0}";
@@ -324,6 +328,8 @@ static partial class Strings
             "- «" + HistoryPlace + "»: ciò che hai copiato, dal più nuovo, ogni giorno sotto il suo nome; le voci tenute "
                 + "in alto vengono prima delle altre.",
             "- «" + PinnedPlace + "»: solo le voci copiate tenute in alto.",
+            "- «" + ShortcutsPlace + "»: le voci con un numero, copiate e salvate, in ordine di numero. Un clic sul numero di una "
+                + "scheda lo cambia o lo toglie, qui come altrove.",
             "- «" + SavedTitle + "»: i testi salvati, per nome. Sotto ci sono le loro cartelle.",
             "- «" + SourcesPlace + "»: i programmi in cui hai copiato, prima quello della copia più recente, ognuno con la sua icona e quante voci vengono da "
                 + "lui. Un clic su uno mostra solo ciò che hai copiato lì; un clic su «" + SourcesPlace + "» apre o chiude l'elenco. "

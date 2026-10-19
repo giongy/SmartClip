@@ -7,7 +7,7 @@ using System.Threading;
 using System.Windows.Forms;
 
 // A part of a card, where a click does something of its own.
-enum Part { None, Body, Show, Copy, Save, Delete, Pin, More }
+enum Part { None, Body, Show, Copy, Save, Delete, Pin, More, Number }
 
 // The name of a day among the cards: those under it were copied, or saved, that day.
 class Heading
@@ -175,6 +175,12 @@ partial class MainForm
                 case Part.Delete: DeleteSelected(); break;
                 case Part.Pin: TogglePin(entry); break;
                 case Part.More: listMenu.Show(cardList, e.Location); break;
+                case Part.Number:
+                    // The numbers it can have, as in its menu: another one, or none.
+                    ListNumbers(numberItem, entry);
+                    Rectangle number = Lay(entry, cardList.GetItemRectangle(index)).Number;
+                    numberItem.DropDown.Show(cardList, new Point(number.Left, number.Bottom));
+                    break;
             }
         };
         cardList.MouseDoubleClick += delegate(object sender, MouseEventArgs e)
@@ -202,7 +208,8 @@ partial class MainForm
                 HideHoverTip();
                 return;
             }
-            Rectangle button = Lay(entry, cardList.GetItemRectangle(index)).Buttons[part];
+            CardParts parts = Lay(entry, cardList.GetItemRectangle(index));
+            Rectangle button = part == Part.Number ? parts.Number : parts.Buttons[part];
             HoverTip(cardList, index * 16 + (int)part, text, new Point(button.Left + (button.Width - Look.TipSize(text).Width) / 2,
                 button.Bottom + (int)(Gap * Zoom)));
         };
@@ -309,12 +316,16 @@ partial class MainForm
         Category? kind = TabKinds[tabs.Selected];
         List<Entry> copied = new List<Entry>();
         int total = 0;
-        if (place.HasCopied)
+        // Shortcuts: the entries with a number, copied or saved (wanted by the user on 19/10/2026, to see and manage them
+        // in one place).
+        bool numbered = place.Kind == PlaceKind.Shortcuts;
+        if (place.HasCopied || numbered)
         {
             Sieve sieve = new Sieve();
             sieve.Words = words;
             sieve.Category = kind;
             sieve.Pinned = place.Kind == PlaceKind.Pinned;
+            sieve.Numbered = numbered;
             sieve.App = place.Kind == PlaceKind.Source ? place.Id : 0;
             Change(delegate
             {
@@ -325,10 +336,10 @@ partial class MainForm
         // In History only those a search finds (wanted by the user on 19/10/2026: what is saved is not history, but the list
         // hotkey, a name and Enter must still find a saved password).
         List<Entry> saved = new List<Entry>();
-        if (place.HasSaved || place.Kind == PlaceKind.History && words.Length > 0)
+        if (place.HasSaved || numbered || place.Kind == PlaceKind.History && words.Length > 0)
             foreach (Entry entry in entries)
                 if (!entry.IsGroup && (place.Kind != PlaceKind.Folder || Texts.Within(entry.Group, place.Path))
-                    && (!kind.HasValue || entry.Category == kind.Value) && Texts.Matches(entry, words))
+                    && (!numbered || entry.Number > 0) && (!kind.HasValue || entry.Category == kind.Value) && Texts.Matches(entry, words))
                     saved.Add(entry);
         total += saved.Count;
         rows = Arrange(copied, saved);
@@ -344,23 +355,33 @@ partial class MainForm
         bool searching = words.Length > 0;
         emptyNote.Text = searching ? Strings.NoResults : kind.HasValue ? Strings.NoneOfKind
             : place.Kind == PlaceKind.Pinned ? Strings.NoPinned
+            : numbered ? string.Format(Strings.NoShortcuts, Strings.NumberMenu, NumbersName)
             : place.Kind == PlaceKind.Folder ? Strings.EmptyFolder : place.Kind == PlaceKind.Saved ? Strings.NoSaved
             : !historyBox.Checked ? Strings.HistoryOffEmpty : paused ? Strings.PausedEmpty : Strings.CopyHint;
         emptyNote.Sign = searching ? Sign.Search : kind.HasValue ? Sign.Search : place.Kind == PlaceKind.Pinned ? Sign.Up
-            : place.HasSaved ? Sign.Star
+            : numbered ? Sign.Keys : place.HasSaved ? Sign.Star
             : !historyBox.Checked ? Sign.History : paused ? Sign.Pause : Sign.Paste;
         emptyNote.Visible = shownCount == 0;
         FillNav();   // the counts of the sidebar, and the programs, may have changed
     }
 
-    // The cards in their order. In Saved and its folders the texts by name; elsewhere those kept at the top first,
-    // then the others from the newest, each day under its name, and last, by name under their own, the saved texts a
-    // search in History found.
+    // The cards in their order. In Shortcuts by number; in Saved and its folders the texts by name; elsewhere those kept
+    // at the top first, then the others from the newest, each day under its name, and last, by name under their own,
+    // the saved texts a search in History found.
     List<object> Arrange(List<Entry> copied, List<Entry> saved)
     {
         List<object> arranged = new List<object>();
         headed = place.HasCopied;
         saved.Sort(delegate(Entry a, Entry b) { return StringComparer.CurrentCultureIgnoreCase.Compare(a.Label, b.Label); });
+        if (place.Kind == PlaceKind.Shortcuts)
+        {
+            // Copied and saved together, by their numbers.
+            List<Entry> both = new List<Entry>(copied);
+            both.AddRange(saved);
+            both.Sort(delegate(Entry a, Entry b) { return a.Number.CompareTo(b.Number); });
+            arranged.AddRange(both.ToArray());
+            return arranged;
+        }
         if (!headed)
         {
             arranged.AddRange(saved.ToArray());
@@ -897,6 +918,7 @@ partial class MainForm
             case Part.Delete: return Strings.Delete;
             case Part.Pin: return entry.Pinned ? Strings.Unpin : Strings.Pin;
             case Part.More: return Strings.MoreItem;
+            case Part.Number: return string.Format(Strings.NumberTip, NumberName(entry.Number));
             default: return null;
         }
     }
@@ -928,6 +950,7 @@ partial class MainForm
         CardParts parts = Lay(entry, cardList.GetItemRectangle(index));
         foreach (KeyValuePair<Part, Rectangle> button in parts.Buttons)
             if (button.Value.Contains(where)) return button.Key;
+        if (entry.Number > 0 && parts.Number.Contains(where)) return Part.Number;
         return parts.Card.Contains(where) ? Part.Body : Part.None;
     }
 
@@ -1011,9 +1034,14 @@ partial class MainForm
         if (entry.Number > 0)
         {
             // The digit that pastes it from anywhere, in a rounded frame in the accent colour.
+            // A click on it changes it or takes it away: under the pointer it is filled faintly, as the buttons are.
             using (GraphicsPath shape = Look.Rounded(Rectangle.FromLTRB(parts.Number.Left, parts.Number.Top, parts.Number.Right - 1, parts.Number.Bottom - 1)))
             using (Pen edge = new Pen(Look.Accent))
+            using (Brush lit = new SolidBrush(Look.Blend(fill, Look.Accent, 0.15f)))
+            {
+                if (IsHovered(e.Index, Part.Number)) g.FillPath(lit, shape);
                 g.DrawPath(edge, shape);
+            }
             TextRenderer.DrawText(g, entry.Number.ToString(), Font, parts.Number, Look.Accent, TextFormatFlags.HorizontalCenter
                 | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding);
         }

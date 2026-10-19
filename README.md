@@ -65,6 +65,8 @@ the edge of the sidebar to make it wider or narrower; the button at its top redu
 - **History**: what you copied, newest first, each day under its name. The entries kept at the top come first.
   Searching, the saved texts that match come after them, under **Saved**.
 - **Pinned**: only the copied entries kept at the top.
+- **Shortcuts**: the entries with a number (see *Paste by number*), copied and saved, by number. A click on the number
+  of a card changes it or takes it away, here and everywhere else.
 - **Saved**: the texts you saved, by name, which stay until you delete them. Their folders are under it.
 - **Source**: the programs you copied in, that of your latest copy first, each with its icon and how many entries come from it; choose one to see
   only what you copied there. The programs of a Citrix server all go by the name of Citrix on your PC, each with

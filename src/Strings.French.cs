@@ -28,6 +28,10 @@ static partial class Strings
         NoneOfKind = "Rien de ce type";
         SourcesTip = "Les programmes dans lesquels vous avez copié : choisissez-en un pour ne voir que ce que vous y avez copié.";
         PinnedTip = "Les éléments copiés gardés en haut pour un moment : ils partent quand même à la fin de leurs jours.";
+        ShortcutsPlace = "Raccourcis";
+        ShortcutsTip = "Les éléments avec un numéro, qui les colle depuis n'importe où : un clic sur le numéro le change ou le retire.";
+        NoShortcuts = "Aucun raccourci : « {0} », dans le menu d'un élément, lui donne un numéro qui le colle depuis n'importe où avec {1}";
+        NumberTip = "{0} le colle depuis n'importe où : cliquez pour le changer ou le retirer";
         NarrowSideTip = "Réduit la barre latérale à ses icônes. On peut aussi faire glisser son bord, pour l'élargir ou la rétrécir.";
         WideSideTip = "Affiche de nouveau les noms dans la barre latérale.";
         Error = "Erreur : {0}";
@@ -334,6 +338,8 @@ static partial class Strings
             "- « " + HistoryPlace + " » : ce que vous avez copié, du plus récent au plus ancien, chaque jour sous son nom ; "
                 + "les éléments gardés en haut passent avant les autres.",
             "- « " + PinnedPlace + " » : seulement les éléments copiés gardés en haut.",
+            "- « " + ShortcutsPlace + " » : les éléments avec un numéro, copiés et enregistrés, par numéro. Un clic sur le numéro "
+                + "d'une carte le change ou le retire, ici comme ailleurs.",
             "- « " + SavedTitle + " » : les textes enregistrés, par nom. En dessous se trouvent leurs dossiers.",
             "- « " + SourcesPlace + " » : les programmes dans lesquels vous avez copié, celui de la copie la plus récente d'abord, chacun avec son icône et le nombre "
                 + "d'éléments qui en viennent. Un clic sur l'un d'eux ne montre que ce que vous y avez copié ; un clic sur « "

@@ -1615,9 +1615,21 @@ static class TestProgram
             // The places of the sidebar, and the tabs.
             Sample s = Sample.Current;
             ListBox nav = (ListBox)typeof(MainForm).GetField("navList", hidden).GetValue(form);
-            Console.WriteLine("[{0}] the sidebar: all, pinned, saved with its folders, the programs: {1} rows", nav.Items.Count == 10
-                && ((Place)nav.Items[3]).Label == s.Home && ((Place)nav.Items[5]).Level == 2 && ((Place)nav.Items[6]).Kind == PlaceKind.Sources
-                && ((Place)nav.Items[7]).Origin != null ? "PASS" : "FAIL", nav.Items.Count);
+            Console.WriteLine("[{0}] the sidebar: history, pinned, shortcuts, saved with its folders, the programs: {1} rows",
+                nav.Items.Count == 11 && ((Place)nav.Items[2]).Kind == PlaceKind.Shortcuts && ((Place)nav.Items[2]).Count == 3
+                && ((Place)nav.Items[4]).Label == s.Home && ((Place)nav.Items[6]).Level == 2 && ((Place)nav.Items[7]).Kind == PlaceKind.Sources
+                && ((Place)nav.Items[8]).Origin != null ? "PASS" : "FAIL", nav.Items.Count);
+            // The shortcuts: the entries with a number, copied and saved, by number, without days.
+            GoTo(form, PlaceKind.Shortcuts, null);
+            List<Entry> numberedCards = Cards(cards);
+            // The number on a card is a part of its own, which a click acts on.
+            CardParts numberParts = (CardParts)typeof(MainForm).GetMethod("Lay", hidden).Invoke(form, new object[] { numberedCards[0], cards.GetItemRectangle(0) });
+            Point onNumber = new Point(numberParts.Number.Left + numberParts.Number.Width / 2, numberParts.Number.Top + numberParts.Number.Height / 2);
+            bool numberPart = (Part)typeof(MainForm).GetMethod("PartAt", hidden).Invoke(form, new object[] { 0, onNumber }) == Part.Number;
+            Console.WriteLine("[{0}] the shortcuts, copied and saved, by number, each number a part of its card", numberedCards.Count == 3
+                && cards.Items.Count == 3 && numberedCards[0].Number == 1 && numberedCards[1].Number == 2 && numberedCards[2].Number == 3
+                && numberedCards.Exists(delegate(Entry e) { return !e.Saved; }) && numberPart ? "PASS" : "FAIL");
+            Save(form, path + "-shortcuts.png");
             GoTo(form, PlaceKind.Saved, null);
             bool savedOnly = Cards(cards).Count == 4 && Cards(cards).TrueForAll(delegate(Entry e) { return e.Saved; }) && !(cards.Items[0] is Heading);
             GoTo(form, PlaceKind.Folder, s.Work);
@@ -1626,8 +1638,8 @@ static class TestProgram
             bool pinnedOnly = Cards(cards).Count == 1 && Cards(cards)[0].Pinned;
             Console.WriteLine("[{0}] saved, a folder with those inside it, pinned", savedOnly && inWork && pinnedOnly ? "PASS" : "FAIL");
             // The programs from that of the latest copy: PowerShell, then Edge.
-            bool byTime = ((Place)nav.Items[7]).Origin.Name.Contains("PowerShell");
-            nav.SelectedIndex = 8;
+            bool byTime = ((Place)nav.Items[8]).Origin.Name.Contains("PowerShell");
+            nav.SelectedIndex = 9;
             bool fromEdge = Cards(cards).Count == 2 && byTime;
             GoTo(form, PlaceKind.History, null);
             TabStrip tabs = (TabStrip)typeof(MainForm).GetField("tabs", hidden).GetValue(form);
@@ -1688,7 +1700,7 @@ static class TestProgram
             int closedRows = nav.Items.Count;
             work.Open = true;
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
-            Console.WriteLine("[{0}] a closed folder hides those inside it: {1} rows", closedRows == 9 ? "PASS" : "FAIL", closedRows);
+            Console.WriteLine("[{0}] a closed folder hides those inside it: {1} rows", closedRows == 10 ? "PASS" : "FAIL", closedRows);
 
             // The sidebar reduced to its signs leaves its room to the pane, with the same rows, and gets it back; its
             // width, as dragged, stays between its least and the room the pane leaves it.
@@ -1705,16 +1717,16 @@ static class TestProgram
             // Reduced, the name of a row waits for the pointer to rest, and goes when it leaves; with the names, never.
             MethodInfo rowTip = typeof(MainForm).GetMethod("RowTip", hidden);
             System.Windows.Forms.Timer tipWait = (System.Windows.Forms.Timer)typeof(MainForm).GetField("hoverTipWait", hidden).GetValue(form);
-            rowTip.Invoke(form, new object[] { nav, 3, s.Home, false });
+            rowTip.Invoke(form, new object[] { nav, 4, s.Home, false });
             bool waits = tipWait.Enabled && (string)typeof(MainForm).GetField("tipText", hidden).GetValue(form) == s.Home;
             typeof(MainForm).GetMethod("HideHoverTip", hidden).Invoke(form, null);
             waits &= !tipWait.Enabled;
             typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { false });
             bool back = pane.Width == wide && pane.Right == right;
-            rowTip.Invoke(form, new object[] { nav, 3, s.Home, false });
+            rowTip.Invoke(form, new object[] { nav, 4, s.Home, false });
             waits &= !tipWait.Enabled;
             // With the names, a name cut short says itself whole all the same.
-            rowTip.Invoke(form, new object[] { nav, 3, s.Home, true });
+            rowTip.Invoke(form, new object[] { nav, 4, s.Home, true });
             waits &= tipWait.Enabled;
             typeof(MainForm).GetMethod("HideHoverTip", hidden).Invoke(form, null);
             int least = (int)typeof(MainForm).GetField("MinSideWidth", constant).GetValue(null);

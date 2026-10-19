@@ -606,6 +606,7 @@ sealed class Clips : IDisposable
             sql.Append(" AND app_id = ?" + values.Count);
         }
         if (sieve.Pinned) sql.Append(" AND pinned = 1");
+        if (sieve.Numbered) sql.Append(" AND number IS NOT NULL");
         return sql.ToString();
     }
 
@@ -1090,6 +1091,7 @@ class Sieve
     public Category? Category;   // null: of any category
     public long App;             // the row of the program they come from among the apps; 0: any
     public bool Pinned;          // only those kept at the top
+    public bool Numbered;        // only those with a number
 }
 
 // A program copied entries come from, as the sidebar lists it.

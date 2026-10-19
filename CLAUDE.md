@@ -231,7 +231,8 @@ condiviso su GitHub).
 - La finestra principale è l'elenco, con una barra laterale e le voci in schede (voluto dall'utente il 18/10/2026;
   prima erano due colonne affiancate, copiati e salvati). A sinistra la barra laterale (`navList`,
   `MainForm.Nav.cs`): «Cronologia» (`PlaceKind.History`, fino alla 4.3.5 «Tutti»), «In alto» (i copiati con la
-  freccia), «Salvati» con sotto l'albero delle cartelle, «Provenienza» con sotto i programmi (icona e quante voci),
+  freccia), «Scorciatoie» (`PlaceKind.Shortcuts`: le voci con un numero, copiate e salvate, per numero, senza giorni;
+  voluto dall'utente il 19/10/2026 per vederle e gestirle in un posto solo; `Sieve.Numbered`), «Salvati» con sotto l'albero delle cartelle, «Provenienza» con sotto i programmi (icona e quante voci),
   ognuno un `Place`; la freccia a destra di una riga apre
   e chiude ciò che ha sotto (Salvati e Provenienza nelle impostazioni `SavedOpen`, `SourcesOpen`; le cartelle nel
   database), un clic su «Provenienza» pure. Ridotta, una linea sottile sopra «Salvati» e sopra «Provenienza» separa
@@ -331,7 +332,8 @@ condiviso su GitHub).
   di altri; le altre due scorciatoie non possono essere modificatori + cifra (`NumberOf`). Impostazioni
   `QuickPaste` e `QuickKeys` (solo i modificatori). Si assegna e
   cambia da «Scorciatoia» nel menu del tasto destro (`ListNumbers`: «Nessuna» e i nove numeri, quello attuale
-  spuntato e senza effetto, accanto agli altri la voce che li ha). Si vede in un riquadro d'accento a destra della prima riga,
+  spuntato e senza effetto, accanto agli altri la voce che li ha), e dal numero stesso sulla scheda, che un clic
+  apre lo stesso elenco (`Part.Number`, il suggerimento dice i tasti, `NumberTip`). Si vede in un riquadro d'accento a destra della prima riga,
   prima della riga piccola e dei pulsanti, sempre, anche senza il puntatore (`CardParts.Number`), e nel menu del tray accanto al testo salvato
   (`ShortcutKeyDisplayString`, che `MenuLook` scrive in grigio). Un numero è di una voce sola: `Clips.Number` lo
   toglie prima a chi lo aveva, e lo schema lo vuole `UNIQUE`. **Un numero non salva una voce copiata** (deciso con
@@ -868,7 +870,8 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   comparirebbe più volte), chi possiede gli appunti dopo una copia remota.
 - I pulsanti delle schede solo sotto il puntatore (19/10/2026) dal vivo: vista l'immagine di `shot` con la luce portata
   a mano a 1 e provato che l'altezza non cambia; mai la dissolvenza vera tra riga piccola e pulsanti, né il clic su un
-  segno appena comparso. Nemmeno il suggerimento di un nome tagliato nella barra laterale con i nomi.
+  segno appena comparso. Nemmeno il suggerimento di un nome tagliato nella barra laterale con i nomi, né il clic sul
+  numero di una scheda (provato solo che `PartAt` lo riconosce) con il suo elenco che si apre lì sotto.
 - La barra laterale trascinata e ridotta (19/10/2026) dal vivo: provati da `shot` riduzione, ritorno e limiti della
   larghezza, vista l'immagine ridotta; mai il bordo trascinato con il mouse vero, il cursore ↔, i suggerimenti delle
   icone, il clic sul ☰.

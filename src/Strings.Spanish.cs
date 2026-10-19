@@ -27,6 +27,10 @@ static partial class Strings
         NoneOfKind = "Nada de este tipo";
         SourcesTip = "Los programas en los que copiaste: elige uno para ver solo lo que copiaste allí.";
         PinnedTip = "Las entradas copiadas mantenidas arriba por un tiempo: se van igualmente cuando vencen sus días.";
+        ShortcutsPlace = "Atajos";
+        ShortcutsTip = "Las entradas con un número, que las pega desde cualquier sitio: un clic en el número lo cambia o lo quita.";
+        NoShortcuts = "Ningún atajo: «{0}», en el menú de una entrada, le da un número que la pega desde cualquier sitio con {1}";
+        NumberTip = "{0} la pega desde cualquier sitio: clic para cambiarlo o quitarlo";
         NarrowSideTip = "Reduce la barra lateral a sus iconos. También se puede arrastrar su borde, para ensancharla o estrecharla.";
         WideSideTip = "Vuelve a mostrar los nombres en la barra lateral.";
         Error = "Error: {0}";
@@ -327,6 +331,8 @@ static partial class Strings
             "- «" + HistoryPlace + "»: lo que copiaste, de lo más nuevo a lo más antiguo, cada día bajo su nombre; las "
                 + "entradas mantenidas arriba van antes que las demás.",
             "- «" + PinnedPlace + "»: solo las entradas copiadas mantenidas arriba.",
+            "- «" + ShortcutsPlace + "»: las entradas con un número, copiadas y guardadas, por número. Un clic en el número de una "
+                + "tarjeta lo cambia o lo quita, aquí y en cualquier otro lugar.",
             "- «" + SavedTitle + "»: los textos guardados, por nombre. Debajo están sus carpetas.",
             "- «" + SourcesPlace + "»: los programas en los que copiaste, primero el de la copia más reciente, cada uno con su icono y cuántas entradas vienen "
                 + "de él. Un clic en uno muestra solo lo que copiaste allí; un clic en «" + SourcesPlace + "» abre o cierra la lista. "
