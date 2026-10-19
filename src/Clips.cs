@@ -288,6 +288,7 @@ sealed class Clips : IDisposable
     public void Prune()
     {
         pruned = DateTime.Today;
+        ForgetHosts();
         Drop(DateTime.Today.AddDays(-KeepDays));
         TrimPictures();   // the room may have been made smaller, or the pictures come from an older version
     }
@@ -368,6 +369,17 @@ sealed class Clips : IDisposable
         data.Execute("DELETE FROM entries WHERE saved = 0 AND copied_at < ?1", Stamp(oldest));
         DropApps();
         Compact();
+    }
+
+    // The clipboard service of Windows is never the program something was copied in (Origin.IsHost), but versions
+    // before 4.3.3 could say so: those entries forget it, and DropApps the program, which the sidebar listed.
+    void ForgetHosts()
+    {
+        List<long> hosts = new List<long>();
+        using (Statement apps = data.Prepare("SELECT id, path FROM apps"))
+            while (apps.Step())
+                if (Origin.IsHost(apps.Text(1))) hosts.Add(apps.Long(0));
+        foreach (long id in hosts) data.Execute("UPDATE entries SET app_id = NULL WHERE app_id = ?1", id);
     }
 
     // Forgets the programs no copied entry comes from any more. Their rows can then go to other programs: what this

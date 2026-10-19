@@ -41,7 +41,9 @@ partial class MainForm : Window
     const int PageTop = 48;                            // under the name of a page, where its options begin
     // The window: on the left the sidebar, the places of the entries; on the right, on a lighter pane, the title of the
     // place, the search with its buttons, the tabs of the categories, the cards of the entries and the status line.
-    const int SideWidth = 210;                         // the sidebar, its margin on the left included
+    // The sidebar, its margin on the left included: as it starts, how narrow and how wide its edge drags it, and
+    // reduced to its signs. The pane beside it gives up at most PaneSlack of its width to it.
+    const int SideWidth = 210, MinSideWidth = 160, MaxSideWidth = 400, NarrowSideWidth = 72, PaneSlack = 120;
     const int PaneInset = 16;                          // inside the pane, around what it holds
     const int TitleRow = 34, TabsHeight = 32;          // the title of the place, and the tabs under the search
     const int ListHeight = 380;                        // the cards, as the window starts
@@ -122,6 +124,20 @@ partial class MainForm : Window
     Place place = new Place(PlaceKind.All);       // the place shown
     bool savedOpen = true, sourcesOpen = true;    // the sidebar shows the folders, and the programs
     bool fillingNav;                              // the sidebar is being filled: its selection is not the user's
+    readonly RoundButton sideButton = new RoundButton();   // on top of the sidebar: reduces it to its signs, and back
+    int sideWidth = SideWidth;                    // as the user dragged it, in pixels at 96 dpi
+    bool sideNarrow;                              // only the signs of the places show
+    bool sizingSide;                              // its edge is being dragged
+    int sideGrab, sideBefore;                     // from the pointer to the edge, and the width the drag started from
+    // A tooltip shown by hand where the pointer rests (see HoverTip): the control, which part of it, what it says
+    // and where.
+    readonly ToolTip hoverTips = new ToolTip();
+    readonly Timer hoverTipWait = new Timer();    // runs while the pointer rests there, before the tooltip shows
+    Control tipOwner;
+    int tipKey = -1;
+    string tipText;
+    Point tipAt;
+    Size leastSize;                               // the window as designed: it is never made smaller
     readonly ContextMenuStrip listMenu = new ContextMenuStrip();
     readonly ContextMenuStrip navMenu = new ContextMenuStrip();   // of a folder in the sidebar
     readonly Peek peek = new Peek();              // shows whole the entry of a card
@@ -160,6 +176,8 @@ partial class MainForm : Window
     readonly CheckBox historyBox = new Toggle();
     readonly CheckBox trayBox = new Toggle();
     readonly CheckBox leaveBox = new Toggle();   // hides the window when another program comes to the foreground
+    readonly CheckBox restBox = new Toggle();    // the pointer resting on a card shows the entry whole
+    readonly CheckBox whereLeftBox = new Toggle();   // the list hotkey opens on the place and kind left, not on All
     readonly CheckBox startBox = new Toggle();   // not among the settings: it shows what the Run key of Windows says
     bool startHidden;   // the first request to show the window is not obeyed
     readonly NotifyIcon tray = new NotifyIcon();
@@ -286,10 +304,17 @@ partial class MainForm : Window
         emptyNote.BringToFront();
         ClientSize = new Size(SideWidth + paneWidth + Edge, Edge + pane.Height + Edge);
 
-        // On the left the sidebar: the places, and under them a new folder, the options and the guide.
-        navList.SetBounds(Edge, Edge, SideWidth - 2 * Edge, pane.Height);
-        footList.SetBounds(Edge, Edge, SideWidth - 2 * Edge, 0);   // at the bottom, once its rows have their height (PlaceSidebar)
-        Controls.AddRange(new Control[] { pane, navList, footList });
+        // On the left the sidebar: the button that reduces it, the places, and under them a new folder, the options
+        // and the guide. Placed for good, at their width, once their rows have their height (PlaceSidebar).
+        sideButton.SetBounds(Edge, Edge, ButtonHeight, ButtonHeight);
+        sideButton.Sign = Sign.Menu;
+        Look.Style(sideButton, false);
+        sideButton.Subtle = true;
+        sideButton.TabStop = false;
+        sideButton.Click += delegate { NarrowSide(!sideNarrow); };
+        navList.SetBounds(Edge, sideButton.Bottom + Gap, SideWidth - 2 * Edge, pane.Bottom - sideButton.Bottom - Gap);
+        footList.SetBounds(Edge, Edge, SideWidth - 2 * Edge, 0);
+        Controls.AddRange(new Control[] { pane, sideButton, navList, footList });
         // Thin scroll bars over those of the lists, which always have one so that their rows never change width.
         cardList.ScrollAlwaysVisible = navList.ScrollAlwaysVisible = true;
         Rail.Over(cardList);
@@ -304,6 +329,7 @@ partial class MainForm : Window
         navList.Anchor = toTop | toBottom | toLeft;
         footList.Anchor = toBottom | toLeft;
 
+        WireHoverTips();
         WireLists();
         WireSidebar();
 
@@ -574,8 +600,7 @@ partial class MainForm : Window
     protected override void OnLoad(EventArgs e)
     {
         base.OnLoad(e);
-        MinimumSize = Size;   // as designed, at the scale of this screen
-        PlaceSidebar();
+        MinimumSize = leastSize = Size;   // as designed, at the scale of this screen
         // The size the user left it at, never smaller than designed nor larger than the screen, which it stays on.
         if (savedSize.Width > 0 && savedSize.Height > 0)
         {
@@ -584,6 +609,7 @@ partial class MainForm : Window
                 Math.Min(screen.WorkingArea.Height, Math.Max(MinimumSize.Height, (int)(savedSize.Height * Zoom))));
             PlaceOnScreen(Location, screen);
         }
+        PlaceSidebar();   // at the width it was left at, once the window has its size
         shown = true;
         FitStatus();
     }

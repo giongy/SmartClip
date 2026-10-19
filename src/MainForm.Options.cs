@@ -47,6 +47,8 @@ partial class MainForm
         hotkeyBox.Checked = true;
         PlaceHotkey(pickBox, pickKeysButton, Strings.PickOption, Strings.PickNote, ref top);
         pickBox.Checked = true;
+        // Off, the list hotkey opens on All, every kind (OpenList).
+        PlaceOption(whereLeftBox, Strings.WhereLeftOption, Strings.WhereLeftNote, ref top);
         PlaceHotkey(quickBox, quickKeysButton, Strings.QuickOption, Strings.QuickNote, ref top);
         quickBox.Checked = true;   // nothing is taken from other programs until an entry has a number
 
@@ -88,6 +90,8 @@ partial class MainForm
                 delegate(string name) { UseEntryFont(name, Look.EntrySize); }, itself),
             Picker(sizeButton, Look.EntrySizes, PixelsName, delegate { return Look.EntrySize; },
                 delegate(int size) { UseEntryFont(Look.EntryFamily, size); }, null));
+        // Off, an entry is shown whole only from the eye of its card, or its menu.
+        PlaceOption(restBox, Strings.RestOption, Strings.RestNote, ref top);
 
         top = Page(Strings.ProgramTitle, Sign.Options);
         PlaceOption(trayBox, Strings.TrayOption, Strings.TrayNote, ref top);
@@ -115,6 +119,8 @@ partial class MainForm
         Tip(string.Format(Strings.FaceSizeTip, PixelsName(Look.DefaultInterfaceSize), Program.AppName), faceSizeButton);
         TipOption(Strings.FontTip, fontButton);
         Tip(string.Format(Strings.SizeTip, PixelsName(Look.DefaultEntrySize)), sizeButton);
+        TipOption(Strings.RestTip, restBox);
+        TipOption(Strings.WhereLeftTip, whereLeftBox);
         TipOption(Strings.HistoryTip, historyBox);
         TipOption(string.Format(Strings.KeepTip, MaxShown), keepBox);
         TipOption(Strings.CleanTip, cleanBox);
@@ -630,6 +636,8 @@ partial class MainForm
         Retention = Transfer(key, save, "KeepDays", Retention);
         trayBox.Checked = Transfer(key, save, "Tray", trayBox.Checked);
         leaveBox.Checked = Transfer(key, save, "HideOnLeave", leaveBox.Checked);
+        restBox.Checked = Transfer(key, save, "PeekOnRest", restBox.Checked);
+        whereLeftBox.Checked = Transfer(key, save, "OpenWhereLeft", whereLeftBox.Checked);
         language = Transfer(key, save, LanguageSetting, language);   // read again by SavedLanguage, before the window
         Transfer(key, save, ThemeSetting, (int)Look.Chosen);         // read by SavedTheme, before the window
         face = Transfer(key, save, FaceSetting, face);                // read by UseSavedInterface, before the window
@@ -640,6 +648,8 @@ partial class MainForm
         if (!save) UseEntryFont(entryFamily, entrySize);
         savedOpen = Transfer(key, save, "SavedOpen", savedOpen);       // the sidebar shows the folders
         sourcesOpen = Transfer(key, save, "SourcesOpen", sourcesOpen); // and the programs
+        sideWidth = Transfer(key, save, "SideWidth", sideWidth);       // as wide as dragged, in pixels at 96 dpi (see PlaceSidebar)
+        sideNarrow = Transfer(key, save, "SideNarrow", sideNarrow);    // or reduced to its signs
 
         // Window size, in pixels at 96 dpi: applied when the window loads (see OnLoad). Zero if never saved.
         Size size = !save ? Size.Empty : WindowState == FormWindowState.Normal ? Size : RestoreBounds.Size;

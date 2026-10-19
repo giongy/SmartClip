@@ -80,7 +80,7 @@ class Place
 // The sidebar, as in the apps of Windows 11: the places, a folder under the one it is in, the programs under Sources;
 // a click shows a place, the arrow at the right end of a row opens or closes what is under it. A saved text, or a
 // folder, is dragged onto a folder to go in it, onto Saved to leave the folders. Under it, a new folder, the
-// options, the guide.
+// options, the guide. Its edge drags it wider or narrower, and the button on top reduces it to its signs.
 partial class MainForm
 {
     // The commands at the bottom of the sidebar: a new folder, the pause of the capture, the options, the guide.
@@ -105,19 +105,25 @@ partial class MainForm
             int row = navList.RowAt(e.Location);
             navList.Cursor = row >= 0 ? Cursors.Hand : Cursors.Default;
             navList.Glow.Set(row);
+            RowTip(navList, row, row < 0 ? null : ((Place)navList.Items[row]).Title);   // a folder by its whole path
         };
-        navList.MouseLeave += delegate { navList.Glow.Set(-1); };
+        navList.MouseLeave += delegate
+        {
+            navList.Glow.Set(-1);
+            HideHoverTip();
+        };
         // The arrow at the right end opens and closes; anywhere else the row is shown (SelectedIndexChanged), and
-        // Sources, which has nothing to show, opens and closes there.
+        // Sources, which has nothing to show, opens and closes there. Reduced, the arrows are not there.
         navList.MouseClick += delegate(object sender, MouseEventArgs e)
         {
             int row = navList.RowAt(e.Location);
-            if (e.Button != MouseButtons.Left || row < 0) return;
+            if (e.Button != MouseButtons.Left || row < 0 || sideNarrow) return;
             Place at = (Place)navList.Items[row];
             if (at.Opens && at.Kind != PlaceKind.Sources && e.X >= ChevronArea(navList.GetItemRectangle(row)).Left) Toggle(at);
         };
         navList.MouseDown += delegate(object sender, MouseEventArgs e)
         {
+            HideHoverTip();
             int row = navList.RowAt(e.Location);
             Place at = row < 0 ? null : (Place)navList.Items[row];
             if (e.Button == MouseButtons.Right && at != null && at.Kind != PlaceKind.Sources) navList.SelectedIndex = row;
@@ -136,11 +142,25 @@ partial class MainForm
         footList.DrawItem += delegate(object sender, DrawItemEventArgs e)
         {
             if (e.Index < 0) return;
-            // A command, never left selected.
-            Look.DrawTopic(new DrawItemEventArgs(e.Graphics, e.Font, e.Bounds, e.Index, DrawItemState.None), footList,
-                (string)footList.Items[e.Index], e.Index == PauseRow ? (paused ? Sign.Resume : Sign.Pause) : FootSigns[e.Index],
-                (int)(NavInset * Zoom));
+            // A command, never left selected; reduced, only its sign.
+            Sign sign = e.Index == PauseRow ? (paused ? Sign.Resume : Sign.Pause) : FootSigns[e.Index];
+            if (sideNarrow)
+            {
+                Look.DrawRow(e.Graphics, e.Bounds, footList.BackColor, false, footList.Glow.Of(e.Index));
+                Look.Draw(e.Graphics, sign, SignAlone(e.Bounds, e.Font.Height), null);
+            }
+            else
+                Look.DrawTopic(new DrawItemEventArgs(e.Graphics, e.Font, e.Bounds, e.Index, DrawItemState.None), footList,
+                    (string)footList.Items[e.Index], sign, (int)(NavInset * Zoom));
         };
+        footList.MouseMove += delegate(object sender, MouseEventArgs e)
+        {
+            int row = footList.RowAt(e.Location);
+            RowTip(footList, row, row < 0 ? null : (string)footList.Items[row]);
+        };
+        footList.MouseLeave += delegate { HideHoverTip(); };
+        footList.MouseDown += delegate { HideHoverTip(); };
+        navList.MouseWheel += delegate { HideHoverTip(); };   // the rows move under it
         footList.MouseClick += delegate(object sender, MouseEventArgs e)
         {
             int row = footList.RowAt(e.Location);
@@ -151,16 +171,148 @@ partial class MainForm
             else if (row == 2) OpenOptions();
             else if (row == 3) ShowHelp();
         };
-        Tip(Strings.PinnedTip + "\n" + Strings.SourcesTip, navList);
     }
 
-    // The commands at the bottom of the sidebar, as tall as their rows, and the places above them: once the window
-    // has its scale.
+    // The sidebar at the width the user gave it, or reduced to its signs, and the pane beside it with the rest of the
+    // window: the pane never gets narrower than designed by more than PaneSlack, so a wider sidebar may wait for a
+    // wider window. On top the button that reduces it, at the bottom the commands, as tall as their rows, the places
+    // between them. Once the window has its scale, and again whenever the sidebar changes.
     void PlaceSidebar()
     {
-        int height = footList.Items.Count * footList.ItemHeight, bottom = pane.Bottom;
-        footList.SetBounds(navList.Left, bottom - height, navList.Width, height);
-        navList.Height = footList.Top - (int)(Gap * Zoom) - navList.Top;
+        int edge = (int)(Edge * Zoom), gap = (int)(Gap * Zoom);
+        int least = (int)((PaneInset + ContentWidth + PaneInset - PaneSlack) * Zoom);
+        int width = (int)((sideNarrow ? NarrowSideWidth : sideWidth) * Zoom);
+        if (!sideNarrow)
+        {
+            width = Math.Max((int)(MinSideWidth * Zoom), Math.Min(Math.Min((int)(MaxSideWidth * Zoom), ClientSize.Width - edge - least), width));
+            sideWidth = (int)Math.Round(width / Zoom);
+        }
+        SuspendLayout();
+        pane.SetBounds(width, pane.Top, ClientSize.Width - edge - width, pane.Height);
+        // Never so small that the pane would go under its least width; never smaller than designed either.
+        MinimumSize = new Size(Math.Max(leastSize.Width, Width - ClientSize.Width + width + least + edge), leastSize.Height);
+        int row = navList.ItemHeight, height = footList.Items.Count * footList.ItemHeight;
+        navList.Width = footList.Width = width - 2 * edge;
+        // The button with its sign above those of the rows.
+        int middle = sideNarrow ? navList.ClientSize.Width / 2 : (int)(NavInset * Zoom) + Font.Height / 2;
+        sideButton.SetBounds(navList.Left + middle - row / 2, pane.Top, row, row);
+        footList.SetBounds(navList.Left, pane.Bottom - height, navList.Width, height);
+        navList.SetBounds(navList.Left, sideButton.Bottom + gap, navList.Width, footList.Top - gap - sideButton.Bottom - gap);
+        ResumeLayout();
+        // Reduced, the rows say their names one at a time (RowTip); with the names, the list has a tooltip of its own.
+        HideHoverTip();
+        tips.SetToolTip(navList, sideNarrow ? null : Strings.PinnedTip + "\n" + Strings.SourcesTip);
+        Tip(sideNarrow ? Strings.WideSideTip : Strings.NarrowSideTip, sideButton);
+        navList.Invalidate();
+        footList.Invalidate();
+    }
+
+    // Reduces the sidebar to its signs, or gives it back its names, at the width it had.
+    void NarrowSide(bool narrow)
+    {
+        if (narrow == sideNarrow) return;
+        sideNarrow = narrow;
+        PlaceSidebar();
+    }
+
+    // Reduced, the name of the row under the pointer shows on its right once the pointer rests there, as in the
+    // NavigationView of Windows 11.
+    void RowTip(RowList list, int row, string text)
+    {
+        if (!sideNarrow || row < 0)
+        {
+            HideHoverTip();
+            return;
+        }
+        Rectangle area = list.GetItemRectangle(row);
+        HoverTip(list, row, text, new Point(list.Width + (int)(Gap * Zoom), area.Top + (area.Height - Look.TipSize(text).Height) / 2));
+    }
+
+    // A tooltip for one part of a control, shown at a point of it once the pointer rests there, until it moves to
+    // another part, leaves, clicks or scrolls. Shown by hand: Windows shows the tooltip of a control once until the
+    // pointer leaves it, so one whose text changed from part to part would not come back. 'key' tells the parts apart.
+    void HoverTip(Control owner, int key, string text, Point at)
+    {
+        if (owner == tipOwner && key == tipKey) return;
+        HideHoverTip();
+        if (text == null) return;
+        tipOwner = owner;
+        tipKey = key;
+        tipText = text;
+        tipAt = at;
+        hoverTipWait.Start();
+    }
+
+    void HideHoverTip()
+    {
+        hoverTipWait.Stop();
+        if (tipOwner != null) hoverTips.Hide(tipOwner);
+        tipOwner = null;
+        tipKey = -1;
+    }
+
+    // Measured by what they say, shown once the pointer rests.
+    void WireHoverTips()
+    {
+        Look.Style(hoverTips);
+        hoverTips.Popup += delegate(object sender, PopupEventArgs e) { e.ToolTipSize = Look.TipSize(tipText); };
+        hoverTipWait.Interval = hoverTips.InitialDelay;
+        hoverTipWait.Tick += delegate
+        {
+            hoverTipWait.Stop();
+            if (tipOwner != null) hoverTips.Show(tipText, tipOwner, tipAt);
+        };
+    }
+
+    // Where a sign alone goes in a row: in its middle.
+    static Rectangle SignAlone(Rectangle row, int side)
+    {
+        return new Rectangle(row.Left + (row.Width - side) / 2, row.Top + (row.Height - side) / 2, side, side);
+    }
+
+    // The edge between the sidebar and the pane drags it wider or narrower; below the least width it is reduced to
+    // its signs, and dragged out again it has its names back.
+    bool OnSideEdge(Point at)
+    {
+        return at.X >= navList.Right && at.X < pane.Left && at.Y >= pane.Top && at.Y < pane.Bottom;
+    }
+
+    protected override void OnMouseDown(MouseEventArgs e)
+    {
+        base.OnMouseDown(e);
+        if (e.Button != MouseButtons.Left || !OnSideEdge(e.Location)) return;
+        sizingSide = Capture = true;
+        sideGrab = pane.Left - e.X;
+        sideBefore = sideWidth;
+    }
+
+    protected override void OnMouseMove(MouseEventArgs e)
+    {
+        base.OnMouseMove(e);
+        Cursor = sizingSide || OnSideEdge(e.Location) ? Cursors.VSplit : Cursors.Default;
+        if (!sizingSide) return;
+        int wanted = e.X + sideGrab;   // where the pane would start
+        bool narrow = wanted < (MinSideWidth + NarrowSideWidth) / 2 * Zoom;
+        if (narrow && sideNarrow) return;
+        if (!narrow) sideWidth = (int)Math.Round(wanted / Zoom);   // kept within its bounds by PlaceSidebar
+        sideNarrow = narrow;
+        PlaceSidebar();
+    }
+
+    protected override void OnMouseUp(MouseEventArgs e)
+    {
+        base.OnMouseUp(e);
+        if (!sizingSide) return;
+        sizingSide = Capture = false;
+        if (sideNarrow) sideWidth = sideBefore;   // given its names back, it has the width it had
+        Cursor = OnSideEdge(e.Location) ? Cursors.VSplit : Cursors.Default;
+    }
+
+    // The controls that have no cursor of their own take that of the window: off the edge it must be the usual one.
+    protected override void OnMouseLeave(EventArgs e)
+    {
+        base.OnMouseLeave(e);
+        if (!sizingSide) Cursor = Cursors.Default;
     }
 
     // Shows a place; Sources, which shows nothing, only opens or closes.
@@ -291,7 +443,8 @@ partial class MainForm
     }
 
     // A row of the sidebar: its sign or the icon of its program, its name, how many entries it has and, if it has
-    // rows under it, the arrow that opens and closes them. Sources stands as the title of the programs.
+    // rows under it, the arrow that opens and closes them. Sources stands as the title of the programs. Reduced, only
+    // the sign or the icon, in the middle.
     void DrawPlace(object sender, DrawItemEventArgs e)
     {
         if (e.Index < 0) return;
@@ -302,13 +455,14 @@ partial class MainForm
         Look.DrawRow(e.Graphics, e.Bounds, navList.BackColor, selected, glow);
         int inset = (int)(NavInset * Zoom), side = e.Font.Height;
         int left = e.Bounds.Left + inset + (int)(SideIndent * Zoom) * at.Level, right = e.Bounds.Right - inset / 2;
-        Rectangle box = new Rectangle(left, e.Bounds.Top + (e.Bounds.Height - side) / 2, side, side);
+        Rectangle box = sideNarrow ? SignAlone(e.Bounds, side) : new Rectangle(left, e.Bounds.Top + (e.Bounds.Height - side) / 2, side, side);
         if (at.Kind != PlaceKind.Source) Look.Draw(e.Graphics, at.Sign, box, null);
         else if (at.Origin.Icon != null)
         {
             e.Graphics.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
             e.Graphics.DrawImage(at.Origin.Icon, box);
         }
+        if (sideNarrow) return;
         if (at.Opens)
         {
             Rectangle chevron = ChevronArea(e.Bounds);

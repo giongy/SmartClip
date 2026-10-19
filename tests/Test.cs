@@ -781,6 +781,14 @@ static class TestProgram
                 "the programs the copied entries come from, each with how many");
             clips.Remove(clips.Copied(1, code)[0].Id);
             clips.Remove(clips.Copied(1, link)[0].Id);
+            // What versions before 4.3.3 said came from the clipboard service of Windows comes from no program.
+            string host = System.IO.Path.Combine(Environment.SystemDirectory, "svchost.exe");
+            clips.AddText("through the service", host);
+            clips.Prune();
+            Check(clips.Copied(10, Texts.Words("through the service"))[0].Origin == null
+                && Convert.ToInt64(clips.Data.Value("SELECT count(*) FROM apps WHERE path = ?1", host)) == 0,
+                "an entry said to come from the clipboard service of Windows forgets it, and the service goes");
+            clips.Remove(clips.Copied(10, Texts.Words("through the service"))[0].Id);
 
             // What the user says a text is: it stays, copied again or saved; a saved text not told is guessed.
             clips.AddText("just words", null);
@@ -1568,6 +1576,13 @@ static class TestProgram
             bool links = Cards(cards).Count == 1 && Cards(cards)[0].Category == Category.Link;
             tabs.Selected = 0;
             Console.WriteLine("[{0}] a program, and a category of the tabs", fromEdge && links ? "PASS" : "FAIL");
+            // The list hotkey opens on All, every kind, wherever the list was left (unless an option says otherwise).
+            GoTo(form, PlaceKind.Folder, s.Work);
+            tabs.Selected = 3;
+            typeof(MainForm).GetMethod("ShowAll", hidden).Invoke(form, null);
+            Place opened = (Place)typeof(MainForm).GetField("place", hidden).GetValue(form);
+            Console.WriteLine("[{0}] the list hotkey opens on all of it", opened.Kind == PlaceKind.All && tabs.Selected == 0
+                && Cards(cards).Count == 9 && ((Place)nav.SelectedItem).Kind == PlaceKind.All ? "PASS" : "FAIL");
 
             // A closed folder hides the folders inside it too, in the sidebar.
             List<Entry> sample = (List<Entry>)typeof(MainForm).GetField("entries", hidden).GetValue(form);
@@ -1578,6 +1593,42 @@ static class TestProgram
             work.Open = true;
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
             Console.WriteLine("[{0}] a closed folder hides those inside it: {1} rows", closedRows == 9 ? "PASS" : "FAIL", closedRows);
+
+            // The sidebar reduced to its signs leaves its room to the pane, with the same rows, and gets it back; its
+            // width, as dragged, stays between its least and the room the pane leaves it.
+            BindingFlags constant = BindingFlags.NonPublic | BindingFlags.Static;
+            Control pane = (Control)typeof(MainForm).GetField("pane", hidden).GetValue(form);
+            FieldInfo sideWidth = typeof(MainForm).GetField("sideWidth", hidden);
+            MethodInfo placeSide = typeof(MainForm).GetMethod("PlaceSidebar", hidden);
+            int wide = pane.Width, right = pane.Right, rows = nav.Items.Count;
+            typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { true });
+            Application.DoEvents();
+            Save(form, path + "-narrow.png");
+            bool narrowed = pane.Width > wide && pane.Right == right && nav.Right < pane.Left && nav.Items.Count == rows
+                && pane.Left == (int)((int)typeof(MainForm).GetField("NarrowSideWidth", constant).GetValue(null) * Look.Zoom);
+            // Reduced, the name of a row waits for the pointer to rest, and goes when it leaves; with the names, never.
+            MethodInfo rowTip = typeof(MainForm).GetMethod("RowTip", hidden);
+            System.Windows.Forms.Timer tipWait = (System.Windows.Forms.Timer)typeof(MainForm).GetField("hoverTipWait", hidden).GetValue(form);
+            rowTip.Invoke(form, new object[] { nav, 3, s.Home });
+            bool waits = tipWait.Enabled && (string)typeof(MainForm).GetField("tipText", hidden).GetValue(form) == s.Home;
+            typeof(MainForm).GetMethod("HideHoverTip", hidden).Invoke(form, null);
+            waits &= !tipWait.Enabled;
+            typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { false });
+            bool back = pane.Width == wide && pane.Right == right;
+            rowTip.Invoke(form, new object[] { nav, 3, s.Home });
+            waits &= !tipWait.Enabled;
+            int least = (int)typeof(MainForm).GetField("MinSideWidth", constant).GetValue(null);
+            sideWidth.SetValue(form, 0);
+            placeSide.Invoke(form, null);
+            bool atLeast = (int)sideWidth.GetValue(form) == least && nav.Right < pane.Left;
+            sideWidth.SetValue(form, 10000);
+            placeSide.Invoke(form, null);
+            int slack = (int)typeof(MainForm).GetField("PaneSlack", constant).GetValue(null);
+            bool atMost = pane.Right == right && pane.Width >= wide - (int)(slack * Look.Zoom) - 2 && pane.Width < wide;
+            sideWidth.SetValue(form, typeof(MainForm).GetField("SideWidth", constant).GetValue(null));
+            placeSide.Invoke(form, null);
+            Console.WriteLine("[{0}] the sidebar reduced to its signs and back, its names in tooltips, dragged as narrow and as wide as it can be",
+                narrowed && waits && back && atLeast && atMost && pane.Width == wide ? "PASS" : "FAIL");
             TextBox search = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
 
             // The icon menu: the saved texts between the first item and the rest, each folder a submenu.
@@ -1878,6 +1929,13 @@ static class TestProgram
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
             recent.TopIndex = 10;
             Snap(form, path + "-real-scroll.png");
+            // Reduced to its signs, the sidebar says the name of the row the pointer rests on, on its right.
+            ListBox side = (ListBox)typeof(MainForm).GetField("navList", hidden).GetValue(form);
+            typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { true });
+            typeof(MainForm).GetMethod("RowTip", hidden).Invoke(form, new object[] { side, 3, Sample.Current.Home });
+            for (DateTime until = DateTime.Now.AddSeconds(1); DateTime.Now < until; System.Threading.Thread.Sleep(20)) Application.DoEvents();
+            Snap(form, path + "-real-narrow.png");
+            typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { false });
             FillSample(form, Wider);
             typeof(MainForm).GetMethod("OpenOptions", hidden).Invoke(form, null);
             Form options = (Form)typeof(MainForm).GetField("options", hidden).GetValue(form);

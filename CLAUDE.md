@@ -257,6 +257,10 @@ condiviso su GitHub).
 - Ctrl+D (`OpenList`) porta la finestra in primo piano da qualsiasi programma; dopo la scelta con Invio o
   doppio clic `GoBack` restituisce il primo piano alla finestra di partenza e rinasconde la finestra se era
   nascosta. «Copia» no (voluto dall'utente: la finestra spariva e la voce non si poteva più salvare).
+  Ctrl+D apre sempre su «Tutti», scheda dei tipi «Tutti», ricerca vuota (`ShowAll`; voluto dall'utente il 19/10/2026);
+  con l'opzione «Riapri dove l'hai lasciato» (`whereLeftBox`, nelle Scorciatoie, spenta di default, impostazione
+  `OpenWhereLeft`) tiene posto e tipo. Vale solo per la scorciatoia: riaprire dal tray o con un secondo avvio lascia
+  tutto com'era.
 - Copiati e salvati stanno in un solo database SQLite (dalla 4.0, `docs\piano-sqlite.md`; prima i salvati
   nel registro e la cronologia in un file al giorno): `Clips.DefaultFile`, cioè `SmartClip.db` nella cartella
   dei dati (`Program.DataFolder`), o nella cartella scelta dall'utente (vedi sotto), sempre con il log accanto. `MainForm` lo apre in `OpenClips`; la prima volta vi porta i
@@ -351,7 +355,7 @@ condiviso su GitHub).
 - App di provenienza (voluta dall'utente il 18/10/2026: «serve per ogni voce copiata»): nella riga piccola sotto la scheda di ogni
   voce copiata, icona e nome del programma in cui è stata copiata (`DrawEntry`); nella barra laterale, sotto
   «Provenienza», un posto per programma (`Clips.Sources`, con quante voci). `Texts.Remember`
-  chiede a `Origin.Find` l'eseguibile del proprietario degli appunti (`GetClipboardOwner`; senza, o se è il servizio degli appunti di Windows in `svchost.exe`, `IsHost`, la finestra in primo
+  chiede a `Origin.Find` l'eseguibile del proprietario degli appunti (`GetClipboardOwner`; senza, o se è il servizio degli appunti di Windows in `svchost.exe`, `IsHost`; le voci che le versioni fino alla 4.3.2 gli avevano attribuito lo dimenticano a ogni `Prune`, `ForgetHosts`, la finestra in primo
   piano), con `QueryFullProcessImageName` (funziona anche con i programmi da amministratore). Il nome è la descrizione
   del file («Microsoft Edge»), o il prodotto, o il nome del file (`Origin.NameOf`); l'icona quella di
   `ExtractAssociatedIcon` (`IconOf`). Ogni programma sta una volta sola nella tabella `apps` (`Clips.App`, descritto
@@ -431,22 +435,27 @@ condiviso su GitHub).
   meno): disegnata a mano in una riga di `cardList` (`OwnerDrawVariable`, `DrawEntry`), un po' più chiara del
   pannello (`Look.Raised`, nuovo colore delle due tavolozze) e con il bordo d'accento se selezionata (`RowList.Marked`
   falso: niente tacca). **Prima la voce**, grande (fino a `BodyLines` righe del testo, `CardText`; il nome di un
-  salvato con nome; una miniatura con la misura); sotto, piccola e grigia, una riga sola: icona e nome del programma
+  salvato con nome; una miniatura con la misura); in fondo a destra, sotto i pulsanti, piccola e tenue (`MetaShare`, anche l'icona semitrasparente, `Look.DrawFaint`; voluto dall'utente il 19/10/2026, «per rendere ancora più chiaro cosa è copiato»), una riga sola: icona e nome del programma
   (o stella e cartella di un salvato) · ora (`When`) · tipo (`BadgeOf`). A destra della prima riga numero, freccia e
-  piccoli segni senza testo: copia, salva/modifica, elimina, «⋯» (`CardButtons`), grigi tranne sulla scheda sotto il
-  puntatore o selezionata, con il nome nel suggerimento (`PartText`); «Mostra tutto» sta nel menu. Voluto
+  piccoli segni senza testo: anteprima (l'occhio), copia, salva/modifica, elimina, «⋯» (`CardButtons`), grigi tranne
+  sulla scheda sotto il puntatore o selezionata, con il nome in un suggerimento sotto il segno (`PartText`, mostrato a
+  mano da `HoverTip` come i nomi della barra ridotta: cambiare il testo dell'unico suggerimento della lista non lo
+  faceva ricomparire, trovato dall'utente il 19/10/2026). Voluto
   dall'utente il 18/10/2026: con il programma in grassetto in cima e una fila di pulsanti in fondo, «il
   vero contenuto si perde» (scelte proposte: icone a destra). Le parti si misurano in un posto solo (`Lay`, `CardParts`) che serve a disegno e clic (`PartAt`);
   quella sotto il puntatore si illumina (`hoverRow`, `hoverPart`). Un clic altrove sulla scheda la seleziona soltanto; il doppio clic fa come Invio (`Accept`).
   **Una riga di `ListBox` non supera 255 pixel** (`MaxRow`): `CardHeight` vi taglia la voce; le altezze si rifanno
   quando cambia la larghezza (`ShowRows`). Sopra i giorni un `Heading`, che una selezione salta (`lastCard`, `Step`).
   Le righe alternate e le colonne di prima non ci sono più.
-- Anteprima (voluta dall'utente «con il mouse che resta sopra un po'»): il puntatore fermo `RestMs` su una voce
-  che la scheda taglia (`Cut`), o «Mostra tutto», la mostra per intero in `Peek`, sotto la scheda (`ShowPeek`, timer `rest`
-  avviato da `Hover`). `Peek` non prende il primo piano e lascia passare il puntatore (`HTTRANSPARENT`), così
-  l'elenco continua a seguire il mouse; sparisce a ogni tasto, clic, rotella, ricarica dell'elenco. Dei testi
-  salvati **non** compare passandoci sopra (potrebbero essere password, scelta mia da confermare con l'utente):
-  c'è «Mostra il contenuto» nel menu del tasto destro, che lo lascia in vista `AskedMs` (`peekAsked`).
+- Anteprima: l'occhio a destra di ogni scheda, testi e immagini (`Part.Show`, voluto dall'utente il 19/10/2026), e
+  «Anteprima» nel menu (`ShowFull`; di un salvato con nome «Mostra il contenuto», `ShowText`) mostrano la voce per
+  intero in `Peek`, sotto la scheda (`ShowPeek` con `asked`), e la lasciano in vista `AskedMs` ovunque vada il
+  puntatore (`peekAsked`). Il puntatore fermo `RestMs` su una voce che la scheda taglia (`Cut`; timer `rest` avviato
+  da `Hover`), voluto all'inizio dall'utente «con il mouse che resta sopra un po'», dal 19/10/2026 è un'opzione
+  spenta di default (`restBox`, «Anteprima con il puntatore fermo» in «Aspetto», impostazione `PeekOnRest`): l'utente
+  la voleva togliere o rendere facoltativa. `Peek` non prende il primo piano e lascia passare il puntatore
+  (`HTTRANSPARENT`), così l'elenco continua a seguire il mouse; sparisce a ogni tasto, clic, rotella, ricarica
+  dell'elenco. Dei testi salvati con nome **non** compare mai passandoci sopra (potrebbero essere password).
 - Pausa della cattura (voluta dall'utente): «Sospendi/Riprendi la cattura» nel menu dell'icona e in fondo
   alla barra laterale (`Pause`, `paused`, `pauseItems` e `PauseRow` di `footList`). Non è un'impostazione: a ogni avvio si riparte in ascolto.
   Lo dicono il titolo (dove ci sono copiati), l'elenco vuoto e il suggerimento dell'icona.
@@ -594,8 +603,23 @@ condiviso su GitHub).
   ogni volta quella di default): impostazioni `Width` e `Height`, in pixel a 96 dpi, applicate in
   `OnLoad` (`savedSize`), mai sotto la minima né oltre lo schermo, sul quale la finestra viene riportata. Le
   immagini dei test (`FillSample`) le ignorano: `shot` mostra la finestra come disegnata, `store` e `real` più
-  larga di `Wider`. Allargandola crescono il pannello e le schede (`Anchor`); la barra laterale resta larga
-  `SideWidth`. Lo spazio trascinabile tra le due colonne di prima (`SavedWidth`) non c'è più.
+  larga di `Wider`. Allargandola crescono il pannello e le schede (`Anchor`); la barra laterale resta com'è.
+
+- La barra laterale si allarga e si stringe trascinandone il bordo (lo spazio tra lei e il pannello, il puntatore
+  diventa ↔; `OnSideEdge` e gli `OnMouse…` della finestra), da `MinSideWidth` a `MaxSideWidth`; e il pulsante ☰ in
+  cima (`sideButton`, `Sign.Menu`) la riduce alle sole icone (`NarrowSideWidth`, `sideNarrow`, `NarrowSide`), come
+  NavigationView di Windows 11 (voluti dall'utente il 19/10/2026; il pulsante era una sua idea, chiesto il mio
+  parere). Trascinata sotto il minimo si riduce, tirata fuori riprende i nomi e la larghezza di prima (`sideBefore`).
+  Ridotta ha **le stesse righe** (cartelle aperte e programmi compresi, senza rientri né frecce), così scelta dei
+  posti, menu e trascinamento nelle cartelle restano quelli; il nome dell'icona su cui il puntatore si ferma compare a
+  destra della riga (`RowTip`, con un suo `ToolTip`, `rowTips`, mostrato a mano dopo `InitialDelay`; di una cartella il
+  percorso intero). Non con il testo di un unico suggerimento della lista cambiato a ogni riga, come si fa sulle
+  schede: Windows mostra il suggerimento di un controllo una volta sola finché il puntatore non ne esce, e passando
+  da un'icona all'altra non ricompariva (trovato dall'utente il 19/10/2026). Il pannello cede alla barra al massimo `PaneSlack` della sua
+  larghezza disegnata: oltre, per allargare la barra si allarga prima la finestra, e la finestra non si stringe più
+  di così (`MinimumSize` rifatta da `PlaceSidebar`, mai sotto `leastSize`, la misura con cui nasce). Impostazioni
+  `SideWidth` (pixel a 96 dpi) e `SideNarrow`. Lo spazio trascinabile tra le due colonne di prima (`SavedWidth`) non
+  c'era più dal 18/10/2026.
 
 ## Regole di stile volute dall'utente
 
@@ -798,6 +822,9 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   l'immagine di `shot`; mai una copia vera da Chrome, Office, un'app dello Store (il proprietario potrebbe essere
   `ApplicationFrameHost`, e l'icona del suo eseguibile quella generica), un desktop remoto (dovrebbe dire «Connessione
   Desktop remoto»), un programma da amministratore.
+- La barra laterale trascinata e ridotta (19/10/2026) dal vivo: provati da `shot` riduzione, ritorno e limiti della
+  larghezza, vista l'immagine ridotta; mai il bordo trascinato con il mouse vero, il cursore ↔, i suggerimenti delle
+  icone, il clic sul ☰.
 - La finestra con la barra laterale e le schede (18/10/2026) dal vivo: viste le immagini di `shot` in chiaro e in scuro, provati da `shot`
   posti, schede dei tipi, giorni e selezione; mai i clic veri sui pulsanti delle schede, sulle frecce della barra,
   il trascinamento sulla barra, il menu di una cartella, schermi oltre il 100% (le schede alte più di 255 pixel si

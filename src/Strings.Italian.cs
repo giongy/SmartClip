@@ -21,12 +21,14 @@ static partial class Strings
         AllPlace = "Tutti"; PinnedPlace = "In alto"; SourcesPlace = "Provenienza"; GuideItem = "Guida";
         AllKinds = "Tutti"; TextKinds = "Testo"; CodeKinds = "Codice"; LinkKinds = "Link"; PictureKinds = "Immagini";
         TextBadge = "Testo"; CodeBadge = "Codice"; LinkBadge = "Link"; PictureBadge = "Immagine"; FormattedBadge = "Formattato";
-        CopyButton = "Copia"; ShowFull = "Mostra tutto"; MoreItem = "Altro";
+        CopyButton = "Copia"; ShowFull = "Anteprima"; MoreItem = "Altro";
         Today = "Oggi"; Yesterday = "Ieri"; Undated = "Prima";
         NoPinned = "Niente in alto: la freccia di una voce copiata la porta qui per un po'";
         NoneOfKind = "Niente di questo tipo";
         SourcesTip = "I programmi in cui hai copiato: scegline uno per vedere solo ciò che hai copiato lì.";
         PinnedTip = "Le voci copiate tenute in alto per un po': se ne vanno comunque quando scadono i loro giorni.";
+        NarrowSideTip = "Riduce la barra laterale alle sue icone. Se ne può anche trascinare il bordo, per allargarla o stringerla.";
+        WideSideTip = "Mostra di nuovo i nomi nella barra laterale.";
         Error = "Errore: {0}";
         NewerDatabase = "{0} è stato scritto da una versione più nuova di {1}: aggiorna il programma per aprirlo.";
         UnexpectedError ="Qualcosa è andato storto: {0}\n\nIl programma continua. I dettagli sono in {1}.";
@@ -123,7 +125,7 @@ static partial class Strings
             + "«" + CopyButton + "», {0} o un doppio clic rimettono la voce negli appunti: poi la incolli\n"
             + "con Ctrl+V o la digiti con {1}. Con «" + CopyButton + "» la finestra resta aperta, con {0} o un\n"
             + "doppio clic torni dov'eri. Un clic seleziona soltanto; il tasto destro apre il menu della voce.\n"
-            + "Fermando il puntatore su una scheda che ne taglia il testo la vedi per intero.\n"
+            + "L'occhio a destra di una scheda la mostra per intero.\n"
             + "La freccia a destra di una voce copiata ({2}) la tiene per un po' in cima all'elenco:\n"
             + "se ne va comunque quando scadono i suoi giorni. Ciò che deve restare, salvalo.\n"
             + "I testi salvati non scadono mai e sono cifrati per il tuo utente; con un nome, se ne\n"
@@ -169,6 +171,9 @@ static partial class Strings
         ThemeSystem = "Come Windows"; ThemeLight = "Chiaro"; ThemeDark = "Scuro";
         FaceOption = "Carattere dell'interfaccia"; FaceNote = "Pulsanti, opzioni, menu: il programma riparte";
         FontOption = "Carattere delle voci"; FontNote = "Ciò che copi e salvi: cambia subito";
+        RestOption = "Anteprima con il puntatore fermo"; RestNote = "Su una scheda tagliata, senza l'occhio";
+        RestTip = "Attiva, il puntatore fermo su una scheda che taglia la sua voce la mostra per intero.\n"
+            + "Spenta, la mostra solo l'occhio a destra della scheda, o il suo menu.";
         Pixels = "{0} px";
         TrayOption = "Resta attivo nell'area di notifica (tray)"; TrayNote = "Chiudendo la finestra il programma resta attivo";
         LeaveOption = "Nascondi passando a un altro programma"; LeaveNote = "Torna nell'area di notifica";
@@ -178,6 +183,9 @@ static partial class Strings
         AboutNote = "Software libero con licenza MIT";
         TypeNote = "Digita subito nella finestra attiva";
         PickOption = "Apri l'elenco"; PickNote = "Porta questa finestra in primo piano da ogni programma";
+        WhereLeftOption = "Riapri dove l'hai lasciato"; WhereLeftNote = "Altrimenti l'elenco si apre su " + AllPlace;
+        WhereLeftTip = "Spenta, la scorciatoia dell'elenco lo apre sempre su " + AllPlace + ", di ogni tipo, con la ricerca vuota.\n"
+            + "Attiva, mostra il posto e il tipo su cui l'hai lasciato.";
         QuickOption = "Incolla per numero"; QuickNote = "Incolla le voci che hanno una scorciatoia";
         HistoryOption = "Ricorda i testi e le immagini copiati"; HistoryNote = "Ciò che copi mentre il programma è aperto";
         KeepOption = "Giorni da tenere"; KeepNote = "Con 0, solo ciò che hai copiato oggi";
@@ -318,13 +326,16 @@ static partial class Strings
             "- «" + SavedTitle + "»: i testi salvati, per nome. Sotto ci sono le loro cartelle.",
             "- «" + SourcesPlace + "»: i programmi in cui hai copiato, ognuno con la sua icona e quante voci vengono da "
                 + "lui. Un clic su uno mostra solo ciò che hai copiato lì; un clic su «" + SourcesPlace + "» apre o chiude l'elenco.",
+            "Il pulsante in cima alla barra laterale la riduce alle sue icone, e le ridà i nomi: fermando il puntatore su "
+                + "un'icona ne leggi il nome. Trascinando il bordo tra la barra e le schede la allarghi o la stringi; "
+                + "stretta più di quanto può, si riduce alle icone.",
             "Le schede sopra le voci (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") mostrano un solo tipo di voce. «" + CodeKinds + "» è un'ipotesi fatta dall'aspetto delle "
                 + "righe: ogni tanto ci finisce un testo, o un pezzo di codice tra i testi. Quando sbaglia, «" + KindMenu
                 + "», nel menu di un testo, dice che cos'è: copiato di nuovo o salvato, resta così.",
-            "Ogni scheda mostra prima la voce; sotto, in piccolo, il programma in cui è stata copiata, con la sua icona (o "
-                + "la cartella di un testo salvato), l'ora della copia e che cos'è. A destra, piccoli segni la copiano, la "
-                + "salvano o la modificano, la eliminano e aprono il suo menu: fermando il puntatore su uno, dice che cosa fa.",
+            "Ogni scheda mostra prima la voce; in fondo a destra, in piccolo e tenue, il programma in cui è stata copiata, con la sua icona (o "
+                + "la cartella di un testo salvato), l'ora della copia e che cos'è. A destra, piccoli segni la mostrano per "
+                + "intero, la copiano, la salvano o la modificano, la eliminano e aprono il suo menu: fermando il puntatore su uno, dice che cosa fa.",
             "- Scrivi nella casella in alto per cercare tra le voci del posto: le parole valgono in qualsiasi "
                 + "ordine, senza badare a maiuscole e accenti.",
             "- Un clic su una scheda la seleziona. Il segno della copia («" + CopyButton + "») mette la voce negli appunti e lascia la "
@@ -332,9 +343,10 @@ static partial class Strings
             "- " + EnterKeyName + " o un doppio clic la mettono negli appunti e, se avevi aperto l'elenco con " + pick
                 + ", ti riportano alla finestra in cui stavi lavorando.",
             "- A quel punto la incolli con Ctrl+V, oppure la digiti con " + type + ".",
-            "- «" + ShowFull + "», nel menu, mostra la voce per intero in un riquadro: il testo con tutte le sue righe, l'immagine "
-                + "più grande. Fermare il puntatore su una scheda che taglia il suo testo fa lo stesso. Sparisce appena "
-                + "sposti il puntatore.",
+            "- L'occhio («" + ShowFull + "», anche nel menu) mostra la voce per intero in un riquadro: il testo con tutte le sue "
+                + "righe, l'immagine più grande. Resta qualche secondo, ovunque vada il puntatore. Con «" + RestOption + "» "
+                + "attiva, nelle opzioni, fermare il puntatore su una scheda che taglia il suo testo fa lo stesso, finché il "
+                + "puntatore non si sposta.",
             "- I tre puntini a destra, o il tasto destro, aprono il menu della voce, senza toccare gli appunti.",
             "- «" + CopyPictureText + "», nel menu di un'immagine, mette negli appunti il testo che "
                 + "Windows ci legge, qui sul PC, senza internet: entra nell'elenco come ogni cosa che copi (quello di "
@@ -366,8 +378,9 @@ static partial class Strings
                 + "o il contenuto.",
             "- «" + Delete + "» (" + Key(Keys.Control | MainForm.DeleteKey) + ") cancella il testo salvato, oppure toglie "
                 + "dall'elenco la voce copiata.",
-            "- «" + ShowContent + "», nel menu del tasto destro di un testo salvato, lo fa vedere in un riquadro per "
-                + "qualche secondo: l'elenco ne mostra solo il nome, e passarci sopra con il puntatore non basta.",
+            "- L'occhio di un testo salvato con un nome («" + ShowContent + "», anche nel suo menu) ne fa vedere il contenuto "
+                + "in un riquadro per qualche secondo: l'elenco ne mostra solo il nome, e passarci sopra con il puntatore non "
+                + "basta mai.",
             "- I testi salvati sono anche nel menu dell'icona vicino all'orologio: sceglierne uno lo rimette negli "
                 + "appunti senza aprire la finestra.",
             "I testi salvati non scadono mai. Stanno nel database del programma, cifrati per il tuo utente: un altro "
@@ -423,7 +436,7 @@ static partial class Strings
             "- con Bloc Maiusc attivo non si digita: va spento prima.",
 
             "# I tasti",
-            pick + "\tApre l'elenco, da qualsiasi programma.",
+            pick + "\tApre l'elenco su " + AllPlace + ", da qualsiasi programma.",
             type + "\tDigita subito gli appunti nella finestra attiva.",
             MainForm.NumbersName + "\tIncolla nella finestra attiva la voce con quel numero.",
             "F1\tApre questa guida.",
@@ -475,12 +488,12 @@ static partial class Strings
                 + MainForm.MaxDelay + "), se il server usa la tastiera americana, se premere Invio alla fine, se "
                 + "svuotare gli appunti dopo, la digitazione lenta e i simboli composti con Alt+codice.",
             "- " + HotkeysTitle + ": accende e spegne " + type + ", " + pick + " e " + MainForm.NumbersName
-                + ", e dà loro altri tasti.",
+                + ", e dà loro altri tasti; e se " + pick + " riapre l'elenco dove l'hai lasciato.",
             "- " + HistoryTitle + ": se ricordare ciò che copi, per quanti giorni, la cartella del database "
                 + "(che si può cambiare) con il collegamento che la apre, e il pulsante che pulisce subito la cronologia.",
             "- " + AppearanceTitle + ": la lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), il carattere e la "
-                + "dimensione dell'interfaccia (pulsanti, opzioni, questa guida: in pixel, riavviano il programma) e quelli "
-                + "delle voci (cambiano subito).",
+                + "dimensione dell'interfaccia (pulsanti, opzioni, questa guida: in pixel, riavviano il programma), quelli "
+                + "delle voci (cambiano subito), e se fermare il puntatore su una scheda la mostra per intero.",
             "- " + ProgramTitle + ": se restare attivo nell'area di notifica e nascondersi passando a un altro programma, "
                 + "se partire insieme a Windows, i pulsanti per esportare e importare, e la versione del programma.",
 

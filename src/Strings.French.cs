@@ -22,12 +22,14 @@ static partial class Strings
         AllPlace = "Tout"; PinnedPlace = "En haut"; SourcesPlace = "Provenance"; GuideItem = "Aide";
         AllKinds = "Tout"; TextKinds = "Texte"; CodeKinds = "Code"; LinkKinds = "Liens"; PictureKinds = "Images";
         TextBadge = "Texte"; CodeBadge = "Code"; LinkBadge = "Lien"; PictureBadge = "Image"; FormattedBadge = "Mis en forme";
-        CopyButton = "Copier"; ShowFull = "Tout voir"; MoreItem = "Plus";
+        CopyButton = "Copier"; ShowFull = "Aperçu"; MoreItem = "Plus";
         Today = "Aujourd'hui"; Yesterday = "Hier"; Undated = "Avant";
         NoPinned = "Rien en haut : la flèche d'un élément copié l'amène ici pour un moment";
         NoneOfKind = "Rien de ce type";
         SourcesTip = "Les programmes dans lesquels vous avez copié : choisissez-en un pour ne voir que ce que vous y avez copié.";
         PinnedTip = "Les éléments copiés gardés en haut pour un moment : ils partent quand même à la fin de leurs jours.";
+        NarrowSideTip = "Réduit la barre latérale à ses icônes. On peut aussi faire glisser son bord, pour l'élargir ou la rétrécir.";
+        WideSideTip = "Affiche de nouveau les noms dans la barre latérale.";
         Error = "Erreur : {0}";
         NewerDatabase = "{0} a été écrit par une version plus récente de {1} : mettez le programme à jour pour l'ouvrir.";
         UnexpectedError ="Une erreur s'est produite : {0}\n\nLe programme continue. Les détails sont dans {1}.";
@@ -128,7 +130,7 @@ static partial class Strings
             + "ensuite avec Ctrl+V ou saisissez-le avec {1}. Avec « " + CopyButton + " » la fenêtre reste ouverte, avec {0}\n"
             + "ou un double-clic vous revenez où vous étiez. Un clic sélectionne seulement ; le clic droit ouvre le menu\n"
             + "de l'élément.\n"
-            + "En laissant le pointeur sur une carte qui coupe son texte, vous le voyez en entier.\n"
+            + "L'œil à droite d'une carte la montre en entier.\n"
             + "La flèche à droite d'un élément copié ({2}) le garde un moment en haut de la liste :\n"
             + "il part quand même quand ses jours expirent. Ce qui doit rester, enregistrez-le.\n"
             + "Les textes enregistrés n'expirent jamais et sont chiffrés pour votre utilisateur ; avec un\n"
@@ -176,6 +178,9 @@ static partial class Strings
         ThemeSystem = "Comme Windows"; ThemeLight = "Clair"; ThemeDark = "Sombre";
         FaceOption = "Police de l'interface"; FaceNote = "Boutons, options, menus : le programme redémarre";
         FontOption = "Police des éléments"; FontNote = "Ce que vous copiez et enregistrez : change aussitôt";
+        RestOption = "Aperçu quand le pointeur s'arrête"; RestNote = "Sur une carte coupée, sans l'œil";
+        RestTip = "Activée, le pointeur arrêté sur une carte qui coupe son élément le montre en entier.\n"
+            + "Désactivée, seul l'œil à droite de la carte, ou son menu, le montre.";
         Pixels = "{0} px";
         TrayOption = "Rester dans la zone de notification"; TrayNote = "Fermer la fenêtre laisse le programme actif";
         LeaveOption = "Masquer en passant à un autre programme"; LeaveNote = "Retour dans la zone de notification";
@@ -185,6 +190,9 @@ static partial class Strings
         AboutNote = "Logiciel libre sous licence MIT";
         TypeNote = "Saisit aussitôt dans la fenêtre active";
         PickOption = "Ouvrir la liste"; PickNote = "Amène cette fenêtre au premier plan depuis tout programme";
+        WhereLeftOption = "Rouvrir là où vous l'avez laissée"; WhereLeftNote = "Sinon la liste s'ouvre sur " + AllPlace;
+        WhereLeftTip = "Désactivée, le raccourci de la liste l'ouvre toujours sur " + AllPlace + ", de tous les types, avec la recherche vide.\n"
+            + "Activée, il montre l'endroit et le type où vous l'avez laissée.";
         QuickOption = "Coller par numéro"; QuickNote = "Colle les éléments qui ont un raccourci";
         HistoryOption = "Mémoriser les textes et images copiés"; HistoryNote = "Ce que vous copiez pendant que le programme est ouvert";
         KeepOption = "Jours gardés"; KeepNote = "Avec 0, seulement ce que vous avez copié aujourd'hui";
@@ -329,14 +337,17 @@ static partial class Strings
             "- « " + SourcesPlace + " » : les programmes dans lesquels vous avez copié, chacun avec son icône et le nombre "
                 + "d'éléments qui en viennent. Un clic sur l'un d'eux ne montre que ce que vous y avez copié ; un clic sur « "
                 + SourcesPlace + " » ouvre ou ferme la liste.",
+            "Le bouton en haut de la barre latérale la réduit à ses icônes, et lui rend ses noms : en laissant le pointeur "
+                + "sur une icône, vous voyez son nom. En faisant glisser le bord entre la barre et les cartes, vous l'élargissez "
+                + "ou la rétrécissez ; plus étroite qu'elle ne peut l'être, elle se réduit à ses icônes.",
             "Les onglets au-dessus des cartes (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") ne montrent qu'un type d'élément. « " + CodeKinds + " » est une supposition faite d'après "
                 + "l'allure des lignes : de temps en temps un texte s'y retrouve, ou un morceau de code parmi les textes. "
                 + "Quand elle se trompe, « " + KindMenu + " », dans le menu d'un texte, dit ce qu'il est : copié à "
                 + "nouveau ou enregistré, il le reste.",
-            "Chaque carte montre d'abord l'élément ; en dessous, en petit, le programme dans lequel il a été copié, avec "
+            "Chaque carte montre d'abord l'élément ; en bas à droite, en petit et discret, le programme dans lequel il a été copié, avec "
                 + "son icône (ou le dossier d'un texte enregistré), l'heure de la copie et ce qu'il est. À droite, de petits "
-                + "signes le copient, l'enregistrent ou le modifient, le suppriment et ouvrent son menu : en laissant le "
+                + "signes le montrent en entier, le copient, l'enregistrent ou le modifient, le suppriment et ouvrent son menu : en laissant le "
                 + "pointeur sur l'un d'eux, il dit ce qu'il fait.",
             "- Tapez dans la case du haut pour chercher parmi les éléments de l'endroit : les mots comptent dans "
                 + "n'importe quel ordre, sans tenir compte des majuscules ni des accents.",
@@ -345,9 +356,10 @@ static partial class Strings
             "- " + EnterKeyName + " ou un double-clic le mettent dans le presse-papiers et, si vous aviez ouvert la "
                 + "liste avec " + pick + ", vous ramènent à la fenêtre où vous travailliez.",
             "- Collez-le alors avec Ctrl+V, ou saisissez-le avec " + type + ".",
-            "- « " + ShowFull + " », dans le menu, montre l'élément en entier dans un petit cadre : le texte avec toutes ses lignes, "
-                + "l'image en plus grand. Laisser le pointeur sur une carte qui coupe son texte fait de même. Il disparaît "
-                + "dès que vous bougez le pointeur.",
+            "- L'œil (« " + ShowFull + " », aussi dans le menu) montre l'élément en entier dans un petit cadre : le texte avec "
+                + "toutes ses lignes, l'image en plus grand. Il reste quelques secondes, où que vous alliez avec le pointeur. "
+                + "Avec « " + RestOption + " » activée, dans les options, laisser le pointeur sur une carte qui coupe son texte "
+                + "fait de même, jusqu'à ce que vous bougiez le pointeur.",
             "- Les trois points à droite, ou le clic droit, ouvrent le menu de l'élément, sans toucher au presse-papiers.",
             "- « " + CopyPictureText + " », dans le menu d'une image, met dans le presse-papiers le texte "
                 + "que Windows y lit, ici sur le PC, sans internet : il entre dans la liste comme tout ce que vous copiez "
@@ -382,8 +394,8 @@ static partial class Strings
                 + "son nom ou son contenu.",
             "- « " + Delete + " » (" + Key(Keys.Control | MainForm.DeleteKey) + ") supprime le texte enregistré, ou "
                 + "retire l'élément copié de la liste.",
-            "- « " + ShowContent + " », dans le menu du clic droit d'un texte enregistré, le montre dans un petit cadre "
-                + "pendant quelques secondes : la liste ne montre que son nom, et le survoler ne suffit pas.",
+            "- L'œil d'un texte enregistré avec un nom (« " + ShowContent + " », aussi dans son menu) montre son contenu dans "
+                + "un petit cadre pendant quelques secondes : la liste ne montre que son nom, et le survoler ne suffit jamais.",
             "- Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge : en choisir un le remet "
                 + "dans le presse-papiers sans ouvrir la fenêtre.",
             "Les textes enregistrés n'expirent jamais. Ils sont dans la base de données du programme, chiffrés pour "
@@ -443,7 +455,7 @@ static partial class Strings
             "- rien n'est saisi tant que Verr. Maj est activé : désactivez-le d'abord.",
 
             "# Les touches",
-            pick + "\tOuvre la liste, depuis n'importe quel programme.",
+            pick + "\tOuvre la liste sur " + AllPlace + ", depuis n'importe quel programme.",
             type + "\tSaisit aussitôt le presse-papiers dans la fenêtre active.",
             MainForm.NumbersName + "\tColle dans la fenêtre active l'élément qui a ce numéro.",
             "F1\tOuvre ce guide.",
@@ -496,12 +508,12 @@ static partial class Strings
                 + MainForm.MaxDelay + "), si le serveur a un clavier américain, s'il faut appuyer sur Entrée à la fin, "
                 + "s'il faut vider le presse-papiers ensuite, la saisie lente et les symboles composés avec des codes Alt.",
             "- " + HotkeysTitle + " : active et désactive " + type + ", " + pick + " et " + MainForm.NumbersName
-                + ", et leur donne d'autres touches.",
+                + ", et leur donne d'autres touches ; et si " + pick + " rouvre la liste là où vous l'avez laissée.",
             "- " + HistoryTitle + " : s'il faut mémoriser ce que vous copiez, pendant combien de jours, le dossier de la base de données "
                 + "(qu'on peut changer) avec le lien qui l'ouvre, et le bouton qui nettoie aussitôt l'historique.",
             "- " + AppearanceTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la "
-                + "taille de l'interface (boutons, options, ce guide : en pixels, elles redémarrent le programme) et celles des "
-                + "éléments (elles changent aussitôt).",
+                + "taille de l'interface (boutons, options, ce guide : en pixels, elles redémarrent le programme), celles des "
+                + "éléments (elles changent aussitôt), et si laisser le pointeur sur une carte la montre en entier.",
             "- " + ProgramTitle + " : s'il faut rester dans la zone de notification et se masquer en passant à un autre "
                 + "programme, s'il faut démarrer avec Windows, les boutons pour exporter et importer, et la version du programme.",
 

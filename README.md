@@ -59,7 +59,8 @@ window. A remote desktop client running full screen usually captures every short
 
 ### The lists
 
-The main window looks like the apps of Windows 11: a sidebar on the left, the entries as cards on the right.
+The main window looks like the apps of Windows 11: a sidebar on the left, the entries as cards on the right. Drag
+the edge of the sidebar to make it wider or narrower; the button at its top reduces it to its icons.
 
 - **All**: everything, copied and saved, newest first, each day under its name. The entries kept at the top come
   first.
@@ -72,9 +73,9 @@ Above the cards, tabs show one kind of entry only: **All**, **Text**, **Code**, 
 told from how the lines look, so now and then it guesses wrong: **Type**, in the menu of a text, says what it
 is, and it stays so, also copied again or saved.
 
-Each card shows the entry first, large; under it, small and grey, the program it was copied in with its icon (or
+Each card shows the entry first, large; at its bottom right, under the buttons, small and faint, the program it was copied in with its icon (or
 the folder of a saved text), the time and what it is. On the right of the entry are its number, its arrow and small
-signs that copy it, save or edit it, delete it and open its menu; their tooltips name them. Copied entries are texts and pictures
+signs that show it whole, copy it, save or edit it, delete it and open its menu; their tooltips name them. Copied entries are texts and pictures
 (screenshots, for example), each picture with a small preview. They stay for the number of days set in the
 options, also across restarts; the list shows the 200 most recent, and the search reaches the rest. Copied
 pictures take at most 200 MB: beyond that the oldest go, even before their days are over, and a red bar under the
@@ -90,7 +91,7 @@ only the name and the content stays hidden, which suits a password; without, the
 | **Copy** | Puts the entry back on the clipboard; the window stays, so you can still save or delete it |
 | Enter, or a double click | Puts the entry back on the clipboard and returns to the window you came from |
 | Right click, or the three dots on the right | Opens the menu of the entry |
-| **View full** in the menu, or resting the pointer on a card | Shows the entry whole in a small box: every line of a text, a larger picture. It goes away as the pointer moves on |
+| The eye on the right of a card (**Preview**), also in the menu | Shows the entry whole in a small box for a few seconds: every line of a text, a larger picture; of a saved text with a name, its content. With **Preview when the pointer rests** on, resting the pointer on a card cut short does the same |
 | Dragging a saved card, or a folder of the sidebar | Onto a folder of the sidebar moves it there; onto **Saved** takes it out of the folders |
 | Resizing the window | The cards take the room; size and position are remembered for the next start, never smaller than the starting size |
 | The arrow on the right of a copied entry, or Ctrl+P | Keeps the entry at the top for a while: it still goes when its days are over. What is to stay, save it |
@@ -143,7 +144,8 @@ picture, puts on the clipboard the text in it, read by the text recognition buil
 comes into the list like any copy (from a saved picture it is marked private). Small screen text can come out with
 a few mistakes.
 
-Press **Ctrl+D** in any program to bring the window up with the cursor in the search box. After you choose an
+Press **Ctrl+D** in any program to bring the window up on **All**, every kind, with the cursor in the search box
+(**Open where you left it**, among the hotkeys in the options, keeps the place and the kind instead). After you choose an
 entry the focus returns to the program you were in, and the window hides again if it was hidden. Esc goes back
 without choosing.
 
@@ -181,6 +183,7 @@ on an option shows its full explanation.
 | Alt codes for symbols with no key | Type symbols that your keyboard has no key for with Alt+numpad codes instead of Unicode input. Works only when the remote machine runs Windows. |
 | Type clipboard, with a button showing **Ctrl+Alt+V** | Enable the global hotkey that types the clipboard. The button shows its keys: click it and press the new ones to change them. |
 | Open the list, with a button showing **Ctrl+D** | Enable the global hotkey that brings up the window with the list. While it is on, those keys no longer reach other programs: change them with the button, or turn the hotkey off. |
+| Open where you left it | Off by default: Ctrl+D always opens the list on **All**, every kind, with the search empty. On, it shows the place and the kind you left it on. |
 | Paste by number, with a button showing **Ctrl+Shift+1…9** | Enable the keys that paste the numbered entries. Only the keys of the numbers in use are taken from other programs. The button takes the keys to hold: press them with any digit; it says which of the nine another program already uses. Del goes back to Ctrl+Shift. |
 | Remember copied texts and pictures | Keep the copied texts and pictures in the list. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. Turning it off also deletes the history on disk. |
 | Days kept | For how many days, 0 to 365, what you copy stays in the history, also after the program closes, today being the first: with 0 only what was copied today stays. Entries kept at the top go too when their days are over; saved texts never do. |
@@ -190,6 +193,7 @@ on an option shows its full explanation.
 | Theme | Same as Windows (the mode it sets for apps, followed also when it changes), Light or Dark. Changes at once. |
 | Font of the interface, with its size | The font of the program itself, the same in every window: buttons, labels, options, the guide, menus and questions. Segoe UI Variable (the default where it is installed), Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, Cascadia Mono or Consolas, among those Windows has; each is written in itself in the menu. The size goes from 12 to 16 px (13 px by default); the windows grow with the text. The program restarts to apply either. |
 | Font of the entries, with its size | The font of what you copied and saved: the rows of the lists, an entry shown whole and the content of a saved text, chosen among the same fonts. The rest of the program keeps the font of the interface. The size goes from 11 to 20 px (14 px by default, the text of Windows 11). Both change at once. |
+| Preview when the pointer rests | Off by default: an entry shows whole only from the eye of its card, or its menu. On, resting the pointer on a card that cuts its entry short shows it whole too. |
 | Stay in the notification area (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Exit** to quit; the same menu lists the saved texts. |
 | Hide when switching to another program | With the option above on, the window also goes back to the notification area when you click another program; off, it simply stays open behind the others. Never while it waits and types, nor while a window of its own (a text being written, a question) is open. |
 | Start with Windows | Start SmartClip when you sign in, already hidden in the notification area (minimised, if the option above is off). It is the entry Windows shows in Task Manager > Startup apps: the switch reflects it, and follows the program if you move the `.exe`. |

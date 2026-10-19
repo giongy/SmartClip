@@ -63,12 +63,14 @@ static partial class Strings
     public static string AllPlace = "All", PinnedPlace = "Pinned", SourcesPlace = "Source", GuideItem = "Help";
     public static string AllKinds = "All", TextKinds = "Text", CodeKinds = "Code", LinkKinds = "Links", PictureKinds = "Images";
     public static string TextBadge = "Text", CodeBadge = "Code", LinkBadge = "Link", PictureBadge = "Image", FormattedBadge = "Formatted";
-    public static string CopyButton = "Copy", ShowFull = "View full", MoreItem = "More";
+    public static string CopyButton = "Copy", ShowFull = "Preview", MoreItem = "More";
     public static string Today = "Today", Yesterday = "Yesterday", Undated = "Earlier";
     public static string NoPinned = "Nothing kept at the top: the arrow of a copied entry brings it here for a while",
         NoneOfKind = "Nothing of this kind";
     public static string SourcesTip = "The programs you copied in: choose one to see only what you copied there.";
     public static string PinnedTip = "Copied entries kept at the top for a while: they still go when their days are over.";
+    public static string NarrowSideTip = "Reduces the sidebar to its icons. Its edge can also be dragged, to make it wider or narrower.";
+    public static string WideSideTip = "Shows the names in the sidebar again.";
     public static string Error = "Error: {0}";
     public static string NewerDatabase = "{0} was written by a newer version of {1}: update the program to open it.";
     public static string UnexpectedError ="Something went wrong: {0}\n\nThe program goes on. The details are in {1}.";
@@ -172,7 +174,7 @@ static partial class Strings
         + "“" + CopyButton + "”, {0} or a double click put the entry back on the clipboard: then paste it with\n"
         + "Ctrl+V or type it with {1}. With “" + CopyButton + "” the window stays open, with {0} or a double click\n"
         + "you go back where you were. A click only selects; right-click opens the entry's menu.\n"
-        + "Resting the pointer on a card that cuts its text short shows it whole.\n"
+        + "The eye at the right of a card shows it whole.\n"
         + "The arrow at the right of a copied entry ({2}) keeps it at the top of the list\n"
         + "for a while: it still goes when its days are over. What is to stay, save it.\n"
         + "Saved texts never expire and are kept encrypted for your user; with a name, only\n"
@@ -221,6 +223,9 @@ static partial class Strings
     public static string ThemeSystem = "Same as Windows", ThemeLight = "Light", ThemeDark = "Dark";
     public static string FaceOption = "Font of the interface", FaceNote = "Buttons, options, menus: the program starts again";
     public static string FontOption = "Font of the entries", FontNote = "What you copy and save: it changes at once";
+    public static string RestOption = "Preview when the pointer rests", RestNote = "On a card cut short, without the eye";
+    public static string RestTip = "On, the pointer resting on a card that cuts its entry short shows the entry whole.\n"
+        + "Off, it shows only from the eye at the right of the card, or from its menu.";
     public static string Pixels = "{0} px";
     public static string TrayOption = "Stay in the notification area (tray)", TrayNote = "Closing the window leaves the program running";
     public static string LeaveOption = "Hide when switching to another program", LeaveNote = "Back to the notification area";
@@ -230,6 +235,9 @@ static partial class Strings
     public static string AboutNote = "Free software under the MIT license";
     public static string TypeNote = "Types into the active window at once";
     public static string PickOption = "Open the list", PickNote = "Brings this window up from any program";
+    public static string WhereLeftOption = "Open where you left it", WhereLeftNote = "Otherwise the list opens on " + AllPlace;
+    public static string WhereLeftTip = "Off, the hotkey of the list always opens it on " + AllPlace + ", every kind, with the search empty.\n"
+        + "On, it shows the place and the kind you left it on.";
     public static string QuickOption = "Paste by number", QuickNote = "Pastes the entries that have a shortcut";
     public static string HistoryOption = "Remember copied texts and pictures", HistoryNote = "What you copy while the program is open";
     public static string KeepOption = "Days kept", KeepNote = "With 0, only what you copied today";
@@ -376,21 +384,25 @@ static partial class Strings
             "- " + SavedTitle + ": the saved texts, by name. Under it are their folders.",
             "- " + SourcesPlace + ": the programs you copied in, each with its icon and how many entries come from it. A "
                 + "click on one shows only what you copied there; a click on " + SourcesPlace + " opens or closes the list.",
+            "The button at the top of the sidebar reduces it to its icons, and gives it its names back: resting the pointer "
+                + "on an icon says its name. Dragging the edge between the sidebar and the cards makes it wider or narrower; "
+                + "dragged narrower than it can be, it is reduced to its icons.",
             "The tabs above the cards (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") show one kind of entry only. " + CodeKinds + " is a guess from how the lines look: now "
                 + "and then a text ends up there, or a piece of code among the texts. When it guesses wrong, “" + KindMenu
                 + "”, in the menu of a text, says what it is: copied again or saved, it stays so.",
-            "Each card shows the entry first; under it, small, the program it was copied in, with its icon (or the folder "
-                + "of a saved text), the time of the copy and what it is. On the right, small signs copy it, save or edit it, "
-                + "delete it and open its menu: resting the pointer on one says what it does.",
+            "Each card shows the entry first; at its bottom right, small and faint, the program it was copied in, with its icon (or the folder "
+                + "of a saved text), the time of the copy and what it is. On the right, small signs show it whole, copy it, "
+                + "save or edit it, delete it and open its menu: resting the pointer on one says what it does.",
             "- Type in the box at the top to search the cards of the place: words count in any order, ignoring case and accents.",
             "- A click on a card selects it. The copy sign (“" + CopyButton + "”) puts the entry on the clipboard and leaves the "
                 + "window open, so that you can still save or delete it.",
             "- " + EnterKeyName + " or a double click put it on the clipboard and, if you opened the list with " + pick
                 + ", take you back to the window you were working in.",
             "- Then paste it with Ctrl+V, or type it with " + type + ".",
-            "- “" + ShowFull + "”, in the menu, shows the entry whole in a small box: the text with all its lines, the picture larger. "
-                + "Resting the pointer on a card that cuts its text short does the same. It goes as soon as you move the pointer.",
+            "- The eye (“" + ShowFull + "”, also in the menu) shows the entry whole in a small box: the text with all its lines, "
+                + "the picture larger. It stays a few seconds, wherever the pointer goes. With “" + RestOption + "” on, in the "
+                + "options, resting the pointer on a card that cuts its text short does the same, until the pointer moves.",
             "- The three dots on the right, or right-click, open the menu of the entry, without touching the clipboard.",
             "- “" + CopyPictureText + "”, in the menu of a picture, puts on the clipboard the text Windows "
                 + "reads in it, here on the PC, without the internet: it comes into the list as anything you copy (that of "
@@ -420,8 +432,8 @@ static partial class Strings
             "- “" + EditDots + "” (" + Key(Keys.Control | MainForm.SaveKey) + "), on a saved entry, changes its name or content.",
             "- “" + Delete + "” (" + Key(Keys.Control | MainForm.DeleteKey) + ") deletes the saved text, or drops the "
                 + "copied entry from the list.",
-            "- “" + ShowContent + "”, in the right-click menu of a saved text, shows it in a small box for a few "
-                + "seconds: the list shows only its name, and resting the pointer on it is not enough.",
+            "- The eye of a saved text with a name (“" + ShowContent + "”, also in its menu) shows its content in a small box "
+                + "for a few seconds: the list shows only its name, and resting the pointer on it is never enough.",
             "- Saved texts are also in the menu of the icon by the clock: choosing one puts it back on the "
                 + "clipboard without opening the window.",
             "Saved texts never expire. They are kept in the program's database, encrypted for your user: another "
@@ -475,7 +487,7 @@ static partial class Strings
             "- nothing is typed while Caps Lock is on: turn it off first.",
 
             "# Keys",
-            pick + "\tOpens the list, from any program.",
+            pick + "\tOpens the list on " + AllPlace + ", from any program.",
             type + "\tTypes the clipboard into the active window at once.",
             MainForm.NumbersName + "\tPastes the entry with that number into the active window.",
             "F1\tOpens this guide.",
@@ -525,12 +537,12 @@ static partial class Strings
                 + MainForm.MaxDelay + "), whether the server uses a US keyboard, whether to press Enter at the end, "
                 + "whether to clear the clipboard afterwards, slow typing and symbols composed with Alt codes.",
             "- " + HotkeysTitle + ": turns " + type + ", " + pick + " and " + MainForm.NumbersName + " on and off, and "
-                + "gives them other keys.",
+                + "gives them other keys; and whether " + pick + " opens the list where you left it.",
             "- " + HistoryTitle + ": whether to remember what you copy, for how many days, the folder of the database "
                 + "(which can be changed) with the link that opens it, and the button that cleans the history at once.",
             "- " + AppearanceTitle + ": the language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of "
-                + "the interface (buttons, options, this guide: in pixels, they restart the program) and those of the entries "
-                + "(they change at once).",
+                + "the interface (buttons, options, this guide: in pixels, they restart the program), those of the entries "
+                + "(they change at once), and whether resting the pointer on a card shows it whole.",
             "- " + ProgramTitle + ": whether to stay in the notification area and hide when you switch to another program, "
                 + "whether to start with Windows, the buttons to export and import, and the version of the program.",
 

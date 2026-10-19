@@ -7,7 +7,7 @@ using System.Threading;
 using System.Windows.Forms;
 
 // A part of a card, where a click does something of its own.
-enum Part { None, Body, Copy, Save, Delete, Pin, More }
+enum Part { None, Body, Show, Copy, Save, Delete, Pin, More }
 
 // The name of a day among the cards: those under it were copied, or saved, that day.
 class Heading
@@ -26,7 +26,8 @@ class Heading
 }
 
 // Where the parts of a card are, in its row: the card itself, with air under it; the entry, first; at the right of
-// its first line its number, its arrow and the small buttons; under it the small line of where, when and what.
+// its first line its number, its arrow and the small buttons; at the bottom the small line of where, when and what,
+// drawn at its right end, under the buttons.
 class CardParts
 {
     public Rectangle Card, Body, Meta, Number, Pin;
@@ -86,7 +87,7 @@ partial class MainForm
             Look.Mark(changeItem, entry != null && entry.Saved ? Sign.Edit : Sign.Star);
             changeItem.Visible = deleteItem.Visible = entry != null;
             showItem.Visible = entry != null;
-            showItem.Text = entry != null && entry.Saved && entry.Name != null && !entry.Picture ? Strings.ShowContent : Strings.ShowFull;
+            if (entry != null) showItem.Text = ShowText(entry);
             readItem.Visible = entry != null && entry.Picture;
             pinItem.Visible = entry != null && !entry.Saved;
             pinItem.Text = entry != null && entry.Pinned ? Strings.Unpin : Strings.Pin;
@@ -121,6 +122,7 @@ partial class MainForm
         cardList.MouseDown += delegate(object sender, MouseEventArgs e)
         {
             HidePeek();
+            HideHoverTip();
             int index = cardList.RowAt(e.Location);
             if (e.Button == MouseButtons.Right && index >= 0 && !(cardList.Items[index] is Heading)) cardList.SelectedIndex = index;
             // A saved text may be dragged to a folder of the sidebar.
@@ -140,6 +142,7 @@ partial class MainForm
             Entry entry = (Entry)cardList.Items[index];
             switch (PartAt(index, e.Location))
             {
+                case Part.Show: ShowPeek(cardList, index, true); break;
                 case Part.Copy: Use(entry); break;
                 case Part.Save: Edit(entry); break;
                 case Part.Delete: DeleteSelected(); break;
@@ -164,17 +167,27 @@ partial class MainForm
             hoverRow = index;
             hoverPart = part;
             if (index >= 0) cardList.Invalidate(cardList.GetItemRectangle(index));
-            // The small buttons are signs alone: their tooltip says what they do.
+            // The small buttons are signs alone: their tooltip, under each, says what they do.
             Entry entry = index < 0 ? null : cardList.Items[index] as Entry;
-            tips.SetToolTip(cardList, entry == null ? null : PartText(part, entry));
+            string text = entry == null ? null : PartText(part, entry);
+            if (text == null)
+            {
+                HideHoverTip();
+                return;
+            }
+            CardParts parts = Lay(entry, cardList.GetItemRectangle(index));
+            Rectangle button = part == Part.Pin ? parts.Pin : parts.Buttons[part];
+            HoverTip(cardList, index * 16 + (int)part, text, new Point(button.Left + (button.Width - Look.TipSize(text).Width) / 2,
+                button.Bottom + (int)(Gap * Zoom)));
         };
         cardList.MouseLeave += delegate
         {
+            HideHoverTip();
             Hover(-1);
             if (hoverRow >= 0 && hoverRow < cardList.Items.Count) cardList.Invalidate(cardList.GetItemRectangle(hoverRow));
             hoverRow = -1;
         };
-        cardList.MouseWheel += delegate { HidePeek(); };   // the cards move under it
+        cardList.MouseWheel += delegate { HidePeek(); HideHoverTip(); };   // the cards move under it
         // Wider or narrower, a text may take another number of lines: the cards are measured again.
         int measuredWidth = 0;
         cardList.Resize += delegate
@@ -183,7 +196,8 @@ partial class MainForm
             measuredWidth = cardList.ClientSize.Width;
             ShowRows(Selected);
         };
-        // The pointer resting on a card shows the entry whole; one that was asked for leaves by itself.
+        // The pointer resting on a card shows the entry whole, if the option says so; one that was asked for leaves by
+        // itself.
         rest.Tick += delegate
         {
             rest.Stop();
@@ -412,15 +426,15 @@ partial class MainForm
         if (row.Top < 0 || row.Bottom > list.ClientSize.Height) list.TopIndex = index;
     }
 
-    // Remembers which card the pointer is on, and lets it light up. An entry whose content the card shows (a copied
-    // one, a saved one without a name, a picture) is shown whole if the pointer rests there; a text with a name only
-    // when asked.
+    // Remembers which card the pointer is on, and lets it light up. With the option on, an entry whose content the
+    // card shows (a copied one, a saved one without a name, a picture) is shown whole if the pointer rests there; a
+    // text with a name only when asked, from the eye of its card or its menu.
     void Hover(int index)
     {
         if (cardList.Glow.Row == index) return;
         cardList.Glow.Set(index);   // the card lights up gradually, the one left fades
         if (!peekAsked || index < 0) HidePeek();
-        if (index < 0) return;
+        if (index < 0 || !restBox.Checked) return;
         Entry entry = (Entry)cardList.Items[index];
         if (entry.Saved && entry.Name != null && !entry.Picture) return;
         resting = cardList;
@@ -568,8 +582,9 @@ partial class MainForm
     const TextFormatFlags BodyFlags = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.TextBoxControl;
     const int MaxBody = 600;   // of a long text, what a card takes to show its first lines
     const string Dot = " · ";  // between the parts of the small line under the entry
+    const float MetaShare = 0.6f;   // how far that line goes from the card towards Muted, and how opaque its icon is
     // The small buttons at the right of a card, from the left: they are signs alone, named by their tooltips.
-    static readonly Part[] CardButtons = { Part.Copy, Part.Save, Part.Delete, Part.More };
+    static readonly Part[] CardButtons = { Part.Show, Part.Copy, Part.Save, Part.Delete, Part.More };
 
     // What the card shows of an entry: of a saved one with a name only the name, so that a password never appears;
     // of a text its beginning, its lines kept.
@@ -600,7 +615,8 @@ partial class MainForm
     }
 
     // The parts of the card of an entry in its row (see CardParts): the entry first, at the top left; at the right of
-    // its first line its number, its arrow and the small buttons; at the bottom the small line of where and when.
+    // its first line its number, its arrow and the small buttons; at the bottom the small line of where and when, which
+    // DrawEntry writes at its right end.
     CardParts Lay(Entry entry, Rectangle row)
     {
         int inset = (int)(CardInset * Zoom), gap = (int)(CardLineGap * Zoom), side = (int)(PartHeight * Zoom);
@@ -637,6 +653,7 @@ partial class MainForm
     {
         switch (part)
         {
+            case Part.Show: return ShowText(entry);
             case Part.Copy: return Strings.CopyButton;
             case Part.Save: return entry.Saved ? Strings.EditDots : Strings.SaveDots;
             case Part.Delete: return Strings.Delete;
@@ -646,10 +663,17 @@ partial class MainForm
         }
     }
 
+    // What showing an entry whole is called: of a saved text with a name, showing its content, which the card hides.
+    static string ShowText(Entry entry)
+    {
+        return entry.Saved && entry.Name != null && !entry.Picture ? Strings.ShowContent : Strings.ShowFull;
+    }
+
     static Sign PartSignOf(Part part, Entry entry)
     {
         switch (part)
         {
+            case Part.Show: return Sign.Show;
             case Part.Copy: return Sign.Copy;
             case Part.Save: return entry.Saved ? Sign.Edit : Sign.Star;
             case Part.Delete: return Sign.Delete;
@@ -717,35 +741,24 @@ partial class MainForm
         else
             TextRenderer.DrawText(g, CardText(entry), e.Font, parts.Body, Look.Ink, BodyFlags | TextFormatFlags.EndEllipsis);
 
-        // Under it, small and grey: the program it was copied in with its icon, or the folder of a saved one; when;
-        // what it is.
-        int side = parts.Meta.Height;
-        Rectangle icon = new Rectangle(parts.Meta.Left, parts.Meta.Top, side, side);
-        string source;
-        if (entry.Saved)
-        {
-            Look.Draw(g, Sign.Star, icon, null);
-            source = entry.Group != null ? Texts.Display(entry.Group) : Strings.SavedTitle;
-        }
-        else if (entry.Origin != null)
-        {
-            if (entry.Origin.Icon != null)
-            {
-                g.InterpolationMode = InterpolationMode.HighQualityBicubic;
-                g.DrawImage(entry.Origin.Icon, icon);
-            }
-            else Look.Draw(g, Sign.Apps, icon, null);
-            source = entry.Origin.Name;
-        }
-        else
-        {
-            Look.Draw(g, SignOf(entry), icon, null);
-            source = null;
-        }
+        // Under the buttons, at the right end, small and faint, so that the entry is what stands out: the program it was
+        // copied in with its icon, or the folder of a saved one; when; what it is.
+        string source = entry.Saved ? (entry.Group != null ? Texts.Display(entry.Group) : Strings.SavedTitle)
+            : entry.Origin != null ? entry.Origin.Name : null;
         List<string> said = new List<string>();
         foreach (string part in new string[] { source, When(entry), BadgeOf(entry) }) if (part != null) said.Add(part);
-        TextRenderer.DrawText(g, string.Join(Dot, said.ToArray()), Look.NoteFont, Rectangle.FromLTRB(icon.Right + (int)(PartGap * Zoom),
-            parts.Meta.Top, parts.Meta.Right, parts.Meta.Bottom), Look.Muted, TextFormatFlags.VerticalCenter | LineFlags);
+        string meta = string.Join(Dot, said.ToArray());
+        const TextFormatFlags metaFlags = TextFormatFlags.VerticalCenter | LineFlags | TextFormatFlags.NoPadding;
+        int side = parts.Meta.Height, gap = (int)(PartGap * Zoom);
+        int width = Math.Min(parts.Meta.Width - side - gap, TextRenderer.MeasureText(g, meta, Look.NoteFont, Size.Empty,
+            metaFlags & ~TextFormatFlags.EndEllipsis).Width);
+        Rectangle text = Rectangle.FromLTRB(parts.Meta.Right - width, parts.Meta.Top, parts.Meta.Right, parts.Meta.Bottom);
+        Rectangle icon = new Rectangle(text.Left - gap - side, parts.Meta.Top, side, side);
+        Color faint = Look.Blend(fill, Look.Muted, MetaShare);
+        if (entry.Saved) Look.Draw(g, Sign.Star, icon, faint);
+        else if (entry.Origin != null && entry.Origin.Icon != null) Look.DrawFaint(g, entry.Origin.Icon, icon, MetaShare);
+        else Look.Draw(g, entry.Origin != null ? Sign.Apps : SignOf(entry), icon, faint);
+        TextRenderer.DrawText(g, meta, Look.NoteFont, text, faint, metaFlags);
 
         // At the right of the first line: the number, the arrow and the small buttons, grey but on the card the pointer
         // is on, or the selected one.
@@ -971,9 +984,20 @@ partial class MainForm
             wasHidden = !Visible;
         }
         search.Clear();
+        if (!whereLeftBox.Checked) ShowAll();   // unless the option keeps where the list was left
         options.Hide();   // above the list, it would cover it
         RestoreWindow();
         search.Focus();
+    }
+
+    // All the entries, of every kind: where the list hotkey opens, wanted by the user.
+    void ShowAll()
+    {
+        if (place.Kind == PlaceKind.All && tabs.Selected == 0) return;
+        place = new Place(PlaceKind.All);
+        cardList.ClearSelected();
+        if (tabs.Selected != 0) tabs.Selected = 0;   // which fills the cards and the sidebar again
+        else Filter();
     }
 
     // After the list hotkey: gives the foreground back to the window the user came from, and hides the

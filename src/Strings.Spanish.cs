@@ -21,12 +21,14 @@ static partial class Strings
         AllPlace = "Todo"; PinnedPlace = "Arriba"; SourcesPlace = "Origen"; GuideItem = "Ayuda";
         AllKinds = "Todo"; TextKinds = "Texto"; CodeKinds = "Código"; LinkKinds = "Enlaces"; PictureKinds = "Imágenes";
         TextBadge = "Texto"; CodeBadge = "Código"; LinkBadge = "Enlace"; PictureBadge = "Imagen"; FormattedBadge = "Con formato";
-        CopyButton = "Copiar"; ShowFull = "Ver todo"; MoreItem = "Más";
+        CopyButton = "Copiar"; ShowFull = "Vista previa"; MoreItem = "Más";
         Today = "Hoy"; Yesterday = "Ayer"; Undated = "Antes";
         NoPinned = "Nada arriba: la flecha de una entrada copiada la trae aquí por un tiempo";
         NoneOfKind = "Nada de este tipo";
         SourcesTip = "Los programas en los que copiaste: elige uno para ver solo lo que copiaste allí.";
         PinnedTip = "Las entradas copiadas mantenidas arriba por un tiempo: se van igualmente cuando vencen sus días.";
+        NarrowSideTip = "Reduce la barra lateral a sus iconos. También se puede arrastrar su borde, para ensancharla o estrecharla.";
+        WideSideTip = "Vuelve a mostrar los nombres en la barra lateral.";
         Error = "Error: {0}";
         NewerDatabase = "{0} fue escrito por una versión más reciente de {1}: actualiza el programa para abrirlo.";
         UnexpectedError ="Algo ha ido mal: {0}\n\nEl programa continúa. Los detalles están en {1}.";
@@ -124,7 +126,7 @@ static partial class Strings
             + "«" + CopyButton + "», {0} o un doble clic devuelven la entrada al portapapeles: luego la pegas\n"
             + "con Ctrl+V o la tecleas con {1}. Con «" + CopyButton + "» la ventana sigue abierta, con {0} o un doble\n"
             + "clic vuelves a donde estabas. Un clic solo selecciona; el clic derecho abre el menú de la entrada.\n"
-            + "Si dejas el puntero sobre una tarjeta que corta su texto, la ves entera.\n"
+            + "El ojo a la derecha de una tarjeta la muestra entera.\n"
             + "La flecha a la derecha de una entrada copiada ({2}) la mantiene un tiempo arriba de la lista:\n"
             + "se va igualmente cuando vencen sus días. Lo que deba quedarse, guárdalo.\n"
             + "Los textos guardados no vencen nunca y están cifrados para tu usuario; con un nombre,\n"
@@ -169,6 +171,9 @@ static partial class Strings
         ThemeSystem = "Como Windows"; ThemeLight = "Claro"; ThemeDark = "Oscuro";
         FaceOption = "Fuente de la interfaz"; FaceNote = "Botones, opciones, menús: el programa se reinicia";
         FontOption = "Fuente de las entradas"; FontNote = "Lo que copias y guardas: cambia enseguida";
+        RestOption = "Vista previa con el puntero quieto"; RestNote = "En una tarjeta cortada, sin el ojo";
+        RestTip = "Activada, el puntero quieto sobre una tarjeta que corta su entrada la muestra entera.\n"
+            + "Desactivada, solo la muestra el ojo a la derecha de la tarjeta, o su menú.";
         Pixels = "{0} px";
         TrayOption = "Seguir en el área de notificación"; TrayNote = "Al cerrar la ventana el programa sigue activo";
         LeaveOption = "Ocultar al cambiar a otro programa"; LeaveNote = "Vuelve al área de notificación";
@@ -178,6 +183,9 @@ static partial class Strings
         AboutNote = "Software libre con licencia MIT";
         TypeNote = "Teclea enseguida en la ventana activa";
         PickOption = "Abrir la lista"; PickNote = "Trae esta ventana al frente desde cualquier programa";
+        WhereLeftOption = "Abrir donde la dejaste"; WhereLeftNote = "Si no, la lista se abre en " + AllPlace;
+        WhereLeftTip = "Desactivada, el atajo de la lista la abre siempre en " + AllPlace + ", de todos los tipos, con la búsqueda vacía.\n"
+            + "Activada, muestra el lugar y el tipo en que la dejaste.";
         QuickOption = "Pegar por número"; QuickNote = "Pega las entradas que tienen un atajo";
         HistoryOption = "Recordar textos e imágenes copiados"; HistoryNote = "Lo que copias mientras el programa está abierto";
         KeepOption = "Días que se guardan"; KeepNote = "Con 0, solo lo que copiaste hoy";
@@ -321,14 +329,17 @@ static partial class Strings
             "- «" + SavedTitle + "»: los textos guardados, por nombre. Debajo están sus carpetas.",
             "- «" + SourcesPlace + "»: los programas en los que copiaste, cada uno con su icono y cuántas entradas vienen "
                 + "de él. Un clic en uno muestra solo lo que copiaste allí; un clic en «" + SourcesPlace + "» abre o cierra la lista.",
+            "El botón en lo alto de la barra lateral la reduce a sus iconos, y le devuelve los nombres: si dejas el puntero "
+                + "sobre un icono, ves su nombre. Arrastrando el borde entre la barra y las tarjetas la ensanchas o la "
+                + "estrechas; más estrecha de lo que puede, se reduce a los iconos.",
             "Las pestañas sobre las tarjetas (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") muestran un solo tipo de entrada. «" + CodeKinds + "» es una suposición hecha por el "
                 + "aspecto de las líneas: de vez en cuando acaba ahí un texto, o un trozo de código entre los textos. "
                 + "Cuando se equivoca, «" + KindMenu + "», en el menú de un texto, dice qué es: copiado de nuevo o "
                 + "guardado, se queda así.",
-            "Cada tarjeta muestra primero la entrada; debajo, en pequeño, el programa en el que se copió, con su icono (o "
-                + "la carpeta de un texto guardado), la hora de la copia y qué es. A la derecha, pequeños signos la copian, la "
-                + "guardan o la editan, la eliminan y abren su menú: dejando el puntero sobre uno, dice qué hace.",
+            "Cada tarjeta muestra primero la entrada; abajo a la derecha, en pequeño y tenue, el programa en el que se copió, con su icono (o "
+                + "la carpeta de un texto guardado), la hora de la copia y qué es. A la derecha, pequeños signos la muestran "
+                + "entera, la copian, la guardan o la editan, la eliminan y abren su menú: dejando el puntero sobre uno, dice qué hace.",
             "- Escribe en la casilla de arriba para buscar entre las entradas del lugar: las palabras valen en cualquier "
                 + "orden, sin importar mayúsculas ni acentos.",
             "- Un clic en una tarjeta la selecciona. El signo de copiar («" + CopyButton + "») pone la entrada en el portapapeles y deja la "
@@ -336,9 +347,10 @@ static partial class Strings
             "- " + EnterKeyName + " o un doble clic la ponen en el portapapeles y, si habías abierto la lista con "
                 + pick + ", te devuelven a la ventana en la que estabas trabajando.",
             "- Luego la pegas con Ctrl+V, o la tecleas con " + type + ".",
-            "- «" + ShowFull + "», en el menú, muestra la entrada completa en un recuadro: el texto con todas sus líneas, la imagen más "
-                + "grande. Dejar el puntero sobre una tarjeta que corta su texto hace lo mismo. Desaparece en cuanto mueves "
-                + "el puntero.",
+            "- El ojo («" + ShowFull + "», también en el menú) muestra la entrada completa en un recuadro: el texto con todas sus "
+                + "líneas, la imagen más grande. Se queda unos segundos, vaya donde vaya el puntero. Con «" + RestOption + "» "
+                + "activada, en las opciones, dejar el puntero sobre una tarjeta que corta su texto hace lo mismo, hasta que "
+                + "mueves el puntero.",
             "- Los tres puntos de la derecha, o el clic derecho, abren el menú de la entrada, sin tocar el portapapeles.",
             "- «" + CopyPictureText + "», en el menú de una imagen, pone en el portapapeles el texto "
                 + "que Windows lee en ella, aquí en el PC, sin internet: entra en la lista como todo lo que copias (el de "
@@ -371,8 +383,8 @@ static partial class Strings
                 + "nombre o su contenido.",
             "- «" + Delete + "» (" + Key(Keys.Control | MainForm.DeleteKey) + ") borra el texto guardado, o quita de la "
                 + "lista la entrada copiada.",
-            "- «" + ShowContent + "», en el menú del clic derecho de un texto guardado, lo muestra en un recuadro "
-                + "unos segundos: la lista solo muestra su nombre, y pasar el puntero por encima no basta.",
+            "- El ojo de un texto guardado con nombre («" + ShowContent + "», también en su menú) muestra su contenido en un "
+                + "recuadro unos segundos: la lista solo muestra su nombre, y pasar el puntero por encima nunca basta.",
             "- Los textos guardados también están en el menú del icono junto al reloj: elegir uno lo devuelve al "
                 + "portapapeles sin abrir la ventana.",
             "Los textos guardados no vencen nunca. Están en la base de datos del programa, cifrados para tu usuario: "
@@ -429,7 +441,7 @@ static partial class Strings
             "- con Bloq Mayús activado no se teclea: hay que desactivarlo antes.",
 
             "# Teclas",
-            pick + "\tAbre la lista, desde cualquier programa.",
+            pick + "\tAbre la lista en " + AllPlace + ", desde cualquier programa.",
             type + "\tTeclea enseguida el portapapeles en la ventana activa.",
             MainForm.NumbersName + "\tPega en la ventana activa la entrada con ese número.",
             "F1\tAbre esta guía.",
@@ -480,12 +492,12 @@ static partial class Strings
                 + MainForm.MaxDelay + "), si el servidor usa el teclado estadounidense, si pulsar Intro al final, si "
                 + "vaciar el portapapeles después, el tecleo lento y los símbolos compuestos con códigos Alt.",
             "- " + HotkeysTitle + ": activa y desactiva " + type + ", " + pick + " y " + MainForm.NumbersName
-                + ", y les da otras teclas.",
+                + ", y les da otras teclas; y si " + pick + " abre la lista donde la dejaste.",
             "- " + HistoryTitle + ": si recordar lo que copias, durante cuántos días, la carpeta de la base de datos "
                 + "(que se puede cambiar) con el enlace que la abre, y el botón que limpia enseguida el historial.",
             "- " + AppearanceTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño "
-                + "de la interfaz (botones, opciones, esta guía: en píxeles, reinician el programa) y los de las entradas "
-                + "(cambian enseguida).",
+                + "de la interfaz (botones, opciones, esta guía: en píxeles, reinician el programa), los de las entradas "
+                + "(cambian enseguida), y si dejar el puntero sobre una tarjeta la muestra entera.",
             "- " + ProgramTitle + ": si seguir en el área de notificación y ocultarse al cambiar a otro programa, si "
                 + "iniciarse con Windows, los botones para exportar e importar, y la versión del programa.",
 

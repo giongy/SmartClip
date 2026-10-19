@@ -582,7 +582,7 @@ class RoundButton : Button
 // The small signs drawn beside entries, on buttons and beside the pages of the options: they are where the colour is.
 enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, Keys, Search, Help, Opened, Closed, Bolt, History, Up,
     Bold, Italic, Underline, Face, Size, Erase, Formatted, Folder, NewFolder, Move, Pause, Resume, Open, Exit, Show, Check, Paint,
-    Info, Done, Warning, Error, Paste, Code, Picture, Apps, More, Copy }
+    Info, Done, Warning, Error, Paste, Code, Picture, Apps, More, Copy, Menu }
 
 // The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
 enum Theme { System, Light, Dark }
@@ -979,6 +979,19 @@ static class Look
             | TextFormatFlags.EndEllipsis);
     }
 
+    // A picture drawn partly see-through: 'opacity' from 0, nothing, to 1, as it is.
+    public static void DrawFaint(Graphics g, Image image, Rectangle box, float opacity)
+    {
+        using (System.Drawing.Imaging.ImageAttributes faint = new System.Drawing.Imaging.ImageAttributes())
+        {
+            System.Drawing.Imaging.ColorMatrix matrix = new System.Drawing.Imaging.ColorMatrix();
+            matrix.Matrix33 = opacity;
+            faint.SetColorMatrix(matrix);
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.DrawImage(image, box, 0, 0, image.Width, image.Height, GraphicsUnit.Pixel, faint);
+        }
+    }
+
     // A colour part of the way from one to another.
     public static Color Blend(Color from, Color to, float amount)
     {
@@ -1053,6 +1066,7 @@ static class Look
             case Sign.Apps: return "\uE71D";                        // AllApps
             case Sign.More: return "\uE712";                        // More
             case Sign.Copy: return "\uE8C8";                        // Copy
+            case Sign.Menu: return "\uE700";                        // GlobalNavigationButton
             default: return "\uE81C";                               // History
         }
     }
@@ -1078,6 +1092,7 @@ static class Look
             case Sign.Plus: return Green;
             case Sign.Delete: return Red;
             case Sign.Exit: return Muted;
+            case Sign.Menu: return Ink;
             default: return Letter(sign) != null && sign != Sign.Formatted ? Ink : Purple;
         }
     }
@@ -1278,6 +1293,10 @@ static class Look
                 case Sign.Apps:   // four squares
                     foreach (PointF corner in new PointF[] { new PointF(2, 2), new PointF(9, 2), new PointF(2, 9), new PointF(9, 9) })
                         g.FillRectangle(fill, x + corner.X * u, y + corner.Y * u, 5 * u, 5 * u);
+                    break;
+                case Sign.Menu:   // three lines
+                    foreach (float line in new float[] { 4, 8, 12 })
+                        g.DrawLine(pen, x + 2.5f * u, y + line * u, x + 13.5f * u, y + line * u);
                     break;
                 case Sign.More:   // three dots
                     foreach (float dot in new float[] { 3.5f, 8, 12.5f })
@@ -1492,17 +1511,21 @@ static class Look
     {
         tips.OwnerDraw = true;
         int padding = (int)(TipPadding * Zoom);
-        tips.Popup += delegate(object sender, PopupEventArgs e)
-        {
-            Size text = TextRenderer.MeasureText(tips.GetToolTip(e.AssociatedControl), TextFont, Size.Empty, TipFlags);
-            e.ToolTipSize = new Size(text.Width + 2 * padding, text.Height + 2 * padding);
-        };
+        tips.Popup += delegate(object sender, PopupEventArgs e) { e.ToolTipSize = TipSize(tips.GetToolTip(e.AssociatedControl)); };
         tips.Draw += delegate(object sender, DrawToolTipEventArgs e)
         {
             using (Brush back = new SolidBrush(Well)) e.Graphics.FillRectangle(back, e.Bounds);
             using (Pen edge = new Pen(Border)) e.Graphics.DrawRectangle(edge, 0, 0, e.Bounds.Width - 1, e.Bounds.Height - 1);
             TextRenderer.DrawText(e.Graphics, e.ToolTipText, TextFont, Rectangle.Inflate(e.Bounds, -padding, -padding), Ink, TipFlags);
         };
+    }
+
+    // How large a tooltip is with its text.
+    public static Size TipSize(string text)
+    {
+        int padding = (int)(TipPadding * Zoom);
+        Size size = TextRenderer.MeasureText(text, TextFont, Size.Empty, TipFlags);
+        return new Size(size.Width + 2 * padding, size.Height + 2 * padding);
     }
 
     // Title bar in the colour of the window (Windows 11; earlier versions refuse and keep their own).
