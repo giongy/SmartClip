@@ -119,8 +119,8 @@ History of copied texts and pictures, with instant search that also finds saved 
 A sidebar like the apps of Windows 11, to widen or reduce to icons: history, pinned, shortcuts, saved texts in folders, the programs you copied in
 Compact cards all of one height, one line or two, the content first and the buttons under the pointer, with tabs for texts, code, links and pictures
 List available from any program with a hotkey, and hotkeys of your choice
-Entries kept at the top for a while with an arrow
-Saved texts and copied entries pasted anywhere with Ctrl+Shift+1…9
+Entries kept at the top for a while with an arrow, and saved texts or copied entries pasted anywhere with Ctrl+Shift+1…9
+Several cards selected at once, with Ctrl or Shift, to keep at the top, move into a folder or delete together
 Encrypted saved texts and pictures, with or without a name, in folders and subfolders
 Formatted saved texts, such as mail signatures: bold, italic, fonts and sizes, pasted as they are
 Saved texts also in the tray icon menu, without opening the window
@@ -149,13 +149,9 @@ paste blocked
 ### What's new in this version
 
 ```
-History: the list opens on what you copied, without the saved texts mixed in. A search finds them too, after your copies, and the words found are highlighted on the cards; a long text found further in shows that part of it.
+Several cards at once: Ctrl+click adds or removes one, Shift+click takes all those in between, Ctrl+A takes them all. A bar above the cards says how many and keeps them at the top, moves them into a folder (copied entries are saved there) or deletes them together; the same is in the right-click menu.
 
-Cleaner cards, all of one height: one line each by default, so more entries are in view, or two in the options. The lines of a longer text follow one another, a picture fills a small box, and the buttons appear under the pointer. A second click on the eye puts the preview away. The count sits beside the title.
-
-Shortcuts, a new place in the sidebar: every entry with a number in one list. A click on the number of a card changes it or takes it away.
-
-The window can be made narrower, down to the icons of the sidebar, where each folder now shows its initial.
+Scrolling through the history, the name of the day of the top card now stays above the cards, so you always know which day you are looking at.
 ```
 
 ### Screenshot captions
@@ -217,8 +213,8 @@ Cronologia di testi e immagini copiati, con una ricerca istantanea che trova anc
 Una barra laterale come nelle app di Windows 11, da allargare o ridurre alle icone: cronologia, in alto, scorciatoie, salvati in cartelle, i programmi in cui hai copiato
 Voci in schede compatte tutte alte uguali, una riga o due, prima il contenuto e i pulsanti sotto il puntatore, con le schede per testi, codice, link e immagini
 Elenco richiamabile da qualsiasi programma con una scorciatoia, e scorciatoie a tua scelta
-Voci tenute in cima per un po' con una freccia
-Testi salvati e voci copiate incollati ovunque con Ctrl+Maiusc+1…9
+Voci tenute in cima per un po' con una freccia, e testi salvati o voci copiate incollati ovunque con Ctrl+Maiusc+1…9
+Più schede selezionate insieme, con Ctrl o Maiusc, da tenere in cima, spostare in una cartella o eliminare in una volta
 Testi e immagini salvati cifrati, con o senza nome, in cartelle e sottocartelle
 Testi salvati formattati, come le firme di posta: grassetto, corsivo, caratteri e dimensioni, incollati così come sono
 Testi salvati anche nel menu dell'icona, senza aprire la finestra
@@ -247,13 +243,9 @@ digitare password
 ### Novità di questa versione
 
 ```
-Cronologia: l'elenco si apre su ciò che hai copiato, senza i testi salvati mescolati. Una ricerca trova anche quelli, dopo le copie, e le parole trovate sono evidenziate sulle schede; un testo lungo trovato più avanti ne mostra quel punto.
+Più schede insieme: Ctrl+clic ne aggiunge o toglie una, Maiusc+clic prende tutte quelle in mezzo, Ctrl+A le prende tutte. Una barra sopra le schede dice quante sono e le tiene in cima, le sposta in una cartella (le voci copiate vi vengono salvate) o le elimina in una volta; lo stesso nel menu del tasto destro.
 
-Schede più pulite, tutte alte uguali: una riga ciascuna di default, così si vedono più voci, o due nelle opzioni. Le righe di un testo più lungo si seguono, un'immagine riempie un piccolo riquadro e i pulsanti compaiono sotto il puntatore. Un secondo clic sull'occhio toglie l'anteprima. Il conteggio sta accanto al titolo.
-
-Scorciatoie, un posto nuovo nella barra laterale: tutte le voci con un numero in un elenco. Un clic sul numero di una scheda lo cambia o lo toglie.
-
-La finestra si stringe di più, fino alle sole icone della barra laterale, dove ogni cartella mostra ora la sua iniziale.
+Scorrendo la cronologia, il nome del giorno della prima scheda resta ora sopra le schede: sai sempre di che giorno è ciò che stai guardando.
 ```
 
 ### Didascalie delle schermate
@@ -315,8 +307,8 @@ Historial de textos e imágenes copiados, con una búsqueda instantánea que tam
 Una barra lateral como en las apps de Windows 11, para ensanchar o reducir a iconos: historial, arriba, atajos, guardados en carpetas, los programas donde copiaste
 Entradas en tarjetas compactas de la misma altura, una línea o dos, primero el contenido y los botones bajo el puntero, con pestañas para textos, código, enlaces e imágenes
 Lista disponible desde cualquier programa con un atajo, y atajos a tu elección
-Entradas mantenidas arriba un tiempo con una flecha
-Textos guardados y entradas copiadas pegados en cualquier sitio con Ctrl+Mayús+1…9
+Entradas mantenidas arriba un tiempo con una flecha, y textos guardados o entradas copiadas pegados en cualquier sitio con Ctrl+Mayús+1…9
+Varias tarjetas seleccionadas a la vez, con Ctrl o Mayús, para mantener arriba, mover a una carpeta o eliminar juntas
 Textos e imágenes guardados cifrados, con o sin nombre, en carpetas y subcarpetas
 Textos guardados con formato, como las firmas de correo: negrita, cursiva, fuentes y tamaños, pegados tal cual
 Textos guardados también en el menú del icono, sin abrir la ventana
@@ -345,13 +337,9 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Historial: la lista se abre en lo que copiaste, sin los textos guardados mezclados. Una búsqueda también los encuentra, después de tus copias, y las palabras encontradas se resaltan en las tarjetas; un texto largo encontrado más adelante muestra esa parte.
+Varias tarjetas a la vez: Ctrl+clic añade o quita una, Mayús+clic toma todas las de en medio, Ctrl+A las toma todas. Una barra encima de las tarjetas dice cuántas son y las mantiene arriba, las mueve a una carpeta (las entradas copiadas se guardan allí) o las elimina juntas; lo mismo en el menú del clic derecho.
 
-Tarjetas más limpias, todas de la misma altura: una línea cada una por defecto, para ver más entradas, o dos en las opciones. Las líneas de un texto más largo van seguidas, una imagen llena un pequeño recuadro y los botones aparecen bajo el puntero. Un segundo clic en el ojo quita la vista previa. El recuento está junto al título.
-
-Atajos, un lugar nuevo en la barra lateral: todas las entradas con un número en una lista. Un clic en el número de una tarjeta lo cambia o lo quita.
-
-La ventana se puede estrechar más, hasta los iconos de la barra lateral, donde cada carpeta muestra ahora su inicial.
+Al desplazarte por el historial, el nombre del día de la primera tarjeta queda ahora encima de las tarjetas: siempre sabes de qué día es lo que estás viendo.
 ```
 
 ### Leyendas de las capturas
@@ -413,8 +401,8 @@ Historique des textes et images copiés, avec une recherche instantanée qui tro
 Une barre latérale comme les apps de Windows 11, à élargir ou réduire aux icônes : historique, en haut, raccourcis, enregistrés en dossiers, les programmes où vous avez copié
 Éléments en cartes compactes de la même hauteur, une ligne ou deux, le contenu d'abord et les boutons sous le pointeur, avec des onglets pour textes, code, liens et images
 Liste accessible depuis n'importe quel programme avec un raccourci, et raccourcis à votre choix
-Éléments gardés un moment en haut avec une flèche
-Textes enregistrés et éléments copiés collés partout avec Ctrl+Maj+1…9
+Éléments gardés un moment en haut avec une flèche, et textes enregistrés ou éléments copiés collés partout avec Ctrl+Maj+1…9
+Plusieurs cartes sélectionnées à la fois, avec Ctrl ou Maj, à garder en haut, déplacer dans un dossier ou supprimer ensemble
 Textes et images enregistrés chiffrés, avec ou sans nom, dans des dossiers et sous-dossiers
 Textes enregistrés mis en forme, comme les signatures de courriel : gras, italique, polices et tailles, collés tels quels
 Textes enregistrés aussi dans le menu de l'icône, sans ouvrir la fenêtre
@@ -443,13 +431,9 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Historique : la liste s'ouvre sur ce que vous avez copié, sans les textes enregistrés mélangés. Une recherche les trouve aussi, après vos copies, et les mots trouvés sont surlignés sur les cartes ; un long texte trouvé plus loin en montre ce passage.
+Plusieurs cartes à la fois : Ctrl+clic en ajoute ou en retire une, Maj+clic prend toutes celles entre les deux, Ctrl+A les prend toutes. Une barre au-dessus des cartes dit combien elles sont et les garde en haut, les déplace dans un dossier (les éléments copiés y sont enregistrés) ou les supprime ensemble ; la même chose dans le menu du clic droit.
 
-Des cartes plus nettes, toutes de la même hauteur : une ligne chacune par défaut, pour voir plus d'éléments, ou deux dans les options. Les lignes d'un texte plus long se suivent, une image remplit un petit cadre et les boutons apparaissent sous le pointeur. Un second clic sur l'œil retire l'aperçu. Le nombre est à côté du titre.
-
-Raccourcis, un nouvel endroit dans la barre latérale : tous les éléments avec un numéro dans une liste. Un clic sur le numéro d'une carte le change ou le retire.
-
-La fenêtre se rétrécit davantage, jusqu'aux seules icônes de la barre latérale, où chaque dossier montre maintenant son initiale.
+En faisant défiler l'historique, le nom du jour de la première carte reste maintenant au-dessus des cartes : vous savez toujours de quel jour est ce que vous regardez.
 ```
 
 ### Légendes des captures
