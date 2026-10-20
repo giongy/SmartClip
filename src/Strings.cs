@@ -35,6 +35,8 @@ static partial class Strings
 
     // --- Keys, as the keyboards of each language label them ---
     public static string ShiftName = "Shift", DeleteKeyName = "Del", EnterKeyName = "Enter", ArrowsName = "Up / Down";
+    public static string EscapeKeyName = "Esc";
+    public static string WithKeys = "{0} ({1})";   // what a button does, and its keys
 
     // --- Dates, quotes and sizes ---
     public static string DayFormat = "d MMM", YearDayFormat = "d MMM yy";   // a day in a row of the list
@@ -84,6 +86,8 @@ static partial class Strings
         + "and this Windows has version {2}. Updating Windows solves it.";
     public static string PicturesFull = "The room for copied pictures ({0}) is full: the oldest are deleted, one at a time, "
         + "as you copy new ones.";
+    // The bar of the cards picked together, in the place of the tabs: how many, and taking them back.
+    public static string PickedCount = "{0} selected", PickNone = "Clear the selection";
 
     // --- Menus ---
     public static string Open = "Open", Exit = "Exit", Pause = "Pause capture", Resume = "Resume capture";
@@ -104,6 +108,10 @@ static partial class Strings
     public static string PausedSay = "Paused: what you copy is not remembered until you resume capturing.";
     public static string ResumedSay = "Capturing has resumed: what you copy comes back to the list.";
     public static string Pinned = "Kept at the top: {0}.", Unpinned = "No longer at the top: {0}.";
+    public static string PinnedMany = "{0} entries kept at the top.", UnpinnedMany = "{0} entries no longer at the top.";
+    public static string DeletedMany = "{0} entries deleted.";
+    public static string PickedSaved = "{0} entries are among the saved texts, outside the folders.",
+        PickedInFolder = "{0} entries are in the folder “{1}”.";
     public static string KindChanged = "Marked as {1}: {0}.";
     public static string NumberGiven = "{0} now pastes “{1}” wherever you are.";
     public static string NumberTaken = "“{0}” no longer has a shortcut.";
@@ -127,6 +135,7 @@ static partial class Strings
     public static string DeleteFolderTop = "\n\nWhat it holds is not deleted: it stays among the saved texts, outside the folders.";
     public static string DeleteFolderUp = "\n\nWhat it holds is not deleted: it moves into the folder “{0}”.";
     public static string AskDelete = "Delete “{0}”?";
+    public static string AskDeleteMany = "Delete {0} entries?", DeleteManySaved = "\n\nAmong them, saved texts: {0}.";
     // The buttons of the questions, which the program asks in a window of its own (AskForm).
     public static string Yes = "Yes", No = "No", Ok = "OK";
 
@@ -389,7 +398,7 @@ static partial class Strings
             "# The list",
             "On the left the sidebar, on the right the cards of the place chosen there:",
             "- " + HistoryPlace + ": what you copied, newest first, each day under its name; the entries kept at the top come "
-                + "before the others.",
+                + "before the others. While you scroll, the name of the day of the top card stays above the cards.",
             "- " + PinnedPlace + ": only the copied entries kept at the top.",
             "- " + ShortcutsPlace + ": the entries with a number, copied and saved, by number. A click on the number of a card "
                 + "changes it or takes it away, here and everywhere else.",
@@ -420,6 +429,11 @@ static partial class Strings
                 + "the picture larger. It stays a few seconds, wherever the pointer goes. With “" + RestOption + "” on, in the "
                 + "options, resting the pointer on a card that cuts its text short does the same, until the pointer moves.",
             "- The three dots on the right, or right-click, open the menu of the entry, without touching the clipboard.",
+            "- Ctrl+click adds a card to the selection or takes it away, " + ShiftName + "+click selects all the cards up to that one "
+                + "(" + ShiftName + " with the arrows too), " + Key(Keys.Control | MainForm.AllKey) + " selects them all. With several "
+                + "selected, a bar in the place of the tabs says how many and offers “" + Pin + "”, “" + MoveTo + "” and “" + Delete
+                + "”, which are also in the right-click menu and on their keys. “" + MoveTo + "” a folder, or " + SavedTitle
+                + ", saves the copied entries there. " + EscapeKeyName + ", or the cross at the end of the bar, goes back to one card.",
             "- “" + CopyPictureText + "”, in the menu of a picture, puts on the clipboard the text Windows "
                 + "reads in it, here on the PC, without the internet: it comes into the list as anything you copy (that of "
                 + "a saved picture is private, as a saved text is). Small text can come out with mistakes: look at it first.",
@@ -508,8 +522,9 @@ static partial class Strings
             MainForm.NumbersName + "\tPastes the entry with that number into the active window.",
             "F1\tOpens this guide.",
             ArrowsName + "\tMoves through the cards, or the places of the sidebar.",
+            Key(Keys.Control | MainForm.AllKey) + "\tSelects all the cards; Ctrl or " + ShiftName + " with a click, several.",
             EnterKeyName + "\tChooses the entry and goes back to the window you came from.",
-            "Esc\tGoes back to that window without choosing.",
+            EscapeKeyName + "\tGoes back to that window without choosing; with several cards selected, back to one.",
             Key(Keys.Control | MainForm.SearchKey) + "\tTakes the cursor to the search box.",
             Key(Keys.Control | MainForm.NewKey) + "\tNew saved text.",
             Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "\tNew folder.",

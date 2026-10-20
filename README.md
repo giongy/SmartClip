@@ -63,7 +63,8 @@ The main window looks like the apps of Windows 11: a sidebar on the left, the en
 the edge of the sidebar to make it wider or narrower; the button at its top reduces it to its icons.
 
 - **History**: what you copied, newest first, each day under its name. The entries kept at the top come first.
-  Searching, the saved texts that match come after them, under **Saved**.
+  Searching, the saved texts that match come after them, under **Saved**. While you scroll, the name of the day of
+  the top card stays above the cards.
 - **Pinned**: only the copied entries kept at the top.
 - **Shortcuts**: the entries with a number (see *Paste by number*), copied and saved, by number. A click on the number
   of a card changes it or takes it away, here and everywhere else.
@@ -94,6 +95,7 @@ only the name and the content stays hidden, which suits a password; without, the
 | Up / Down | Moves through the cards |
 | Ctrl+F | Takes the cursor to the search box, from anywhere in the window |
 | Click | Selects the card |
+| Ctrl+click, Shift+click (or Shift with the arrows), Ctrl+A | Selects several cards: one more or one less, all up to that one, all of them. A bar in the place of the tabs says how many and offers **Keep at the top**, **Move to** and **Delete**, also in the right-click menu and on Ctrl+P and Ctrl+E. **Move to** a folder, or **Saved**, saves the copied entries there. Esc, or the × at the end of the bar, goes back to one card |
 | **Copy** | Puts the entry back on the clipboard; the window stays, so you can still save or delete it |
 | Enter, or a double click | Puts the entry back on the clipboard and returns to the window you came from |
 | Right click, or the three dots on the right | Opens the menu of the entry |
@@ -141,7 +143,7 @@ on the clipboard without opening the window. Only the names are shown there, as 
 | --- | --- | --- |
 | New… | Ctrl+N | Write a new text to keep |
 | Save… / Edit… | Ctrl+S | Save the copied entry, with a name or without, or change the name or content of a saved one |
-| Delete | Ctrl+E | Delete the saved text, or drop a copied entry from the list |
+| Delete | Ctrl+E | Delete the saved text, or drop a copied entry from the list; several selected cards after asking once |
 
 Once an entry is back on the clipboard, paste it with Ctrl+V as usual or type it with **Ctrl+Alt+V** where paste
 does not work. Pictures can only be pasted, not typed; they can be saved like texts, and a saved picture always

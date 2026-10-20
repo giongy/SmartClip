@@ -26,6 +26,30 @@ class Heading
     }
 }
 
+// The name of the day of the top card, standing over the cards while they scroll under it: drawn as the names of
+// the days among them (see MainForm.ShowDay). The wheel over it scrolls them.
+class DayBar : Control
+{
+    public Control Under;
+
+    public DayBar()
+    {
+        DoubleBuffered = true;
+        ResizeRedraw = true;
+        SetStyle(ControlStyles.Selectable, false);   // a click leaves the focus where it is
+    }
+
+    protected override void WndProc(ref Message m)
+    {
+        if (m.Msg == Native.WM_MOUSEWHEEL && Under != null && Under.IsHandleCreated)
+        {
+            m.Result = Native.SendMessage(Under.Handle, m.Msg, m.WParam, m.LParam);
+            return;
+        }
+        base.WndProc(ref m);
+    }
+}
+
 // Where the parts of a card are, in its row: the card itself, with air under it; the entry, first; at the right of
 // its first line its number, then the small line of where, when and what, drawn at its right end, in whose room the
 // small buttons show while the pointer is on the card.
@@ -84,7 +108,7 @@ partial class MainForm
         // Only for a picture: the text Windows reads in it.
         ToolStripItem readItem = listMenu.Items.Add(Strings.CopyPictureText, null, delegate { CopyText(Selected); });
         // Only for a copied entry: the same as a click on its arrow.
-        ToolStripItem pinItem = listMenu.Items.Add("", null, delegate { TogglePin(Selected); });
+        ToolStripItem pinItem = listMenu.Items.Add("", null, delegate { PinSelected(); });
         // The number that pastes the entry from anywhere: the numbers are listed when the menu opens.
         ToolStripMenuItem numberItem = new ToolStripMenuItem(Strings.NumberMenu);
         listMenu.Items.Add(numberItem);
@@ -105,22 +129,27 @@ partial class MainForm
         Look.Mark(moveItem, Sign.Move);
         Look.Mark(deleteItem, Sign.Delete);
         Look.Mark(newItem, Sign.Plus);
-        // With nothing selected the menu still opens: a first text can be written from an empty list.
+        // With nothing selected the menu still opens: a first text can be written from an empty list. With several cards
+        // picked, it has only what acts on all of them, as their bar does.
         listMenu.Opening += delegate
         {
             HidePeek();
-            Entry entry = Selected;
+            bool many = Many;
+            Entry entry = many ? null : Selected;
             changeItem.Text = entry != null && entry.Saved ? Strings.EditDots : Strings.SaveDots;
             Look.Mark(changeItem, entry != null && entry.Saved ? Sign.Edit : Sign.Star);
-            changeItem.Visible = deleteItem.Visible = entry != null;
+            changeItem.Visible = entry != null;
+            deleteItem.Visible = entry != null || many;
             showItem.Visible = entry != null;
             if (entry != null) showItem.Text = ShowText(entry);
             readItem.Visible = entry != null && entry.Picture;
-            pinItem.Visible = entry != null && !entry.Saved;
-            pinItem.Text = entry != null && entry.Pinned ? Strings.Unpin : Strings.Pin;
+            pinItem.Visible = entry != null ? !entry.Saved : many && PickedCopied().Count > 0;
+            pinItem.Text = (entry != null ? entry.Pinned : many && AllPinned()) ? Strings.Unpin : Strings.Pin;
+            newItem.Visible = !many;
             ListNumbers(numberItem, entry);
             ListKinds(kindItem, entry);
-            ListPlaces(moveItem, entry);
+            if (many) moveItem.Visible = ListMoves(moveItem.DropDownItems, Targets());
+            else ListPlaces(moveItem, entry);
         };
         Look.Style((ToolStripDropDownMenu)moveItem.DropDown);
         Look.Style((ToolStripDropDownMenu)numberItem.DropDown);
@@ -139,13 +168,20 @@ partial class MainForm
             e.ItemHeight = CardHeight(cardList.Items[e.Index]);
         };
         cardList.DrawItem += DrawEntry;
-        // The name of a day is not chosen: the selection stays where it was.
+        // The name of a day is not chosen: the selection stays where it was. Moved otherwise than by picking (a click, the
+        // arrows), the selection is of one card again, where a range picked with Shift starts.
         cardList.SelectedIndexChanged += delegate
         {
             if (cardList.SelectedItem is Heading) cardList.SelectedIndex = lastCard < cardList.Items.Count ? lastCard : -1;
             else lastCard = cardList.SelectedIndex;
+            if (keepPicks) return;
+            pickFrom = cardList.SelectedIndex;
+            ClearPicks();
         };
-        // The left button acts, the right one only selects, so that its menu acts on the card under the pointer.
+        // Ctrl or Shift with a click pick several cards (wanted by the user on 20/10/2026), as in File Explorer.
+        cardList.Picking = Pick;
+        // The left button acts, the right one only selects, so that its menu acts on the card under the pointer; on a card
+        // among those picked, it leaves them picked, and its menu acts on all of them.
         cardList.MouseDown += delegate(object sender, MouseEventArgs e)
         {
             int index = cardList.RowAt(e.Location);
@@ -154,7 +190,13 @@ partial class MainForm
             eyeCloses = e.Button == MouseButtons.Left && peek.Visible && index == peekRow && PartAt(index, e.Location) == Part.Show;
             HidePeek();
             HideHoverTip();
-            if (e.Button == MouseButtons.Right && index >= 0 && !(cardList.Items[index] is Heading)) cardList.SelectedIndex = index;
+            Entry under = index < 0 ? null : cardList.Items[index] as Entry;
+            if (e.Button == MouseButtons.Left) ClearPicks();   // also on the card already selected, which Windows leaves as it is
+            else if (e.Button == MouseButtons.Right && under != null && !picked.Contains(under.Id))
+            {
+                ClearPicks();
+                cardList.SelectedIndex = index;
+            }
             // A saved text may be dragged to a folder of the sidebar.
             Entry entry = index < 0 ? null : cardList.Items[index] as Entry;
             grabbed = e.Button == MouseButtons.Left && entry != null && entry.Saved && PartAt(index, e.Location) == Part.Body ? entry : null;
@@ -224,6 +266,15 @@ partial class MainForm
             hoverRow = -1;
         };
         cardList.MouseWheel += delegate { HidePeek(); HideHoverTip(); };   // the cards move under it
+        // Scrolling, the name of the day of the top card stays over them (wanted by the user on 20/10/2026: among the cards
+        // of yesterday, which say their time only, the name of the day had gone up out of view).
+        cardList.Scrolled += delegate { ShowDay(); };
+        dayBar.Paint += delegate(object sender, PaintEventArgs e)
+        {
+            using (Brush back = new SolidBrush(cardList.BackColor)) e.Graphics.FillRectangle(back, dayBar.ClientRectangle);
+            DrawHeading(e.Graphics, dayBar.Text, dayBar.ClientRectangle);
+        };
+        WirePicks();
         // The pointer resting on a card shows the entry whole, if the option says so; one that was asked for leaves by
         // itself.
         rest.Tick += delegate
@@ -241,8 +292,8 @@ partial class MainForm
         };
 
         // A new search, or another category, starts again from its best result.
-        search.TextChanged += delegate { cardList.ClearSelected(); Filter(); };
-        tabs.SelectedChanged += delegate { cardList.ClearSelected(); Filter(); };
+        search.TextChanged += delegate { ClearPicks(); cardList.ClearSelected(); Filter(); };
+        tabs.SelectedChanged += delegate { ClearPicks(); cardList.ClearSelected(); Filter(); };
     }
 
     // Everything again, the saved entries too: after anything that changed them.
@@ -338,6 +389,9 @@ partial class MainForm
                     saved.Add(entry);
         total += saved.Count;
         rows = Arrange(copied, saved);
+        // The name the cards begin under is said by the bar over them, which says the name of the day of the top card.
+        topDay = rows.Count > 0 ? rows[0] as Heading : null;
+        if (topDay != null) rows.RemoveAt(0);
         ShowRows(selected);
 
         ShowTitle();
@@ -426,14 +480,17 @@ partial class MainForm
     // where it was scrolled to as far as that entry stays in view. Without one, the first entry is. After a copy and
     // the list hotkey (newest), the latest copied entry is, also when kept at the top under others, and the list
     // shows its top (wanted by the user on 19/10/2026: the card selected before kept the new copy out of view).
+    // The cards picked stay picked, those still there.
     void ShowRows(Entry selected)
     {
         bool toNewest = newest;
         newest = false;
         int top = cardList.TopIndex;
+        keepPicks = true;
         cardList.BeginUpdate();
         cardList.Items.Clear();
         int found = -1, first = -1, latest = -1;
+        HashSet<long> still = new HashSet<long>();
         foreach (object row in rows)
         {
             int index = cardList.Items.Add(row);
@@ -442,6 +499,7 @@ partial class MainForm
             if (first < 0) first = index;
             if (selected != null && entry.Id == selected.Id) found = index;
             if (!entry.Saved && (latest < 0 || entry.Time > ((Entry)rows[latest]).Time)) latest = index;
+            if (picked.Contains(entry.Id)) still.Add(entry.Id);
         }
         lastCard = -1;
         if (toNewest && latest >= 0)
@@ -455,8 +513,45 @@ partial class MainForm
             if (found >= 0) Rescroll(cardList, top);
         }
         cardList.EndUpdate();
+        keepPicks = false;
+        picked.IntersectWith(still);
+        if (picked.Count < 2) picked.Clear();
+        if (!Many || pickFrom >= cardList.Items.Count) pickFrom = cardList.SelectedIndex;
         cardList.Glow.Reset();   // the rows changed under the pointer
         hoverRow = -1;
+        ShowPickBar();
+        PlaceDay();
+    }
+
+    // The bar of the day over the cards, where they begin under the name of a day: the cards make room for it, below it.
+    // Placed once the window has its scale, its height that of a name among the cards.
+    void PlaceDay()
+    {
+        dayBar.Visible = topDay != null;
+        if (!shown) return;
+        int top = tabs.Bottom + (int)(Gap * Zoom), tall = topDay != null ? CardHeight(topDay) : 0, bottom = cardList.Bottom;
+        dayBar.SetBounds(cardList.Left, top, cardList.ClientSize.Width, tall);
+        if (cardList.Top != top + tall) cardList.SetBounds(cardList.Left, top + tall, cardList.Width, bottom - top - tall);
+        emptyNote.SetBounds(cardList.Left, top, cardList.Width, bottom - top);
+        ShowDay();
+    }
+
+    // What the bar over the cards says: the name of the day of the top card, the last name before it, or the one the cards
+    // begin under. With the name of a day itself at the top, right under the bar, the bar still says the day before.
+    void ShowDay()
+    {
+        if (topDay == null) return;
+        string day = topDay.Text;
+        for (int i = Math.Min(cardList.TopIndex, cardList.Items.Count) - 1; i >= 0; i--)
+        {
+            Heading heading = cardList.Items[i] as Heading;
+            if (heading == null) continue;
+            day = heading.Text;
+            break;
+        }
+        if (day == dayBar.Text) return;
+        dayBar.Text = day;
+        dayBar.Invalidate();
     }
 
     // The name of the place over the cards, and that capturing is paused where copied entries are shown.
@@ -997,15 +1092,11 @@ partial class MainForm
         Heading heading = cardList.Items[e.Index] as Heading;
         if (heading != null)
         {
-            // Its name low in its row, with a thin line under it, across.
-            int height = Look.StrongFont.Height, bottom = e.Bounds.Bottom - (int)(CardLineGap * Zoom);
-            TextRenderer.DrawText(g, heading.Text, Look.StrongFont, new Rectangle(e.Bounds.Left + 2, bottom - height - 2, e.Bounds.Width, height),
-                Look.Ink, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
-            using (Pen line = new Pen(Look.Border)) g.DrawLine(line, e.Bounds.Left, bottom, e.Bounds.Right - 2, bottom);
+            DrawHeading(g, heading.Text, e.Bounds);
             return;
         }
         Entry entry = (Entry)cardList.Items[e.Index];
-        bool selected = (e.State & DrawItemState.Selected) != 0;
+        bool selected = Many ? picked.Contains(entry.Id) : (e.State & DrawItemState.Selected) != 0;
         float glow = cardList.Glow.Of(e.Index);
         CardParts parts = Lay(entry, e.Bounds);
         // The card: a shade lighter than the pane, a little more under the pointer; the selected one has an edge in
@@ -1090,6 +1181,15 @@ partial class MainForm
         }
     }
 
+    // The name of a day, in its row among the cards or in the bar over them: low in it, with a thin line under it, across.
+    void DrawHeading(Graphics g, string text, Rectangle bounds)
+    {
+        int height = Look.StrongFont.Height, bottom = bounds.Bottom - (int)(CardLineGap * Zoom);
+        TextRenderer.DrawText(g, text, Look.StrongFont, new Rectangle(bounds.Left + 2, bottom - height - 2, bounds.Width, height),
+            Look.Ink, TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding);
+        using (Pen line = new Pen(Look.Border)) g.DrawLine(line, bounds.Left, bottom, bounds.Right - 2, bottom);
+    }
+
     bool IsHovered(int index, Part part)
     {
         return index == hoverRow && part == hoverPart;
@@ -1158,6 +1258,273 @@ partial class MainForm
         ReloadCopied();
     }
 
+    // --- Several cards at once ---
+
+    // Whether several cards are picked: then they are the selection, drawn with its edge, and what acts on it (the bar in
+    // the place of the tabs, the menu, the keys) acts on all of them. Never one alone: that is the selected card.
+    bool Many
+    {
+        get { return picked.Count > 0; }
+    }
+
+    // What the commands act on: the cards picked, in their order, or else the selected one.
+    List<Entry> Targets()
+    {
+        List<Entry> found = new List<Entry>();
+        if (!Many)
+        {
+            if (Selected != null) found.Add(Selected);
+            return found;
+        }
+        foreach (object row in cardList.Items)
+        {
+            Entry entry = row as Entry;
+            if (entry != null && picked.Contains(entry.Id)) found.Add(entry);
+        }
+        return found;
+    }
+
+    // The copied entries among them, which have an arrow, and whether all of those are at the top already.
+    List<Entry> PickedCopied()
+    {
+        return Targets().FindAll(delegate(Entry entry) { return !entry.Saved; });
+    }
+
+    bool AllPinned()
+    {
+        List<Entry> copied = PickedCopied();
+        return copied.Count > 0 && copied.TrueForAll(delegate(Entry entry) { return entry.Pinned; });
+    }
+
+    // A click on a card with Ctrl adds it to the cards picked, or takes it away; with Shift picks those from the card the
+    // range starts at to this one, and with Ctrl too adds them to those picked. The card selected so far is the first
+    // picked. The card clicked becomes the selected one.
+    void Pick(int row, Keys keys)
+    {
+        HidePeek();
+        HideHoverTip();
+        Entry entry = cardList.Items[row] as Entry;
+        if (entry == null) return;   // the name of a day
+        if (!Many && Selected != null) picked.Add(Selected.Id);
+        if ((keys & Keys.Shift) != 0)
+        {
+            int from = pickFrom >= 0 && pickFrom < cardList.Items.Count ? pickFrom : row;
+            if ((keys & Keys.Control) == 0) picked.Clear();
+            for (int i = Math.Min(from, row); i <= Math.Max(from, row); i++)
+            {
+                Entry each = cardList.Items[i] as Entry;
+                if (each != null) picked.Add(each.Id);
+            }
+        }
+        else
+        {
+            if (!picked.Remove(entry.Id)) picked.Add(entry.Id);
+            pickFrom = row;
+        }
+        ShowPicks(row);
+    }
+
+    // Shift with an arrow: the range goes on to the card before or after the selected one.
+    void PickStep(int by)
+    {
+        for (int index = cardList.SelectedIndex + by; cardList.SelectedIndex >= 0 && index >= 0 && index < cardList.Items.Count; index += by)
+            if (cardList.Items[index] is Entry)
+            {
+                Pick(index, Keys.Shift);
+                return;
+            }
+    }
+
+    void PickAll()
+    {
+        foreach (object row in cardList.Items)
+        {
+            Entry entry = row as Entry;
+            if (entry != null) picked.Add(entry.Id);
+        }
+        ShowPicks(cardList.SelectedIndex);
+    }
+
+    // After picking: the card clicked selected, among those picked. Left with one, that is the selected card again; with
+    // none, nothing is selected.
+    void ShowPicks(int row)
+    {
+        int only = -1;
+        if (picked.Count == 1)
+        {
+            foreach (long id in picked) only = CardRow(id);
+            picked.Clear();
+        }
+        keepPicks = true;
+        if (only >= 0) cardList.SelectedIndex = only;
+        else if (!Many) cardList.ClearSelected();
+        else cardList.SelectedIndex = row;
+        keepPicks = false;
+        cardList.Invalidate();
+        ShowPickBar();
+    }
+
+    // The row of the card of an entry, or -1.
+    int CardRow(long id)
+    {
+        for (int i = 0; i < cardList.Items.Count; i++)
+        {
+            Entry entry = cardList.Items[i] as Entry;
+            if (entry != null && entry.Id == id) return i;
+        }
+        return -1;
+    }
+
+    // Back to one card selected: the one that was, the last clicked.
+    void ClearPicks()
+    {
+        if (!Many) return;
+        picked.Clear();
+        cardList.Invalidate();
+        ShowPickBar();
+    }
+
+    // The arrow of the selected entry, or of the copied ones among the cards picked: all of them at the top, or, if they
+    // are already, all back among the others.
+    void PinSelected()
+    {
+        if (!Many)
+        {
+            TogglePin(Selected);
+            return;
+        }
+        List<Entry> copied = PickedCopied();
+        if (copied.Count == 0) return;
+        bool pin = !AllPinned();
+        if (!Change(delegate
+        {
+            using (Transaction transaction = clips.Begin())
+            {
+                foreach (Entry entry in copied) clips.Pin(entry.Id, pin);
+                transaction.Commit();
+            }
+        })) return;
+        Say(string.Format(pin ? Strings.PinnedMany : Strings.UnpinnedMany, copied.Count));
+        ReloadCopied();
+    }
+
+    // Where the cards picked can go, in a menu: among the saved texts out of the folders, or into a folder; a copied entry
+    // going there is saved there (wanted by the user on 20/10/2026). Each place where some of them are not already. Says
+    // whether there is any.
+    bool ListMoves(ToolStripItemCollection items, List<Entry> targets)
+    {
+        items.Clear();
+        bool copied = targets.Exists(delegate(Entry entry) { return !entry.Saved; }), any = false;
+        List<string> places = GroupNames();
+        places.Insert(0, null);
+        foreach (string each in places)
+        {
+            string group = each;   // a variable of its own for the delegate
+            bool goes = targets.Exists(delegate(Entry entry) { return !entry.Saved || !Texts.SameName(entry.Group, group); });
+            items.Add(group != null ? Texts.Display(group) : copied ? Strings.SavedTitle : Strings.OutOfFolders, null,
+                delegate { MoveAll(targets, group); }).Enabled = goes;
+            any |= goes;
+        }
+        return any;
+    }
+
+    // Puts the cards picked into a folder, or among the saved texts out of the folders, all of them or none: the copied
+    // ones are saved there without a name, formatted if they came so and are among the last copies.
+    void MoveAll(List<Entry> targets, string group)
+    {
+        if (!Change(delegate
+        {
+            using (Transaction transaction = clips.Begin())
+            {
+                long folder = FolderAt(group);
+                foreach (Entry entry in targets)
+                {
+                    if (entry.Saved)
+                    {
+                        clips.Move(entry.Id, folder);
+                        continue;
+                    }
+                    clips.Save(entry.Id, null, folder);   // its number too stays
+                    string html, rtf;
+                    if (!entry.Picture && Rich.Kept(entry.Text, out html, out rtf)) clips.Change(entry.Id, null, entry.Text, html, rtf, folder);
+                }
+                clips.Reveal(folder);   // or its folder would not be seen in the sidebar
+                transaction.Commit();
+            }
+        })) return;
+        picked.Clear();
+        Say(group == null ? string.Format(Strings.PickedSaved, targets.Count)
+            : string.Format(Strings.PickedInFolder, targets.Count, Shorten(Texts.Display(group))));
+        Reload();
+    }
+
+    // The bar of the cards picked: how many, then what to do with all of them, each with its sign. The list keeps the
+    // focus, so that Esc and the arrows still reach it.
+    void WirePicks()
+    {
+        pickCount.Font = Look.StrongFont;
+        pickCount.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        pickPin.Sign = Sign.Up;
+        pickMove.Sign = Sign.Move;
+        pickMove.Text = Strings.MoveTo;
+        pickDelete.Sign = Sign.Delete;
+        pickDelete.Text = Strings.Delete;
+        pickNone.Sign = Sign.Cancel;   // its tooltip says what it does
+        foreach (RoundButton button in new RoundButton[] { pickPin, pickMove, pickDelete, pickNone })
+        {
+            Look.Style(button, false);
+            button.Subtle = true;
+            button.TabStop = false;
+            button.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        }
+        pickPin.Click += delegate { cardList.Focus(); PinSelected(); };
+        pickMove.Click += delegate
+        {
+            cardList.Focus();
+            ListMoves(pickPlaces.Items, Targets());
+            pickPlaces.Show(pickMove, new Point(0, pickMove.Height));
+        };
+        pickDelete.Click += delegate { cardList.Focus(); DeleteSelected(); };
+        pickNone.Click += delegate { cardList.Focus(); ClearPicks(); };
+        Look.Style(pickPlaces);
+        Tip(string.Format(Strings.WithKeys, Strings.Delete, NameOf(DeleteKeys)), pickDelete);
+        Tip(string.Format(Strings.WithKeys, Strings.PickNone, Strings.EscapeKeyName), pickNone);
+    }
+
+    // While cards are picked their bar takes the place of the tabs, which a search or another tab would not keep anyway.
+    void ShowPickBar()
+    {
+        bool many = Many;
+        pickBar.Visible = many;
+        tabs.Visible = !many;
+        if (!many) return;
+        List<Entry> targets = Targets();
+        pickCount.Text = string.Format(Strings.PickedCount, targets.Count);
+        pickPin.Text = AllPinned() ? Strings.Unpin : Strings.Pin;
+        Tip(string.Format(Strings.WithKeys, pickPin.Text, NameOf(PinKeys)), pickPin);
+        pickMove.Enabled = ListMoves(pickPlaces.Items, targets);
+        PlacePickBar(PickedCopied().Count > 0);
+    }
+
+    // Its buttons at its right end, each as wide as what it says, the arrow only where some card picked is a copied one;
+    // the count takes the rest.
+    void PlacePickBar(bool pin)
+    {
+        if (!shown) return;
+        int gap = (int)(Gap * Zoom), high = (int)(ButtonHeight * Zoom), top = (pickBar.Height - high) / 2, right = pickBar.Width;
+        pickPin.Visible = pin;
+        foreach (RoundButton button in new RoundButton[] { pickNone, pickDelete, pickMove, pickPin })
+        {
+            if (button == pickPin && !pin) continue;
+            int wide = button.Text.Length == 0 ? high : TextRenderer.MeasureText(button.Text, button.Font).Width + (int)(PickPadding * Zoom);
+            right -= wide;
+            button.SetBounds(right, top, wide, high);
+            right -= gap;
+        }
+        int inset = (int)(2 * Zoom);   // where the names of the days start, under it
+        pickCount.SetBounds(inset, 0, Math.Max(0, right - inset), pickBar.Height);
+    }
+
     // The card before or after the selected one, over the names of the days.
     void Step(int by)
     {
@@ -1173,7 +1540,7 @@ partial class MainForm
     void Accept()
     {
         Entry entry = Selected;
-        if (entry != null && !busy && Use(entry)) GoBack();
+        if (entry != null && !busy && !Many && Use(entry)) GoBack();   // of several cards picked, none is the one chosen
     }
 
     // Makes an entry the clipboard content again: from there Ctrl+V pastes it and the hotkey types it.
@@ -1303,6 +1670,7 @@ partial class MainForm
     void ShowHistory()
     {
         place = new Place(PlaceKind.History);
+        ClearPicks();
         cardList.ClearSelected();
         newest = true;
         if (tabs.Selected != 0) tabs.Selected = 0;   // which fills the cards and the sidebar again
@@ -1455,11 +1823,29 @@ partial class MainForm
         Reload();
     }
 
+    // Deletes the selected entry, or the cards picked: a copied entry alone without asking, a saved one or several after
+    // asking, those picked all of them or none.
     void DeleteSelected()
     {
-        Entry entry = Selected;
-        if (entry == null) return;
-        if (!entry.Saved)
+        List<Entry> targets = Targets();
+        if (targets.Count == 0) return;
+        Entry entry = targets[0];
+        if (targets.Count > 1)
+        {
+            int saved = targets.FindAll(delegate(Entry each) { return each.Saved; }).Count;
+            if (!Ask(string.Format(Strings.AskDeleteMany, targets.Count) + (saved > 0 ? string.Format(Strings.DeleteManySaved, saved) : ""))
+                || !Change(delegate
+                {
+                    using (Transaction transaction = clips.Begin())
+                    {
+                        foreach (Entry each in targets) clips.Remove(each.Id);
+                        transaction.Commit();
+                    }
+                })) return;
+            picked.Clear();
+            Say(string.Format(Strings.DeletedMany, targets.Count));
+        }
+        else if (!entry.Saved)
         {
             if (!Change(delegate { clips.Remove(entry.Id); })) return;
         }
@@ -1511,13 +1897,13 @@ partial class MainForm
                 EditGroup(null);
                 return true;
             case SaveKeys:
-                Edit(Selected);
+                if (!Many) Edit(Selected);   // one at a time, in its window
                 return true;
             case DeleteKeys:
                 DeleteSelected();
                 return true;
             case PinKeys:
-                TogglePin(Selected);
+                PinSelected();
                 return true;
         }
         // The arrows of the sidebar move among its places.
@@ -1525,7 +1911,8 @@ partial class MainForm
         switch (keyData)
         {
             case Keys.Escape:
-                GoBack();
+                if (Many) ClearPicks();   // the cards picked first, then back
+                else GoBack();
                 return true;
             case Keys.Enter:
                 enterDown = true;
@@ -1535,6 +1922,16 @@ partial class MainForm
                 return true;
             case Keys.Down:
                 Step(1);
+                return true;
+            case Keys.Shift | Keys.Up:
+                PickStep(-1);
+                return true;
+            case Keys.Shift | Keys.Down:
+                PickStep(1);
+                return true;
+            case AllKeys:
+                if (!cardList.Focused) break;   // in the search box, all its text
+                PickAll();
                 return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);

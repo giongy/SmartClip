@@ -42,6 +42,7 @@ static partial class Strings
             + "y este Windows tiene la versión {2}. Actualizar Windows lo soluciona.";
         PicturesFull = "El espacio para las imágenes copiadas ({0}) está lleno: las más antiguas se borran, una a una, a "
             + "medida que copias otras nuevas.";
+        PickedCount = "{0} seleccionadas"; PickNone = "Quitar la selección";
 
         Open = "Abrir"; Exit = "Salir"; Pause = "Pausar la captura"; Resume = "Reanudar la captura";
         ShowContent = "Mostrar el contenido"; MoveTo = "Mover a"; NewFolder = "Nueva carpeta…";
@@ -60,6 +61,10 @@ static partial class Strings
         PausedSay = "En pausa: lo que copias no se recuerda hasta que reanudes la captura.";
         ResumedSay = "La captura se ha reanudado: lo que copias vuelve a la lista.";
         Pinned = "Se queda arriba: {0}."; Unpinned = "Ya no está arriba: {0}.";
+        PinnedMany = "{0} entradas se quedan arriba."; UnpinnedMany = "{0} entradas ya no están arriba.";
+        DeletedMany = "{0} entradas eliminadas.";
+        PickedSaved = "{0} entradas están entre los guardados, fuera de las carpetas.";
+        PickedInFolder = "{0} entradas están en la carpeta «{1}».";
         KindChanged = "Marcada como {1}: {0}.";
         NumberGiven = "{0} ahora pega «{1}» dondequiera que estés.";
         NumberTaken = "«{0}» ya no tiene atajo.";
@@ -82,6 +87,7 @@ static partial class Strings
         DeleteFolderTop = "\n\nLo que contiene no se elimina: queda entre los guardados, fuera de las carpetas.";
         DeleteFolderUp = "\n\nLo que contiene no se elimina: pasa a la carpeta «{0}».";
         AskDelete = "¿Quieres eliminar «{0}»?";
+        AskDeleteMany = "¿Quieres eliminar {0} entradas?"; DeleteManySaved = "\n\nEntre ellas, textos guardados: {0}.";
         Yes = "Sí"; No = "No"; Ok = "Aceptar";
 
         Cancel = "Cancelar";
@@ -334,7 +340,8 @@ static partial class Strings
             "# La lista",
             "A la izquierda está la barra lateral, a la derecha las tarjetas de las entradas del lugar elegido en ella:",
             "- «" + HistoryPlace + "»: lo que copiaste, de lo más nuevo a lo más antiguo, cada día bajo su nombre; las "
-                + "entradas mantenidas arriba van antes que las demás.",
+                + "entradas mantenidas arriba van antes que las demás. Al desplazarte, el nombre del día de la primera tarjeta "
+                + "queda encima de las tarjetas.",
             "- «" + PinnedPlace + "»: solo las entradas copiadas mantenidas arriba.",
             "- «" + ShortcutsPlace + "»: las entradas con un número, copiadas y guardadas, por número. Un clic en el número de una "
                 + "tarjeta lo cambia o lo quita, aquí y en cualquier otro lugar.",
@@ -368,6 +375,12 @@ static partial class Strings
                 + "activada, en las opciones, dejar el puntero sobre una tarjeta que corta su texto hace lo mismo, hasta que "
                 + "mueves el puntero.",
             "- Los tres puntos de la derecha, o el clic derecho, abren el menú de la entrada, sin tocar el portapapeles.",
+            "- Ctrl+clic añade una tarjeta a la selección o la quita, " + ShiftName + "+clic selecciona todas las tarjetas hasta "
+                + "esa (también " + ShiftName + " con las flechas), " + Key(Keys.Control | MainForm.AllKey) + " las selecciona todas. "
+                + "Con varias seleccionadas, una barra en el lugar de las pestañas dice cuántas son y ofrece «" + Pin + "», «" + MoveTo
+                + "» y «" + Delete + "», que también están en el menú del clic derecho y en sus teclas. «" + MoveTo + "» una carpeta, "
+                + "o «" + SavedTitle + "», guarda allí las entradas copiadas. " + EscapeKeyName + ", o la cruz al final de la barra, "
+                + "vuelve a una sola tarjeta.",
             "- «" + CopyPictureText + "», en el menú de una imagen, pone en el portapapeles el texto "
                 + "que Windows lee en ella, aquí en el PC, sin internet: entra en la lista como todo lo que copias (el de "
                 + "una imagen guardada es privado, como un texto guardado). El texto pequeño puede salir con algún error: "
@@ -462,8 +475,9 @@ static partial class Strings
             MainForm.NumbersName + "\tPega en la ventana activa la entrada con ese número.",
             "F1\tAbre esta guía.",
             ArrowsName + "\tRecorre las entradas, o los lugares de la barra lateral.",
+            Key(Keys.Control | MainForm.AllKey) + "\tSelecciona todas las tarjetas; Ctrl o " + ShiftName + " con un clic, varias.",
             EnterKeyName + "\tElige la entrada y vuelve a la ventana de partida.",
-            "Esc\tVuelve a la ventana de partida sin elegir.",
+            EscapeKeyName + "\tVuelve a la ventana de partida sin elegir; con varias tarjetas seleccionadas, a una sola.",
             Key(Keys.Control | MainForm.SearchKey) + "\tLleva el cursor al cuadro de búsqueda.",
             Key(Keys.Control | MainForm.NewKey) + "\tNuevo texto guardado.",
             Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "\tNueva carpeta.",

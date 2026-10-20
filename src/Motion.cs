@@ -250,6 +250,10 @@ class RowList : ListBox
         MouseLeave += delegate { Glow.Set(-1); };
     }
 
+    // Given, a press of the left button on a row with Ctrl or Shift held goes here instead of to Windows, with the
+    // row and those keys: the list picks several rows (see MainForm.Pick). Left null, Windows selects one row.
+    public Action<int, Keys> Picking;
+
     protected override void WndProc(ref Message m)
     {
         if (m.Msg == Native.WM_ERASEBKGND)
@@ -257,6 +261,18 @@ class RowList : ListBox
             EraseBelowRows(m.WParam);
             m.Result = (IntPtr)1;
             return;
+        }
+        if ((m.Msg == Native.WM_LBUTTONDOWN || m.Msg == Native.WM_LBUTTONDBLCLK) && Picking != null)
+        {
+            int held = m.WParam.ToInt32() & (Native.MK_CONTROL | Native.MK_SHIFT);
+            long at = m.LParam.ToInt64();
+            int row = RowAt(new Point((short)(at & 0xFFFF), (short)((at >> 16) & 0xFFFF)));
+            if (held != 0 && row >= 0)
+            {
+                Focus();
+                Picking(row, ((held & Native.MK_CONTROL) != 0 ? Keys.Control : Keys.None) | ((held & Native.MK_SHIFT) != 0 ? Keys.Shift : Keys.None));
+                return;
+            }
         }
         base.WndProc(ref m);
         if ((m.Msg == Native.WM_PAINT || m.Msg == Native.WM_VSCROLL || m.Msg == Native.WM_MOUSEWHEEL) && Scrolled != null)

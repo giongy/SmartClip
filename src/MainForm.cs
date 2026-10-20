@@ -53,6 +53,7 @@ partial class MainForm : Window
     // the cells".
     const int CardGap = 5, CardInset = 12, CardPad = 6, CardLineGap = 4;   // CardInset at the sides, CardPad above and below
     const int PartHeight = 24, PartGap = 6;            // the buttons of a card, and the room between them
+    const int PickPadding = 44;                        // a button of the bar of the cards picked: its sign and its air, beside its text
     // Every card as tall as this many lines of text, whatever it holds (wanted by the user on 20/10/2026: pictures and
     // texts of one height; one line by default, so that more entries are in view).
     static readonly int[] CardLineChoices = { 1, 2 };
@@ -85,11 +86,13 @@ partial class MainForm : Window
     const int RestMs = 600;                            // how long the pointer rests on a row before it is shown whole
     const int AskedMs = 15000;                         // how long a saved text stays in view once asked for
     public const Keys NewKey = Keys.N, SaveKey = Keys.S, DeleteKey = Keys.E, PinKey = Keys.P;   // in the list, all with Ctrl
+    public const Keys AllKey = Keys.A;      // with Ctrl, in the cards: picks them all
     public const Keys SearchKey = Keys.F;   // with Ctrl, anywhere in the window: to the search box
     const Keys NewKeys = Keys.Control | NewKey, GroupKeys = Keys.Control | Keys.Shift | NewKey, SaveKeys = Keys.Control | SaveKey,
-        DeleteKeys = Keys.Control | DeleteKey, PinKeys = Keys.Control | PinKey, SearchKeys = Keys.Control | SearchKey;
+        DeleteKeys = Keys.Control | DeleteKey, PinKeys = Keys.Control | PinKey, SearchKeys = Keys.Control | SearchKey,
+        AllKeys = Keys.Control | AllKey;
     // What the list itself answers to: a global hotkey on the same keys would take them away from it.
-    static readonly Keys[] ListKeys = { NewKeys, GroupKeys, SaveKeys, DeleteKeys, PinKeys, SearchKeys };
+    static readonly Keys[] ListKeys = { NewKeys, GroupKeys, SaveKeys, DeleteKeys, PinKeys, SearchKeys, AllKeys };
     const TextFormatFlags LineFlags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;   // one line of a row
     // What a row says at its right end: when it was copied, how many texts a folder holds.
     const TextFormatFlags RightFlags = TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.SingleLine
@@ -126,6 +129,17 @@ partial class MainForm : Window
     readonly TextBox search = new TextBox();
     readonly TabStrip tabs = new TabStrip();      // the categories: all, texts, code, links, pictures
     readonly RowList cardList = new RowList();    // the entries of the place, as cards, with the names of the days among them
+    readonly DayBar dayBar = new DayBar();        // over them, the name of the day of the top card, while they scroll under it
+    Heading topDay;                               // the name the cards begin under, which that bar says instead of a row; or null
+    // The cards picked together, with Ctrl or Shift: two at least, or none (see Pick). While there are, the bar of what to
+    // do with them takes the place of the tabs.
+    readonly HashSet<long> picked = new HashSet<long>();
+    int pickFrom = -1;                            // the card a range picked with Shift starts from
+    bool keepPicks;                               // the selection moves for the picking, or for a refill: those picked stay
+    readonly Panel pickBar = new Panel();
+    readonly Label pickCount = new Label();       // how many
+    readonly RoundButton pickPin = new RoundButton(), pickMove = new RoundButton(), pickDelete = new RoundButton(), pickNone = new RoundButton();
+    readonly ContextMenuStrip pickPlaces = new ContextMenuStrip();   // where the move button sends them
     readonly RowList navList = new RowList();     // the sidebar: the places (see Place)
     readonly RowList footList = new RowList();    // under it: a new folder, the options, the guide
     Place place = new Place(PlaceKind.History);       // the place shown
@@ -304,8 +318,19 @@ partial class MainForm : Window
         tabs.SetBounds(PaneInset, searchFrame.Bottom + Gap, ContentWidth, TabsHeight);
         foreach (string name in new string[] { Strings.AllKinds, Strings.TextKinds, Strings.CodeKinds, Strings.LinkKinds, Strings.PictureKinds })
             tabs.Add(name);
+        // In their place while cards are picked: how many, and what can be done with all of them (see ShowPickBar).
+        pickBar.Bounds = tabs.Bounds;
+        pickBar.Visible = false;
+        pickCount.UseMnemonic = false;
+        pickCount.AutoEllipsis = true;
+        pickCount.TextAlign = ContentAlignment.MiddleLeft;
+        pickBar.Controls.AddRange(new Control[] { pickCount, pickPin, pickMove, pickDelete, pickNone });
         int listTop = tabs.Bottom + Gap, statusTop = listTop + ListHeight + Gap;
         cardList.SetBounds(PaneInset, listTop, ContentWidth, ListHeight);
+        // Over the cards, where they have days, the name of the day of the top one, which the cards make room for (PlaceDay).
+        dayBar.SetBounds(PaneInset, listTop, ContentWidth, 0);
+        dayBar.Visible = false;
+        dayBar.Under = cardList;
         // What an empty list says, in its place.
         emptyNote.Bounds = cardList.Bounds;
         emptyNote.TextAlign = ContentAlignment.MiddleCenter;
@@ -313,7 +338,8 @@ partial class MainForm : Window
         emptyNote.ForeColor = Look.Muted;
         status.SetBounds(PaneInset, statusTop, ContentWidth, StatusHeight);
         pane.SetBounds(SideWidth, Edge, paneWidth, statusTop + StatusHeight + PaneInset);
-        pane.Controls.AddRange(new Control[] { title, count, searchFrame, newButton, typeButton, tabs, cardList, emptyNote, banner, status });
+        pane.Controls.AddRange(new Control[] { title, count, searchFrame, newButton, typeButton, tabs, pickBar, dayBar, cardList, emptyNote,
+            banner, status });
         emptyNote.BringToFront();
         ClientSize = new Size(SideWidth + paneWidth + Edge, Edge + pane.Height + Edge);
 
@@ -336,7 +362,7 @@ partial class MainForm : Window
         // When the window grows, the pane and its cards take the room; the sidebar stays as wide as it is.
         const AnchorStyles toTop = AnchorStyles.Top, toBottom = AnchorStyles.Bottom, toLeft = AnchorStyles.Left, toRight = AnchorStyles.Right;
         pane.Anchor = cardList.Anchor = emptyNote.Anchor = toTop | toBottom | toLeft | toRight;
-        searchFrame.Anchor = tabs.Anchor = toTop | toLeft | toRight;
+        searchFrame.Anchor = tabs.Anchor = pickBar.Anchor = dayBar.Anchor = toTop | toLeft | toRight;
         newButton.Anchor = typeButton.Anchor = toTop | toRight;
         status.Anchor = banner.Anchor = toBottom | toLeft | toRight;
         navList.Anchor = toTop | toBottom | toLeft;
@@ -569,7 +595,7 @@ partial class MainForm : Window
             end = banner.Top - gap;
         }
         cardList.Height = end - cardList.Top;
-        emptyNote.Height = cardList.Height;
+        emptyNote.Height = end - emptyNote.Top;   // from the top of the bar of the day, if there is one
     }
 
     // Shows the red bar while the copied pictures fill their room, and only while the history is on.
@@ -626,6 +652,7 @@ partial class MainForm : Window
         PlaceSidebar();   // at the width it was left at, once the window has its size
         PlaceTitle();     // measured with the fonts of the screen, once the window has its scale
         shown = true;
+        PlaceDay();       // the same: its height is that of the name of a day among the cards
         FitStatus();
     }
 

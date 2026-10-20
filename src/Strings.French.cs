@@ -5,7 +5,7 @@ static partial class Strings
 {
     static void French()
     {
-        ShiftName = "Maj"; DeleteKeyName = "Suppr"; EnterKeyName = "Entrée"; ArrowsName = "Haut / Bas";
+        ShiftName = "Maj"; DeleteKeyName = "Suppr"; EnterKeyName = "Entrée"; ArrowsName = "Haut / Bas"; EscapeKeyName = "Échap";
         DayFormat = "dd/MM"; YearDayFormat = "dd/MM/yy";
         Quote = "« {0} »";
         Megabytes = "{0} Mo"; Kilobytes = "{0} Ko";
@@ -43,6 +43,7 @@ static partial class Strings
             + "et 11, et ce Windows a la version {2}. Mettre Windows à jour résout le problème.";
         PicturesFull = "L'espace des images copiées ({0}) est plein : les plus anciennes sont supprimées, une à une, au fur "
             + "et à mesure que vous en copiez de nouvelles.";
+        PickedCount = "{0} sélectionnés"; PickNone = "Désélectionner";
 
         Open = "Ouvrir"; Exit = "Quitter"; Pause = "Suspendre la capture"; Resume = "Reprendre la capture";
         ShowContent = "Afficher le contenu"; MoveTo = "Déplacer vers"; NewFolder = "Nouveau dossier…";
@@ -61,6 +62,10 @@ static partial class Strings
         PausedSay = "En pause : ce que vous copiez n'est pas mémorisé tant que vous ne reprenez pas la capture.";
         ResumedSay = "La capture a repris : ce que vous copiez revient dans la liste.";
         Pinned = "Reste en haut : {0}."; Unpinned = "N'est plus en haut : {0}.";
+        PinnedMany = "{0} éléments restent en haut."; UnpinnedMany = "{0} éléments ne sont plus en haut.";
+        DeletedMany = "{0} éléments supprimés.";
+        PickedSaved = "{0} éléments sont parmi les textes enregistrés, hors des dossiers.";
+        PickedInFolder = "{0} éléments sont dans le dossier « {1} ».";
         KindChanged = "Marqué comme {1} : {0}.";
         NumberGiven = "{0} colle maintenant « {1} » où que vous soyez.";
         NumberTaken = "« {0} » n'a plus de raccourci.";
@@ -83,6 +88,7 @@ static partial class Strings
         DeleteFolderTop = "\n\nSon contenu n'est pas supprimé : il reste parmi les textes enregistrés, hors des dossiers.";
         DeleteFolderUp = "\n\nSon contenu n'est pas supprimé : il passe dans le dossier « {0} ».";
         AskDelete = "Voulez-vous supprimer « {0} » ?";
+        AskDeleteMany = "Voulez-vous supprimer {0} éléments ?"; DeleteManySaved = "\n\nParmi eux, textes enregistrés : {0}.";
         Yes = "Oui"; No = "Non"; Ok = "OK";
 
         Cancel = "Annuler";
@@ -341,7 +347,8 @@ static partial class Strings
             "# La liste",
             "À gauche la barre latérale, à droite les cartes des éléments de l'endroit choisi dans celle-ci :",
             "- « " + HistoryPlace + " » : ce que vous avez copié, du plus récent au plus ancien, chaque jour sous son nom ; "
-                + "les éléments gardés en haut passent avant les autres.",
+                + "les éléments gardés en haut passent avant les autres. Pendant le défilement, le nom du jour de la première "
+                + "carte reste au-dessus des cartes.",
             "- « " + PinnedPlace + " » : seulement les éléments copiés gardés en haut.",
             "- « " + ShortcutsPlace + " » : les éléments avec un numéro, copiés et enregistrés, par numéro. Un clic sur le numéro "
                 + "d'une carte le change ou le retire, ici comme ailleurs.",
@@ -377,6 +384,12 @@ static partial class Strings
                 + "Avec « " + RestOption + " » activée, dans les options, laisser le pointeur sur une carte qui coupe son texte "
                 + "fait de même, jusqu'à ce que vous bougiez le pointeur.",
             "- Les trois points à droite, ou le clic droit, ouvrent le menu de l'élément, sans toucher au presse-papiers.",
+            "- Ctrl+clic ajoute une carte à la sélection ou l'en retire, " + ShiftName + "+clic sélectionne toutes les cartes "
+                + "jusqu'à celle-ci (" + ShiftName + " avec les flèches aussi), " + Key(Keys.Control | MainForm.AllKey) + " les "
+                + "sélectionne toutes. Avec plusieurs cartes sélectionnées, une barre à la place des onglets dit combien elles sont "
+                + "et propose « " + Pin + " », « " + MoveTo + " » et « " + Delete + " », qui sont aussi dans le menu du clic droit "
+                + "et sur leurs touches. « " + MoveTo + " » un dossier, ou « " + SavedTitle + " », y enregistre les éléments copiés. "
+                + EscapeKeyName + ", ou la croix au bout de la barre, revient à une seule carte.",
             "- « " + CopyPictureText + " », dans le menu d'une image, met dans le presse-papiers le texte "
                 + "que Windows y lit, ici sur le PC, sans internet : il entre dans la liste comme tout ce que vous copiez "
                 + "(celui d'une image enregistrée est privé, comme un texte enregistré). Un petit texte peut sortir avec "
@@ -476,8 +489,9 @@ static partial class Strings
             MainForm.NumbersName + "\tColle dans la fenêtre active l'élément qui a ce numéro.",
             "F1\tOuvre ce guide.",
             ArrowsName + "\tParcourt les éléments, ou les endroits de la barre latérale.",
+            Key(Keys.Control | MainForm.AllKey) + "\tSélectionne toutes les cartes ; Ctrl ou " + ShiftName + " avec un clic, plusieurs.",
             EnterKeyName + "\tChoisit l'élément et revient à la fenêtre de départ.",
-            "Échap\tRevient à la fenêtre de départ sans choisir.",
+            EscapeKeyName + "\tRevient à la fenêtre de départ sans choisir ; avec plusieurs cartes sélectionnées, à une seule.",
             Key(Keys.Control | MainForm.SearchKey) + "\tAmène le curseur dans la zone de recherche.",
             Key(Keys.Control | MainForm.NewKey) + "\tNouveau texte enregistré.",
             Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "\tNouveau dossier.",

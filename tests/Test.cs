@@ -1597,12 +1597,14 @@ static class TestProgram
                 string.Join(", ", one.ConvertAll(delegate(int h) { return h.ToString(); }).ToArray()),
                 string.Join(", ", two.ConvertAll(delegate(int h) { return h.ToString(); }).ToArray()));
 
-            // The history: the copied entry at the top under its own name, then the others under the name of their day; the
-            // saved ones are not there.
+            // The history: the copied entry at the top under its own name, said by the bar over the cards, then the others under
+            // the name of their day; the saved ones are not there.
             ListBox cards = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
+            Control dayBar = (Control)typeof(MainForm).GetField("dayBar", hidden).GetValue(form);
             List<Entry> shown = Cards(cards);
             Console.WriteLine("[{0}] the history, the one at the top first, then each day under its name, nothing saved: {1} rows",
-                shown.Count == 5 && shown[0].Pinned && cards.Items[0] is Heading && cards.Items[2] is Heading && cards.Items.Count == 7
+                shown.Count == 5 && shown[0].Pinned && cards.Items[0] is Entry && cards.Items[1] is Heading && cards.Items.Count == 6
+                && dayBar.Visible && dayBar.Text == Strings.PinnedPlace && cards.Top == dayBar.Bottom
                 && !shown.Exists(delegate(Entry e) { return e.Saved; }) ? "PASS" : "FAIL", cards.Items.Count);
             // Refilling the list (it happens at every clipboard change) must not move the selection.
             cards.SelectedIndex = 5;
@@ -1610,8 +1612,68 @@ static class TestProgram
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
             Console.WriteLine("[{0}] the selection survives a refill", cards.SelectedItem is Entry && ((Entry)cards.SelectedItem).Id == chosen.Id
                 ? "PASS" : "FAIL");
-            cards.SelectedIndex = 0;
+            cards.SelectedIndex = 1;
             Console.WriteLine("[{0}] the name of a day is never selected", cards.SelectedIndex == 5 ? "PASS" : "FAIL");
+
+            // Scrolling, the bar over the cards says the day of the top card: that of the name before it, or with a name at
+            // the top, right under the bar, the day before; back at the top, the name the cards begin under. With the list
+            // made short, so that it scrolls.
+            MethodInfo showDay = typeof(MainForm).GetMethod("ShowDay", hidden);
+            int listHeight = cards.Height;
+            cards.Height = 2 * cards.GetItemHeight(0);
+            cards.TopIndex = 2;
+            showDay.Invoke(form, null);
+            string scrolled = dayBar.Text;
+            cards.TopIndex = 1;
+            showDay.Invoke(form, null);
+            string onName = dayBar.Text;
+            cards.TopIndex = 0;
+            showDay.Invoke(form, null);
+            string atTop = dayBar.Text;
+            cards.Height = listHeight;
+            Console.WriteLine("[{0}] scrolling, the bar over the cards says the day of the top one: {1}, {2}, {3}",
+                scrolled == ((Heading)cards.Items[1]).Text && onName == Strings.PinnedPlace && atTop == Strings.PinnedPlace ? "PASS" : "FAIL",
+                scrolled, onName, atTop);
+
+            // Ctrl and Shift with a click pick several cards, over the names of the days; a bar in the place of the tabs says
+            // how many, a refill keeps them, the arrow of all of them goes on and then off together; one left is the selected
+            // card again, and letting them go leaves the tabs.
+            MethodInfo pick = typeof(MainForm).GetMethod("Pick", hidden);
+            HashSet<long> picked = (HashSet<long>)typeof(MainForm).GetField("picked", hidden).GetValue(form);
+            Control pickBar = (Control)typeof(MainForm).GetField("pickBar", hidden).GetValue(form);
+            Control kindTabs = (Control)typeof(MainForm).GetField("tabs", hidden).GetValue(form);
+            int lastRow = cards.Items.Count - 1;
+            cards.SelectedIndex = 0;
+            pick.Invoke(form, new object[] { lastRow, Keys.Shift });
+            bool ranged = picked.Count == 5 && cards.SelectedIndex == lastRow && pickBar.Visible && !kindTabs.Visible;
+            pick.Invoke(form, new object[] { 3, Keys.Control });
+            bool lessOne = picked.Count == 4 && !picked.Contains(((Entry)cards.Items[3]).Id);
+            Application.DoEvents();
+            Save(form, path + "-picked.png");
+            typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
+            bool kept = picked.Count == 4;
+            long wasPinned = shown[0].Id;
+            MethodInfo pinPicked = typeof(MainForm).GetMethod("PinSelected", hidden);
+            pinPicked.Invoke(form, null);
+            bool allUp = Cards(cards).FindAll(delegate(Entry e) { return e.Pinned; }).Count == 4 && picked.Count == 4;
+            pinPicked.Invoke(form, null);
+            bool allDown = !Cards(cards).Exists(delegate(Entry e) { return e.Pinned; });
+            ClipsOf(form).Pin(wasPinned, true);   // as the sample has it
+            typeof(MainForm).GetMethod("ClearPicks", hidden).Invoke(form, null);
+            typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
+            bool letGo = picked.Count == 0 && kindTabs.Visible && !pickBar.Visible;
+            cards.SelectedIndex = 2;
+            pick.Invoke(form, new object[] { 3, Keys.Control });
+            pick.Invoke(form, new object[] { 3, Keys.Control });
+            bool backToOne = picked.Count == 0 && cards.SelectedIndex == 2;
+            Console.WriteLine("[{0}] several cards picked with Ctrl and Shift, their bar, kept by a refill, pinned and released together, let go",
+                ranged && lessOne && kept && allUp && allDown && letGo && backToOne ? "PASS" : "FAIL");
+            // The same with the button itself, as Windows tells it to the list: with Ctrl it picks, without it selects one.
+            Press(cards, 4, Native.MK_CONTROL);
+            bool pressedPick = picked.Count == 2 && cards.SelectedIndex == 4;
+            Press(cards, 4, 0);
+            Console.WriteLine("[{0}] the button pressed with Ctrl picks, without it selects one card", pressedPick && picked.Count == 0
+                && cards.SelectedIndex == 4 ? "PASS" : "FAIL");
 
             // The places of the sidebar, and the tabs.
             Sample s = Sample.Current;
@@ -1671,7 +1733,9 @@ static class TestProgram
             // hotkey, a name and Enter still choose a saved password.
             TextBox find = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
             find.Text = s.ServerPassword;
-            Heading over = cards.Items.Count < 2 ? null : cards.Items[cards.Items.Count - 2] as Heading;
+            // The name over them is a row, or, with no copied entry found before them, in the bar over the cards.
+            Heading over = cards.Items.Count >= 2 && cards.Items[cards.Items.Count - 2] is Heading ? (Heading)cards.Items[cards.Items.Count - 2]
+                : (Heading)typeof(MainForm).GetField("topDay", hidden).GetValue(form);
             Entry selectedFound = cards.SelectedItem as Entry;
             bool searched = over != null && over.Text == Strings.SavedTitle && selectedFound != null && selectedFound.Saved
                 && selectedFound.Label == s.ServerPassword;
@@ -1974,6 +2038,37 @@ static class TestProgram
                     && wrote.Pictures == 1 && folders.Count == 3 && folders.Exists(delegate(Folder f) { return f.Name == s.Servers && f.Level == 1; })
                     ? "PASS" : "FAIL", read.Saved, read.Copied, wrote.Pictures);
             }
+            FillSample(form);
+
+            // Several copied entries moved into a folder are saved there, without a name, each in its own row, a picture
+            // too, and one of the last copies as it came, formatted; the history has none left, and no bar of the day.
+            GoTo(form, PlaceKind.History, null);
+            List<Entry> moving = Cards(cards);
+            Entry plainText = moving.Find(delegate(Entry e) { return !e.Picture && e.Category == Category.Text; });
+            DataObject formattedCopy = new DataObject();
+            Rich.Put(formattedCopy, "<b>" + System.Net.WebUtility.HtmlEncode(plainText.Text) + "</b>", null);
+            Rich.Remember(plainText.Text, formattedCopy);
+            typeof(MainForm).GetMethod("PickAll", hidden).Invoke(form, null);
+            typeof(MainForm).GetMethod("MoveAll", hidden).Invoke(form, new object[] { moving, s.Work });
+            long workId = ClipsOf(form).FindFolder(s.Work);
+            List<Entry> nowSaved = ClipsOf(form).Saved();
+            bool allThere = moving.TrueForAll(delegate(Entry m)
+            {
+                return nowSaved.Exists(delegate(Entry e) { return e.Id == m.Id && e.FolderId == workId && e.Name == null && e.Picture == m.Picture; });
+            });
+            Entry keptFormat = nowSaved.Find(delegate(Entry e) { return e.Id == plainText.Id; });
+            Console.WriteLine("[{0}] copied entries moved together into a folder are saved there, a recent one formatted as it came",
+                moving.Exists(delegate(Entry e) { return e.Picture; }) && allThere && keptFormat != null && keptFormat.Html != null
+                && Cards(cards).Count == 0 && !dayBar.Visible && picked.Count == 0 ? "PASS" : "FAIL");
+            // A long history of three days, scrolled down among the cards of yesterday: the bar says so.
+            for (int i = 0; i < 30; i++) ClipsOf(form).Import(s.Long + " " + i, DateTime.Today.AddDays(-(i / 10)).AddHours(8).AddMinutes(i), false);
+            typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
+            cards.TopIndex = RowOf(cards, delegate(Entry e) { return e.Text == s.Long + " 14"; });
+            showDay.Invoke(form, null);
+            Application.DoEvents();
+            Save(form, path + "-scrolled.png");
+            Console.WriteLine("[{0}] scrolled among the cards of yesterday, the bar over them says so: {1}",
+                dayBar.Text == Strings.Yesterday ? "PASS" : "FAIL", dayBar.Text);
             FillSample(form);
 
             // The folder of the database: moved elsewhere and back, the list going along; the setting saved at once.
@@ -2453,6 +2548,17 @@ static class TestProgram
         MouseEventArgs click = new MouseEventArgs(MouseButtons.Left, 1, at.X, at.Y, 0);
         foreach (string step in new string[] { "OnMouseDown", "OnMouseClick", "OnMouseUp" })
             typeof(Control).GetMethod(step, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(control, new object[] { click });
+        Application.DoEvents();
+    }
+
+    // The left button pressed and released on the left of a row, as Windows sends it, with the keys held ('keys': MK_).
+    static void Press(ListBox list, int row, int keys)
+    {
+        Rectangle area = list.GetItemRectangle(row);
+        IntPtr at = (IntPtr)(((area.Top + area.Height / 2) << 16) | (area.Left + 40));
+        const int MK_LBUTTON = 0x0001, WM_LBUTTONUP = 0x0202;
+        Native.SendMessage(list.Handle, Native.WM_LBUTTONDOWN, (IntPtr)(MK_LBUTTON | keys), at);
+        Native.SendMessage(list.Handle, WM_LBUTTONUP, (IntPtr)keys, at);
         Application.DoEvents();
     }
 

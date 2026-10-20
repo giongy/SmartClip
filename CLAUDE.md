@@ -247,7 +247,14 @@ condiviso su GitHub).
   appunti», le schede dei tipi (`tabs`, `TabStrip`: Tutti, Testo, Codice, Link, Immagini, scelte dell'utente),
   l'elenco delle schede delle voci (`cardList`), la riga di stato. «Cronologia» mostra solo i copiati (voluto
   dall'utente il 19/10/2026: prima mescolava copiati e salvati, e una password salvata mesi fa finiva in fondo tra le
-  copie vecchie), quelli in alto prima e il nome del giorno sopra ogni giorno (`Heading`, mai selezionabile); **cercando**
+  copie vecchie), quelli in alto prima e il nome del giorno sopra ogni giorno (`Heading`, mai selezionabile). Il primo
+  nome non è una riga: lo dice la barra fissa sopra le schede (`dayBar`, `DayBar`, `topDay` tolto da `rows` in `Filter`,
+  disegnata come le righe da `DrawHeading`; le schede le fanno posto sotto, `PlaceDay`), che scorrendo dice il giorno
+  della prima scheda in vista, cioè l'ultimo nome prima di `TopIndex` (`ShowDay`, da `RowList.Scrolled`; voluta
+  dall'utente il 20/10/2026: tra le schede di ieri, che dicono solo l'ora, il nome del giorno era salito fuori vista).
+  Un `ListBox` scorre per righe intere, quindi una barra sopra l'elenco ne avrebbe coperto la prima scheda: per questo
+  le schede partono sotto di lei, e con un nome in cima, subito sotto la barra, la barra dice ancora il giorno prima;
+  la rotella sopra di lei scorre le schede. **Cercando**
   vi compaiono anche i salvati che corrispondono, dopo i copiati, per nome sotto un `Heading` «Salvati» (scelta
   dell'utente: Ctrl+D, il nome e Invio devono continuare a trovare una password salvata). Le parole trovate sono
   evidenziate sulle schede, nel testo e nel nome di un salvato (voluto dall'utente il 19/10/2026: una scheda trovata
@@ -272,6 +279,21 @@ condiviso su GitHub).
   sono i numeri delle voci, sotto). Un testo salvato
   torna negli appunti con il formato che lo segna riservato; ciò che il programma stesso mette negli appunti
   non rientra nell'elenco (`ownCopy`, numero di sequenza degli appunti).
+- Più schede insieme (voluto dall'utente il 20/10/2026, scelte sue: come Esplora file, con una barra, e «Sposta in»
+  salva i copiati): Ctrl+clic ne aggiunge o toglie una, Maiusc+clic (o Maiusc con le frecce, `PickStep`) prende quelle
+  dalla scheda di partenza (`pickFrom`) a questa, Ctrl+A nelle schede tutte (`PickAll`, `AllKeys`, tra i `ListKeys`).
+  Il `ListBox` resta a selezione singola: gli id scelti stanno in `picked` (mai uno solo: allora è la scheda
+  selezionata, `ShowPicks`; `Many`), e i clic con Ctrl o Maiusc non arrivano a Windows (`RowList.Picking`, da
+  `WM_LBUTTONDOWN`), così tutto ciò che usa `SelectedIndex` non è cambiato. Un clic senza tasti, le frecce, un altro
+  posto, una ricerca o un'altra scheda dei tipi tornano a una scheda sola (`ClearPicks`, anche da `SelectedIndexChanged`
+  fuori da `keepPicks`); una ricarica tiene quelle ancora in elenco (`ShowRows`). Le scelte hanno il bordo d'accento
+  (`DrawEntry`); al posto delle schede dei tipi compare `pickBar` (`ShowPickBar`, `PlacePickBar`): quante, «Tieni in
+  alto» (solo se c'è un copiato; tutte in alto, o tutte giù se lo sono già: `PinSelected`), «Sposta in» (`ListMoves`,
+  `MoveAll`: un copiato si salva lì senza nome, formattato se è tra le ultime copie, `Rich.Kept`), «Elimina»
+  (`DeleteSelected`, chiede sempre per più di una e dice quanti salvati ci sono) e ✕ (`Sign.Cancel`). Le stesse nel menu
+  del tasto destro (un clic destro su una scelta le tiene) e su Ctrl+P, Ctrl+E; Esc le lascia prima di tornare indietro;
+  Invio e Ctrl+S non fanno niente. I pulsanti di una scheda agiscono solo su lei (il clic toglie le altre). Il
+  trascinamento in una cartella resta di una scheda sola.
 - Ctrl+D (`OpenList`) porta la finestra in primo piano da qualsiasi programma; dopo la scelta con Invio o
   doppio clic `GoBack` restituisce il primo piano alla finestra di partenza e rinasconde la finestra se era
   nascosta. «Copia» no (voluto dall'utente: la finestra spariva e la voce non si poteva più salvare).
@@ -843,7 +865,8 @@ cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
   AltGr, Unicode, Alt+codice, Tab, Invio; poi verifica che finestra sbagliata e annullamento blocchino tutto.
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.
 - `tests.exe shot <prefisso>` — non è in `test.cmd`: salva immagini PNG della finestra (elenco con voci
-  finte, una scheda sotto il puntatore in `-hover`, le schede alte due righe in `-two`, una ricerca con la parola evidenziata in `-search`, opzioni con ogni pagina in `-options-1`…`-5`, stati lunghi) per
+  finte, una scheda sotto il puntatore in `-hover`, le schede alte due righe in `-two`, una ricerca con la parola evidenziata in `-search`,
+  quattro schede scelte con la loro barra in `-picked`, un elenco di tre giorni scorso fino a ieri in `-scrolled`, opzioni con ogni pagina in `-options-1`…`-5`, stati lunghi) per
   controllare l'aspetto senza mostrarla.
 - `tests.exe store <cartella> <lingua>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno
   sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>` (in scuro, che sullo Store fa più effetto, tranne l'ultima, `8-light`; lo sfondo si scurisce con il tema), e
@@ -896,6 +919,11 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   posti, schede dei tipi, giorni e selezione; mai i clic veri sui pulsanti delle schede, sulle frecce della barra,
   il trascinamento sulla barra, il menu di una cartella, schermi oltre il 100% (le schede alte più di 255 pixel si
   tagliano), Windows 10.
+- Più schede scelte e la barra del giorno (20/10/2026) dal vivo: provati da `shot` `Pick` (Ctrl, Maiusc, una che resta
+  sola), la barra, la ricarica, «Tieni in alto» avanti e indietro, `MoveAll` con un'immagine e un testo formattato,
+  `ShowDay` scorrendo, i messaggi del tasto sinistro mandati alla lista con e senza Ctrl, e viste le immagini in quattro
+  lingue; mai il mouse vero, Ctrl+A e Maiusc+frecce premuti davvero, la domanda di «Elimina», il menu di «Sposta in» aperto dal
+  pulsante, la rotella sopra la barra del giorno.
 - L'avviso di SQLite mancante o troppo vecchio: nessun Windows a portata di mano ne è privo.
 - Il database con migliaia di voci (la ricerca, la scadenza, il file che si restringe): provato solo con le
   poche dei test. E dal pacchetto dello Store, dove sta in `LocalState`.

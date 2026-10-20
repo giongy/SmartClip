@@ -42,6 +42,7 @@ static partial class Strings
             + "e questo Windows ha la versione {2}. Aggiornare Windows risolve.";
         PicturesFull = "Lo spazio per le immagini copiate ({0}) è pieno: le più vecchie vengono cancellate, una alla volta, "
             + "man mano che ne copi di nuove.";
+        PickedCount = "{0} selezionate"; PickNone = "Annulla la selezione";
 
         Open = "Apri"; Exit = "Esci"; Pause = "Sospendi la cattura"; Resume = "Riprendi la cattura";
         ShowContent = "Mostra il contenuto"; MoveTo = "Sposta in"; NewFolder = "Nuova cartella…";
@@ -59,6 +60,9 @@ static partial class Strings
         PausedSay = "In pausa: quello che copi non viene ricordato, finché non riprendi la cattura.";
         ResumedSay = "La cattura è ripresa: quello che copi torna nell'elenco.";
         Pinned = "Resta in alto: {0}."; Unpinned = "Non è più in alto: {0}.";
+        PinnedMany = "{0} voci restano in alto."; UnpinnedMany = "{0} voci non sono più in alto.";
+        DeletedMany = "{0} voci eliminate.";
+        PickedSaved = "{0} voci sono tra i salvati, fuori dalle cartelle."; PickedInFolder = "{0} voci sono nella cartella «{1}».";
         KindChanged = "Segnata come {1}: {0}.";
         NumberGiven = "{0} ora incolla «{1}» ovunque tu sia.";
         NumberTaken = "«{0}» non ha più una scorciatoia.";
@@ -81,6 +85,7 @@ static partial class Strings
         DeleteFolderTop = "\n\nQuello che contiene non viene eliminato: resta tra i salvati, fuori dalle cartelle.";
         DeleteFolderUp = "\n\nQuello che contiene non viene eliminato: passa nella cartella «{0}».";
         AskDelete = "Vuoi eliminare «{0}»?";
+        AskDeleteMany = "Vuoi eliminare {0} voci?"; DeleteManySaved = "\n\nTra queste, testi salvati: {0}.";
         Yes = "Sì"; No = "No"; Ok = "OK";
 
         Cancel = "Annulla";
@@ -331,7 +336,7 @@ static partial class Strings
             "# L'elenco",
             "A sinistra c'è la barra laterale, a destra le schede delle voci del posto scelto lì:",
             "- «" + HistoryPlace + "»: ciò che hai copiato, dal più nuovo, ogni giorno sotto il suo nome; le voci tenute "
-                + "in alto vengono prima delle altre.",
+                + "in alto vengono prima delle altre. Mentre scorri, il nome del giorno della prima scheda resta sopra le schede.",
             "- «" + PinnedPlace + "»: solo le voci copiate tenute in alto.",
             "- «" + ShortcutsPlace + "»: le voci con un numero, copiate e salvate, in ordine di numero. Un clic sul numero di una "
                 + "scheda lo cambia o lo toglie, qui come altrove.",
@@ -364,6 +369,12 @@ static partial class Strings
                 + "attiva, nelle opzioni, fermare il puntatore su una scheda che taglia il suo testo fa lo stesso, finché il "
                 + "puntatore non si sposta.",
             "- I tre puntini a destra, o il tasto destro, aprono il menu della voce, senza toccare gli appunti.",
+            "- Ctrl+clic aggiunge una scheda alla selezione o la toglie, " + ShiftName + "+clic seleziona tutte le schede fino a "
+                + "quella (anche " + ShiftName + " con le frecce), " + Key(Keys.Control | MainForm.AllKey) + " le seleziona tutte. Con "
+                + "più schede selezionate, una barra al posto delle schede dei tipi dice quante sono e offre «" + Pin + "», «" + MoveTo
+                + "» ed «" + Delete + "», che stanno anche nel menu del tasto destro e sui loro tasti. «" + MoveTo + "» una cartella, "
+                + "o «" + SavedTitle + "», vi salva le voci copiate. " + EscapeKeyName + ", o la croce in fondo alla barra, torna a una "
+                + "scheda sola.",
             "- «" + CopyPictureText + "», nel menu di un'immagine, mette negli appunti il testo che "
                 + "Windows ci legge, qui sul PC, senza internet: entra nell'elenco come ogni cosa che copi (quello di "
                 + "un'immagine salvata è riservato, come un testo salvato). Il testo piccolo può uscire con qualche errore: "
@@ -457,8 +468,9 @@ static partial class Strings
             MainForm.NumbersName + "\tIncolla nella finestra attiva la voce con quel numero.",
             "F1\tApre questa guida.",
             ArrowsName + "\tScorre le voci, o i posti della barra laterale.",
+            Key(Keys.Control | MainForm.AllKey) + "\tSeleziona tutte le schede; Ctrl o " + ShiftName + " con un clic, più d'una.",
             EnterKeyName + "\tSceglie la voce e torna alla finestra di partenza.",
-            "Esc\tTorna alla finestra di partenza senza scegliere.",
+            EscapeKeyName + "\tTorna alla finestra di partenza senza scegliere; con più schede selezionate, a una sola.",
             Key(Keys.Control | MainForm.SearchKey) + "\tPorta il cursore nella casella di ricerca.",
             Key(Keys.Control | MainForm.NewKey) + "\tNuovo testo salvato.",
             Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "\tNuova cartella.",

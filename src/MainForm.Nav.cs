@@ -346,6 +346,7 @@ partial class MainForm
         }
         if (chosen.Is(place)) return;
         place = chosen;
+        ClearPicks();   // what was picked elsewhere is not there
         Filter();
     }
 

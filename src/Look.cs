@@ -582,7 +582,7 @@ class RoundButton : Button
 // The small signs drawn beside entries, on buttons and beside the pages of the options: they are where the colour is.
 enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, Keys, Search, Help, Opened, Closed, Bolt, History, Up,
     Bold, Italic, Underline, Erase, Formatted, Folder, NewFolder, Move, Pause, Resume, Open, Exit, Show, Check, Paint,
-    Info, Done, Warning, Error, Paste, Code, Picture, Apps, More, Copy, Menu, FullFolder }
+    Info, Done, Warning, Error, Paste, Code, Picture, Apps, More, Copy, Menu, FullFolder, Cancel }
 
 // The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
 enum Theme { System, Light, Dark }
@@ -1072,6 +1072,7 @@ static class Look
             case Sign.More: return "\uE712";                        // More
             case Sign.Copy: return "\uE8C8";                        // Copy
             case Sign.Menu: return "\uE700";                        // GlobalNavigationButton
+            case Sign.Cancel: return "\uE711";                      // Cancel
             default: return "\uE81C";                               // History
         }
     }
@@ -1096,7 +1097,7 @@ static class Look
                 return Amber;
             case Sign.Plus: return Green;
             case Sign.Delete: return Red;
-            case Sign.Exit: return Muted;
+            case Sign.Exit: case Sign.Cancel: return Muted;
             case Sign.Menu: return Ink;
             default: return Letter(sign) != null && sign != Sign.Formatted ? Ink : Purple;
         }
@@ -1157,6 +1158,7 @@ static class Look
                     g.DrawLine(pen, x + 3 * u, y + 13.5f * u, x + 13 * u, y + 13.5f * u);
                     break;
                 case Sign.Delete:
+                case Sign.Cancel:
                     g.DrawLine(pen, x + 4 * u, y + 4 * u, x + 12 * u, y + 12 * u);
                     g.DrawLine(pen, x + 12 * u, y + 4 * u, x + 4 * u, y + 12 * u);
                     break;

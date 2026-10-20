@@ -252,6 +252,24 @@ static class Rich
         return copy != null;
     }
 
+    // The formatting a copied text had, as it came, if it is one of the last copies and says what the text says (see
+    // Matches): what saving it without its window keeps. Both null for none; the RTF only beside the HTML.
+    public static bool Kept(string text, out string html, out string rtf)
+    {
+        if (Recent(text, out html, out rtf))
+        {
+            List<Run> runs = rtf != null ? FromRtf(rtf) : null;
+            if (runs == null && html != null) runs = FromHtml(html);
+            if (runs != null && !Plain(runs) && TextOf(runs).Length > 0 && Matches(runs, text))
+            {
+                if (html == null) html = ToHtml(runs);
+                return true;
+            }
+        }
+        html = rtf = null;
+        return false;
+    }
+
     // --- Runs ---
 
     public static bool Plain(List<Run> runs)
