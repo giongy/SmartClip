@@ -2,8 +2,9 @@
 
 Piccolo gestore degli appunti per Windows che sa anche digitarne il contenuto come pressioni di tasti reali, per
 inserire password dove l'incolla non funziona (schermate di blocco dei desktop remoti). Fino alla versione 1.2
-si chiamava PasswordPaste (il repository GitHub è `giongy/SmartClip`), e alla
-prima apertura `AdoptOldSettings` sposta impostazioni e testi salvati da `HKCU\Software\PasswordPaste`. L'utente è italiano: risposte in
+si chiamava PasswordPaste (il repository GitHub è `giongy/SmartClip`); fino alla 4.3.8 `AdoptOldSettings` ne adottava
+impostazioni e testi salvati da `HKCU\Software\PasswordPaste`: tolto nella 4.3.9, perché quel nome non restasse
+nell'eseguibile (vedi «Nessuna parola come password» sotto). L'utente è italiano: risposte in
 italiano. L'interfaccia è in inglese (la lingua di default, voluta dall'utente per renderla internazionale),
 spagnolo, francese e italiano. I commenti nel codice e nei file di configurazione sono in inglese (il progetto è
 condiviso su GitHub).
@@ -30,7 +31,7 @@ condiviso su GitHub).
     - `MainForm.Nav.cs` — la barra laterale (`navList`, i posti `Place`/`PlaceKind`; `footList` sotto), il suo
       menu (`navMenu`) e il trascinamento nelle cartelle (`Draggable`).
     - `MainForm.Options.cs` — `PlaceOptions` (le opzioni e i loro suggerimenti), i `Place…`, esportazione,
-      importazione, pulizia, `TransferSettings` e `AdoptOldSettings`, e `OptionsWindow`, la finestra delle
+      importazione, pulizia, `TransferSettings`, e `OptionsWindow`, la finestra delle
       opzioni (classe annidata in `MainForm`, così usa i suoi campi).
     - `MainForm.Hotkeys.cs` — le scorciatoie globali: nomi, cambio dei tasti, registrazione, e l'incolla delle voci numerate (`PasteNumber`).
     - `MainForm.Typing.cs` — la digitazione: `Run`, `WaitForTarget`, esito.
@@ -336,7 +337,7 @@ condiviso su GitHub).
   cambiato: non con la cronologia spenta o in pausa, né per una copia riservata o fatta dall'elenco).
 - Una voce copiata si può tenere in cima **per un po'** (`Entry.Pinned`, la freccia, voluta
   dall'utente al posto della stellina il 17/10/2026; nella barra il posto «In alto»): freccia a destra della prima riga della
-  scheda (`Part.Pin`: lì il clic non sceglie la voce, `Sign.Up`), menu e Ctrl+P, tutti in `TogglePin`. **Scade come
+  scheda (`Part.Arrow`: lì il clic non sceglie la voce, `Sign.Up`), menu e Ctrl+P, tutti in `TogglePin`. **Scade come
   le altre**, e «Pulisci ora…» la toglie (l'utente: «se vuoi salvarlo lo salvi con l'apposita funzione; la freccia
   serve temporaneamente a tenere in alto una voce»). `Forget` (la password digitata) non la toglie, né toglie una
   voce con un numero.
@@ -712,6 +713,16 @@ condiviso su GitHub).
   stessi argomenti, ed elenca i testi rimasti uguali all'inglese. Gli spazi sono tarati sull'italiano, che è
   tra le lingue più lunghe: dopo aver cambiato etichette guardare `tests.exe shot <png> <lingua>` in tutte e
   quattro (francese e spagnolo sono i più a rischio).
+- **Nessuna parola come password** (voluto dall'utente il 20/10/2026, dalla 4.3.9) in ciò che arriva allo Store, in
+  nessuna lingua: i testi del programma e la guida, le voci finte delle immagini (`Sample`), la scheda
+  (`store\README.md`), `PRIVACY.md`. Vietate anche *contraseña*, *mot de passe*, *credenziali/credentials/
+  credenciales*, *identifiants*, *PIN*, *passphrase*, *passcode*: l'elenco, espressioni regolari, sta solo in
+  `store\forbidden-words.txt`. Lo leggono `tests.exe texts` (ogni campo di `Strings` e ogni riga della guida composti
+  in ogni lingua, quindi anche una parola spezzata tra due righe di codice, e i campi di `Sample`) e
+  `make-listing.ps1` (ogni cella del CSV: se ne trova una non scrive niente). Al loro posto: «testo», «testo
+  riservato/privato», «le copie che altri programmi segnano come riservate» (non «i gestori di password»), «codice di
+  accesso»; l'argomento della guida è «Digitare dove incollare non funziona». Commenti, CLAUDE.md, README di GitHub
+  (scelta dell'utente: resta com'è) e dati interni dei test che non finiscono nelle immagini possono usarle.
   Le opzioni stanno in pagine, una per categoria (voluto dall'utente il 16/10/2026: «fatte come la guida, schede
   verticali, divise per argomento»; prima erano su due colonne, e prima ancora in un elenco unico, caotico): a
   sinistra la colonna delle pagine (`pageList`, disegnata come gli argomenti della guida con `Look.DrawTopic`, in un
@@ -849,7 +860,8 @@ cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
 - `tests.exe map` — stampa la mappa della tastiera attiva e confronta la tabella americana (solo lettere e
   cifre, se il layout USA non è installato).
 - `tests.exe texts` — la logica attorno all'elenco, senza aprirlo e senza toccare gli appunti: formati riservati,
-  ricerca, percorsi delle cartelle, file esportato, caratteri, testi formattati (`RichTest`), lingue, il log, il
+  ricerca, percorsi delle cartelle, file esportato, caratteri, testi formattati (`RichTest`), lingue (anche
+  nessuna parola di `store\forbidden-words.txt` nei testi e nelle voci finte, `Forbidden`), il log, il
   testo delle immagini (`OcrTest`: due righe a 16 px, una trasparente, una vuota, le accentate in italiano; dove
   Windows non ha lingue da leggere, come forse il server di GitHub, scrive `[SKIP]`).
 - `tests.exe data` — il database, in file della cartella di prova: per ora lo strato SQLite (`SqliteTest`: testi

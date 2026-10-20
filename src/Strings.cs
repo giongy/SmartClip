@@ -92,7 +92,7 @@ static partial class Strings
     // --- Menus ---
     public static string Open = "Open", Exit = "Exit", Pause = "Pause capture", Resume = "Resume capture";
     public static string ShowContent = "Show the content", MoveTo = "Move to", NewFolder = "New folder…",
-        Pin = "Keep at the top", Unpin = "Release from the top", OutOfFolders = "Out of the folders", EmptyFolder = "Empty";
+        KeepTop = "Keep at the top", Unpin = "Release from the top", OutOfFolders = "Out of the folders", EmptyFolder = "Empty";
     public static string NumberMenu = "Shortcut", NoNumber = "None", KindMenu = "Type";
     public static string CopyPictureText = "Copy the text";
 
@@ -141,15 +141,15 @@ static partial class Strings
 
     // --- Typing ---
     public static string Cancel = "Cancel";
-    public static string NoText = "There is no text on the clipboard: copy the password first.";
+    public static string NoText = "There is no text on the clipboard: copy the text first.";
     public static string Cancelled = "Cancelled.";
     public static string CapsLock = "Caps Lock is on: turn it off and try again.";
     public static string TypingInto = "Typing into {0}…";
-    public static string AskUnusual = "The clipboard holds {0}: it does not look like a password.\n\nType it anyway?";
+    public static string AskUnusual = "The clipboard holds {0}: longer than what is usually typed.\n\nType it anyway?";
     public static string OnLines = " on {0} lines";
     public static string Countdown = "Typing in {0} s into {1}. Press Cancel to stop.";
     public static string TimeUp = "Time is up: you did not choose the window to type into.";
-    public static string ClickNow = "Click now into the password field of the remote window…";
+    public static string ClickNow = "Click now into the field of the remote window…";
     public static string Untitled = "an untitled window";
     public static string KeysHeld = "Release the keys you are holding down and try again.";
     public static string Blocked = "Windows blocked the keystrokes. If the remote desktop program runs as administrator, "
@@ -180,7 +180,7 @@ static partial class Strings
         + "It applies only with the option above on. It does not happen while it waits or types,\n"
         + "nor while you write a saved text or answer a question: meanwhile you can copy elsewhere.";
     public static string TypeTip = "Types the clipboard text one key at a time, where paste does not work:\n"
-        + "copy the password, press here and click into the field of the remote window.\n"
+        + "copy the text, press here and click into the field of the remote window.\n"
         + "Or press {0} right in the field.";
     public static string SearchTip = "Type to search the cards of the place: words in any order, ignoring case and accents.\n"
         + "In " + HistoryPlace + " the saved texts too, after what you copied.\n"
@@ -277,7 +277,7 @@ static partial class Strings
         + "Turn it on if symbols arrive wrong because the server assumes a US\n"
         + "keyboard (it happens with VMware consoles, iLO, iDRAC and some sign-in\nscreens).";
     public static string EnterTip = "Presses Enter after the last character, to confirm the sign-in at once.";
-    public static string ClearTip = "Erases the password from the clipboard once typing has succeeded.\n"
+    public static string ClearTip = "Erases the typed text from the clipboard once typing has succeeded.\n"
         + "Windows clipboard history (Win+V), if on, is not touched.";
     public static string SlowTip = "Turn it on if characters arrive missing or out of order on the server.";
     public static string AltCodeTip = "Symbols this keyboard has no key for (for example ~ and ` on an Italian\n"
@@ -299,8 +299,8 @@ static partial class Strings
         + "With one line the lines of a text follow one another, a faint {0} between them; with two they stay as they are.\n"
         + "The eye at the right of a card shows whole what it cuts short. It changes at once.";
     public static string HistoryTip = "The list offers the texts and pictures copied while the program is open.\n"
-        + "What password managers mark as private is not remembered.\n"
-        + "Turn it off if you copy passwords from programs that do not: they would be\n"
+        + "Copies that other programs mark as private are not remembered.\n"
+        + "Turn it off if you copy private texts from programs that do not: they would be\n"
         + "readable in the list. Turning it off also deletes the history on disk.";
     public static string KeepTip = "How many days what you copy stays in the history, also after closing,\n"
         + "today being the first: with 0 only what you copied today stays.\n"
@@ -326,13 +326,13 @@ static partial class Strings
         + "It is the same entry as Task Manager > Startup apps: off there, it shows off here too.";
     public static string ExportTip = "Writes the saved texts with their folders to a text file that Notepad opens;\n"
         + "if you ask, what was copied too. Pictures are left out.\n"
-        + "In the file the texts are unencrypted, passwords included: keep it somewhere safe.";
+        + "In the file the texts are unencrypted, private ones included: keep it somewhere safe.";
     public static string ImportTip = "Reads a file written by “Export”, also on another PC, and adds what it holds\n"
         + "to what is already here. If a saved text has the name of an existing one, it asks which to keep.\n"
         + "Copied texts the list already has are not repeated.";
     public static string OnlySaved = "Saved texts only…", Everything = "Everything, copied items too…";
     public static string TextFiles = "Text files";
-    public static string AskExport = "The file will hold the texts unencrypted, passwords included: anyone who opens it "
+    public static string AskExport = "The file will hold the texts unencrypted, private ones included: anyone who opens it "
         + "can read them.\n\nContinue?";
     public static string SavedOne = "saved text", SavedMany = "saved texts", CopiedOne = "copied item", CopiedMany = "copied items";
     public static string Exported = "Exported: {0}.", ExportedAll = "Exported: {0}, {1}.";
@@ -360,7 +360,7 @@ static partial class Strings
     public static string PictureHintNamed = "The list shows the picture with “{0}” beside it.";
     public static string NameLabel = "Name (optional):", ContentLabel = "Content:";
     public static string NameHintEmpty = "Without a name, the list shows the content.";
-    public static string NameHintNamed = "The list shows “{0}”; the content stays hidden, which suits a password.";
+    public static string NameHintNamed = "The list shows “{0}”; the content stays hidden, which suits a private text.";
     public static string BoldTip = "Bold (Ctrl+B)", ItalicTip = "Italic (Ctrl+I)", UnderlineTip = "Underline (Ctrl+U)";
     public static string TypefaceTip = "Font", PointsTip = "Size", PlainTip = "Remove the formatting: of the selection, or of all the text";
     public static string DefaultLook = "Default", Points = "{0} pt";   // in the menus of font and size
@@ -375,7 +375,7 @@ static partial class Strings
 
     // --- Export file ---
     public static string ExportHeader = "{0} {1}: export of {2}";
-    public static string ExportClearWarning = "Warning: the texts here are unencrypted, passwords included.";
+    public static string ExportClearWarning = "Warning: the texts here are unencrypted, private ones included.";
     public static string ExportEditNote = "The text of each entry is in the lines that start with a tab: if you edit the "
         + "file, leave it in place.";
 
@@ -392,7 +392,7 @@ static partial class Strings
         {
             "# What it is for",
             app + " keeps what you copy and the texts you choose to save, to put them back on the clipboard when "
-                + "you need them. It can also type the clipboard as real key presses: that is how a password gets "
+                + "you need them. It can also type the clipboard as real key presses: that is how a text gets "
                 + "in where paste does not work, for example on the lock screens of remote desktops.",
 
             "# The list",
@@ -431,7 +431,7 @@ static partial class Strings
             "- The three dots on the right, or right-click, open the menu of the entry, without touching the clipboard.",
             "- Ctrl+click adds a card to the selection or takes it away, " + ShiftName + "+click selects all the cards up to that one "
                 + "(" + ShiftName + " with the arrows too), " + Key(Keys.Control | MainForm.AllKey) + " selects them all. With several "
-                + "selected, a bar in the place of the tabs says how many and offers “" + Pin + "”, “" + MoveTo + "” and “" + Delete
+                + "selected, a bar in the place of the tabs says how many and offers “" + KeepTop + "”, “" + MoveTo + "” and “" + Delete
                 + "”, which are also in the right-click menu and on their keys. “" + MoveTo + "” a folder, or " + SavedTitle
                 + ", saves the copied entries there. " + EscapeKeyName + ", or the cross at the end of the bar, goes back to one card.",
             "- “" + CopyPictureText + "”, in the menu of a picture, puts on the clipboard the text Windows "
@@ -453,9 +453,9 @@ static partial class Strings
             "The list shows the " + MainForm.MaxShown + " most recent copied entries: search finds the others.",
 
             "# Saved texts",
-            "They are what you want always at hand: a signature, an address, a password. They never expire. The "
+            "They are what you want always at hand: a signature, an address, an access code. They never expire. The "
                 + "name is optional: with one, the list shows only the name and the content stays hidden, which suits "
-                + "a password; without, the list shows the content, as for a second email address.",
+                + "a private text; without, the list shows the content, as for a second email address.",
             "- “" + New + "” (" + Key(Keys.Control | MainForm.NewKey) + ") writes a text from scratch.",
             "- “" + SaveDots + "” (" + Key(Keys.Control | MainForm.SaveKey) + "), on a copied entry, keeps it, with "
                 + "a name or without; before saving you can touch up its content.",
@@ -502,14 +502,14 @@ static partial class Strings
             "- In the menu of the icon by the clock each folder is a submenu with its texts.",
             "- The name of a folder finds its texts in a search.",
 
-            "# Typing a password",
+            "# Typing where paste does not work",
             "Where Ctrl+V does not work, " + app + " writes the clipboard text one key at a time, as you would on the keyboard.",
-            "- Copy the password.",
+            "- Copy the text.",
             "- Press “" + TypeButton + "”.",
             "- Click into the field of the remote window: you have " + MainForm.ArmedSeconds + " seconds to do it.",
             "- When that window has stayed in the foreground for the wait, typing starts.",
             "Otherwise press " + type + " right in the field: it types at once, with no wait.",
-            "Not to send a password to the wrong place:",
+            "Not to send a private text to the wrong place:",
             "- typing stops by itself if the target window loses the foreground;",
             "- while waiting and typing the same button becomes “" + Cancel + "”;",
             "- the desktop, the taskbar and the Start menu are never a target;",
@@ -553,7 +553,7 @@ static partial class Strings
             "- With 0 days only what you copied today stays.",
             "- Copied pictures take at most " + Size(Clips.PictureSpace) + ": beyond that the oldest go, even before their "
                 + "days are over, and a red bar under the list says so. Saved pictures do not count.",
-            "- What password managers mark as private is not remembered.",
+            "- Copies that other programs mark as private are not remembered.",
             "- Entries kept at the top go when their days are over too: what is to stay, save it.",
             "- In the options, “" + CleanButton + "” deletes at once what you copied before the last days written "
                 + "beside it: with 1 only today stays, with 0 nothing does. It asks first; entries kept at the top "
@@ -584,7 +584,7 @@ static partial class Strings
             "- “" + ExportButton + "” writes a text file that Notepad opens: the saved texts with their folders "
                 + "(formatted ones with their HTML before the text) and, if you ask, the copied items with their time "
                 + "and arrow. Pictures are left out.",
-            "- In the file the texts are unencrypted, passwords included: keep it somewhere safe.",
+            "- In the file the texts are unencrypted, private ones included: keep it somewhere safe.",
             "- “" + ImportButton + "” reads such a file and adds what it holds to what is already here. If a saved "
                 + "text has the name of an existing one it asks which to keep; copied items the list already has "
                 + "are not repeated. A file exported in another language is read just the same.",

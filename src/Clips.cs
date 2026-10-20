@@ -637,7 +637,7 @@ sealed class Clips : IDisposable
 
     // Keeps a copied entry at the top of the list, or lets it go back among the others. It goes all the same
     // when its days are over.
-    public void Pin(long id, bool pinned)
+    public void KeepAtTop(long id, bool pinned)
     {
         data.Execute("UPDATE entries SET pinned = ?2 WHERE id = ?1 AND saved = 0", id, pinned);
     }

@@ -25,8 +25,8 @@ class ShotEdit : EditForm
 // would not look like anybody's.
 class Sample
 {
-    public string Signature, SignatureText, Work, Address, Servers, ServerPassword, Home, Wifi, Long, TwoLines, Remote;
-    public string Probe;   // a word found only in the server password, for a search
+    public string Signature, SignatureText, Work, Address, Servers, TestServer, Home, Wifi, Long, TwoLines, Remote;
+    public string Probe;   // a word found only in the name of the test server, for a search
 
     public static Sample Current
     {
@@ -38,28 +38,28 @@ class Sample
                 case "it":
                     s.Signature = "Firma email"; s.SignatureText = "Cordiali saluti,\nMario Rossi\n\nUfficio tecnico\nTel. 02 1234567";
                     s.Work = "Lavoro"; s.Address = "Indirizzo ufficio"; s.Servers = "Server";
-                    s.ServerPassword = "Password del server di prova"; s.Home = "Casa"; s.Wifi = "Wi-Fi di casa";
+                    s.TestServer = "Accesso al server di prova"; s.Home = "Casa"; s.Wifi = "Wi-Fi di casa";
                     s.Long = "Una frase copiata più lunga della finestra, che finisce tagliata sul bordo destro con i puntini";
                     s.TwoLines = "prima riga\r\nseconda riga"; s.Remote = "srv-database-01 - Connessione Desktop remoto"; s.Probe = "prova";
                     break;
                 case "es":
                     s.Signature = "Firma de correo"; s.SignatureText = "Saludos cordiales,\nMaría García\n\nOficina técnica\nTel. 91 123 45 67";
                     s.Work = "Trabajo"; s.Address = "Dirección de la oficina"; s.Servers = "Servidores";
-                    s.ServerPassword = "Contraseña del servidor de pruebas"; s.Home = "Casa"; s.Wifi = "Wi-Fi de casa";
+                    s.TestServer = "Acceso al servidor de pruebas"; s.Home = "Casa"; s.Wifi = "Wi-Fi de casa";
                     s.Long = "Una frase copiada más larga que la ventana, que termina cortada en el borde derecho con puntos suspensivos";
                     s.TwoLines = "primera línea\r\nsegunda línea"; s.Remote = "srv-database-01 - Conexión a Escritorio remoto"; s.Probe = "pruebas";
                     break;
                 case "fr":
                     s.Signature = "Signature e-mail"; s.SignatureText = "Cordialement,\nMarie Dupont\n\nBureau technique\nTél. 01 23 45 67 89";
                     s.Work = "Travail"; s.Address = "Adresse du bureau"; s.Servers = "Serveurs";
-                    s.ServerPassword = "Mot de passe du serveur de test"; s.Home = "Maison"; s.Wifi = "Wi-Fi de la maison";
+                    s.TestServer = "Accès au serveur de test"; s.Home = "Maison"; s.Wifi = "Wi-Fi de la maison";
                     s.Long = "Une phrase copiée plus longue que la fenêtre, coupée au bord droit par des points de suspension";
                     s.TwoLines = "première ligne\r\ndeuxième ligne"; s.Remote = "srv-database-01 - Connexion Bureau à distance"; s.Probe = "test";
                     break;
                 default:
                     s.Signature = "Email signature"; s.SignatureText = "Kind regards,\nJohn Smith\n\nTechnical office\nTel. 020 7946 0958";
                     s.Work = "Work"; s.Address = "Office address"; s.Servers = "Servers";
-                    s.ServerPassword = "Test server password"; s.Home = "Home"; s.Wifi = "Home Wi-Fi";
+                    s.TestServer = "Test server access"; s.Home = "Home"; s.Wifi = "Home Wi-Fi";
                     s.Long = "A copied sentence longer than the window, which ends cut short at the right edge with an ellipsis";
                     s.TwoLines = "first line\r\nsecond line"; s.Remote = "srv-database-01 - Remote Desktop Connection"; s.Probe = "test";
                     break;
@@ -116,7 +116,6 @@ static class TestProgram
         // log in a folder of their own. Both are emptied before and removed after.
         sandbox = System.IO.Path.Combine(System.IO.Path.GetTempPath(), "SmartClip test " + Guid.NewGuid());
         MainForm.SettingsKey = TestKey;
-        MainForm.OldSettingsKey = TestKey + @"\Old";
         Clips.DefaultFile = System.IO.Path.Combine(sandbox, Program.AppName + ".db");
         Migration.OldHistory = System.IO.Path.Combine(sandbox, "History");
         Log.FileName = Log.FileIn(sandbox);
@@ -283,7 +282,7 @@ static class TestProgram
             clips.AddText("copied text");
             using (Bitmap picture = Noise(30, 7)) clips.AddPicture(picture);
             pictureId = clips.Copied(10, new string[0])[0].Id;
-            clips.Pin(pictureId, true);
+            clips.KeepAtTop(pictureId, true);
             clips.Number(pictureId, 3);
             png = clips.Png(pictureId);
             clips.AddSaved("Bank", "secret", clips.MakeFolder("Work"), DateTime.Now);
@@ -730,7 +729,7 @@ static class TestProgram
 
             // At the top: first, and still temporary.
             long two = clips.Copied(10, Texts.Words("two"))[0].Id;
-            clips.Pin(two, true);
+            clips.KeepAtTop(two, true);
             copied = clips.Copied(10, new string[0]);
             Check(copied[0].Id == two && copied[0].Pinned, "an entry kept at the top comes first");
             clips.AddText("two");
@@ -1458,12 +1457,40 @@ static class TestProgram
             }
             Check(tooMany.Count == 0, code + ": every text fits the values it is given" + (tooMany.Count == 0 ? "" : ": " + string.Join(", ", tooMany.ToArray())));
             Check(subjects(Strings.Guide()) == englishSubjects, code + ": the guide has the " + englishSubjects + " subjects");
+            // Nothing the program says, nor the made-up entries of the pictures of the Store, has a word kept out of it.
+            List<string> said = new List<string>(Strings.Guide());
+            foreach (FieldInfo field in english.Keys) if (field.GetValue(null) is string) said.Add((string)field.GetValue(null));
+            foreach (FieldInfo field in typeof(Sample).GetFields()) said.Add(field.GetValue(Sample.Current) as string ?? "");
+            List<string> kept = said.FindAll(delegate(string each) { return Forbidden(each) != null; });
+            Check(kept.Count == 0, code + ": no word kept out of the Store" + (kept.Count == 0 ? "" : ": " + Forbidden(kept[0]) + " in “" + kept[0] + "”"));
             List<Entry> read = Backup.Parse(Backup.Lines(sent));
             Check(read.Count == 3 && read[0].IsGroup && read[1].Text == text.Text && read[1].Group == "A" && read[1].Html == text.Html
                 && read[2].Pinned && read[2].Html == null, code + ": an exported file comes back, a formatted text with its HTML");
             if (same.Count > 0) Console.WriteLine("       same as English: " + string.Join(", ", same.ToArray()));
         }
         foreach (KeyValuePair<FieldInfo, object> pair in english) pair.Key.SetValue(null, pair.Value);
+    }
+
+    // The words that must never reach the Store, from the list make-listing.ps1 reads too.
+    static List<System.Text.RegularExpressions.Regex> forbidden;
+
+    // The first of those words in a text, or null.
+    static string Forbidden(string text)
+    {
+        if (forbidden == null)
+        {
+            forbidden = new List<System.Text.RegularExpressions.Regex>();
+            string list = System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\store\forbidden-words.txt");
+            foreach (string line in System.IO.File.ReadAllLines(list, Encoding.UTF8))
+                if (line.Trim().Length > 0 && !line.StartsWith("#"))
+                    forbidden.Add(new System.Text.RegularExpressions.Regex(line.Trim(), System.Text.RegularExpressions.RegexOptions.IgnoreCase));
+        }
+        foreach (System.Text.RegularExpressions.Regex word in forbidden)
+        {
+            System.Text.RegularExpressions.Match found = word.Match(text);
+            if (found.Success) return found.Value;
+        }
+        return null;
     }
 
     // The highest {n} a text asks string.Format for, or -1.
@@ -1658,7 +1685,7 @@ static class TestProgram
             bool allUp = Cards(cards).FindAll(delegate(Entry e) { return e.Pinned; }).Count == 4 && picked.Count == 4;
             pinPicked.Invoke(form, null);
             bool allDown = !Cards(cards).Exists(delegate(Entry e) { return e.Pinned; });
-            ClipsOf(form).Pin(wasPinned, true);   // as the sample has it
+            ClipsOf(form).KeepAtTop(wasPinned, true);   // as the sample has it
             typeof(MainForm).GetMethod("ClearPicks", hidden).Invoke(form, null);
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
             bool letGo = picked.Count == 0 && kindTabs.Visible && !pickBar.Visible;
@@ -1732,13 +1759,13 @@ static class TestProgram
             // A search in the history finds the saved texts too, after the copied ones, under a name of their own: the list
             // hotkey, a name and Enter still choose a saved password.
             TextBox find = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
-            find.Text = s.ServerPassword;
+            find.Text = s.TestServer;
             // The name over them is a row, or, with no copied entry found before them, in the bar over the cards.
             Heading over = cards.Items.Count >= 2 && cards.Items[cards.Items.Count - 2] is Heading ? (Heading)cards.Items[cards.Items.Count - 2]
                 : (Heading)typeof(MainForm).GetField("topDay", hidden).GetValue(form);
             Entry selectedFound = cards.SelectedItem as Entry;
             bool searched = over != null && over.Text == Strings.SavedTitle && selectedFound != null && selectedFound.Saved
-                && selectedFound.Label == s.ServerPassword;
+                && selectedFound.Label == s.TestServer;
             // The words found are marked on the cards, in the name of a saved text too; found far in a long text, its card
             // shows that part of it, after an ellipsis.
             MethodInfo markedText = typeof(MainForm).GetMethod("MarkedText", hidden);
@@ -1858,7 +1885,7 @@ static class TestProgram
             Console.WriteLine("[{0}] the icon menu lists the saved texts by folder: {1} items", menu.Items.Count == 7
                 && menu.Items[1] is ToolStripSeparator && menu.Items[2].Text == s.Signature && workMenu != null && workMenu.Text == s.Work
                 && workMenu.DropDownItems[0].Text == s.Address && serverMenu != null && serverMenu.Text == s.Servers
-                && serverMenu.DropDownItems[0].Text == s.ServerPassword && menu.Items[3].Text == s.Home
+                && serverMenu.DropDownItems[0].Text == s.TestServer && menu.Items[3].Text == s.Home
                 && menu.Items[5] is ToolStripSeparator && menu.Items[6].Text == Strings.Exit ? "PASS" : "FAIL", menu.Items.Count);
             menu.Dispose();
 
@@ -2500,7 +2527,7 @@ static class TestProgram
         clips.Number(clips.AddSaved(s.Signature, s.SignatureText, SavedSample().Html, null, 0, DateTime.Now), 1);   // the keys that choose it, shown in its row
         long work = clips.AddFolder(0, s.Work), servers = clips.AddFolder(work, s.Servers), home = clips.AddFolder(0, s.Home);
         clips.AddSaved(s.Address, "not shown", work, DateTime.Now);
-        clips.Number(clips.AddSaved(s.ServerPassword, "not shown", servers, DateTime.Now), 2);
+        clips.Number(clips.AddSaved(s.TestServer, "not shown", servers, DateTime.Now), 2);
         clips.AddSaved(s.Wifi, "not shown", home, DateTime.Now);
         clips.OpenFolder(home, false);
         // Copied this morning, whatever the time the pictures are taken.

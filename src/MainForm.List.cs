@@ -8,7 +8,7 @@ using System.Threading;
 using System.Windows.Forms;
 
 // A part of a card, where a click does something of its own.
-enum Part { None, Body, Show, Copy, Save, Delete, Pin, More, Number }
+enum Part { None, Body, Show, Copy, Save, Delete, Arrow, More, Number }
 
 // The name of a day among the cards: those under it were copied, or saved, that day.
 class Heading
@@ -144,7 +144,7 @@ partial class MainForm
             if (entry != null) showItem.Text = ShowText(entry);
             readItem.Visible = entry != null && entry.Picture;
             pinItem.Visible = entry != null ? !entry.Saved : many && PickedCopied().Count > 0;
-            pinItem.Text = (entry != null ? entry.Pinned : many && AllPinned()) ? Strings.Unpin : Strings.Pin;
+            pinItem.Text = (entry != null ? entry.Pinned : many && AllPinned()) ? Strings.Unpin : Strings.KeepTop;
             newItem.Visible = !many;
             ListNumbers(numberItem, entry);
             ListKinds(kindItem, entry);
@@ -218,7 +218,7 @@ partial class MainForm
                 case Part.Copy: Use(entry); break;
                 case Part.Save: Edit(entry); break;
                 case Part.Delete: DeleteSelected(); break;
-                case Part.Pin: TogglePin(entry); break;
+                case Part.Arrow: TogglePin(entry); break;
                 case Part.More: listMenu.Show(cardList, e.Location); break;
                 case Part.Number:
                     // The numbers it can have, as in its menu: another one, or none.
@@ -768,7 +768,7 @@ partial class MainForm
     // The small buttons at the right of a card, from the left: they are signs alone, named by their tooltips. A copied
     // entry has its arrow first.
     static readonly Part[] CardButtons = { Part.Show, Part.Copy, Part.Save, Part.Delete, Part.More };
-    static readonly Part[] CopiedButtons = { Part.Pin, Part.Show, Part.Copy, Part.Save, Part.Delete, Part.More };
+    static readonly Part[] CopiedButtons = { Part.Arrow, Part.Show, Part.Copy, Part.Save, Part.Delete, Part.More };
 
     // What the card shows of an entry: of a saved one with a name only the name, so that a password never appears;
     // of a text its beginning.
@@ -1045,7 +1045,7 @@ partial class MainForm
             case Part.Copy: return Strings.CopyButton;
             case Part.Save: return entry.Saved ? Strings.EditDots : Strings.SaveDots;
             case Part.Delete: return Strings.Delete;
-            case Part.Pin: return entry.Pinned ? Strings.Unpin : Strings.Pin;
+            case Part.Arrow: return entry.Pinned ? Strings.Unpin : Strings.KeepTop;
             case Part.More: return Strings.MoreItem;
             case Part.Number: return string.Format(Strings.NumberTip, NumberName(entry.Number));
             default: return null;
@@ -1066,7 +1066,7 @@ partial class MainForm
             case Part.Copy: return Sign.Copy;
             case Part.Save: return entry.Saved ? Sign.Edit : Sign.Star;
             case Part.Delete: return Sign.Delete;
-            case Part.Pin: return Sign.Up;
+            case Part.Arrow: return Sign.Up;
             default: return Sign.More;
         }
     }
@@ -1176,7 +1176,7 @@ partial class MainForm
             Sign sign = PartSignOf(button.Key, entry);
             bool hovered = IsHovered(e.Index, button.Key);
             Color colour = button.Key == Part.More ? (hovered ? Look.Ink : Look.Blend(fill, Look.Muted, 0.8f))
-                : button.Key == Part.Pin && !entry.Pinned && !hovered ? Look.Blend(fill, Look.Muted, 0.5f) : Look.Own(sign);
+                : button.Key == Part.Arrow && !entry.Pinned && !hovered ? Look.Blend(fill, Look.Muted, 0.5f) : Look.Own(sign);
             DrawPart(g, hovered, button.Value, sign, Look.Blend(fill, colour, buttons), fill);
         }
     }
@@ -1253,7 +1253,7 @@ partial class MainForm
     void TogglePin(Entry entry)
     {
         if (entry == null || entry.Saved) return;
-        if (!Change(delegate { clips.Pin(entry.Id, !entry.Pinned); })) return;
+        if (!Change(delegate { clips.KeepAtTop(entry.Id, !entry.Pinned); })) return;
         Say(string.Format(!entry.Pinned ? Strings.Pinned : Strings.Unpinned, Shorten(entry.ToString())));
         ReloadCopied();
     }
@@ -1395,16 +1395,16 @@ partial class MainForm
         }
         List<Entry> copied = PickedCopied();
         if (copied.Count == 0) return;
-        bool pin = !AllPinned();
+        bool up = !AllPinned();
         if (!Change(delegate
         {
             using (Transaction transaction = clips.Begin())
             {
-                foreach (Entry entry in copied) clips.Pin(entry.Id, pin);
+                foreach (Entry entry in copied) clips.KeepAtTop(entry.Id, up);
                 transaction.Commit();
             }
         })) return;
-        Say(string.Format(pin ? Strings.PinnedMany : Strings.UnpinnedMany, copied.Count));
+        Say(string.Format(up ? Strings.PinnedMany : Strings.UnpinnedMany, copied.Count));
         ReloadCopied();
     }
 
@@ -1500,7 +1500,7 @@ partial class MainForm
         if (!many) return;
         List<Entry> targets = Targets();
         pickCount.Text = string.Format(Strings.PickedCount, targets.Count);
-        pickPin.Text = AllPinned() ? Strings.Unpin : Strings.Pin;
+        pickPin.Text = AllPinned() ? Strings.Unpin : Strings.KeepTop;
         Tip(string.Format(Strings.WithKeys, pickPin.Text, NameOf(PinKeys)), pickPin);
         pickMove.Enabled = ListMoves(pickPlaces.Items, targets);
         PlacePickBar(PickedCopied().Count > 0);
@@ -1508,14 +1508,14 @@ partial class MainForm
 
     // Its buttons at its right end, each as wide as what it says, the arrow only where some card picked is a copied one;
     // the count takes the rest.
-    void PlacePickBar(bool pin)
+    void PlacePickBar(bool arrow)
     {
         if (!shown) return;
         int gap = (int)(Gap * Zoom), high = (int)(ButtonHeight * Zoom), top = (pickBar.Height - high) / 2, right = pickBar.Width;
-        pickPin.Visible = pin;
+        pickPin.Visible = arrow;
         foreach (RoundButton button in new RoundButton[] { pickNone, pickDelete, pickMove, pickPin })
         {
-            if (button == pickPin && !pin) continue;
+            if (button == pickPin && !arrow) continue;
             int wide = button.Text.Length == 0 ? high : TextRenderer.MeasureText(button.Text, button.Font).Width + (int)(PickPadding * Zoom);
             right -= wide;
             button.SetBounds(right, top, wide, high);

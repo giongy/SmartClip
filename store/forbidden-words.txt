@@ -1,0 +1,14 @@
+# Words that must never reach the Store, in any language: neither the texts of the program (its window, its guide,
+# what the pictures of the Store show) nor the listing. Wanted by the user on 20/10/2026.
+# One regular expression per line, matched ignoring case. Read by "tests.exe texts" and by make-listing.ps1.
+# "contrase.as?" takes any letter for the ñ: text recognition, reading the pictures, sometimes sees another one.
+password
+contrase.as?
+mots?\s+de\s+passe
+credenzial[ei]
+credentials?
+credencial(es)?
+identifiants?
+\bpin\b
+passphrase
+passcode

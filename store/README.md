@@ -94,15 +94,15 @@ Everything you copy, always at hand. And where paste does not work, such as remo
 ```
 SmartClip is a lightweight clipboard manager for Windows with one extra talent: it can type the clipboard text as if you were typing it on the keyboard.
 
-Copy a password, click into the field of the remote window and let SmartClip do the rest. It works where Ctrl+V is blocked: remote desktop lock screens, virtual machine consoles, server management pages. You get time to click the right field, and typing stops by itself if the window changes, so a password never ends up in the wrong place.
+Copy the text, click into the field of the remote window and let SmartClip do the rest. It works where Ctrl+V is blocked: remote desktop lock screens, virtual machine consoles, server management pages. You get time to click the right field, and typing stops by itself if the window changes, so what you type never ends up in the wrong place.
 
 Everything you copy, texts and pictures, stays in a list you can bring up from any program with a hotkey. Type a few words to find it, press Enter and you are back where you were, with the entry on the clipboard, ready to paste or to type.
 
-The texts and pictures you use often, such as a signature with its bold and its fonts, an address or a password, can be saved, under a name if you like, and arranged in folders and subfolders. They are also in the menu of the icon by the clock, ready to take without even opening the window.
+The texts and pictures you use often, such as a signature with its bold and its fonts, an address or an access code, can be saved, under a name if you like, and arranged in folders and subfolders. They are also in the menu of the icon by the clock, ready to take without even opening the window.
 
 Built with privacy in mind:
 • saved texts are encrypted for your Windows user;
-• what password managers mark as private is not remembered;
+• copies that other programs mark as private are not remembered;
 • you can pause capturing and choose how many days to keep the history, or keep only today's;
 • no account, no ads, no Internet connection: your data stays on your PC.
 
@@ -125,7 +125,7 @@ Encrypted saved texts and pictures, with or without a name, in folders and subfo
 Formatted saved texts, such as mail signatures: bold, italic, fonts and sizes, pasted as they are
 Saved texts also in the tray icon menu, without opening the window
 Full preview of long texts and pictures, and the text in a picture copied with the text recognition of Windows
-Private copies from password managers are not remembered, and capturing pauses with one click
+Copies that other programs mark as private are not remembered, and capturing pauses with one click
 Export and import to a text file, and the database in the folder you choose
 Starts with Windows, hidden in the notification area
 Built-in guide, organized by topic
@@ -140,7 +140,7 @@ No account, no ads, no Internet connection
 clipboard
 clipboard manager
 clipboard history
-password
+autotype
 remote desktop
 type clipboard
 paste blocked
@@ -188,15 +188,15 @@ Tutto quello che copi, sempre a portata di mano. E dove incollare non funziona, 
 ```
 SmartClip è un gestore degli appunti leggero per Windows, con un talento in più: sa digitare il testo degli appunti come se lo scrivessi tu sulla tastiera.
 
-Copia una password, clicca nel campo della finestra remota e lascia fare a SmartClip. Funziona anche dove Ctrl+V è bloccato: nelle schermate di blocco dei desktop remoti, nelle console delle macchine virtuali, nelle pagine di gestione dei server. Hai il tempo di cliccare nel campo giusto, e la digitazione si ferma da sola se cambi finestra: una password non finisce mai nel posto sbagliato.
+Copia il testo, clicca nel campo della finestra remota e lascia fare a SmartClip. Funziona anche dove Ctrl+V è bloccato: nelle schermate di blocco dei desktop remoti, nelle console delle macchine virtuali, nelle pagine di gestione dei server. Hai il tempo di cliccare nel campo giusto, e la digitazione si ferma da sola se cambi finestra: ciò che digiti non finisce mai nel posto sbagliato.
 
 Tutto quello che copi, testi e immagini, resta in un elenco che si apre da qualsiasi programma con una scorciatoia. Scrivi qualche parola per trovarlo, premi Invio e torni dov'eri con la voce già negli appunti, pronta da incollare o da digitare.
 
-I testi e le immagini che usi spesso, come una firma con i suoi grassetti e i suoi caratteri, un indirizzo o una password, li salvi, con un nome se vuoi, e li organizzi in cartelle e sottocartelle. Li trovi anche nel menu dell'icona vicino all'orologio, da prendere senza nemmeno aprire la finestra.
+I testi e le immagini che usi spesso, come una firma con i suoi grassetti e i suoi caratteri, un indirizzo o un codice di accesso, li salvi, con un nome se vuoi, e li organizzi in cartelle e sottocartelle. Li trovi anche nel menu dell'icona vicino all'orologio, da prendere senza nemmeno aprire la finestra.
 
 Pensato per la riservatezza:
 • i testi salvati sono cifrati per il tuo utente di Windows;
-• ciò che i gestori di password segnano come riservato non viene ricordato;
+• le copie che altri programmi segnano come riservate non vengono ricordate;
 • puoi sospendere la cattura e scegliere per quanti giorni tenere la cronologia, o tenere solo quella di oggi;
 • nessun account, nessuna pubblicità, nessuna connessione a Internet: i tuoi dati restano sul tuo PC.
 
@@ -219,7 +219,7 @@ Testi e immagini salvati cifrati, con o senza nome, in cartelle e sottocartelle
 Testi salvati formattati, come le firme di posta: grassetto, corsivo, caratteri e dimensioni, incollati così come sono
 Testi salvati anche nel menu dell'icona, senza aprire la finestra
 Anteprima completa di testi lunghi e immagini, e il testo di un'immagine copiato con il riconoscimento di Windows
-Le copie riservate dei gestori di password non vengono ricordate, e la cattura si sospende con un clic
+Le copie che altri programmi segnano come riservate non vengono ricordate, e la cattura si sospende con un clic
 Esportazione e importazione in un file di testo, e il database nella cartella che scegli
 Avvio con Windows, nascosto nell'area di notifica
 Guida integrata, divisa per argomenti
@@ -233,11 +233,11 @@ Nessun account, nessuna pubblicità, nessuna connessione a Internet
 ```
 appunti
 clipboard
-password
+digitare appunti
 desktop remoto
 cronologia appunti
 gestore appunti
-digitare password
+incolla bloccato
 ```
 
 ### Novità di questa versione
@@ -282,15 +282,15 @@ Todo lo que copias, siempre a mano. Y donde pegar no funciona, como en las panta
 ```
 SmartClip es un gestor del portapapeles ligero para Windows con un talento más: sabe teclear el texto del portapapeles como si lo escribieras tú en el teclado.
 
-Copia una contraseña, haz clic en el campo de la ventana remota y deja que SmartClip haga el resto. Funciona también donde Ctrl+V está bloqueado: pantallas de bloqueo de escritorios remotos, consolas de máquinas virtuales, páginas de gestión de servidores. Tienes tiempo para hacer clic en el campo correcto, y el tecleo se detiene solo si cambias de ventana: una contraseña nunca acaba en el sitio equivocado.
+Copia el texto, haz clic en el campo de la ventana remota y deja que SmartClip haga el resto. Funciona también donde Ctrl+V está bloqueado: pantallas de bloqueo de escritorios remotos, consolas de máquinas virtuales, páginas de gestión de servidores. Tienes tiempo para hacer clic en el campo correcto, y el tecleo se detiene solo si cambias de ventana: lo que tecleas nunca acaba en el sitio equivocado.
 
 Todo lo que copias, textos e imágenes, queda en una lista que se abre desde cualquier programa con un atajo. Escribe unas palabras para encontrarlo, pulsa Intro y vuelves a donde estabas con la entrada ya en el portapapeles, lista para pegar o teclear.
 
-Los textos y las imágenes que usas a menudo, como una firma con sus negritas y sus fuentes, una dirección o una contraseña, los guardas, con un nombre si quieres, y los organizas en carpetas y subcarpetas. También están en el menú del icono junto al reloj, listos para tomar sin abrir siquiera la ventana.
+Los textos y las imágenes que usas a menudo, como una firma con sus negritas y sus fuentes, una dirección o un código de acceso, los guardas, con un nombre si quieres, y los organizas en carpetas y subcarpetas. También están en el menú del icono junto al reloj, listos para tomar sin abrir siquiera la ventana.
 
 Pensado para la privacidad:
 • los textos guardados están cifrados para tu usuario de Windows;
-• lo que los gestores de contraseñas marcan como privado no se recuerda;
+• las copias que otros programas marcan como privadas no se recuerdan;
 • puedes pausar la captura y elegir cuántos días conservar el historial, o solo el de hoy;
 • sin cuenta, sin publicidad, sin conexión a Internet: tus datos se quedan en tu PC.
 
@@ -313,7 +313,7 @@ Textos e imágenes guardados cifrados, con o sin nombre, en carpetas y subcarpet
 Textos guardados con formato, como las firmas de correo: negrita, cursiva, fuentes y tamaños, pegados tal cual
 Textos guardados también en el menú del icono, sin abrir la ventana
 Vista previa completa de textos largos e imágenes, y el texto de una imagen copiado con el reconocimiento de Windows
-Las copias privadas de los gestores de contraseñas no se recuerdan, y la captura se pausa con un clic
+Las copias que otros programas marcan como privadas no se recuerdan, y la captura se pausa con un clic
 Exportación e importación a un archivo de texto, y la base de datos en la carpeta que elijas
 Inicio con Windows, oculto en el área de notificación
 Guía integrada, dividida por temas
@@ -328,9 +328,9 @@ Sin cuenta, sin publicidad, sin conexión a Internet
 portapapeles
 historial portapapeles
 gestor portapapeles
-contraseña
+teclear portapapeles
 escritorio remoto
-teclear contraseña
+pegar bloqueado
 clipboard
 ```
 
@@ -376,15 +376,15 @@ Tout ce que vous copiez, toujours sous la main. Et là où coller ne marche pas,
 ```
 SmartClip est un gestionnaire de presse-papiers léger pour Windows, avec un talent de plus : il sait saisir le texte du presse-papiers comme si vous le tapiez au clavier.
 
-Copiez un mot de passe, cliquez dans le champ de la fenêtre distante et laissez faire SmartClip. Il marche aussi là où Ctrl+V est bloqué : écrans de verrouillage des bureaux à distance, consoles de machines virtuelles, pages d'administration des serveurs. Vous avez le temps de cliquer dans le bon champ, et la saisie s'arrête toute seule si la fenêtre change : un mot de passe ne finit jamais au mauvais endroit.
+Copiez le texte, cliquez dans le champ de la fenêtre distante et laissez faire SmartClip. Il marche aussi là où Ctrl+V est bloqué : écrans de verrouillage des bureaux à distance, consoles de machines virtuelles, pages d'administration des serveurs. Vous avez le temps de cliquer dans le bon champ, et la saisie s'arrête toute seule si la fenêtre change : ce que vous saisissez ne finit jamais au mauvais endroit.
 
 Tout ce que vous copiez, textes et images, reste dans une liste qui s'ouvre depuis n'importe quel programme avec un raccourci. Tapez quelques mots pour le retrouver, appuyez sur Entrée et vous revenez où vous étiez, l'élément déjà dans le presse-papiers, prêt à coller ou à saisir.
 
-Les textes et les images que vous utilisez souvent, comme une signature avec son gras et ses polices, une adresse ou un mot de passe, s'enregistrent, sous un nom si vous voulez, et se rangent dans des dossiers et sous-dossiers. Ils sont aussi dans le menu de l'icône près de l'horloge, prêts à prendre sans même ouvrir la fenêtre.
+Les textes et les images que vous utilisez souvent, comme une signature avec son gras et ses polices, une adresse ou un code d'accès, s'enregistrent, sous un nom si vous voulez, et se rangent dans des dossiers et sous-dossiers. Ils sont aussi dans le menu de l'icône près de l'horloge, prêts à prendre sans même ouvrir la fenêtre.
 
 Pensé pour la confidentialité :
 • les textes enregistrés sont chiffrés pour votre utilisateur Windows ;
-• ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé ;
+• les copies que d'autres programmes marquent comme privées ne sont pas mémorisées ;
 • vous pouvez suspendre la capture et choisir combien de jours garder l'historique, ou seulement celui d'aujourd'hui ;
 • pas de compte, pas de publicité, pas de connexion à Internet : vos données restent sur votre PC.
 
@@ -407,7 +407,7 @@ Textes et images enregistrés chiffrés, avec ou sans nom, dans des dossiers et 
 Textes enregistrés mis en forme, comme les signatures de courriel : gras, italique, polices et tailles, collés tels quels
 Textes enregistrés aussi dans le menu de l'icône, sans ouvrir la fenêtre
 Aperçu complet des textes longs et des images, et le texte d'une image copié grâce à la reconnaissance de Windows
-Les copies privées des gestionnaires de mots de passe ne sont pas mémorisées, et la capture se suspend en un clic
+Les copies que d'autres programmes marquent comme privées ne sont pas mémorisées, et la capture se suspend en un clic
 Export et import dans un fichier texte, et la base de données dans le dossier de votre choix
 Démarrage avec Windows, caché dans la zone de notification
 Guide intégré, organisé par sujet
@@ -422,9 +422,9 @@ Pas de compte, pas de publicité, pas de connexion à Internet
 presse-papiers
 historique presse-papiers
 gestionnaire presse-papiers
-mot de passe
+saisir presse-papiers
 bureau à distance
-saisir mot de passe
+coller bloqué
 clipboard
 ```
 
@@ -471,5 +471,5 @@ Global hotkeys: Ctrl+Alt+V (type the clipboard) and Ctrl+D (open the list), both
 Se Partner Center chiede di giustificare la capability riservata:
 
 ```
-SmartClip is a classic desktop application (.NET Framework 4, Windows Forms) packaged with MSIX. Full trust is needed to be notified of clipboard changes (AddClipboardFormatListener), to register global hotkeys (RegisterHotKey) and to send keyboard input to the window the user chooses (SendInput), which is the main purpose of the app: typing a password where paste is not available, such as remote desktop sign-in screens.
+SmartClip is a classic desktop application (.NET Framework 4, Windows Forms) packaged with MSIX. Full trust is needed to be notified of clipboard changes (AddClipboardFormatListener), to register global hotkeys (RegisterHotKey) and to send keyboard input to the window the user chooses (SendInput), which is the main purpose of the app: typing text where paste is not available, such as remote desktop sign-in screens.
 ```

@@ -110,6 +110,16 @@ foreach ($parts in $records.GetRange(1, $records.Count - 1)) {
     $rows.Add($cells -join ',')
 }
 
+# No word kept out of the Store (forbidden-words.txt, which "tests.exe texts" reads too) in any cell: the folder is
+# not written.
+$forbidden = @(Get-Content (Join-Path $store 'forbidden-words.txt') -Encoding UTF8 | Where-Object { $_.Trim() -and -not $_.StartsWith('#') })
+foreach ($row in $rows) {
+    foreach ($word in $forbidden) {
+        $m = [regex]::Match($row, $word.Trim(), 'IgnoreCase')
+        if ($m.Success) { throw "the listing says '$($m.Value)', which must not reach the Store: $($row.Split(',')[0])" }
+    }
+}
+
 if (Test-Path $out) { Remove-Item $out -Recurse -Force }
 New-Item -ItemType Directory -Force (Join-Path $out 'images') | Out-Null
 Copy-Item (Join-Path $store 'images\tile-300.png') (Join-Path $out 'images')

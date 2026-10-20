@@ -48,7 +48,7 @@ static partial class Strings
         Open = "Ouvrir"; Exit = "Quitter"; Pause = "Suspendre la capture"; Resume = "Reprendre la capture";
         ShowContent = "Afficher le contenu"; MoveTo = "Déplacer vers"; NewFolder = "Nouveau dossier…";
         CopyPictureText = "Copier le texte";
-        Pin = "Garder en haut"; Unpin = "Retirer du haut"; OutOfFolders = "Hors des dossiers"; EmptyFolder = "Vide";
+        KeepTop = "Garder en haut"; Unpin = "Retirer du haut"; OutOfFolders = "Hors des dossiers"; EmptyFolder = "Vide";
         NumberMenu = "Raccourci"; NoNumber = "Aucun";
         KindMenu = "Type";
 
@@ -92,16 +92,16 @@ static partial class Strings
         Yes = "Oui"; No = "Non"; Ok = "OK";
 
         Cancel = "Annuler";
-        NoText = "Il n'y a pas de texte dans le presse-papiers : copiez d'abord le mot de passe.";
+        NoText = "Il n'y a pas de texte dans le presse-papiers : copiez d'abord le texte.";
         Cancelled = "Annulé.";
         CapsLock = "Verr. Maj est activé : désactivez-le et réessayez.";
         TypingInto = "Saisie en cours dans {0}…";
-        AskUnusual = "Le presse-papiers contient {0} : cela ne ressemble pas à un mot de passe.\n\n"
+        AskUnusual = "Le presse-papiers contient {0} : plus long que ce que l'on saisit d'habitude.\n\n"
             + "Voulez-vous le saisir quand même ?";
         OnLines = " sur {0} lignes";
         Countdown = "Saisie dans {0} s dans {1}. Appuyez sur Annuler pour arrêter.";
         TimeUp = "Temps écoulé : vous n'avez pas choisi la fenêtre où saisir.";
-        ClickNow = "Cliquez maintenant dans le champ du mot de passe de la fenêtre distante…";
+        ClickNow = "Cliquez maintenant dans le champ de la fenêtre distante…";
         Untitled = "une fenêtre sans titre";
         KeysHeld = "Relâchez les touches que vous maintenez enfoncées et réessayez.";
         Blocked = "Windows a bloqué l'envoi des touches. Si le programme de bureau à distance est lancé en tant "
@@ -132,7 +132,7 @@ static partial class Strings
             + "l'attente ou la saisie, ni pendant que vous écrivez un texte enregistré ou répondez à une\n"
             + "question : vous pouvez copier ailleurs en attendant.";
         TypeTip = "Saisit le texte du presse-papiers une touche à la fois, là où coller ne marche pas :\n"
-            + "copiez le mot de passe, appuyez ici et cliquez dans le champ de la fenêtre distante.\n"
+            + "copiez le texte, appuyez ici et cliquez dans le champ de la fenêtre distante.\n"
             + "Ou appuyez sur {0} directement dans le champ.";
         SearchTip = "Tapez pour chercher parmi les éléments de l'endroit : mots dans n'importe quel ordre, sans tenir\n"
             + "compte des majuscules ni des accents. Dans « " + HistoryPlace + " », les textes enregistrés aussi,\n"
@@ -229,7 +229,7 @@ static partial class Strings
             + "Activez-la si les symboles arrivent faux parce que le serveur utilise un clavier\n"
             + "américain (c'est le cas des consoles VMware, iLO, iDRAC et de certains écrans\nde connexion).";
         EnterTip = "Appuie sur Entrée après le dernier caractère, pour valider la connexion aussitôt.";
-        ClearTip = "Efface le mot de passe du presse-papiers une fois la saisie réussie.\n"
+        ClearTip = "Efface le texte saisi du presse-papiers une fois la saisie réussie.\n"
             + "L'historique du presse-papiers de Windows (Win+V), s'il est actif, n'est pas touché.";
         SlowTip = "Activez-la si des caractères manquent ou arrivent dans le désordre sur le serveur.";
         AltCodeTip = "Les symboles sans touche sur ce clavier (par exemple ~ et ` sur un clavier italien) sont\n"
@@ -251,8 +251,8 @@ static partial class Strings
             + "Avec une ligne, les lignes d'un texte se suivent, séparées par un {0} discret ; avec deux, elles restent telles quelles.\n"
             + "Ce qu'une carte coupe, l'œil à sa droite le montre en entier. Change aussitôt.";
         HistoryTip = "La liste propose les textes et images copiés pendant que le programme est ouvert.\n"
-            + "Ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé.\n"
-            + "Désactivez-la si vous copiez des mots de passe depuis des programmes qui ne le font pas :\n"
+            + "Les copies que d'autres programmes marquent comme privées ne sont pas mémorisées.\n"
+            + "Désactivez-la si vous copiez des textes privés depuis des programmes qui ne le font pas :\n"
             + "ils seraient lisibles dans la liste. Désactivée, elle efface aussi l'historique sur disque.";
         KeepTip = "Combien de jours ce que vous copiez reste dans l'historique, même après la fermeture,\n"
             + "aujourd'hui compris : avec 0, seul ce que vous avez copié aujourd'hui reste.\n"
@@ -279,13 +279,13 @@ static partial class Strings
             + "elle l'est ici aussi.";
         ExportTip = "Écrit dans un fichier texte, lisible avec le Bloc-notes, les textes enregistrés avec leurs\n"
             + "dossiers ; si vous le demandez, aussi ce qui a été copié. Les images n'y vont pas.\n"
-            + "Dans le fichier les textes sont en clair, mots de passe compris : gardez-le en lieu sûr.";
+            + "Dans le fichier les textes sont en clair, y compris les privés : gardez-le en lieu sûr.";
         ImportTip = "Lit un fichier écrit par « Exporter », même sur un autre PC, et ajoute son contenu à ce\n"
             + "qui existe déjà. Si un texte enregistré porte le nom d'un texte existant, il demande lequel garder.\n"
             + "Les éléments copiés que la liste a déjà ne sont pas répétés.";
         OnlySaved = "Textes enregistrés seulement…"; Everything = "Tout, éléments copiés compris…";
         TextFiles = "Fichiers texte";
-        AskExport = "Le fichier contiendra les textes en clair, mots de passe compris : quiconque l'ouvre pourra les "
+        AskExport = "Le fichier contiendra les textes en clair, y compris les privés : quiconque l'ouvre pourra les "
             + "lire.\n\nVoulez-vous continuer ?";
         SavedOne = "texte enregistré"; SavedMany = "textes enregistrés"; CopiedOne = "élément copié"; CopiedMany = "éléments copiés";
         Exported = "Exportés : {0}."; ExportedAll = "Exportés : {0}, {1}.";
@@ -312,7 +312,7 @@ static partial class Strings
         PictureHintNamed = "La liste montrera l'image avec « {0} » à côté.";
         NameLabel = "Nom (facultatif) :"; ContentLabel = "Contenu :";
         NameHintEmpty = "Sans nom, la liste montrera le contenu.";
-        NameHintNamed = "La liste montrera « {0} » ; le contenu reste caché, ce qui convient à un mot de passe.";
+        NameHintNamed = "La liste montrera « {0} » ; le contenu reste caché, ce qui convient à un texte privé.";
         BoldTip = "Gras (Ctrl+B)"; ItalicTip = "Italique (Ctrl+I)"; UnderlineTip = "Souligné (Ctrl+U)";
         TypefaceTip = "Police"; PointsTip = "Taille"; PlainTip = "Supprimer la mise en forme : de la sélection, ou de tout le texte";
         DefaultLook = "Par défaut";
@@ -325,7 +325,7 @@ static partial class Strings
         MoreOne = "… et un caractère de plus"; MoreMany = "… et {0} caractères de plus";
 
         ExportHeader = "{0} {1} : export du {2}";
-        ExportClearWarning = "Attention : ici les textes sont en clair, mots de passe compris.";
+        ExportClearWarning = "Attention : ici les textes sont en clair, y compris les privés.";
         ExportEditNote = "Le texte de chaque élément est dans les lignes qui commencent par une tabulation : si vous "
             + "modifiez le fichier, laissez-la en place.";
 
@@ -341,7 +341,7 @@ static partial class Strings
             "# À quoi ça sert",
             app + " garde ce que vous copiez et les textes que vous choisissez d'enregistrer, pour les remettre dans le "
                 + "presse-papiers quand il le faut. Il sait aussi saisir le presse-papiers comme de vraies frappes de "
-                + "touches : c'est ainsi qu'un mot de passe entre là où coller ne marche pas, par exemple sur les "
+                + "touches : c'est ainsi qu'un texte entre là où coller ne marche pas, par exemple sur les "
                 + "écrans de verrouillage des bureaux à distance.",
 
             "# La liste",
@@ -387,7 +387,7 @@ static partial class Strings
             "- Ctrl+clic ajoute une carte à la sélection ou l'en retire, " + ShiftName + "+clic sélectionne toutes les cartes "
                 + "jusqu'à celle-ci (" + ShiftName + " avec les flèches aussi), " + Key(Keys.Control | MainForm.AllKey) + " les "
                 + "sélectionne toutes. Avec plusieurs cartes sélectionnées, une barre à la place des onglets dit combien elles sont "
-                + "et propose « " + Pin + " », « " + MoveTo + " » et « " + Delete + " », qui sont aussi dans le menu du clic droit "
+                + "et propose « " + KeepTop + " », « " + MoveTo + " » et « " + Delete + " », qui sont aussi dans le menu du clic droit "
                 + "et sur leurs touches. « " + MoveTo + " » un dossier, ou « " + SavedTitle + " », y enregistre les éléments copiés. "
                 + EscapeKeyName + ", ou la croix au bout de la barre, revient à une seule carte.",
             "- « " + CopyPictureText + " », dans le menu d'une image, met dans le presse-papiers le texte "
@@ -412,9 +412,9 @@ static partial class Strings
             "La liste montre les " + MainForm.MaxShown + " éléments copiés les plus récents : la recherche trouve les autres.",
 
             "# Les textes enregistrés",
-            "Ce sont les choses que vous voulez toujours avoir sous la main : une signature, une adresse, un mot de "
-                + "passe. Ils n'expirent jamais. Le nom est facultatif : avec un nom, la liste ne montre que le nom et le "
-                + "contenu reste caché, ce qui convient à un mot de passe ; sans, la liste montre le contenu, comme pour "
+            "Ce sont les choses que vous voulez toujours avoir sous la main : une signature, une adresse, un code "
+                + "d'accès. Ils n'expirent jamais. Le nom est facultatif : avec un nom, la liste ne montre que le nom et le "
+                + "contenu reste caché, ce qui convient à un texte privé ; sans, la liste montre le contenu, comme pour "
                 + "une deuxième adresse e-mail.",
             "- « " + New + " » (" + Key(Keys.Control | MainForm.NewKey) + ") écrit un texte de zéro.",
             "- « " + SaveDots + " » (" + Key(Keys.Control | MainForm.SaveKey) + "), sur un élément copié, le garde, avec "
@@ -467,15 +467,15 @@ static partial class Strings
             "- Dans le menu de l'icône près de l'horloge, chaque dossier est un sous-menu avec ses textes.",
             "- Le nom d'un dossier trouve ses textes dans la recherche.",
 
-            "# Saisir un mot de passe",
+            "# Saisir là où coller ne marche pas",
             "Là où Ctrl+V ne marche pas, " + app + " écrit le texte du presse-papiers une touche à la fois, comme vous "
                 + "le feriez au clavier.",
-            "- Copiez le mot de passe.",
+            "- Copiez le texte.",
             "- Appuyez sur « " + TypeButton + " ».",
             "- Cliquez dans le champ de la fenêtre distante : vous avez " + MainForm.ArmedSeconds + " secondes pour le faire.",
             "- Quand cette fenêtre est restée au premier plan le temps de l'attente, la saisie commence.",
             "Sinon, appuyez sur " + type + " directement dans le champ : la saisie démarre aussitôt, sans attente.",
-            "Pour ne pas envoyer un mot de passe au mauvais endroit :",
+            "Pour ne pas envoyer un texte privé au mauvais endroit :",
             "- la saisie s'arrête toute seule si la fenêtre cible perd le premier plan ;",
             "- pendant l'attente et la saisie, le même bouton devient « " + Cancel + " » ;",
             "- le bureau, la barre des tâches et le menu Démarrer ne sont jamais une cible ;",
@@ -522,7 +522,7 @@ static partial class Strings
             "- Les images copiées occupent au maximum " + Size(Clips.PictureSpace) + " : au-delà, les plus anciennes "
                 + "partent même avant la fin de leurs jours, et une barre rouge sous la liste le signale. Les images "
                 + "enregistrées ne comptent pas.",
-            "- Ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé.",
+            "- Les copies que d'autres programmes marquent comme privées ne sont pas mémorisées.",
             "- Les éléments en haut partent aussi quand leurs jours expirent : ce qui doit rester, enregistrez-le.",
             "- Dans les options, « " + CleanButton + " » efface aussitôt ce que vous avez copié avant les derniers jours "
                 + "indiqués à côté : avec 1, seul aujourd'hui reste ; avec 0, rien. Une confirmation est demandée ; les "
@@ -555,7 +555,7 @@ static partial class Strings
                 + "leurs dossiers (ceux mis en forme avec leur HTML avant le texte) et, si vous le demandez, les "
                 + "éléments copiés avec leur heure et leur flèche. Les "
                 + "images n'y vont pas.",
-            "- Dans le fichier, les textes sont en clair, mots de passe compris : gardez-le en lieu sûr.",
+            "- Dans le fichier, les textes sont en clair, y compris les privés : gardez-le en lieu sûr.",
             "- « " + ImportButton + " » lit un tel fichier et ajoute son contenu à ce qui existe déjà. Si un texte "
                 + "enregistré porte le nom d'un texte existant, il demande lequel garder ; les éléments copiés que la "
                 + "liste a déjà ne sont pas répétés. Un fichier exporté dans une autre langue se lit de la même façon.",

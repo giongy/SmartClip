@@ -2,7 +2,7 @@
 
 [![CodeQL](https://github.com/giongy/SmartClip/actions/workflows/codeql.yml/badge.svg)](https://github.com/giongy/SmartClip/actions/workflows/codeql.yml)
 
-**A tiny clipboard manager that can also type the clipboard as real keystrokes, for the places where paste does
+si chiamava PasswordPaste (il repository GitHub è `giongy/SmartClip`); fino alla 4.3.8 `AdoptOldSettings` ne adottava
 not work.**
 
 SmartClip keeps a history of what you copied, pictures included, and the texts you choose to save. One click makes
@@ -14,7 +14,7 @@ It also covers the moment you have a long password in your password manager and 
 Ctrl+V: remote desktop lock screens, VMware consoles, iLO / iDRAC and other KVM viewers. Instead of pasting, it
 presses the keys one by one, as if you were typing.
 
-Formerly called PasswordPaste: the first start under the new name takes over its settings and saved texts.
+Formerly called PasswordPaste.
 
 - One portable `.exe`, about 240 KB. No installer, no dependencies, no network access.
 - A handful of C# source files in `src`, compiled with the compiler already shipped with Windows.

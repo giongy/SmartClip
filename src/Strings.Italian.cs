@@ -47,7 +47,7 @@ static partial class Strings
         Open = "Apri"; Exit = "Esci"; Pause = "Sospendi la cattura"; Resume = "Riprendi la cattura";
         ShowContent = "Mostra il contenuto"; MoveTo = "Sposta in"; NewFolder = "Nuova cartella…";
         CopyPictureText = "Copia il testo";
-        Pin = "Tieni in alto"; Unpin = "Togli dall'alto"; OutOfFolders = "Fuori dalle cartelle"; EmptyFolder = "Vuota";
+        KeepTop = "Tieni in alto"; Unpin = "Togli dall'alto"; OutOfFolders = "Fuori dalle cartelle"; EmptyFolder = "Vuota";
         NumberMenu = "Scorciatoia"; NoNumber = "Nessuna";
         KindMenu = "Tipo";
 
@@ -89,15 +89,15 @@ static partial class Strings
         Yes = "Sì"; No = "No"; Ok = "OK";
 
         Cancel = "Annulla";
-        NoText = "Negli appunti non c'è testo: copia prima la password.";
+        NoText = "Negli appunti non c'è testo: copia prima il testo.";
         Cancelled = "Annullato.";
         CapsLock = "Bloc Maiusc è attivo: disattivalo e riprova.";
         TypingInto = "Digitazione in corso in {0}…";
-        AskUnusual = "Gli appunti contengono {0}: non sembra una password.\n\nVuoi digitarli comunque?";
+        AskUnusual = "Gli appunti contengono {0}: è più lungo di ciò che di solito si digita.\n\nVuoi digitarli comunque?";
         OnLines = " su {0} righe";
         Countdown = "Digito tra {0} s in {1}. Premi Annulla per fermare.";
         TimeUp = "Tempo scaduto: non hai scelto la finestra in cui digitare.";
-        ClickNow = "Clicca ora nel campo password della finestra remota…";
+        ClickNow = "Clicca ora nel campo della finestra remota…";
         Untitled = "una finestra senza titolo";
         KeysHeld = "Rilascia i tasti che stai tenendo premuti e riprova.";
         Blocked = "Windows ha bloccato l'invio dei tasti. Se il programma di desktop remoto è avviato come "
@@ -127,7 +127,7 @@ static partial class Strings
             + "Vale solo con l'opzione qui sopra attiva. Non succede mentre aspetta o digita, né mentre\n"
             + "scrivi un testo salvato o rispondi a una domanda: intanto puoi copiare altrove.";
         TypeTip = "Digita il testo degli appunti un tasto alla volta, dove incollare non funziona:\n"
-            + "copia la password, premi qui e clicca nel campo della finestra remota.\n"
+            + "copia il testo, premi qui e clicca nel campo della finestra remota.\n"
             + "Oppure premi {0} direttamente nel campo.";
         SearchTip = "Scrivi per cercare tra le voci del posto: parole in qualsiasi ordine, senza badare a\n"
             + "maiuscole e accenti. In «" + HistoryPlace + "» anche i testi salvati, dopo ciò che hai copiato.\n"
@@ -221,7 +221,7 @@ static partial class Strings
             + "Attivala se i simboli arrivano sbagliati perché il server usa la tastiera\n"
             + "americana (capita con le console VMware, iLO, iDRAC e con alcune schermate\ndi accesso).";
         EnterTip = "Preme Invio dopo l'ultimo carattere, per confermare subito l'accesso.";
-        ClearTip = "Cancella la password dagli appunti quando la digitazione è riuscita.\n"
+        ClearTip = "Cancella il testo digitato dagli appunti quando la digitazione è riuscita.\n"
             + "La cronologia degli appunti di Windows (Win+V), se attiva, non viene toccata.";
         SlowTip = "Attivala se sul server arrivano caratteri mancanti o in disordine.";
         AltCodeTip = "I simboli che questa tastiera non ha (ad esempio ~ e ` su quella italiana)\n"
@@ -243,8 +243,8 @@ static partial class Strings
             + "Con una riga le righe di un testo si seguono, con un {0} tenue in mezzo; con due restano come sono.\n"
             + "Ciò che una scheda taglia lo mostra per intero l'occhio alla sua destra. Cambia subito.";
         HistoryTip = "L'elenco propone i testi e le immagini copiati mentre il programma è aperto.\n"
-            + "Ciò che i gestori di password segnano come riservato non viene ricordato.\n"
-            + "Disattivala se copi password da programmi che non lo fanno: nell'elenco si\n"
+            + "Le copie che altri programmi segnano come riservate non vengono ricordate.\n"
+            + "Disattivala se copi testi riservati da programmi che non lo fanno: nell'elenco si\n"
             + "leggerebbero in chiaro. Spenta, cancella anche la cronologia su disco.";
         KeepTip = "Per quanti giorni ciò che copi resta nella cronologia, anche dopo la chiusura,\n"
             + "contando oggi come primo: con 0 resta solo quello che hai copiato oggi.\n"
@@ -270,13 +270,13 @@ static partial class Strings
             + "È la stessa voce di Gestione attività > App di avvio: spenta lì, risulta spenta anche qui.";
         ExportTip = "Scrive in un file di testo, che si apre con il Blocco note, i testi salvati con le loro\n"
             + "cartelle; se lo chiedi, anche le cose copiate. Le immagini non ci vanno.\n"
-            + "Nel file i testi sono in chiaro, password comprese: tienilo in un posto sicuro.";
+            + "Nel file i testi sono in chiaro, anche quelli riservati: tienilo in un posto sicuro.";
         ImportTip = "Legge un file scritto da «Esporta», anche su un altro PC, e aggiunge ciò che contiene\n"
             + "a quello che c'è già. Se un testo salvato ha il nome di uno esistente, chiede quale tenere.\n"
             + "Le cose copiate che l'elenco ha già non vengono ripetute.";
         OnlySaved = "Solo i testi salvati…"; Everything = "Tutto, anche le cose copiate…";
         TextFiles = "File di testo";
-        AskExport = "Il file conterrà i testi in chiaro, password comprese: chiunque lo apra potrà leggerli.\n\nVuoi continuare?";
+        AskExport = "Il file conterrà i testi in chiaro, anche quelli riservati: chiunque lo apra potrà leggerli.\n\nVuoi continuare?";
         SavedOne = "testo salvato"; SavedMany = "testi salvati"; CopiedOne = "copiato"; CopiedMany = "copiati";
         Exported = "Esportati: {0}."; ExportedAll = "Esportati: {0}, {1}.";
         PicturesLeftOut = " Le immagini ({0}) non si esportano.";
@@ -302,7 +302,7 @@ static partial class Strings
         PictureHintNamed = "Nell'elenco si vedrà l'immagine con accanto «{0}».";
         NameLabel = "Nome (facoltativo):"; ContentLabel = "Contenuto:";
         NameHintEmpty = "Senza nome, nell'elenco si vedrà il contenuto.";
-        NameHintNamed = "Nell'elenco si vedrà «{0}»; il contenuto resta nascosto, adatto alle password.";
+        NameHintNamed = "Nell'elenco si vedrà «{0}»; il contenuto resta nascosto, adatto ai testi riservati.";
         BoldTip = "Grassetto (Ctrl+B)"; ItalicTip = "Corsivo (Ctrl+I)"; UnderlineTip = "Sottolineato (Ctrl+U)";
         TypefaceTip = "Carattere"; PointsTip = "Dimensione"; PlainTip = "Togli la formattazione: della selezione, o di tutto il testo";
         DefaultLook = "Predefinito";
@@ -315,7 +315,7 @@ static partial class Strings
         MoreOne = "… e un altro carattere"; MoreMany = "… e altri {0} caratteri";
 
         ExportHeader = "{0} {1}: esportazione del {2}";
-        ExportClearWarning = "Attenzione: qui i testi sono in chiaro, password comprese.";
+        ExportClearWarning = "Attenzione: qui i testi sono in chiaro, anche quelli riservati.";
         ExportEditNote = "Il testo di ogni voce sta nelle righe che iniziano con una tabulazione: se modifichi il file, "
             + "lasciala al suo posto.";
 
@@ -330,7 +330,7 @@ static partial class Strings
         {
             "# A cosa serve",
             app + " tiene da parte quello che copi e i testi che scegli di salvare, per riaverli negli appunti quando "
-                + "servono. Sa anche digitare gli appunti come pressioni di tasti veri: serve per inserire una password "
+                + "servono. Sa anche digitare gli appunti come pressioni di tasti veri: serve per inserire un testo "
                 + "dove incollare non funziona, ad esempio nelle schermate di blocco dei desktop remoti.",
 
             "# L'elenco",
@@ -371,7 +371,7 @@ static partial class Strings
             "- I tre puntini a destra, o il tasto destro, aprono il menu della voce, senza toccare gli appunti.",
             "- Ctrl+clic aggiunge una scheda alla selezione o la toglie, " + ShiftName + "+clic seleziona tutte le schede fino a "
                 + "quella (anche " + ShiftName + " con le frecce), " + Key(Keys.Control | MainForm.AllKey) + " le seleziona tutte. Con "
-                + "più schede selezionate, una barra al posto delle schede dei tipi dice quante sono e offre «" + Pin + "», «" + MoveTo
+                + "più schede selezionate, una barra al posto delle schede dei tipi dice quante sono e offre «" + KeepTop + "», «" + MoveTo
                 + "» ed «" + Delete + "», che stanno anche nel menu del tasto destro e sui loro tasti. «" + MoveTo + "» una cartella, "
                 + "o «" + SavedTitle + "», vi salva le voci copiate. " + EscapeKeyName + ", o la croce in fondo alla barra, torna a una "
                 + "scheda sola.",
@@ -395,9 +395,9 @@ static partial class Strings
             "L'elenco mostra le " + MainForm.MaxShown + " voci copiate più recenti: le altre si trovano con la ricerca.",
 
             "# I testi salvati",
-            "Sono le cose che vuoi avere sempre a portata di mano: una firma, un indirizzo, una password. Non scadono "
+            "Sono le cose che vuoi avere sempre a portata di mano: una firma, un indirizzo, un codice di accesso. Non scadono "
                 + "mai. Il nome è facoltativo: con il nome, l'elenco mostra solo il nome e il contenuto resta nascosto, "
-                + "adatto a una password; senza, l'elenco mostra il contenuto, come per un secondo indirizzo email.",
+                + "adatto a un testo riservato; senza, l'elenco mostra il contenuto, come per un secondo indirizzo email.",
             "- «" + New + "» (" + Key(Keys.Control | MainForm.NewKey) + ") scrive un testo da zero.",
             "- «" + SaveDots + "» (" + Key(Keys.Control | MainForm.SaveKey) + "), su una voce copiata, la tiene, con un "
                 + "nome o senza; prima di salvare puoi ritoccarne il contenuto.",
@@ -447,15 +447,15 @@ static partial class Strings
             "- Nel menu dell'icona vicino all'orologio ogni cartella è un sottomenu con i suoi testi.",
             "- Il nome di una cartella trova i suoi testi nella ricerca.",
 
-            "# Digitare una password",
+            "# Digitare dove incollare non funziona",
             "Dove Ctrl+V non funziona, " + app + " scrive il testo degli appunti un tasto alla volta, come faresti tu "
                 + "sulla tastiera.",
-            "- Copia la password.",
+            "- Copia il testo.",
             "- Premi «" + TypeButton + "».",
             "- Clicca nel campo della finestra remota: hai " + MainForm.ArmedSeconds + " secondi per farlo.",
             "- Quando quella finestra è rimasta in primo piano per il tempo dell'attesa, parte la digitazione.",
             "In alternativa premi " + type + " direttamente nel campo: digita subito, senza attesa.",
-            "Per non mandare una password nel posto sbagliato:",
+            "Per non mandare un testo riservato nel posto sbagliato:",
             "- la digitazione si ferma da sola se la finestra di destinazione perde il primo piano;",
             "- durante l'attesa e la digitazione lo stesso pulsante diventa «" + Cancel + "»;",
             "- desktop, barra delle applicazioni e menu Start non sono mai una destinazione;",
@@ -500,7 +500,7 @@ static partial class Strings
             "- Le immagini copiate occupano al massimo " + Size(Clips.PictureSpace) + ": oltre, le più vecchie se ne vanno "
                 + "anche prima che scadano i loro giorni, e una barra rossa sotto l'elenco lo dice. Le immagini salvate non "
                 + "contano.",
-            "- Quello che i gestori di password segnano come riservato non viene ricordato.",
+            "- Le copie che altri programmi segnano come riservate non vengono ricordate.",
             "- Anche le voci in alto se ne vanno quando scadono i loro giorni: ciò che deve restare, salvalo.",
             "- Nelle opzioni, «" + CleanButton + "» elimina subito quello che hai copiato prima degli ultimi giorni che "
                 + "scrivi accanto: con 1 resta solo oggi, con 0 non resta niente. Chiede conferma; vanno anche le voci "
@@ -532,7 +532,7 @@ static partial class Strings
             "- «" + ExportButton + "» scrive un file di testo che si apre con il Blocco note: i testi salvati con le "
                 + "loro cartelle (quelli formattati con il loro HTML prima del testo) e, se lo chiedi, le cose copiate "
                 + "con l'ora e la freccia. Le immagini non ci vanno.",
-            "- Nel file i testi sono in chiaro, password comprese: tienilo in un posto sicuro.",
+            "- Nel file i testi sono in chiaro, anche quelli riservati: tienilo in un posto sicuro.",
             "- «" + ImportButton + "» legge un file così e aggiunge ciò che contiene a quello che c'è già. Se un testo "
                 + "salvato ha il nome di uno esistente chiede quale tenere; le cose copiate che l'elenco ha già non si "
                 + "ripetono. Un file esportato in un'altra lingua si legge lo stesso.",

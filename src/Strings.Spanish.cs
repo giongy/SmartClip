@@ -47,7 +47,7 @@ static partial class Strings
         Open = "Abrir"; Exit = "Salir"; Pause = "Pausar la captura"; Resume = "Reanudar la captura";
         ShowContent = "Mostrar el contenido"; MoveTo = "Mover a"; NewFolder = "Nueva carpeta…";
         CopyPictureText = "Copiar el texto";
-        Pin = "Mantener arriba"; Unpin = "Quitar de arriba"; OutOfFolders = "Fuera de las carpetas"; EmptyFolder = "Vacía";
+        KeepTop = "Mantener arriba"; Unpin = "Quitar de arriba"; OutOfFolders = "Fuera de las carpetas"; EmptyFolder = "Vacía";
         NumberMenu = "Atajo"; NoNumber = "Ninguno";
         KindMenu = "Tipo";
 
@@ -91,15 +91,15 @@ static partial class Strings
         Yes = "Sí"; No = "No"; Ok = "Aceptar";
 
         Cancel = "Cancelar";
-        NoText = "No hay texto en el portapapeles: copia antes la contraseña.";
+        NoText = "No hay texto en el portapapeles: copia antes el texto.";
         Cancelled = "Cancelado.";
         CapsLock = "Bloq Mayús está activado: desactívalo y vuelve a intentarlo.";
         TypingInto = "Tecleando en {0}…";
-        AskUnusual = "El portapapeles contiene {0}: no parece una contraseña.\n\n¿Quieres teclearlo de todos modos?";
+        AskUnusual = "El portapapeles contiene {0}: más largo de lo que se suele teclear.\n\n¿Quieres teclearlo de todos modos?";
         OnLines = " en {0} líneas";
         Countdown = "Tecleo dentro de {0} s en {1}. Pulsa Cancelar para detener.";
         TimeUp = "Se acabó el tiempo: no has elegido la ventana en la que teclear.";
-        ClickNow = "Haz clic ahora en el campo de contraseña de la ventana remota…";
+        ClickNow = "Haz clic ahora en el campo de la ventana remota…";
         Untitled = "una ventana sin título";
         KeysHeld = "Suelta las teclas que mantienes pulsadas y vuelve a intentarlo.";
         Blocked = "Windows ha bloqueado el envío de teclas. Si el programa de escritorio remoto se ejecuta como "
@@ -129,7 +129,7 @@ static partial class Strings
             + "Solo vale con la opción de arriba activa. No ocurre mientras espera o teclea, ni mientras\n"
             + "escribes un texto guardado o respondes a una pregunta: mientras tanto puedes copiar en otro sitio.";
         TypeTip = "Teclea el texto del portapapeles tecla por tecla, donde pegar no funciona:\n"
-            + "copia la contraseña, pulsa aquí y haz clic en el campo de la ventana remota.\n"
+            + "copia el texto, pulsa aquí y haz clic en el campo de la ventana remota.\n"
             + "O pulsa {0} directamente en el campo.";
         SearchTip = "Escribe para buscar entre las entradas del lugar: palabras en cualquier orden, sin importar\n"
             + "mayúsculas ni acentos. En «" + HistoryPlace + "» también los textos guardados, después de lo copiado.\n"
@@ -222,7 +222,7 @@ static partial class Strings
             + "Actívala si los símbolos llegan mal porque el servidor usa el teclado\n"
             + "estadounidense (pasa con las consolas VMware, iLO, iDRAC y algunas pantallas\nde inicio de sesión).";
         EnterTip = "Pulsa Intro después del último carácter, para confirmar el acceso enseguida.";
-        ClearTip = "Borra la contraseña del portapapeles cuando el tecleo ha salido bien.\n"
+        ClearTip = "Borra el texto tecleado del portapapeles cuando el tecleo ha salido bien.\n"
             + "El historial del portapapeles de Windows (Win+V), si está activo, no se toca.";
         SlowTip = "Actívala si en el servidor faltan caracteres o llegan desordenados.";
         AltCodeTip = "Los símbolos que este teclado no tiene (por ejemplo ~ y ` en el italiano) se envían\n"
@@ -244,8 +244,8 @@ static partial class Strings
             + "Con una línea las líneas de un texto van seguidas, con un {0} tenue entre ellas; con dos se quedan como están.\n"
             + "Lo que una tarjeta corta lo muestra entero el ojo a su derecha. Cambia enseguida.";
         HistoryTip = "La lista ofrece los textos e imágenes copiados mientras el programa está abierto.\n"
-            + "Lo que los gestores de contraseñas marcan como privado no se recuerda.\n"
-            + "Desactívala si copias contraseñas desde programas que no lo hacen: se leerían en\n"
+            + "Las copias que otros programas marcan como privadas no se recuerdan.\n"
+            + "Desactívala si copias textos privados desde programas que no lo hacen: se leerían en\n"
             + "la lista. Al desactivarla también se borra el historial en disco.";
         KeepTip = "Cuántos días se queda en el historial lo que copias, también tras cerrar,\n"
             + "contando hoy como el primero: con 0 solo queda lo que copiaste hoy.\n"
@@ -272,13 +272,13 @@ static partial class Strings
             + "aparece desactivada aquí.";
         ExportTip = "Escribe en un archivo de texto, que se abre con el Bloc de notas, los textos guardados\n"
             + "con sus carpetas; si lo pides, también lo copiado. Las imágenes no se incluyen.\n"
-            + "En el archivo los textos van sin cifrar, contraseñas incluidas: guárdalo en un lugar seguro.";
+            + "En el archivo los textos van sin cifrar, también los privados: guárdalo en un lugar seguro.";
         ImportTip = "Lee un archivo escrito por «Exportar», también en otro PC, y añade lo que contiene\n"
             + "a lo que ya hay. Si un texto guardado tiene el nombre de uno existente, pregunta cuál conservar.\n"
             + "Lo copiado que la lista ya tiene no se repite.";
         OnlySaved = "Solo los textos guardados…"; Everything = "Todo, también lo copiado…";
         TextFiles = "Archivos de texto";
-        AskExport = "El archivo contendrá los textos sin cifrar, contraseñas incluidas: quien lo abra podrá leerlos.\n\n"
+        AskExport = "El archivo contendrá los textos sin cifrar, también los privados: quien lo abra podrá leerlos.\n\n"
             + "¿Quieres continuar?";
         SavedOne = "texto guardado"; SavedMany = "textos guardados"; CopiedOne = "copiado"; CopiedMany = "copiados";
         Exported = "Exportados: {0}."; ExportedAll = "Exportados: {0}, {1}.";
@@ -305,7 +305,7 @@ static partial class Strings
         PictureHintNamed = "La lista mostrará la imagen con «{0}» al lado.";
         NameLabel = "Nombre (opcional):"; ContentLabel = "Contenido:";
         NameHintEmpty = "Sin nombre, la lista mostrará el contenido.";
-        NameHintNamed = "La lista mostrará «{0}»; el contenido queda oculto, ideal para una contraseña.";
+        NameHintNamed = "La lista mostrará «{0}»; el contenido queda oculto, ideal para un texto privado.";
         BoldTip = "Negrita (Ctrl+B)"; ItalicTip = "Cursiva (Ctrl+I)"; UnderlineTip = "Subrayado (Ctrl+U)";
         TypefaceTip = "Fuente"; PointsTip = "Tamaño"; PlainTip = "Quitar el formato: de la selección, o de todo el texto";
         DefaultLook = "Predeterminado";
@@ -318,7 +318,7 @@ static partial class Strings
         MoreOne = "… y un carácter más"; MoreMany = "… y {0} caracteres más";
 
         ExportHeader = "{0} {1}: exportación del {2}";
-        ExportClearWarning = "Atención: aquí los textos van sin cifrar, contraseñas incluidas.";
+        ExportClearWarning = "Atención: aquí los textos van sin cifrar, también los privados.";
         ExportEditNote = "El texto de cada entrada está en las líneas que empiezan con una tabulación: si modificas el "
             + "archivo, déjala en su sitio.";
 
@@ -334,7 +334,7 @@ static partial class Strings
             "# Para qué sirve",
             app + " guarda lo que copias y los textos que eliges conservar, para devolverlos al portapapeles cuando "
                 + "hacen falta. También sabe teclear el portapapeles como pulsaciones de teclas reales: sirve para "
-                + "introducir una contraseña donde pegar no funciona, por ejemplo en las pantallas de bloqueo de los "
+                + "introducir un texto donde pegar no funciona, por ejemplo en las pantallas de bloqueo de los "
                 + "escritorios remotos.",
 
             "# La lista",
@@ -377,7 +377,7 @@ static partial class Strings
             "- Los tres puntos de la derecha, o el clic derecho, abren el menú de la entrada, sin tocar el portapapeles.",
             "- Ctrl+clic añade una tarjeta a la selección o la quita, " + ShiftName + "+clic selecciona todas las tarjetas hasta "
                 + "esa (también " + ShiftName + " con las flechas), " + Key(Keys.Control | MainForm.AllKey) + " las selecciona todas. "
-                + "Con varias seleccionadas, una barra en el lugar de las pestañas dice cuántas son y ofrece «" + Pin + "», «" + MoveTo
+                + "Con varias seleccionadas, una barra en el lugar de las pestañas dice cuántas son y ofrece «" + KeepTop + "», «" + MoveTo
                 + "» y «" + Delete + "», que también están en el menú del clic derecho y en sus teclas. «" + MoveTo + "» una carpeta, "
                 + "o «" + SavedTitle + "», guarda allí las entradas copiadas. " + EscapeKeyName + ", o la cruz al final de la barra, "
                 + "vuelve a una sola tarjeta.",
@@ -402,9 +402,9 @@ static partial class Strings
                 + "encuentran buscando.",
 
             "# Textos guardados",
-            "Son lo que quieres tener siempre a mano: una firma, una dirección, una contraseña. No vencen nunca. El "
+            "Son lo que quieres tener siempre a mano: una firma, una dirección, un código de acceso. No vencen nunca. El "
                 + "nombre es opcional: con nombre, la lista muestra solo el nombre y el contenido queda oculto, ideal "
-                + "para una contraseña; sin él, la lista muestra el contenido, como para una segunda dirección de correo.",
+                + "para un texto privado; sin él, la lista muestra el contenido, como para una segunda dirección de correo.",
             "- «" + New + "» (" + Key(Keys.Control | MainForm.NewKey) + ") escribe un texto desde cero.",
             "- «" + SaveDots + "» (" + Key(Keys.Control | MainForm.SaveKey) + "), en una entrada copiada, la conserva, "
                 + "con nombre o sin él; antes de guardar puedes retocar su contenido.",
@@ -453,15 +453,15 @@ static partial class Strings
             "- En el menú del icono junto al reloj cada carpeta es un submenú con sus textos.",
             "- El nombre de una carpeta encuentra sus textos en la búsqueda.",
 
-            "# Teclear una contraseña",
+            "# Teclear donde pegar no funciona",
             "Donde Ctrl+V no funciona, " + app + " escribe el texto del portapapeles tecla por tecla, como harías tú "
                 + "en el teclado.",
-            "- Copia la contraseña.",
+            "- Copia el texto.",
             "- Pulsa «" + TypeButton + "».",
             "- Haz clic en el campo de la ventana remota: tienes " + MainForm.ArmedSeconds + " segundos para hacerlo.",
             "- Cuando esa ventana ha estado en primer plano el tiempo de la espera, empieza el tecleo.",
             "Si no, pulsa " + type + " directamente en el campo: teclea enseguida, sin espera.",
-            "Para no enviar una contraseña al sitio equivocado:",
+            "Para no enviar un texto privado al sitio equivocado:",
             "- el tecleo se detiene solo si la ventana de destino pierde el primer plano;",
             "- durante la espera y el tecleo el mismo botón se convierte en «" + Cancel + "»;",
             "- el escritorio, la barra de tareas y el menú Inicio nunca son un destino;",
@@ -507,7 +507,7 @@ static partial class Strings
             "- Las imágenes copiadas ocupan como máximo " + Size(Clips.PictureSpace) + ": por encima, las más antiguas se "
                 + "van aunque no hayan vencido sus días, y una barra roja bajo la lista lo dice. Las imágenes guardadas no "
                 + "cuentan.",
-            "- Lo que los gestores de contraseñas marcan como privado no se recuerda.",
+            "- Las copias que otros programas marcan como privadas no se recuerdan.",
             "- También las entradas arriba se van cuando vencen sus días: lo que deba quedarse, guárdalo.",
             "- En las opciones, «" + CleanButton + "» borra enseguida lo que copiaste antes de los últimos días que "
                 + "escribes al lado: con 1 solo queda hoy, con 0 no queda nada. Pide confirmación; también se van las "
@@ -539,7 +539,7 @@ static partial class Strings
                 + "guardados con sus carpetas (los que tienen formato, con su HTML antes del texto) y, si lo pides, "
                 + "lo copiado con su hora y su flecha. Las imágenes no "
                 + "se incluyen.",
-            "- En el archivo los textos van sin cifrar, contraseñas incluidas: guárdalo en un lugar seguro.",
+            "- En el archivo los textos van sin cifrar, también los privados: guárdalo en un lugar seguro.",
             "- «" + ImportButton + "» lee un archivo así y añade lo que contiene a lo que ya hay. Si un texto guardado "
                 + "tiene el nombre de uno existente pregunta cuál conservar; lo copiado que la lista ya tiene no se "
                 + "repite. Un archivo exportado en otro idioma se lee igual.",

@@ -566,41 +566,10 @@ partial class MainForm
         return box;
     }
 
-    // The program used to be called PasswordPaste: as long as its registry key exists, the settings and saved
-    // texts in it move here. What is already here stays: the new key may have been written to in the meantime.
-    static void AdoptOldSettings()
-    {
-        using (RegistryKey old = Registry.CurrentUser.OpenSubKey(OldSettingsKey))
-        {
-            if (old == null) return;
-            using (RegistryKey current = Registry.CurrentUser.CreateSubKey(SettingsKey))
-            {
-                CopyMissing(old, current);
-            }
-        }
-        // Reached only if the copy went through to the end.
-        Registry.CurrentUser.DeleteSubKeyTree(OldSettingsKey, false);
-    }
-
-    static void CopyMissing(RegistryKey from, RegistryKey to)
-    {
-        foreach (string name in from.GetValueNames())
-            if (to.GetValue(name) == null) to.SetValue(name, from.GetValue(name), from.GetValueKind(name));
-        foreach (string name in from.GetSubKeyNames())
-        {
-            using (RegistryKey source = from.OpenSubKey(name))
-            using (RegistryKey target = to.CreateSubKey(name))
-            {
-                CopyMissing(source, target);
-            }
-        }
-    }
-
     void LoadSettings()
     {
         try
         {
-            AdoptOldSettings();
             using (RegistryKey key = Registry.CurrentUser.OpenSubKey(SettingsKey))
             {
                 if (key != null) TransferSettings(key, false);

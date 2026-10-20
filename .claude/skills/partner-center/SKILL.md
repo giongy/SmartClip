@@ -38,6 +38,11 @@ all'utente in italiano.
 
 ## 3. La scheda in `store\README.md`
 
+**Mai la parola password o simili**, in nessuna lingua (voluto dall'utente il 20/10/2026): l'elenco è
+`store\forbidden-words.txt`. `make-listing.ps1` si rifiuta di scrivere il CSV se la scheda ne contiene una, e
+`tests.exe texts` fallisce se la contiene un testo del programma o una voce finta delle immagini. Si scrive «testo»,
+«testo riservato», «le copie che altri programmi segnano come riservate».
+
 Per ognuna delle quattro sezioni (`## English (en-US)`, `## Italiano (it-IT)`, `## Español (es-ES)`,
 `## Français (fr-FR)`), con lo stesso contenuto tradotto:
 
