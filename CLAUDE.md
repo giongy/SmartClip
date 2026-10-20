@@ -110,7 +110,11 @@ condiviso su GitHub).
     se ne fa una nuova. Versione 6 (18/10/2026): `chosen`, il tipo detto dall'utente con «Tipo» nel menu di un testo
     (`ListKinds`, `Clips.Choose`; voluto dall'utente, perché l'ipotesi sul codice sbaglia): vale anche su un salvato,
     **in chiaro** (deciso con l'utente: non dice più del nome, che è già in chiaro); un salvato senza scelta non ha
-    `category` e si indovina in memoria. Copiato di nuovo o salvato, il tipo scelto resta. Ore in UTC, millisecondi dal 1970. Copiare di nuovo
+    `category` e si indovina in memoria. Copiato di nuovo o salvato, il tipo scelto resta. Versione 7 (20/10/2026): solo
+    indici (`LookupIndexes`: per tipo, per programma, per genere), così barra laterale, schede dei tipi e spazio delle
+    immagini non leggono più tutta la tabella a ogni copia (misurato con `tests.exe many`: a 20.000 voci 50 ms
+    ciascuno, ora 1–2); `Upgrade` li aggiunge senza rifare la tabella. La cache di SQLite è di 8 MB (`cache_size`;
+    con i 2 MB di default ogni lettura di tutta la tabella tornava al disco: 12 ms invece di 2 a 5000 voci). Ore in UTC, millisecondi dal 1970. Copiare di nuovo
     aggiorna la stessa riga (`hash`). `Entry` ha in più `Id`, `Saved`, `FolderId`. Un database nuovo si riempie
     dentro la transazione che lo crea (`new Clips(path, fill)`): se il riempimento fallisce non resta niente, e al
     prossimo avvio è di nuovo nuovo (`Created`).
@@ -379,6 +383,7 @@ condiviso su GitHub).
   Le immagini copiate hanno un tetto (voluto dall'utente il 17/10/2026, «non più di 200 MB»): `Clips.PictureSpace`,
   PNG e miniature contati con `length()` senza leggerli (`PictureBytes`). Oltre il tetto `TrimPictures` toglie le
   più vecchie, anche con freccia o numero, dopo ogni immagine copiata e a ogni `Prune`; le salvate non contano.
+  Lì il file non si restringe (lo spazio lo riprende l'immagine dopo; compattare spostava l'ultima, fino a un secondo).
   Nessuna domanda né avviso: finché un'altra immagine grande come la più grande non ci starebbe (`PicturesFull`),
   sotto le schede compare una barra rossa (`banner`, una `InfoBar` di tipo errore come quelle della riga di
   stato, messa a posto da `FitStatus`, accesa da `ShowPictureRoom` a ogni `Filter`).
@@ -810,6 +815,9 @@ condiviso su GitHub).
   HTML che entra dagli appunti passa da `Rich.Lighten`: via gli sfondi più scuri di `DarkBack` e i grigi più chiari
   di `LightGrey`, che come il nero diventano il colore predefinito (`Rich.Default`, anche in `Tidy`); i colori veri e
   i grigi medi delle firme restano.
+- Un `ListBox` `OwnerDrawVariable` chiede l'altezza di ogni riga con `MeasureItem`, e WinForms crea per ognuna un
+  `Graphics`: riempire 200 schede costava 20 ms invece di 13. Le schede la dicono da `RowList.RowHeight`, che risponde
+  a `WM_MEASUREITEM` (riflesso) senza passare da WinForms.
 - `ListBox.IndexFromPoint` risponde la riga più vicina anche sotto l'ultima: per sapere su quale riga è il
   puntatore c'è `RowAt` (prima un clic nel vuoto sceglieva di nuovo la voce selezionata).
 - Nell'elenco Invio agisce al rilascio (`OnKeyUp`, con `enterDown`): alla pressione il tasto tenuto giù
@@ -880,6 +888,11 @@ cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
   finte, una scheda sotto il puntatore in `-hover`, le schede alte due righe in `-two`, una ricerca con la parola evidenziata in `-search`,
   quattro schede scelte con la loro barra in `-picked`, un elenco di tre giorni scorso fino a ieri in `-scrolled`, opzioni con ogni pagina in `-options-1`…`-5`, stati lunghi) per
   controllare l'aspetto senza mostrarla.
+- `tests.exe many [testi] [immagini]` — nemmeno (i tempi dipendono dal PC): riempie il database di prova come mesi di
+  uso (5000 testi di ogni genere e lunghezza, 2% documenti interi, e 500 immagini di default, oltre il tetto; 300
+  salvati in cartelle; programmi veri) e misura ciò che l'elenco fa a ogni copia, ricerca, scheda, posto e
+  all'avvio, prima nel database e poi nella finestra, segnando `SLOW` ciò che supera il suo limite. Con 150 immagini
+  basta mezzo minuto.
 - `tests.exe store <cartella> <lingua>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno
   sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>` (in scuro, che sullo Store fa più effetto, tranne l'ultima, `8-light`; lo sfondo si scurisce con il tema), e
   l'icona 300 × 300 in `<cartella>`. Mostra le finestre qualche secondo; a programma chiuso, come `real`, perché le
@@ -937,8 +950,11 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   lingue; mai il mouse vero, Ctrl+A e Maiusc+frecce premuti davvero, la domanda di «Elimina», il menu di «Sposta in» aperto dal
   pulsante, la rotella sopra la barra del giorno.
 - L'avviso di SQLite mancante o troppo vecchio: nessun Windows a portata di mano ne è privo.
-- Il database con migliaia di voci (la ricerca, la scadenza, il file che si restringe): provato solo con le
-  poche dei test. E dal pacchetto dello Store, dove sta in `LocalState`.
+- Il database con migliaia di voci dal vivo: `tests.exe many` (20/10/2026) ha misurato tutto con voci finte, mai
+  con mesi di copie vere. A 5000 voci una ricarica fa 20 ms, una copia 35, un tasto nella ricerca 30–60; a 20.000
+  la ricerca sale a 90–110 ms per tasto, perché legge il testo di ogni voce (30 MB, quasi tutto nei documenti
+  lunghi). Una copia d'immagine a tetto pieno ogni tanto ferma la finestra fino a un secondo (scrittura sul disco
+  con `synchronous = FULL`). E dal pacchetto dello Store, dove il database sta in `LocalState`.
 
 - Le ultime aggiunte dal vivo: l'anteprima con il puntatore fermo (vista solo chiamando `ShowPeek` da
   `tests.exe real`), il puntatore che la attraversa, il trascinamento in una cartella, i tasti nuovi premuti

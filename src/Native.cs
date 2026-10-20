@@ -8,6 +8,9 @@ static class Native
     public const int WM_SETTINGCHANGE = 0x001A, WM_ACTIVATEAPP = 0x001C, WM_NCHITTEST = 0x0084, WM_HOTKEY = 0x0312,
         WM_CLIPBOARDUPDATE = 0x031D, EM_SETCUEBANNER = 0x1501;
     public const int WM_PAINT = 0x000F, WM_ERASEBKGND = 0x0014, WM_VSCROLL = 0x0115, WM_MOUSEWHEEL = 0x020A;
+    // Sent to the parent, which WinForms sends back to the list as WM_REFLECT + it. In MEASUREITEMSTRUCT the row is at
+    // byte 8, its height at byte 16.
+    public const int WM_MEASUREITEM = 0x002C, WM_REFLECT = 0x2000, MeasureItemId = 8, MeasureItemHeight = 16;
     public const int WM_LBUTTONDOWN = 0x0201, WM_LBUTTONDBLCLK = 0x0203, MK_SHIFT = 0x0004, MK_CONTROL = 0x0008;
     public const int SB_VERT = 1, SB_PAGEUP = 2, SB_PAGEDOWN = 3, SB_THUMBPOSITION = 4, SB_ENDSCROLL = 8;
     public const uint SIF_ALL = 0x17;

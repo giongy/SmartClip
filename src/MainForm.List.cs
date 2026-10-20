@@ -163,10 +163,7 @@ partial class MainForm
         cardList.Font = Look.EntryFont;   // the entries have a font of their own, chosen in the options
         cardList.Marked = false;          // a selected card shows it by its edge
         cardList.ContextMenuStrip = listMenu;
-        cardList.MeasureItem += delegate(object sender, MeasureItemEventArgs e)
-        {
-            e.ItemHeight = CardHeight(cardList.Items[e.Index]);
-        };
+        cardList.RowHeight = delegate(int row) { return CardHeight(cardList.Items[row]); };
         cardList.DrawItem += DrawEntry;
         // The name of a day is not chosen: the selection stays where it was. Moved otherwise than by picking (a click, the
         // arrows), the selection is of one card again, where a range picked with Shift starts.
@@ -376,7 +373,8 @@ partial class MainForm
             Change(delegate
             {
                 copied = clips.Copied(MaxShown, sieve);
-                total = clips.CopiedCount(sieve);
+                // Fewer than the most listed are all of them: counting would read every search text once more.
+                total = copied.Count < MaxShown ? copied.Count : clips.CopiedCount(sieve);
             });
         }
         // In History only those a search finds (wanted by the user on 19/10/2026: what is saved is not history, but the list

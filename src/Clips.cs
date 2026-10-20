@@ -27,8 +27,9 @@ sealed class Clips : IDisposable
 {
     // In PRAGMA user_version: a newer file is refused, an older one brought up to date (Upgrade). 2: the large
     // columns of the entries at the end of their rows. 3: the formatting of saved texts. 4: the program each copied
-    // entry was copied in. 5: what it is (Category). 6: what the user says it is, of a saved entry too.
-    public const int SchemaVersion = 6;
+    // entry was copied in. 5: what it is (Category). 6: what the user says it is, of a saved entry too. 7: the indexes
+    // of the sidebar, the tabs and the room of the pictures (LookupIndexes).
+    public const int SchemaVersion = 7;
     const int TextKind = 1, PictureKind = 2;
     // The most the copied pictures take, previews included: beyond it the oldest go (TrimPictures). The checks
     // make it smaller.
@@ -86,7 +87,15 @@ sealed class Clips : IDisposable
         + " CHECK (html IS NULL OR (saved = 1 AND kind = " + TextKind + ")),"
         + " CHECK (rtf IS NULL OR html IS NOT NULL));"
         + "CREATE INDEX entries_recent ON entries (saved, pinned DESC, copied_at DESC);"
-        + "CREATE INDEX entries_hash ON entries (hash) WHERE hash IS NOT NULL;";
+        + "CREATE INDEX entries_hash ON entries (hash) WHERE hash IS NOT NULL;"
+        + LookupIndexes;
+    // What the list asks at every copy besides the newest entries: the programs of the sidebar with how many come from
+    // each, the entries of a tab or of a program and how many, what the copied pictures take. Without these each
+    // read the whole table: with 20,000 entries, 50 ms each (measured with "tests.exe many").
+    const string LookupIndexes =
+        "CREATE INDEX entries_category ON entries (saved, category, pinned DESC, copied_at DESC);"
+        + "CREATE INDEX entries_app ON entries (saved, app_id, pinned DESC, copied_at DESC);"
+        + "CREATE INDEX entries_kind ON entries (saved, kind, copied_at);";
     // The columns of the entries in versions 1 and 2, which an upgrade copies into the table of today; version 3
     // has the formatting too.
     const string OldFields = "id, kind, width, height, copied_at, saved, saved_at, name, name_key, folder_id, pinned, number,"
@@ -127,8 +136,11 @@ sealed class Clips : IDisposable
         data = new Database(path);
         try
         {
-            // A removed entry is overwritten, not only forgotten; nothing is lost to a crash or a power cut.
-            data.Execute("PRAGMA foreign_keys = ON; PRAGMA secure_delete = ON; PRAGMA synchronous = FULL; PRAGMA journal_mode = DELETE");
+            // A removed entry is overwritten, not only forgotten; nothing is lost to a crash or a power cut. 8 MB of
+            // pages kept in memory instead of 2: with thousands of entries the list, the sidebar and the room of the
+            // pictures each read the whole table, at every copy, from the disk again (12 ms each; 2 ms so).
+            data.Execute("PRAGMA foreign_keys = ON; PRAGMA secure_delete = ON; PRAGMA synchronous = FULL; PRAGMA journal_mode = DELETE;"
+                + " PRAGMA cache_size = -8192");
             long version = (long)data.Value("PRAGMA user_version");
             if (version > SchemaVersion)
                 throw new InvalidDataException(string.Format(Strings.NewerDatabase, path, Program.AppName));
@@ -164,7 +176,8 @@ sealed class Clips : IDisposable
             // 1 → 2: the same entries, the large columns at the end. 2 → 3: the columns of the formatting, 3 → 4 the
             // program of a copied entry, 4 → 5 its category and 5 → 6 whether the user chose it (and the checks that let
             // a saved entry have one), before the large ones, which ADD COLUMN would put
-            // after them. Either way the table is made anew under its name and filled from the old one.
+            // after them. Either way the table is made anew under its name and filled from the old one, with the
+            // indexes of today. 6 → 7 only adds indexes.
             if (version < 6)
             {
                 string fields = version < 3 ? OldFields : version < 4 ? OldFields + FormattingFields
@@ -175,6 +188,7 @@ sealed class Clips : IDisposable
                 data.Execute("INSERT INTO entries (" + fields + ") SELECT " + fields + " FROM entries_old; DROP TABLE entries_old;");
                 if (version < 5) Categorize();
             }
+            else if (version < 7) data.Execute(LookupIndexes);
             data.Execute("PRAGMA user_version = " + SchemaVersion);
             transaction.Commit();
         }
@@ -319,7 +333,8 @@ sealed class Clips : IDisposable
     }
 
     // Removes the oldest copied pictures until those left fit in PictureSpace, pinned or numbered as they may
-    // be, as their days would. The saved ones are never counted nor touched.
+    // be, as their days would. The saved ones are never counted nor touched. The file is not made smaller here: the
+    // next picture takes the room back, and compacting would only move the last one into it, a second at times.
     void TrimPictures()
     {
         long over = PictureBytes() - PictureSpace;
@@ -340,7 +355,6 @@ sealed class Clips : IDisposable
             foreach (long id in oldest) delete.Run(id);
             transaction.Commit();
         }
-        Compact();
     }
 
     // How large the file of the database is, as SQLite counts it.
@@ -606,7 +620,9 @@ sealed class Clips : IDisposable
             sql.Append(" AND app_id = ?" + values.Count);
         }
         if (sieve.Pinned) sql.Append(" AND pinned = 1");
-        if (sieve.Numbered) sql.Append(" AND number IS NOT NULL");
+        // Through the index of the numbers, which only a few have: through that of the copied entries SQLite would
+        // read them all.
+        if (sieve.Numbered) sql.Replace("saved = 0", "+saved = 0").Append(" AND number > 0");
         return sql.ToString();
     }
 

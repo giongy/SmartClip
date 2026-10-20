@@ -149,7 +149,8 @@ static class TestProgram
         if (mode == "data") return DataTest();
         if (mode == "real") return Real(args[1]);
         if (mode == "store") return Store(args[1]);
-        Console.WriteLine("usage: map | texts | data | shot <png> [lang] | real <png> [lang] | store <folder> [lang] | type");
+        if (mode == "many") return Many(args.Length > 1 ? int.Parse(args[1]) : 5000, args.Length > 2 ? int.Parse(args[2]) : 500);
+        Console.WriteLine("usage: map | texts | data | shot <png> [lang] | real <png> [lang] | store <folder> [lang] | type | many [texts] [pictures]");
         return 64;
     }
 
@@ -181,6 +182,261 @@ static class TestProgram
         BackupTest();
         MoveTest();
         return failed == 0 ? 0 : 1;
+    }
+
+    // --- Many entries: not in test.cmd, it says how long things take, which depends on the PC ---
+
+    // Months of use: thousands of copied texts of every kind and length, pictures beyond their room, saved texts in
+    // folders, copied in several programs over the days the history keeps. Says how long what the list does at each
+    // copy, search and start takes, with the database and with the window, and marks what is slow.
+    static int Many(int texts, int pictures)
+    {
+        Random random = new Random(7);
+        string[] programs = Array.FindAll(new string[] { "notepad.exe", "cmd.exe", "mspaint.exe", "calc.exe", "explorer.exe", "write.exe",
+            "charmap.exe", @"WindowsPowerShell\v1.0\powershell.exe", "mmc.exe", "regedit.exe", "taskmgr.exe", "mstsc.exe" },
+            delegate(string p) { return System.IO.File.Exists(System.IO.Path.Combine(Environment.SystemDirectory, p)); });
+        for (int i = 0; i < programs.Length; i++) programs[i] = System.IO.Path.Combine(Environment.SystemDirectory, programs[i]);
+        Stopwatch clock = Stopwatch.StartNew();
+        using (Clips clips = new Clips(Clips.DefaultFile))
+        {
+            // The pictures first, as copies are made: each pruning what is over and trimming what is beyond the room.
+            // Then they are spread over the days, as the texts.
+            List<double> perPicture = new List<double>();
+            for (int i = 0; i < pictures; i++)
+            {
+                using (Bitmap picture = Screenshot(random, i))
+                {
+                    long room = clips.PictureBytes();
+                    Stopwatch one = Stopwatch.StartNew();
+                    clips.AddPicture(picture, programs[random.Next(programs.Length)]);
+                    perPicture.Add(one.Elapsed.TotalMilliseconds);
+                    if (one.ElapsedMilliseconds > 500)
+                        Console.WriteLine("       picture {0}: {1} ms, the room from {2} to {3}", i, one.ElapsedMilliseconds,
+                            Strings.Size(room), Strings.Size(clips.PictureBytes()));
+                }
+                clips.Data.Execute("UPDATE entries SET copied_at = ?2 WHERE id = ?1", clips.Data.LastId, Stamp(Past(random)));
+            }
+            Console.WriteLine("{0} pictures copied in {1:0.0} s", pictures, clock.Elapsed.TotalSeconds);
+            clock.Restart();
+            using (Transaction transaction = clips.Begin())
+            {
+                for (int i = 0; i < texts; i++) clips.AdoptText(MadeUp(random, i), Past(random), random.Next(400) == 0, 0);
+                using (Statement attribute = clips.Data.Prepare("SELECT id FROM entries WHERE saved = 0 AND app_id IS NULL"))
+                {
+                    List<long> ids = new List<long>();
+                    while (attribute.Step()) ids.Add(attribute.Long(0));
+                    foreach (long id in ids) clips.Attribute(id, programs[random.Next(programs.Length)]);
+                }
+                transaction.Commit();
+            }
+            List<long> folders = new List<long>();
+            for (int i = 0; i < 20; i++) folders.Add(clips.AddFolder(i < 5 || folders.Count == 0 ? 0 : folders[random.Next(folders.Count)], "Folder " + i));
+            for (int i = 0; i < 300; i++)
+                clips.AddSaved(i % 3 == 0 ? null : "Saved " + i, MadeUp(random, texts + i), random.Next(3) == 0 ? 0 : folders[random.Next(folders.Count)], Past(random));
+            List<Entry> latest = clips.Copied(5, new string[0]);
+            for (int n = 1; n <= 3; n++) clips.Number(latest[n].Id, n);
+            Console.WriteLine("{0} texts and 300 saved ones in {1:0.0} s", texts, clock.Elapsed.TotalSeconds);
+            perPicture.Sort();
+            Console.WriteLine("a picture copied: {0:0} ms usually, {1:0} ms one in ten, {2:0} ms at most", perPicture[perPicture.Count / 2],
+                perPicture[perPicture.Count * 9 / 10], perPicture[perPicture.Count - 1]);
+            Console.WriteLine("{0} copied entries, {1} pictures; the file {2}, the pictures {3}, the search texts {4} ({5} of them beyond 10,000 letters)",
+                clips.CopiedCount(), clips.CopiedCount(Kind(Category.Picture)), Strings.Size(clips.Size), Strings.Size(clips.PictureBytes()),
+                Strings.Size((long)clips.Data.Value("SELECT sum(length(folded)) FROM entries")),
+                clips.Data.Value("SELECT count(*) FROM entries WHERE length(folded) > 10000"));
+            Console.WriteLine();
+
+            Console.WriteLine("The database:");
+            Timed("the history, as the list asks it", 50, delegate { clips.Copied(MainForm.MaxShown, new Sieve()); clips.CopiedCount(new Sieve()); });
+            foreach (string query in new string[] { "server", "zanzibar", "nothing-like-this", "s", "connessione remoto" })
+            {
+                Sieve sieve = new Sieve();
+                sieve.Words = Texts.Words(query);
+                Timed("search \"" + query + "\": " + clips.CopiedCount(sieve) + " found", 50,
+                    delegate { clips.Copied(MainForm.MaxShown, sieve); clips.CopiedCount(sieve); });
+            }
+            foreach (Category kind in new Category[] { Category.Code, Category.Picture })
+            {
+                Sieve sieve = Kind(kind);
+                Timed("the tab " + kind, 50, delegate { clips.Copied(MainForm.MaxShown, sieve); clips.CopiedCount(sieve); });
+            }
+            List<Source> sources = null;
+            Timed("the programs of the sidebar", 20, delegate { sources = clips.Sources(); });
+            Sieve app = new Sieve();
+            app.App = sources[0].App;
+            Timed("one program, " + sources[0].Count + " entries", 50, delegate { clips.Copied(MainForm.MaxShown, app); clips.CopiedCount(app); });
+            Timed("the numbers in use", 10, delegate { clips.Numbers(); });
+            Sieve numbered = new Sieve();
+            numbered.Numbered = true;
+            Timed("the entries with a number", 10, delegate { clips.Copied(MainForm.MaxShown, numbered); clips.CopiedCount(numbered); });
+            Timed("whether the pictures are beyond their room", 20, delegate { bool full = clips.PicturesFull; });
+            Timed("the saved texts, decrypted", 100, delegate { clips.Saved(); });
+            long pictureId = clips.Copied(1, Kind(Category.Picture))[0].Id;
+            Timed("a whole picture, chosen", 50, delegate { clips.Png(pictureId); });
+            int copy = 0;
+            Timed("a text copied", 100, delegate { clips.AddText("a new copy " + copy++, programs[0]); });
+            Timed("the same text copied again", 100, delegate { clips.AddText("a new copy 0", programs[0]); });
+            using (Bitmap picture = Screenshot(random, pictures))
+                Timed("a picture copied, with no room left", 1000, delegate { clips.AddPicture(picture, programs[0]); });
+            long before = clips.Size;
+            int count = clips.CopiedCount();
+            clock.Restart();
+            clips.Prune();
+            Mark("the expired entries removed (a new day)", clock.Elapsed.TotalMilliseconds, 2000);
+            Console.WriteLine("       {0} entries removed; the file from {1} to {2}", count - clips.CopiedCount(), Strings.Size(before), Strings.Size(clips.Size));
+        }
+        Console.WriteLine();
+
+        Console.WriteLine("The window:");
+        BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
+        clock.Restart();
+        ShotForm form = new ShotForm();
+        try
+        {
+            form.ShowInTaskbar = false;
+            form.StartPosition = FormStartPosition.Manual;
+            form.Location = new Point(-30000, -30000);
+            form.Show();
+            Application.DoEvents();
+            Mark("the start, until the window shows", clock.Elapsed.TotalMilliseconds, 1500);
+            Clips clips = ClipsOf(form);
+            MethodInfo filter = typeof(MainForm).GetMethod("Filter", hidden), reloadCopied = typeof(MainForm).GetMethod("ReloadCopied", hidden);
+            Timed("the cards filled again", 100, delegate { filter.Invoke(form, null); });
+            foreach (string part in new string[] { "FillNav", "ShowPictureRoom", "ShowTitle", "PlaceTitle" })
+            {
+                MethodInfo method = typeof(MainForm).GetMethod(part, hidden);
+                Timed("       of which " + part, 100, delegate { method.Invoke(form, null); });
+            }
+            MethodInfo showRows = typeof(MainForm).GetMethod("ShowRows", hidden);
+            Timed("       of which ShowRows", 100, delegate { showRows.Invoke(form, new object[] { null }); });
+            int copy = 0;
+            Timed("a copy, until it is among the cards", 150, delegate
+            {
+                clips.AddText("copied in the window " + copy++, null);
+                reloadCopied.Invoke(form, null);
+            });
+            Timed("the window drawn", 200, delegate
+            {
+                using (Bitmap bmp = new Bitmap(form.Width, form.Height)) form.DrawToBitmap(bmp, new Rectangle(0, 0, form.Width, form.Height));
+            });
+            TextBox search = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
+            // What the search box, a tab and a place do: the cards filled again with what they ask.
+            foreach (string query in new string[] { "c", "co", "con", "conn", "connessione", "zanzibar" })
+            {
+                search.Text = query;
+                Timed("search typed: \"" + query + "\"", 50, delegate { filter.Invoke(form, null); });
+            }
+            search.Text = "";
+            TabStrip tabs = (TabStrip)typeof(MainForm).GetField("tabs", hidden).GetValue(form);
+            for (int tab = 1; tab < 5; tab++)
+            {
+                tabs.Selected = tab;
+                Timed("tab " + tab, 50, delegate { filter.Invoke(form, null); });
+            }
+            tabs.Selected = 0;
+            foreach (PlaceKind kind in new PlaceKind[] { PlaceKind.Saved, PlaceKind.Pinned, PlaceKind.Shortcuts, PlaceKind.History })
+            {
+                GoTo(form, kind, null);
+                Timed("the place " + kind, 50, delegate { filter.Invoke(form, null); });
+            }
+            form.Close();
+        }
+        finally
+        {
+            form.Dispose();
+        }
+        Console.WriteLine();
+        Console.WriteLine(slow == 0 ? "NOTHING SLOW" : slow + " SLOW");
+        return slow == 0 ? 0 : 1;
+    }
+
+    static int slow;   // the timings beyond their limit
+
+    // How long 'action' takes, the middle of five runs after one to warm up, marked slow beyond 'limit' ms.
+    static void Timed(string what, double limit, Action action)
+    {
+        action();
+        List<double> runs = new List<double>();
+        for (int i = 0; i < 5; i++)
+        {
+            Stopwatch one = Stopwatch.StartNew();
+            action();
+            runs.Add(one.Elapsed.TotalMilliseconds);
+        }
+        runs.Sort();
+        Mark(what, runs[2], limit);
+    }
+
+    static void Mark(string what, double ms, double limit)
+    {
+        if (ms > limit) slow++;
+        Console.WriteLine("[{0}] {1,7:0.0} ms  {2}", ms > limit ? "SLOW" : " ok ", ms, what);
+    }
+
+    static Sieve Kind(Category kind)
+    {
+        Sieve sieve = new Sieve();
+        sieve.Category = kind;
+        return sieve;
+    }
+
+    static long Stamp(DateTime time)
+    {
+        return (long)(time.ToUniversalTime() - new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds;
+    }
+
+    // A moment of the days the history keeps, or of the day before them, which a new day removes.
+    static DateTime Past(Random random)
+    {
+        return DateTime.Today.AddDays(-random.Next(Texts.DefaultKeepDays + 2)).AddSeconds(random.Next(86400));
+    }
+
+    static readonly string[] Vocabulary = ("server database utente password connessione remoto desktop file cartella progetto "
+        + "riunione domani ufficio cliente fattura ordine numero codice errore versione aggiornamento backup rete stampante "
+        + "the a of to and meeting tomorrow report invoice customer order error version update network printer deploy build "
+        + "branch commit merge release issue ticket user account login session token query table index select where from").Split(' ');
+
+    // Something copied: words, a link, code, a paragraph or now and then a whole document; a few with a rare word.
+    static string MadeUp(Random random, int i)
+    {
+        int kind = random.Next(100);
+        StringBuilder text = new StringBuilder();
+        if (kind < 45)
+            for (int w = random.Next(1, 9); w > 0; w--) text.Append(Vocabulary[random.Next(Vocabulary.Length)]).Append(w > 1 ? " " : "");
+        else if (kind < 65)
+            text.Append("https://").Append(Vocabulary[random.Next(Vocabulary.Length)]).Append(".example.com/")
+                .Append(Vocabulary[random.Next(Vocabulary.Length)]).Append("?id=").Append(i);
+        else if (kind < 80)
+            for (int l = random.Next(3, 30); l > 0; l--)
+                text.Append("    var ").Append(Vocabulary[random.Next(Vocabulary.Length)]).Append(i).Append(" = Get(\"")
+                    .Append(Vocabulary[random.Next(Vocabulary.Length)]).Append("\", ").Append(l).Append(");\r\n");
+        else
+        {
+            int words = kind < 98 ? random.Next(30, 300) : random.Next(5000, 15000);
+            for (int w = 0; w < words; w++)
+                text.Append(Vocabulary[random.Next(Vocabulary.Length)]).Append(w % 17 == 16 ? ".\r\n" : " ");
+        }
+        if (i % 1000 == 500) text.Append(" zanzibar");
+        return text.ToString();
+    }
+
+    // Something like a screenshot, as large as a real one once compressed: a desktop, a window, and a part as busy
+    // as a photo, which PNG cannot shrink.
+    static Bitmap Screenshot(Random random, int seed)
+    {
+        Bitmap picture = new Bitmap(1920, 1080, PixelFormat.Format24bppRgb);
+        using (Graphics g = Graphics.FromImage(picture))
+        {
+            g.Clear(Color.FromArgb(random.Next(256), random.Next(256), random.Next(256)));
+            g.FillRectangle(Brushes.WhiteSmoke, random.Next(400), random.Next(200), 1100, 700);
+            g.DrawString("Screenshot " + seed, SystemFonts.CaptionFont, Brushes.Black, 500, 300);
+        }
+        Rectangle busy = new Rectangle(random.Next(1000), random.Next(500), random.Next(250, 450), random.Next(200, 400));
+        BitmapData bits = picture.LockBits(busy, ImageLockMode.WriteOnly, PixelFormat.Format24bppRgb);
+        byte[] noise = new byte[bits.Stride * busy.Height];
+        random.NextBytes(noise);
+        Marshal.Copy(noise, 0, bits.Scan0, noise.Length);
+        picture.UnlockBits(bits);
+        return picture;
     }
 
     // A formatted saved text: its HTML and RTF kept encrypted beside its plain text, changed or taken away with it,
@@ -414,6 +670,21 @@ static class TestProgram
             Check(Equals(clips.Data.Value("PRAGMA user_version"), (long)Clips.SchemaVersion) && clips.Copied(10, code).Count == 1
                 && clips.Saved()[0].Category == Category.Link && clips.Healthy(),
                 "a database of version 5 is brought up to date: what the copied entries are kept, a saved text can be told");
+        }
+        System.IO.File.Delete(path);
+
+        // Version 6, without the indexes of the sidebar, the tabs and the pictures: they come, the entries stay.
+        using (Clips clips = new Clips(path))
+        {
+            clips.AddText("int x = 1;\nreturn x;", System.IO.Path.Combine(Environment.SystemDirectory, "notepad.exe"));
+            clips.Data.Execute("DROP INDEX entries_category; DROP INDEX entries_app; DROP INDEX entries_kind; PRAGMA user_version = 6;");
+        }
+        using (Clips clips = new Clips(path))
+        {
+            Check(Equals(clips.Data.Value("PRAGMA user_version"), (long)Clips.SchemaVersion) && clips.CopiedCount(Kind(Category.Code)) == 1
+                && clips.Sources().Count == 1 && Equals(clips.Data.Value("SELECT count(*) FROM sqlite_master WHERE name IN"
+                + " ('entries_category', 'entries_app', 'entries_kind')"), 3L) && clips.Healthy(),
+                "a database of version 6 is brought up to date: its indexes come, its entries stay");
         }
         System.IO.File.Delete(path);
     }

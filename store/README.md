@@ -149,9 +149,9 @@ paste blocked
 ### What's new in this version
 
 ```
-Several cards at once: Ctrl+click adds or removes one, Shift+click takes all those in between, Ctrl+A takes them all. A bar above the cards says how many and keeps them at the top, moves them into a folder (copied entries are saved there) or deletes them together; the same is in the right-click menu.
+Faster with a long history: with thousands of copied entries, every new copy, the tabs, the sidebar and the search now respond several times faster. With 20,000 entries the list is filled again in about 20 milliseconds instead of 150.
 
-Scrolling through the history, the name of the day of the top card now stays above the cards, so you always know which day you are looking at.
+Copying a picture when the room for pictures is full is quicker too.
 ```
 
 ### Screenshot captions
@@ -243,9 +243,9 @@ incolla bloccato
 ### Novità di questa versione
 
 ```
-Più schede insieme: Ctrl+clic ne aggiunge o toglie una, Maiusc+clic prende tutte quelle in mezzo, Ctrl+A le prende tutte. Una barra sopra le schede dice quante sono e le tiene in cima, le sposta in una cartella (le voci copiate vi vengono salvate) o le elimina in una volta; lo stesso nel menu del tasto destro.
+Più veloce con una cronologia lunga: con migliaia di voci copiate, ogni nuova copia, le schede dei tipi, la barra laterale e la ricerca rispondono ora molte volte più in fretta. Con 20.000 voci l'elenco si riempie in circa 20 millisecondi invece di 150.
 
-Scorrendo la cronologia, il nome del giorno della prima scheda resta ora sopra le schede: sai sempre di che giorno è ciò che stai guardando.
+Anche copiare un'immagine quando lo spazio per le immagini è pieno è più rapido.
 ```
 
 ### Didascalie delle schermate
@@ -337,9 +337,9 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Varias tarjetas a la vez: Ctrl+clic añade o quita una, Mayús+clic toma todas las de en medio, Ctrl+A las toma todas. Una barra encima de las tarjetas dice cuántas son y las mantiene arriba, las mueve a una carpeta (las entradas copiadas se guardan allí) o las elimina juntas; lo mismo en el menú del clic derecho.
+Más rápido con un historial largo: con miles de entradas copiadas, cada nueva copia, las pestañas, la barra lateral y la búsqueda responden ahora varias veces más deprisa. Con 20.000 entradas la lista se rellena en unos 20 milisegundos en lugar de 150.
 
-Al desplazarte por el historial, el nombre del día de la primera tarjeta queda ahora encima de las tarjetas: siempre sabes de qué día es lo que estás viendo.
+También copiar una imagen cuando el espacio para imágenes está lleno es más rápido.
 ```
 
 ### Leyendas de las capturas
@@ -431,9 +431,9 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Plusieurs cartes à la fois : Ctrl+clic en ajoute ou en retire une, Maj+clic prend toutes celles entre les deux, Ctrl+A les prend toutes. Une barre au-dessus des cartes dit combien elles sont et les garde en haut, les déplace dans un dossier (les éléments copiés y sont enregistrés) ou les supprime ensemble ; la même chose dans le menu du clic droit.
+Plus rapide avec un long historique : avec des milliers d'éléments copiés, chaque nouvelle copie, les onglets, la barre latérale et la recherche répondent maintenant plusieurs fois plus vite. Avec 20 000 éléments, la liste se remplit en 20 millisecondes environ au lieu de 150.
 
-En faisant défiler l'historique, le nom du jour de la première carte reste maintenant au-dessus des cartes : vous savez toujours de quel jour est ce que vous regardez.
+Copier une image quand l'espace des images est plein est aussi plus rapide.
 ```
 
 ### Légendes des captures

@@ -254,8 +254,23 @@ class RowList : ListBox
     // row and those keys: the list picks several rows (see MainForm.Pick). Left null, Windows selects one row.
     public Action<int, Keys> Picking;
 
+    // Given, the height of each row of a list of rows of different heights, told Windows when it asks for it. Asked
+    // through MeasureItem, WinForms makes a Graphics for every row: filling a list of hundreds of cards took twice as
+    // long.
+    public Func<int, int> RowHeight;
+
     protected override void WndProc(ref Message m)
     {
+        if (m.Msg == Native.WM_REFLECT + Native.WM_MEASUREITEM && RowHeight != null)
+        {
+            int index = Marshal.ReadInt32(m.LParam, Native.MeasureItemId);
+            if (index >= 0 && index < Items.Count)
+            {
+                Marshal.WriteInt32(m.LParam, Native.MeasureItemHeight, RowHeight(index));
+                m.Result = (IntPtr)1;
+                return;
+            }
+        }
         if (m.Msg == Native.WM_ERASEBKGND)
         {
             EraseBelowRows(m.WParam);
