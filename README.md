@@ -2,7 +2,7 @@
 
 [![CodeQL](https://github.com/giongy/SmartClip/actions/workflows/codeql.yml/badge.svg)](https://github.com/giongy/SmartClip/actions/workflows/codeql.yml)
 
-si chiamava PasswordPaste (il repository GitHub è `giongy/SmartClip`); fino alla 4.3.8 `AdoptOldSettings` ne adottava
+**A tiny clipboard manager that can also type the clipboard as real keystrokes, for the places where paste does
 not work.**
 
 SmartClip keeps a history of what you copied, pictures included, and the texts you choose to save. One click makes
