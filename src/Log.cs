@@ -9,8 +9,14 @@ static class Log
 {
     const long MaxLength = 256 * 1024;   // beyond this the file starts again, the previous one kept beside it
     const string OldSuffix = ".old";
-    public static string FileName = Path.Combine(Program.DataFolder, Program.AppName + ".log");   // the checks write elsewhere
+    public static string FileName = FileIn(Program.DataFolder);   // beside the database; the checks write elsewhere
     static readonly object writing = new object();
+
+    // The file of the log in a folder.
+    public static string FileIn(string folder)
+    {
+        return Path.Combine(folder, Program.AppName + ".log");
+    }
 
     // Never fails: a log that cannot be written must not become a problem of its own.
     public static void Error(Exception ex)

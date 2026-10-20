@@ -13,9 +13,9 @@ class MigrationResult
 
 // Brings into a new database what the versions before it kept elsewhere, once: the saved texts from the registry,
 // encrypted as they were, with their days, numbers and folders; the copied texts and pictures from the history
-// files, one per day, with their stars and numbers. It only reads: the registry and the files stay as they are,
-// for a version before this one to find them still. It runs inside the transaction that creates the database
-// (Clips), so it is all or nothing, and tried again at the next start if it fails.
+// files, one per day, with their stars and numbers. It only reads: the registry and the files go only once a
+// database holds them (ForgetOld). It runs inside the transaction that creates the database (Clips), so it is all
+// or nothing, and tried again at the next start if it fails.
 static class Migration
 {
     // Under the settings key: the saved texts by name, and beside them, by the same name, the day each was saved,
@@ -31,14 +31,30 @@ static class Migration
     // Where the history files were, one per day; the checks use a folder of their own.
     public static string OldHistory = Path.Combine(Program.DataFolder, "History");
 
-    // Deletes the folder of the history files once a database holds what they held: after the migration, which
-    // only reads them, and at any later start if the folder is still there (the user wants no copy of it left).
-    // Not before: a migration that fails reads them again at the next start. If they cannot go, the log says why.
-    public static void ForgetOldHistory()
+    // Settings of versions before this one that nothing reads any more: the font and size of the first try at a
+    // font of the interface (3.9.3), the width of the column of the saved texts (before the sidebar, 4.3).
+    static readonly string[] OldSettings = { "Font", "TextSize", "SavedWidth" };
+
+    // Deletes what the versions before kept once a database holds it: the folder of the history files, the saved
+    // texts in the registry, the settings left over. After the migration, which only reads them, and at any later
+    // start if they are still there (the user wants no copy of them left). Not before: a migration that fails
+    // reads them again at the next start. What cannot go stays, and the log says why.
+    public static void ForgetOld(string settingsKey)
     {
         try
         {
             if (Directory.Exists(OldHistory)) Directory.Delete(OldHistory, true);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex);
+        }
+        try
+        {
+            Registry.CurrentUser.DeleteSubKeyTree(settingsKey + @"\" + SavedKey, false);
+            using (RegistryKey settings = Registry.CurrentUser.OpenSubKey(settingsKey, true))
+                if (settings != null)
+                    foreach (string name in OldSettings) settings.DeleteValue(name, false);
         }
         catch (Exception ex)
         {

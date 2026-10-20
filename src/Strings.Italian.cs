@@ -176,6 +176,8 @@ static partial class Strings
         ThemeSystem = "Come Windows"; ThemeLight = "Chiaro"; ThemeDark = "Scuro";
         FaceOption = "Carattere dell'interfaccia"; FaceNote = "Pulsanti, opzioni, menu: il programma riparte";
         FontOption = "Carattere delle voci"; FontNote = "Ciò che copi e salvi: cambia subito";
+        LinesOption = "Altezza delle schede"; LinesNote = "In righe di testo: con una, più voci in vista";
+        OneLine = "1 riga"; TwoLines = "2 righe";
         RestOption = "Anteprima con il puntatore fermo"; RestNote = "Su una scheda tagliata, senza l'occhio";
         RestTip = "Attiva, il puntatore fermo su una scheda che taglia la sua voce la mostra per intero.\n"
             + "Spenta, la mostra solo l'occhio a destra della scheda, o il suo menu.";
@@ -232,6 +234,9 @@ static partial class Strings
             + "e il contenuto di un testo salvato. Il resto del programma tiene il carattere dell'interfaccia. Cambia subito.";
         SizeTip = "Quanto è grande ciò che hai copiato e salvato, in pixel; {0} è il testo di Windows 11.\n"
             + "Il resto del programma tiene la dimensione dell'interfaccia. Cambia subito.";
+        LinesTip = "Quanto è alta ogni scheda dell'elenco, in righe di testo, qualunque cosa contenga: testi, immagini, nomi.\n"
+            + "Con una riga le righe di un testo si seguono, con un {0} tenue in mezzo; con due restano come sono.\n"
+            + "Ciò che una scheda taglia lo mostra per intero l'occhio alla sua destra. Cambia subito.";
         HistoryTip = "L'elenco propone i testi e le immagini copiati mentre il programma è aperto.\n"
             + "Ciò che i gestori di password segnano come riservato non viene ricordato.\n"
             + "Disattivala se copi password da programmi che non lo fanno: nell'elenco si\n"

@@ -118,9 +118,11 @@ condiviso su GitHub).
     leggono), con giorno, numero e cartella (i percorsi diventano l'albero); i copiati dai file `.clips`, con
     stellina (che diventa la freccia) e numero, senza i record eliminati e fino a un record troncato. **Legge
     soltanto** (lo controlla un test byte per byte): se fallisce, al prossimo avvio i dati vecchi ci sono ancora.
-    Dopo, appena un database è aperto, `OpenClips` chiama `Migration.ForgetOldHistory`, che **cancella la cartella
-    `History`** (voluto dall'utente il 17/10/2026: «nessun History»), anche agli avvii successivi se c'è ancora. La
-    chiave `Saved` del registro invece resta, per ora (passo 8 del piano). Nessuna scadenza durante la
+    Dopo, appena un database è aperto, `OpenClips` chiama `Migration.ForgetOld`, che **cancella la cartella
+    `History`** (voluto dall'utente il 17/10/2026: «nessun History»), anche agli avvii successivi se c'è ancora; dal
+    20/10/2026 (passo 8 del piano, voluto dall'utente) anche la chiave `Saved` del registro e le impostazioni che
+    nessuno legge più (`OldSettings`: `Font`, `TextSize`, `SavedWidth`). Un'impostazione che smette di servire va
+    aggiunta lì. Nessuna scadenza durante la
     migrazione. Un numero conteso va alla prima voce, un nome già preso prende « (2)», un file illeggibile si salta e
     va nel log. È l'unico a conoscere il formato vecchio (la cartella è `Migration.OldHistory`). Provata il
     17/10/2026 in sola lettura sui dati veri dell'utente (4 salvati, 16 copiati, 2 immagini: tutto, dati vecchi
@@ -357,7 +359,7 @@ condiviso su GitHub).
   Nessuna domanda né avviso: finché un'altra immagine grande come la più grande non ci starebbe (`PicturesFull`),
   sotto le schede compare una barra rossa (`banner`, una `InfoBar` di tipo errore come quelle della riga di
   stato, messa a posto da `FitStatus`, accesa da `ShowPictureRoom` a ogni `Filter`).
-  Nell'elenco occupano tre righe, con la miniatura (`Entry.Preview`). **Si salvano** come i testi (dopo la 4.0.0):
+  Nell'elenco sono alte come le altre schede, con la miniatura (`Entry.Preview`) tagliata a riempire il suo riquadro. **Si salvano** come i testi (dopo la 4.0.0):
   `EditForm` mostra l'immagine al posto del contenuto e chiede solo nome e cartella; un'immagine salvata mostra
   **sempre** la miniatura, con accanto il nome se c'è (decisione dell'utente: per le immagini il nome non nasconde
   niente, `PictureHintEmpty`/`PictureHintNamed`), e l'anteprima compare passandoci sopra. Non si esportano.
@@ -464,8 +466,17 @@ condiviso su GitHub).
 - Ogni voce è una scheda (dal 18/10/2026; scelta dell'utente: con i pulsanti, anche se se ne vedono
   meno): disegnata a mano in una riga di `cardList` (`OwnerDrawVariable`, `DrawEntry`), un po' più chiara del
   pannello (`Look.Raised`, nuovo colore delle due tavolozze) e con il bordo d'accento se selezionata (`RowList.Marked`
-  falso: niente tacca). **Prima la voce**, grande (fino a `BodyLines` righe del testo, `CardText`; il nome di un
-  salvato con nome; una miniatura con la misura); all'estremità destra della prima riga, piccola e tenue, sempre lì (`Lay`, `CardParts.Least`; schede compatte volute dall'utente il 19/10/2026, «molti spazi interni nelle celle»: margini `CardPad`, miniature di `CardPicture` 40 px; prima una scheda di testo era alta 73 px, ora 31 in una riga) (`MetaShare`, anche l'icona semitrasparente, `Look.DrawFaint`; voluto dall'utente il 19/10/2026, «per rendere ancora più chiaro cosa è copiato»), una riga sola: icona e nome del programma
+  falso: niente tacca). **Tutte le schede sono alte uguali**, qualunque cosa contengano (voluto dall'utente il
+  20/10/2026: prima un'immagine era alta quasi il doppio di un testo e un testo di due righe di più): alte
+  `cardLines` righe di testo, l'opzione «Altezza delle schede» in «Aspetto» (`linesButton`, `UseCardLines`,
+  `CardLineChoices` 1 o 2, `DefaultCardLines` 1 scelto dall'utente per vedere più voci; impostazione `CardLines`).
+  `CardHeight` non misura più niente. Con una riga le righe di un testo si seguono, quelle vuote saltate, con in mezzo
+  un `Joint` (« ↵ ») scritto tenue (`Plain`, `Write`; il testo così unito passa da `LayMarked`/`DrawMarked` anche
+  senza ricerca); con due restano com'erano. L'immagine riempie un riquadro alto quanto le righe e largo
+  `PictureShape` volte tanto, tagliata al centro, con gli angoli arrotondati (`DrawPicture`). **Prima la voce**,
+  grande (il testo, `CardText`; il nome di un salvato con nome; la miniatura con la misura); all'estremità destra
+  della prima riga, piccola e tenue, sempre lì (`Lay`; schede compatte volute dall'utente il 19/10/2026, «molti
+  spazi interni nelle celle»: margini `CardPad`; prima una scheda di testo era alta 73 px, ora 36 a una riga) (`MetaShare`, anche l'icona semitrasparente, `Look.DrawFaint`; voluto dall'utente il 19/10/2026, «per rendere ancora più chiaro cosa è copiato»), una riga sola: icona e nome del programma
   (o stella e cartella di un salvato) · ora (`When`) · tipo (`BadgeOf`; niente per un testo semplice, che detto su
   quasi ogni scheda non diceva niente). **Sotto il puntatore** i piccoli segni senza testo prendono il suo posto,
   l'una che sfuma mentre gli altri compaiono con la luce della scheda (`Glow`): la freccia (solo dei copiati, colorata se
@@ -481,13 +492,13 @@ condiviso su GitHub).
   dall'utente il 18/10/2026: con il programma in grassetto in cima e una fila di pulsanti in fondo, «il
   vero contenuto si perde» (scelte proposte: icone a destra). Le parti si misurano in un posto solo (`Lay`, `CardParts`) che serve a disegno e clic (`PartAt`);
   quella sotto il puntatore si illumina (`hoverRow`, `hoverPart`). Un clic altrove sulla scheda la seleziona soltanto; il doppio clic fa come Invio (`Accept`).
-  **Una riga di `ListBox` non supera 255 pixel** (`MaxRow`): `CardHeight` vi taglia la voce; le altezze si rifanno
-  quando cambia la larghezza (`ShowRows`). Sopra i giorni un `Heading`, che una selezione salta (`lastCard`, `Step`).
+  **Una riga di `ListBox` non supera 255 pixel** (`MaxRow`): `CardHeight` vi taglia la scheda. Sopra i giorni un `Heading`, che una selezione salta (`lastCard`, `Step`).
   Le righe alternate e le colonne di prima non ci sono più.
 - Anteprima: l'occhio a destra di ogni scheda, testi e immagini (`Part.Show`, voluto dall'utente il 19/10/2026), e
   «Anteprima» nel menu (`ShowFull`; di un salvato con nome «Mostra il contenuto», `ShowText`) mostrano la voce per
   intero in `Peek`, sotto la scheda (`ShowPeek` con `asked`), e la lasciano in vista `AskedMs` ovunque vada il
-  puntatore (`peekAsked`). Il puntatore fermo `RestMs` su una voce che la scheda taglia (`Cut`; timer `rest` avviato
+  puntatore (`peekAsked`). Un altro clic sull'occhio della stessa scheda la toglie soltanto (voluto dall'utente il
+  20/10/2026: la pressione la toglieva e il clic la rimostrava subito; `peekRow`, `eyeCloses` decisi alla pressione). Il puntatore fermo `RestMs` su una voce che la scheda taglia (`Cut`; timer `rest` avviato
   da `Hover`), voluto all'inizio dall'utente «con il mouse che resta sopra un po'», dal 19/10/2026 è un'opzione
   spenta di default (`restBox`, «Anteprima con il puntatore fermo» in «Aspetto», impostazione `PeekOnRest`): l'utente
   la voleva togliere o rendere facoltativa. `Peek` non prende il primo piano e lascia passare il puntatore
@@ -650,7 +661,7 @@ condiviso su GitHub).
   parere). Trascinata sotto il minimo si riduce, tirata fuori riprende i nomi e la larghezza di prima (`sideBefore`).
   Ridotta ha **le stesse righe** (cartelle aperte e programmi compresi, senza rientri né frecce), così scelta dei
   posti, menu e trascinamento nelle cartelle restano quelli; il nome dell'icona su cui il puntatore si ferma compare a
-  destra della riga (`RowTip`, con un suo `ToolTip`, `rowTips`, mostrato a mano dopo `InitialDelay`; di una cartella il
+  destra della riga (`RowTip`, con il `ToolTip` delle parti, `hoverTips`, mostrato a mano da `HoverTip` dopo `InitialDelay`; di una cartella il
   percorso intero). Non con il testo di un unico suggerimento della lista cambiato a ogni riga, come si fa sulle
   schede: Windows mostra il suggerimento di un controllo una volta sola finché il puntatore non ne esce, e passando
   da un'icona all'altra non ricompariva (trovato dall'utente il 19/10/2026). Il pannello cede alla barra al massimo `PaneSlack` della sua
@@ -832,7 +843,7 @@ cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
   AltGr, Unicode, Alt+codice, Tab, Invio; poi verifica che finestra sbagliata e annullamento blocchino tutto.
   Ruba il focus per un paio di secondi: avvisare l'utente prima di lanciarlo.
 - `tests.exe shot <prefisso>` — non è in `test.cmd`: salva immagini PNG della finestra (elenco con voci
-  finte, una scheda sotto il puntatore in `-hover`, una ricerca con la parola evidenziata in `-search`, opzioni con ogni pagina in `-options-1`…`-5`, stati lunghi) per
+  finte, una scheda sotto il puntatore in `-hover`, le schede alte due righe in `-two`, una ricerca con la parola evidenziata in `-search`, opzioni con ogni pagina in `-options-1`…`-5`, stati lunghi) per
   controllare l'aspetto senza mostrarla.
 - `tests.exe store <cartella> <lingua>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno
   sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>` (in scuro, che sullo Store fa più effetto, tranne l'ultima, `8-light`; lo sfondo si scurisce con il tema), e

@@ -119,7 +119,7 @@ static class TestProgram
         MainForm.OldSettingsKey = TestKey + @"\Old";
         Clips.DefaultFile = System.IO.Path.Combine(sandbox, Program.AppName + ".db");
         Migration.OldHistory = System.IO.Path.Combine(sandbox, "History");
-        Log.FileName = System.IO.Path.Combine(sandbox, Program.AppName + ".log");
+        Log.FileName = Log.FileIn(sandbox);
         Microsoft.Win32.Registry.CurrentUser.DeleteSubKeyTree(TestKey, false);
         try
         {
@@ -958,8 +958,7 @@ static class TestProgram
             clips.OpenFolder(work, false);
             clips.Reveal(deep);
             Check(clips.Folders().Find(delegate(Folder f) { return f.Id == work; }).Open, "revealing a folder opens those around it");
-            clips.RenameFolder(servers, "Server remoti");
-            clips.MoveFolder(servers, home);
+            clips.PlaceFolder(servers, home, "Server remoti");
             folders = clips.Folders();
             Check(folders.Find(delegate(Folder f) { return f.Id == servers; }).ParentId == home
                 && folders.Find(delegate(Folder f) { return f.Id == deep; }).Level == 2, "a folder moves with what it holds");
@@ -1023,7 +1022,7 @@ static class TestProgram
             Check(id == 1 && db.Changes == 1, "the id of the row inserted, and the rows changed");
             using (Statement row = db.Prepare("SELECT a, b FROM t WHERE id = ?1", id))
             {
-                Check(row.Step() && row.Columns == 2, "a row comes back");
+                Check(row.Step(), "a row comes back");
                 Check(row.Text(0) == text, "a text comes back whole: accents, emoji, line ends, the character zero");
                 byte[] back = row.Blob(1);
                 Check(back.Length == big.Length && back[12345] == big[12345] && back[big.Length - 1] == big[big.Length - 1],
@@ -1585,16 +1584,18 @@ static class TestProgram
             bool steady = hovered.GetItemHeight(hoverAt) == restHeight;
             hovered.Glow.Set(-1);
             typeof(MainForm).GetField("hoverRow", hidden).SetValue(form, -1);
-            GoTo(form, PlaceKind.Saved, null);
-            List<int> named = new List<int>();
-            for (int i = 0; i < hovered.Items.Count; i++)
-            {
-                Entry each = hovered.Items[i] as Entry;
-                if (each != null && each.Name != null && !each.Picture && !named.Contains(hovered.GetItemHeight(i))) named.Add(hovered.GetItemHeight(i));
-            }
-            GoTo(form, PlaceKind.History, null);
-            Console.WriteLine("[{0}] a card is as tall under the pointer, and the saved texts with a name are all as tall: {1}",
-                steady && named.Count == 1 ? "PASS" : "FAIL", string.Join(", ", named.ConvertAll(delegate(int h) { return h.ToString(); }).ToArray()));
+            // Every card as tall as the others, whatever it holds: texts of one line or more, pictures, names; with two
+            // lines all of them taller.
+            MethodInfo useLines = typeof(MainForm).GetMethod("UseCardLines", hidden);
+            List<int> one = CardHeights(form, hovered);
+            useLines.Invoke(form, new object[] { 2 });
+            Save(form, path + "-two.png");
+            List<int> two = CardHeights(form, hovered);
+            useLines.Invoke(form, new object[] { 1 });
+            Console.WriteLine("[{0}] a card is as tall under the pointer, and all cards are as tall, with one line or two: {1} / {2}",
+                steady && one.Count == 1 && two.Count == 1 && two[0] > one[0] ? "PASS" : "FAIL",
+                string.Join(", ", one.ConvertAll(delegate(int h) { return h.ToString(); }).ToArray()),
+                string.Join(", ", two.ConvertAll(delegate(int h) { return h.ToString(); }).ToArray()));
 
             // The history: the copied entry at the top under its own name, then the others under the name of their day; the
             // saved ones are not there.
@@ -1881,8 +1882,8 @@ static class TestProgram
             Save(form, path + "-full.png");
             Control banner = (Control)typeof(MainForm).GetField("banner", hidden).GetValue(form);
             bool barred = banner.Visible && banner.Bottom <= status.Top && cards.Bottom <= banner.Top;
-            string where = string.Format("shown {0}, cards end {1}, bar {2}-{3}, status from {4}", banner.Visible, cards.Bottom,
-                banner.Top, banner.Bottom, status.Top);
+            string where = string.Format("shown {0}, cards end {1}, bar {2}-{3}, status from {4}, window shown {5}", banner.Visible, cards.Bottom,
+                banner.Top, banner.Bottom, status.Top, form.Visible);
             Clips.PictureSpace = space;
             typeof(MainForm).GetMethod("ShowPictureRoom", hidden).Invoke(form, null);
             Console.WriteLine("[{0}] a red bar between the lists and the status line says the room of the pictures is full, and goes: {1}",
@@ -1994,13 +1995,28 @@ static class TestProgram
                 form.ClientSize.Width, form.ClientSize.Height, form.Icon == null ? "none" : form.Icon.Size.ToString());
         }
 
-        // The first start after a version before 4.0: the history files go into a new database, and their folder goes.
+        // The first start after a version before 4.0: the history files and the saved texts in the registry go into a
+        // new database, and then they go, with the settings nothing reads any more.
         System.IO.File.Delete(Clips.DefaultFile);
         OldRecord(Migration.OldHistory, DateTime.Now.AddMinutes(-5), 1, false, 0, Encoding.UTF8.GetBytes("dalla versione 3"));
+        OldSaved(TestKey + @"\Saved", "Dalla versione 3", Protected("vecchia password"), DateTime.Now, 0, null);
+        using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.CreateSubKey(TestKey))
+        {
+            key.SetValue("Font", "Arial");
+            key.SetValue("TextSize", 12);
+            key.SetValue("SavedWidth", 200);
+        }
         using (ShotForm form = new ShotForm())
-            Console.WriteLine("[{0}] after the migration the folder of the old history files is gone, what it held is in the database",
-                !System.IO.Directory.Exists(Migration.OldHistory)
-                && ClipsOf(form).Copied(10, Texts.Words("versione")).Count == 1 ? "PASS" : "FAIL");
+        {
+            bool settingsGone;
+            using (Microsoft.Win32.RegistryKey key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(TestKey))
+                settingsGone = key.OpenSubKey("Saved") == null && key.GetValue("Font") == null && key.GetValue("TextSize") == null
+                    && key.GetValue("SavedWidth") == null;
+            Console.WriteLine("[{0}] after the migration the old history files, saved texts and settings are gone, what they held is in the database",
+                !System.IO.Directory.Exists(Migration.OldHistory) && settingsGone
+                && ClipsOf(form).Copied(10, Texts.Words("versione")).Count == 1
+                && ClipsOf(form).Saved().Exists(delegate(Entry e) { return e.Name == "Dalla versione 3"; }) ? "PASS" : "FAIL");
+        }
 
         // A folder chosen for the database that is no longer there: no new, empty list in its place, but the list in
         // memory and the status line saying why.
@@ -2076,6 +2092,16 @@ static class TestProgram
             Snap(form, path + "-real-peek.png");
             Console.WriteLine("[{0}] the eye shows an entry whole; resting on one that fits would not", shownPeek.Visible
                 && !(bool)typeof(MainForm).GetMethod("Cut", hidden).Invoke(form, new object[] { recent, new Entry(null, "ok"), recent.GetItemRectangle(longRow) })
+                ? "PASS" : "FAIL");
+            // A click on the eye shows the entry whole, another one on the same eye puts it away.
+            typeof(MainForm).GetMethod("HidePeek", hidden).Invoke(form, null);
+            CardParts longParts = (CardParts)typeof(MainForm).GetMethod("Lay", hidden).Invoke(form,
+                new object[] { recent.Items[longRow], recent.GetItemRectangle(longRow) });
+            Rectangle eye = longParts.Buttons[Part.Show];
+            ClickAt(recent, new Point(eye.Left + eye.Width / 2, eye.Top + eye.Height / 2));
+            bool opened = shownPeek.Visible;
+            ClickAt(recent, new Point(eye.Left + eye.Width / 2, eye.Top + eye.Height / 2));
+            Console.WriteLine("[{0}] a click on the eye shows the entry whole, another one puts it away", opened && !shownPeek.Visible
                 ? "PASS" : "FAIL");
             // A long list, with the thin bar that scrolls it, moved a little way down.
             for (int i = 0; i < 40; i++) ClipsOf(form).Import(Sample.Current.Long + " " + i, DateTime.Today.AddMinutes(i), false);
@@ -2419,6 +2445,28 @@ static class TestProgram
         for (int i = 0; i < cards.Items.Count; i++)
             if (cards.Items[i] is Entry && match((Entry)cards.Items[i])) return i;
         return -1;
+    }
+
+    // A click of the left button at a point of a control, as Windows tells it: down, click, up.
+    static void ClickAt(Control control, Point at)
+    {
+        MouseEventArgs click = new MouseEventArgs(MouseButtons.Left, 1, at.X, at.Y, 0);
+        foreach (string step in new string[] { "OnMouseDown", "OnMouseClick", "OnMouseUp" })
+            typeof(Control).GetMethod(step, BindingFlags.NonPublic | BindingFlags.Instance).Invoke(control, new object[] { click });
+        Application.DoEvents();
+    }
+
+    // The heights the cards of the history and of the saved texts have, each once; the history shown again after.
+    static List<int> CardHeights(MainForm form, ListBox cards)
+    {
+        List<int> heights = new List<int>();
+        foreach (PlaceKind kind in new PlaceKind[] { PlaceKind.Saved, PlaceKind.History })
+        {
+            GoTo(form, kind, null);
+            for (int i = 0; i < cards.Items.Count; i++)
+                if (cards.Items[i] is Entry && !heights.Contains(cards.GetItemHeight(i))) heights.Add(cards.GetItemHeight(i));
+        }
+        return heights;
     }
 
     // Shows a place of the sidebar, as a click on it does.

@@ -253,12 +253,6 @@ sealed class Statement : IDisposable
         while (Step()) { }
     }
 
-    // The columns of the row just stepped to, from 0.
-    public int Columns
-    {
-        get { return Sqlite.sqlite3_column_count(Handle); }
-    }
-
     public bool IsNull(int column)
     {
         return Sqlite.sqlite3_column_type(Handle, column) == Sqlite.SQLITE_NULL;
@@ -434,9 +428,6 @@ static class Sqlite
 
     [DllImport(Dll, CallingConvention = CallingConvention.StdCall)]
     public static extern int sqlite3_bind_zeroblob(IntPtr statement, int index, int bytes);
-
-    [DllImport(Dll, CallingConvention = CallingConvention.StdCall)]
-    public static extern int sqlite3_column_count(IntPtr statement);
 
     [DllImport(Dll, CallingConvention = CallingConvention.StdCall)]
     public static extern int sqlite3_column_type(IntPtr statement, int column);

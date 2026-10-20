@@ -92,6 +92,9 @@ partial class MainForm
                 delegate(string name) { UseEntryFont(name, Look.EntrySize); }, itself),
             Picker(sizeButton, Look.EntrySizes, PixelsName, delegate { return Look.EntrySize; },
                 delegate(int size) { UseEntryFont(Look.EntryFamily, size); }, null));
+        // How tall every card is: it changes at once too.
+        PlaceTile(Strings.LinesOption, Strings.LinesNote, ref top,
+            Picker(linesButton, CardLineChoices, LinesName, delegate { return cardLines; }, UseCardLines, null));
         // Off, an entry is shown whole only from the eye of its card, or its menu.
         PlaceOption(restBox, Strings.RestOption, Strings.RestNote, ref top);
 
@@ -121,6 +124,7 @@ partial class MainForm
         Tip(string.Format(Strings.FaceSizeTip, PixelsName(Look.DefaultInterfaceSize), Program.AppName), faceSizeButton);
         TipOption(Strings.FontTip, fontButton);
         Tip(string.Format(Strings.SizeTip, PixelsName(Look.DefaultEntrySize)), sizeButton);
+        TipOption(string.Format(Strings.LinesTip, JointSign), linesButton);
         TipOption(Strings.RestTip, restBox);
         TipOption(Strings.WhereLeftTip, whereLeftBox);
         TipOption(Strings.HistoryTip, historyBox);
@@ -221,6 +225,12 @@ partial class MainForm
     static string PixelsName(int size)
     {
         return string.Format(Strings.Pixels, size);
+    }
+
+    // How tall the cards are, as the options write it: "1 line".
+    static string LinesName(int lines)
+    {
+        return lines == 1 ? Strings.OneLine : Strings.TwoLines;
     }
 
     // The wait before typing, in seconds: whatever is written in its box, kept within the limits.
@@ -508,7 +518,7 @@ partial class MainForm
         }
         dataFolder = folder;
         unavailable = null;
-        Log.FileName = Path.Combine(DataFolder, Program.AppName + ".log");
+        Log.FileName = Log.FileIn(DataFolder);
         SaveSettings();
         ApplyHistory();   // the days kept apply to the list found there too
         Reload();
@@ -648,6 +658,8 @@ partial class MainForm
         string entryFamily = Transfer(key, save, "EntryFont", Look.EntryFamily);
         int entrySize = Transfer(key, save, "EntrySize", Look.EntrySize);
         if (!save) UseEntryFont(entryFamily, entrySize);
+        int lines = Transfer(key, save, "CardLines", cardLines);
+        if (!save) UseCardLines(lines);
         savedOpen = Transfer(key, save, "SavedOpen", savedOpen);       // the sidebar shows the folders
         sourcesOpen = Transfer(key, save, "SourcesOpen", sourcesOpen); // and the programs
         sideWidth = Transfer(key, save, "SideWidth", sideWidth);       // as wide as dragged, in pixels at 96 dpi (see PlaceSidebar)
@@ -761,6 +773,14 @@ partial class MainForm
         fontButton.Text = Look.FontLabel(Look.EntryFamily);
         sizeButton.Text = PixelsName(Look.EntrySize);
         Filter();
+    }
+
+    // Every card that many lines tall; what is not offered goes back to the default.
+    void UseCardLines(int lines)
+    {
+        cardLines = Array.IndexOf(CardLineChoices, lines) < 0 ? DefaultCardLines : lines;
+        linesButton.Text = LinesName(cardLines);
+        Filter();   // measured again, and their texts laid out again
     }
 
     // Another language: the settings are saved with it and the program starts again, which shows every text

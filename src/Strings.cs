@@ -229,6 +229,8 @@ static partial class Strings
     public static string FaceOption = "Font of the interface", FaceNote = "Buttons, options, menus: the program starts again";
     public static string FontOption = "Font of the entries", FontNote = "What you copy and save: it changes at once";
     public static string RestOption = "Preview when the pointer rests", RestNote = "On a card cut short, without the eye";
+    public static string LinesOption = "Height of the cards", LinesNote = "In lines of text: with one, more entries in view";
+    public static string OneLine = "1 line", TwoLines = "2 lines";
     public static string RestTip = "On, the pointer resting on a card that cuts its entry short shows the entry whole.\n"
         + "Off, it shows only from the eye at the right of the card, or from its menu.";
     public static string Pixels = "{0} px";
@@ -284,6 +286,9 @@ static partial class Strings
         + "and the content of a saved text. The rest of the program keeps the font of the interface. It changes at once.";
     public static string SizeTip = "How large what you copied and saved is written, in pixels; {0} is the text of Windows 11.\n"
         + "The rest of the program keeps the size of the interface. It changes at once.";
+    public static string LinesTip = "How tall every card of the list is, in lines of text, whatever it holds: texts, pictures, names.\n"
+        + "With one line the lines of a text follow one another, a faint {0} between them; with two they stay as they are.\n"
+        + "The eye at the right of a card shows whole what it cuts short. It changes at once.";
     public static string HistoryTip = "The list offers the texts and pictures copied while the program is open.\n"
         + "What password managers mark as private is not remembered.\n"
         + "Turn it off if you copy passwords from programs that do not: they would be\n"

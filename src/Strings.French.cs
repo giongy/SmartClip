@@ -183,6 +183,8 @@ static partial class Strings
         ThemeSystem = "Comme Windows"; ThemeLight = "Clair"; ThemeDark = "Sombre";
         FaceOption = "Police de l'interface"; FaceNote = "Boutons, options, menus : le programme redémarre";
         FontOption = "Police des éléments"; FontNote = "Ce que vous copiez et enregistrez : change aussitôt";
+        LinesOption = "Hauteur des cartes"; LinesNote = "En lignes de texte : avec une, plus d'éléments visibles";
+        OneLine = "1 ligne"; TwoLines = "2 lignes";
         RestOption = "Aperçu quand le pointeur s'arrête"; RestNote = "Sur une carte coupée, sans l'œil";
         RestTip = "Activée, le pointeur arrêté sur une carte qui coupe son élément le montre en entier.\n"
             + "Désactivée, seul l'œil à droite de la carte, ou son menu, le montre.";
@@ -239,6 +241,9 @@ static partial class Strings
             + "et le contenu d'un texte enregistré. Le reste du programme garde la police de l'interface. Elle change aussitôt.";
         SizeTip = "La taille de ce que vous avez copié et enregistré, en pixels ; {0} est le texte de Windows 11.\n"
             + "Le reste du programme garde la taille de l'interface. Elle change aussitôt.";
+        LinesTip = "La hauteur de chaque carte de la liste, en lignes de texte, quel que soit son contenu : textes, images, noms.\n"
+            + "Avec une ligne, les lignes d'un texte se suivent, séparées par un {0} discret ; avec deux, elles restent telles quelles.\n"
+            + "Ce qu'une carte coupe, l'œil à sa droite le montre en entier. Change aussitôt.";
         HistoryTip = "La liste propose les textes et images copiés pendant que le programme est ouvert.\n"
             + "Ce que les gestionnaires de mots de passe marquent comme privé n'est pas mémorisé.\n"
             + "Désactivez-la si vous copiez des mots de passe depuis des programmes qui ne le font pas :\n"

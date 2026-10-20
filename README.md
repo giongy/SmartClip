@@ -76,7 +76,9 @@ Above the cards, tabs show one kind of entry only: **All**, **Text**, **Code**, 
 told from how the lines look, so now and then it guesses wrong: **Type**, in the menu of a text, says what it
 is, and it stays so, also copied again or saved.
 
-Each card is compact: the entry first, large; on its right its number, if it has one, and small and faint the
+Each card is compact, and all are as tall, one line of text by default (two in the options): a text with more lines
+shows them one after the other, a faint ↵ between them; a picture fills a small box, cut to its shape. The entry
+comes first, large; on its right its number, if it has one, and small and faint the
 program it was copied in with its icon (or the folder of a saved text), the time and what it is, unless it is plain
 text. With the pointer on the card, small signs take their place: they keep it at the top, show it whole, copy it,
 save or edit it, delete it and open its menu; their tooltips name them. Copied entries are texts and pictures
@@ -197,6 +199,7 @@ on an option shows its full explanation.
 | Theme | Same as Windows (the mode it sets for apps, followed also when it changes), Light or Dark. Changes at once. |
 | Font of the interface, with its size | The font of the program itself, the same in every window: buttons, labels, options, the guide, menus and questions. Segoe UI Variable (the default where it is installed), Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, Cascadia Mono or Consolas, among those Windows has; each is written in itself in the menu. The size goes from 12 to 16 px (13 px by default); the windows grow with the text. The program restarts to apply either. |
 | Font of the entries, with its size | The font of what you copied and saved: the rows of the lists, an entry shown whole and the content of a saved text, chosen among the same fonts. The rest of the program keeps the font of the interface. The size goes from 11 to 20 px (14 px by default, the text of Windows 11). Both change at once. |
+| Height of the cards | How tall every card of the list is, whatever it holds: **1 line** (the default, more entries in view) or **2 lines**. With one line the lines of a text follow one another, a faint ↵ between them. It changes at once. |
 | Preview when the pointer rests | Off by default: an entry shows whole only from the eye of its card, or its menu. On, resting the pointer on a card that cuts its entry short shows it whole too. |
 | Stay in the notification area (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Exit** to quit; the same menu lists the saved texts. |
 | Hide when switching to another program | With the option above on, the window also goes back to the notification area when you click another program; off, it simply stays open behind the others. Never while it waits and types, nor while a window of its own (a text being written, a question) is open. |
@@ -242,8 +245,8 @@ Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key t
   search uses. Of those with a name only the name is shown, until you ask for the content from the right-click
   menu.
 - Versions before 4.0 kept saved texts in the registry and the history in one file per day. The first start of
-  4.0 copies them into the database, all at once or not at all; then the folder of the history files is deleted,
-  while the saved texts stay in the registry, still encrypted, for now.
+  4.0 copies them into the database, all at once or not at all; then the folder of the history files is deleted.
+  Since 4.3.7 the saved texts left in the registry are deleted too, as soon as the database is open.
 - A saved text put back on the clipboard is marked as private, so that Windows clipboard history (Win+V) and other
   clipboard managers skip it.
 - When something goes wrong, what failed and where is written to `SmartClip.log` beside the database, to

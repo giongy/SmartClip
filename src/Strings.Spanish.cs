@@ -176,6 +176,8 @@ static partial class Strings
         ThemeSystem = "Como Windows"; ThemeLight = "Claro"; ThemeDark = "Oscuro";
         FaceOption = "Fuente de la interfaz"; FaceNote = "Botones, opciones, menús: el programa se reinicia";
         FontOption = "Fuente de las entradas"; FontNote = "Lo que copias y guardas: cambia enseguida";
+        LinesOption = "Altura de las tarjetas"; LinesNote = "En líneas de texto: con una, más entradas a la vista";
+        OneLine = "1 línea"; TwoLines = "2 líneas";
         RestOption = "Vista previa con el puntero quieto"; RestNote = "En una tarjeta cortada, sin el ojo";
         RestTip = "Activada, el puntero quieto sobre una tarjeta que corta su entrada la muestra entera.\n"
             + "Desactivada, solo la muestra el ojo a la derecha de la tarjeta, o su menú.";
@@ -232,6 +234,9 @@ static partial class Strings
             + "y el contenido de un texto guardado. El resto del programa mantiene la fuente de la interfaz. Cambia enseguida.";
         SizeTip = "Lo grande que se escribe lo que has copiado y guardado, en píxeles; {0} es el texto de Windows 11.\n"
             + "El resto del programa mantiene el tamaño de la interfaz. Cambia enseguida.";
+        LinesTip = "Lo alta que es cada tarjeta de la lista, en líneas de texto, tenga lo que tenga: textos, imágenes, nombres.\n"
+            + "Con una línea las líneas de un texto van seguidas, con un {0} tenue entre ellas; con dos se quedan como están.\n"
+            + "Lo que una tarjeta corta lo muestra entero el ojo a su derecha. Cambia enseguida.";
         HistoryTip = "La lista ofrece los textos e imágenes copiados mientras el programa está abierto.\n"
             + "Lo que los gestores de contraseñas marcan como privado no se recuerda.\n"
             + "Desactívala si copias contraseñas desde programas que no lo hacen: se leerían en\n"

@@ -829,12 +829,6 @@ sealed class Clips : IDisposable
         return data.LastId;
     }
 
-    // Refused if the name is taken where the folder is.
-    public void RenameFolder(long id, string name)
-    {
-        data.Execute("UPDATE folders SET name = ?2, name_key = ?3 WHERE id = ?1", id, Name(name), Key(name));
-    }
-
     // Moves a folder, with all it holds, into another (0: out of them all). Never into itself or one it holds;
     // refused if the name is taken there.
     public void MoveFolder(long id, long parent)
@@ -900,11 +894,7 @@ sealed class Clips : IDisposable
     {
         using (Transaction transaction = data.Begin())
         {
-            long parent = ParentOf(id);
-            data.Execute("UPDATE entries SET folder_id = ?2 WHERE folder_id = ?1", id, Place(parent));
-            List<long> children = ChildrenOf(id);
-            data.Execute("DELETE FROM folders WHERE id = ?1", id);
-            foreach (long child in children) Join(child, parent);
+            Dissolve(id, ParentOf(id));
             transaction.Commit();
         }
     }
@@ -915,13 +905,14 @@ sealed class Clips : IDisposable
     {
         object same = data.Value("SELECT id FROM folders WHERE parent_id = ?1 AND id <> ?2"
             + " AND name_key = (SELECT name_key FROM folders WHERE id = ?2)", parent, folder);
-        if (same == null)
-        {
-            data.Execute("UPDATE folders SET parent_id = ?2 WHERE id = ?1", folder, parent);
-            return;
-        }
-        long into = (long)same;
-        data.Execute("UPDATE entries SET folder_id = ?2 WHERE folder_id = ?1", folder, into);
+        if (same == null) data.Execute("UPDATE folders SET parent_id = ?2 WHERE id = ?1", folder, parent);
+        else Dissolve(folder, (long)same);
+    }
+
+    // Deletes a folder, what it holds going into 'into' (0: out of them all), its folders joining those there.
+    void Dissolve(long folder, long into)
+    {
+        data.Execute("UPDATE entries SET folder_id = ?2 WHERE folder_id = ?1", folder, Place(into));
         List<long> children = ChildrenOf(folder);
         data.Execute("DELETE FROM folders WHERE id = ?1", folder);
         foreach (long child in children) Join(child, into);

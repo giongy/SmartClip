@@ -898,7 +898,12 @@ static class Look
 
     public static GraphicsPath Rounded(Rectangle area)
     {
-        int side = 2 * Radius;
+        return Rounded(area, Radius);
+    }
+
+    public static GraphicsPath Rounded(Rectangle area, int radius)
+    {
+        int side = 2 * radius;
         GraphicsPath path = new GraphicsPath();
         path.AddArc(area.Left, area.Top, side, side, 180, 90);
         path.AddArc(area.Right - side, area.Top, side, side, 270, 90);

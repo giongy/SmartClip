@@ -53,8 +53,13 @@ partial class MainForm : Window
     // the cells".
     const int CardGap = 5, CardInset = 12, CardPad = 6, CardLineGap = 4;   // CardInset at the sides, CardPad above and below
     const int PartHeight = 24, PartGap = 6;            // the buttons of a card, and the room between them
-    const int BodyLines = 2;                           // lines of text a card shows of its entry, at most
-    const int CardPicture = 40;                        // how tall a picture is shown in its card
+    // Every card as tall as this many lines of text, whatever it holds (wanted by the user on 20/10/2026: pictures and
+    // texts of one height; one line by default, so that more entries are in view).
+    static readonly int[] CardLineChoices = { 1, 2 };
+    const int DefaultCardLines = 1;
+    // A picture on its card: a box as tall as the lines, this many times as wide, which it fills, cut to its shape.
+    const float PictureShape = 1.5f;
+    const int PictureRadius = 3;                       // of the corners of that box
     const int HeadingAir = 6;                          // above the name of a day, among the cards
     // The most of a card the small line of where and when takes, beside the entry, unless the buttons need more.
     const float MetaRoom = 0.45f;
@@ -146,6 +151,8 @@ partial class MainForm : Window
     readonly Timer rest = new Timer();            // runs while the pointer rests on a card, and while a text asked for is in view
     RowList resting;                              // the list whose row the pointer rests on
     bool peekAsked;                               // what is in view was asked for: moving the pointer leaves it there
+    int peekRow = -1;                             // the card whose entry is in view, -1 if none
+    bool eyeCloses;                               // the button went down on the eye of that card: the click only puts it away
     readonly Timer fade = new Timer();            // runs while the status line holds a passing message
     Entry grabbed;                                // the saved text or folder the button went down on: it may be dragged to a folder
     Point grabbedAt;
@@ -212,6 +219,8 @@ partial class MainForm : Window
     readonly RoundButton themeButton = new RoundButton();      // the same for the theme
     readonly RoundButton faceButton = new RoundButton(), faceSizeButton = new RoundButton();   // for the font of the interface and its size
     readonly RoundButton fontButton = new RoundButton(), sizeButton = new RoundButton();   // and for the font of the entries and its size
+    readonly RoundButton linesButton = new RoundButton();      // and for how many lines every card is tall
+    int cardLines = DefaultCardLines;
     string language = Strings.Code;   // saved with the settings: another one only on the way to a restart
     string face = Look.InterfaceFamily;   // the same for the font of the interface
     int faceSize = Look.InterfaceSize;
@@ -418,8 +427,8 @@ partial class MainForm : Window
             {
                 clips = dataFolder.Length > 0 ? new Clips(DatabaseFile)
                     : new Clips(DatabaseFile, delegate(Clips fresh) { Migration.Run(fresh, SettingsKey, Migration.OldHistory); });
-                Log.FileName = Path.Combine(DataFolder, Program.AppName + ".log");
-                Migration.ForgetOldHistory();   // the database holds it now
+                Log.FileName = Log.FileIn(DataFolder);
+                Migration.ForgetOld(SettingsKey);   // the database holds it now
                 return;
             }
         }

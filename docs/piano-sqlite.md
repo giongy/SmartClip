@@ -276,7 +276,8 @@ Ogni passo si chiude con i test che passano e lascia il programma funzionante.
    se cita la cronologia, `CLAUDE.md` (sezioni su cronologia, salvati, cartelle, stellina, numeri, trappole).
 8. **Una o due versioni dopo**: cancellazione dei dati vecchi (registro `Saved`, cartella `History`) e delle
    impostazioni rimaste orfane (`Font`, `TextSize`). — La cartella `History` si cancella già, appena il database è
-   aperto (voluto dall'utente il 17/10/2026). Restano la chiave `Saved` e le impostazioni orfane.
+   aperto (voluto dall'utente il 17/10/2026). Fatto il 20/10/2026 (dalla 4.3.7): nello stesso momento
+   `Migration.ForgetOld` cancella anche la chiave `Saved` e le impostazioni orfane, con `SavedWidth` della 4.2.
 
 ## Test da aggiungere
 
