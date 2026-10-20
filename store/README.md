@@ -117,7 +117,7 @@ Adjustable wait before typing, and typing stops if the window changes
 US keyboard on the server, and symbols composed with Alt codes
 History of copied texts and pictures, with instant search that also finds saved texts and highlights the words found
 A sidebar like the apps of Windows 11, to widen or reduce to icons: history, pinned, shortcuts, saved texts in folders, the programs you copied in
-Compact cards, the content first and the buttons under the pointer, with tabs for texts, code, links and pictures
+Compact cards all of one height, one line or two, the content first and the buttons under the pointer, with tabs for texts, code, links and pictures
 List available from any program with a hotkey, and hotkeys of your choice
 Entries kept at the top for a while with an arrow
 Saved texts and copied entries pasted anywhere with Ctrl+Shift+1…9
@@ -151,7 +151,7 @@ paste blocked
 ```
 History: the list opens on what you copied, without the saved texts mixed in. A search finds them too, after your copies, and the words found are highlighted on the cards; a long text found further in shows that part of it.
 
-Cleaner cards: the buttons appear under the pointer, every card keeps its height, and the count sits beside the title.
+Cleaner cards, all of one height: one line each by default, so more entries are in view, or two in the options. The lines of a longer text follow one another, a picture fills a small box, and the buttons appear under the pointer. A second click on the eye puts the preview away. The count sits beside the title.
 
 Shortcuts, a new place in the sidebar: every entry with a number in one list. A click on the number of a card changes it or takes it away.
 
@@ -215,7 +215,7 @@ Attesa regolabile prima di digitare, e la digitazione si ferma se cambi finestra
 Tastiera americana sul server e simboli composti con Alt+codice
 Cronologia di testi e immagini copiati, con una ricerca istantanea che trova anche i testi salvati ed evidenzia le parole trovate
 Una barra laterale come nelle app di Windows 11, da allargare o ridurre alle icone: cronologia, in alto, scorciatoie, salvati in cartelle, i programmi in cui hai copiato
-Voci in schede compatte, prima il contenuto e i pulsanti sotto il puntatore, con le schede per testi, codice, link e immagini
+Voci in schede compatte tutte alte uguali, una riga o due, prima il contenuto e i pulsanti sotto il puntatore, con le schede per testi, codice, link e immagini
 Elenco richiamabile da qualsiasi programma con una scorciatoia, e scorciatoie a tua scelta
 Voci tenute in cima per un po' con una freccia
 Testi salvati e voci copiate incollati ovunque con Ctrl+Maiusc+1…9
@@ -249,7 +249,7 @@ digitare password
 ```
 Cronologia: l'elenco si apre su ciò che hai copiato, senza i testi salvati mescolati. Una ricerca trova anche quelli, dopo le copie, e le parole trovate sono evidenziate sulle schede; un testo lungo trovato più avanti ne mostra quel punto.
 
-Schede più pulite: i pulsanti compaiono sotto il puntatore, ogni scheda tiene la sua altezza e il conteggio sta accanto al titolo.
+Schede più pulite, tutte alte uguali: una riga ciascuna di default, così si vedono più voci, o due nelle opzioni. Le righe di un testo più lungo si seguono, un'immagine riempie un piccolo riquadro e i pulsanti compaiono sotto il puntatore. Un secondo clic sull'occhio toglie l'anteprima. Il conteggio sta accanto al titolo.
 
 Scorciatoie, un posto nuovo nella barra laterale: tutte le voci con un numero in un elenco. Un clic sul numero di una scheda lo cambia o lo toglie.
 
@@ -313,7 +313,7 @@ Espera ajustable antes de teclear, y el tecleo se detiene si cambia la ventana
 Teclado estadounidense en el servidor y símbolos compuestos con códigos Alt
 Historial de textos e imágenes copiados, con una búsqueda instantánea que también encuentra los textos guardados y resalta las palabras encontradas
 Una barra lateral como en las apps de Windows 11, para ensanchar o reducir a iconos: historial, arriba, atajos, guardados en carpetas, los programas donde copiaste
-Entradas en tarjetas compactas, primero el contenido y los botones bajo el puntero, con pestañas para textos, código, enlaces e imágenes
+Entradas en tarjetas compactas de la misma altura, una línea o dos, primero el contenido y los botones bajo el puntero, con pestañas para textos, código, enlaces e imágenes
 Lista disponible desde cualquier programa con un atajo, y atajos a tu elección
 Entradas mantenidas arriba un tiempo con una flecha
 Textos guardados y entradas copiadas pegados en cualquier sitio con Ctrl+Mayús+1…9
@@ -347,7 +347,7 @@ clipboard
 ```
 Historial: la lista se abre en lo que copiaste, sin los textos guardados mezclados. Una búsqueda también los encuentra, después de tus copias, y las palabras encontradas se resaltan en las tarjetas; un texto largo encontrado más adelante muestra esa parte.
 
-Tarjetas más limpias: los botones aparecen bajo el puntero, cada tarjeta conserva su altura y el recuento está junto al título.
+Tarjetas más limpias, todas de la misma altura: una línea cada una por defecto, para ver más entradas, o dos en las opciones. Las líneas de un texto más largo van seguidas, una imagen llena un pequeño recuadro y los botones aparecen bajo el puntero. Un segundo clic en el ojo quita la vista previa. El recuento está junto al título.
 
 Atajos, un lugar nuevo en la barra lateral: todas las entradas con un número en una lista. Un clic en el número de una tarjeta lo cambia o lo quita.
 
@@ -411,7 +411,7 @@ Attente réglable avant la saisie, qui s'arrête si la fenêtre change
 Clavier américain sur le serveur et symboles composés avec des codes Alt
 Historique des textes et images copiés, avec une recherche instantanée qui trouve aussi les textes enregistrés et surligne les mots trouvés
 Une barre latérale comme les apps de Windows 11, à élargir ou réduire aux icônes : historique, en haut, raccourcis, enregistrés en dossiers, les programmes où vous avez copié
-Éléments en cartes compactes, le contenu d'abord et les boutons sous le pointeur, avec des onglets pour textes, code, liens et images
+Éléments en cartes compactes de la même hauteur, une ligne ou deux, le contenu d'abord et les boutons sous le pointeur, avec des onglets pour textes, code, liens et images
 Liste accessible depuis n'importe quel programme avec un raccourci, et raccourcis à votre choix
 Éléments gardés un moment en haut avec une flèche
 Textes enregistrés et éléments copiés collés partout avec Ctrl+Maj+1…9
@@ -445,7 +445,7 @@ clipboard
 ```
 Historique : la liste s'ouvre sur ce que vous avez copié, sans les textes enregistrés mélangés. Une recherche les trouve aussi, après vos copies, et les mots trouvés sont surlignés sur les cartes ; un long texte trouvé plus loin en montre ce passage.
 
-Des cartes plus nettes : les boutons apparaissent sous le pointeur, chaque carte garde sa hauteur et le nombre est à côté du titre.
+Des cartes plus nettes, toutes de la même hauteur : une ligne chacune par défaut, pour voir plus d'éléments, ou deux dans les options. Les lignes d'un texte plus long se suivent, une image remplit un petit cadre et les boutons apparaissent sous le pointeur. Un second clic sur l'œil retire l'aperçu. Le nombre est à côté du titre.
 
 Raccourcis, un nouvel endroit dans la barre latérale : tous les éléments avec un numéro dans une liste. Un clic sur le numéro d'une carte le change ou le retire.
 
