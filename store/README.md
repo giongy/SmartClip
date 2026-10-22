@@ -149,9 +149,7 @@ paste blocked
 ### What's new in this version
 
 ```
-Faster with a long history: with thousands of copied entries, every new copy, the tabs, the sidebar and the search now respond several times faster. With 20,000 entries the list is filled again in about 20 milliseconds instead of 150.
-
-Copying a picture when the room for pictures is full is quicker too.
+Opening a folder of the saved texts now shows only the texts it holds itself, not those of the folders inside it. Those folders stay in the sidebar under it, and the number beside a folder counts only its own texts.
 ```
 
 ### Screenshot captions
@@ -243,9 +241,7 @@ incolla bloccato
 ### Novità di questa versione
 
 ```
-Più veloce con una cronologia lunga: con migliaia di voci copiate, ogni nuova copia, le schede dei tipi, la barra laterale e la ricerca rispondono ora molte volte più in fretta. Con 20.000 voci l'elenco si riempie in circa 20 millisecondi invece di 150.
-
-Anche copiare un'immagine quando lo spazio per le immagini è pieno è più rapido.
+Aprendo una cartella dei testi salvati ora si vedono solo i testi che contiene direttamente, non quelli delle cartelle al suo interno. Le cartelle restano nella barra laterale sotto di lei, e il numero accanto a una cartella conta solo i suoi testi.
 ```
 
 ### Didascalie delle schermate
@@ -337,9 +333,7 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Más rápido con un historial largo: con miles de entradas copiadas, cada nueva copia, las pestañas, la barra lateral y la búsqueda responden ahora varias veces más deprisa. Con 20.000 entradas la lista se rellena en unos 20 milisegundos en lugar de 150.
-
-También copiar una imagen cuando el espacio para imágenes está lleno es más rápido.
+Al abrir una carpeta de los textos guardados ahora se muestran solo los textos que contiene directamente, no los de las carpetas que tiene dentro. Las carpetas siguen en la barra lateral bajo ella, y el número junto a una carpeta cuenta solo sus textos.
 ```
 
 ### Leyendas de las capturas
@@ -431,9 +425,7 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Plus rapide avec un long historique : avec des milliers d'éléments copiés, chaque nouvelle copie, les onglets, la barre latérale et la recherche répondent maintenant plusieurs fois plus vite. Avec 20 000 éléments, la liste se remplit en 20 millisecondes environ au lieu de 150.
-
-Copier une image quand l'espace des images est plein est aussi plus rapide.
+Ouvrir un dossier des textes enregistrés montre maintenant seulement les textes qu'il contient directement, pas ceux des dossiers qu'il contient. Les sous-dossiers restent dans la barre latérale sous lui, et le nombre à côté d'un dossier ne compte que ses propres textes.
 ```
 
 ### Légendes des captures
