@@ -382,7 +382,7 @@ partial class MainForm
         List<Entry> saved = new List<Entry>();
         if (place.HasSaved || numbered || place.Kind == PlaceKind.History && words.Length > 0)
             foreach (Entry entry in entries)
-                if (!entry.IsGroup && (place.Kind != PlaceKind.Folder || Texts.Within(entry.Group, place.Path))
+                if (!entry.IsGroup && (place.Kind != PlaceKind.Folder || Texts.SameName(entry.Group, place.Path))
                     && (!numbered || entry.Number > 0) && (!kind.HasValue || entry.Category == kind.Value) && Texts.Matches(entry, words))
                     saved.Add(entry);
         total += saved.Count;

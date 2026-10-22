@@ -268,7 +268,7 @@ condiviso su GitHub).
   scrive a pezzi su una forma tinta d'accento (`DrawMarked`, `MarkTint`); trovate oltre ciò che la scheda mostra, la
   scheda parte da poco prima della prima (`MarkContext`) dopo «…». Si ricorda per scheda fino alla ricerca dopo
   (`marks`); senza ricerca, e per le immagini, la scheda si scrive come sempre. «Salvati» e una
-  cartella (con le sue sottocartelle) mostrano i salvati per nome, senza giorni. I copiati li filtra il database
+  cartella (solo quelli contenuti direttamente in lei, non nelle sottocartelle; «Salvati» tutti) mostrano i salvati per nome, senza giorni. I copiati li filtra il database
   (`Clips.Copied` con un `Sieve`: parole, tipo, programma, solo in alto; al massimo `MaxShown`), i salvati la memoria
   (`Texts.Matches`: parole in qualsiasi ordine, senza maiuscole né accenti). `Filter` rifà anche la barra (`FillNav`,
   i conteggi cambiano a ogni copia); un posto che sparisce (cartella eliminata, programma senza più voci) lascia
@@ -441,7 +441,8 @@ condiviso su GitHub).
   nome), messa subito prima dei suoi testi e poi delle sue sottocartelle, quelle affiancate
   per nome: per questo dove si scorre `entries` cercando i testi va escluso `IsGroup`. Le cartelle stanno solo
   nella barra laterale (dal 18/10/2026, scelta dell'utente), sotto «Salvati», rientrate per livello: un clic mostra i
-  testi della cartella e delle sue sottocartelle; la freccia a destra apre e chiude le sottocartelle (una chiusa
+  testi che la cartella contiene direttamente (non quelli delle sottocartelle, dal 22/10/2026: voluto dall'utente, che
+  lo ha segnalato come problema); il conteggio accanto a ogni cartella fa lo stesso; la freccia a destra apre e chiude le sottocartelle (una chiusa
   nasconde anche quelle dentro, `InView`). Il menu del tasto destro di una cartella (`navMenu`) ha «Nuova cartella…»,
   «Rinomina…», «Sposta in» ed «Elimina»; quello di «Salvati» solo la prima. La cartella mostrata segue i propri
   spostamenti e cambi di nome (`Follow`); eliminata, si torna a «Salvati». Rinominare e spostare insieme è `PlaceFolder` (un

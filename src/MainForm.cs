@@ -217,7 +217,7 @@ partial class MainForm : Window
     readonly RoundButton changeFolderButton = new RoundButton(), defaultFolderButton = new RoundButton();
     Control[] folderTipped;   // what the tooltip about that folder is on
     List<Entry> entries = new List<Entry>();   // the saved entries and the folders, each folder right before what it holds
-    // How many texts each folder holds, those of the folders inside it too: counted when the sidebar is filled,
+    // How many texts each folder holds itself, not those of the folders inside it: counted when the sidebar is filled,
     // drawn on its row.
     readonly Dictionary<string, int> held = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
     bool enterDown;    // Enter was pressed in the list, so its release belongs to it

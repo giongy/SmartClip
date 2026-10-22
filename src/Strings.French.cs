@@ -449,13 +449,13 @@ static partial class Strings
             "# Les dossiers",
             "Quand les textes enregistrés deviennent nombreux, vous pouvez les regrouper en dossiers, et les dossiers "
                 + "dans d'autres dossiers. Ils sont dans la barre latérale, sous « " + SavedTitle + " » : un clic sur un "
-                + "dossier montre ses textes, et ceux des dossiers qu'il contient.",
+                + "dossier montre les textes qu'il contient directement, pas ceux des dossiers qu'il contient.",
             "- « " + NewFolder + " » est en bas de la barre latérale et dans le menu du clic droit d'un dossier "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + ") : il est créé dans le dossier "
                 + "affiché, mais sa fenêtre permet de choisir où le mettre.",
             "- La flèche à l'extrémité droite d'un dossier qui en contient d'autres l'ouvre et le ferme ; celle de « "
-                + SavedTitle + " » les montre ou les cache tous. Le nombre dit combien de textes contient un dossier, y "
-                + "compris dans les dossiers qu'il contient. Ouverts ou fermés, vous les retrouvez comme vous les avez laissés.",
+                + SavedTitle + " » les montre ou les cache tous. Le nombre dit combien de textes sont dans le dossier même, "
+                + "pas dans ceux qu'il contient. Ouverts ou fermés, vous les retrouvez comme vous les avez laissés.",
             "- La carte d'un texte enregistré, ou un dossier de la barre avec tout son contenu, se fait glisser sur un "
                 + "dossier de la barre ; lâché sur « " + SavedTitle + " », il sort des dossiers.",
             "- « " + MoveTo + " », dans le menu d'un texte enregistré ou d'un dossier, fait de même. Le "

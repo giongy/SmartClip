@@ -127,7 +127,7 @@ types the text. As long as it is not changed it stays exactly as it was copied, 
 once edited, it is written again from what the buttons know, and links, pictures, alignment and lists are lost.
 
 Saved texts can be gathered in folders, and folders in other folders. They are in the sidebar under **Saved**: a
-click on one shows its texts, and those of the folders inside it. **New folder…** is at the bottom of the sidebar
+click on one shows the texts in it, not those of the folders inside it. **New folder…** is at the bottom of the sidebar
 and in the right-click menu of a folder (Ctrl+Shift+N), and creates the folder inside the one shown; **Move to** moves a saved
 text or a whole folder, and the window of a text or a folder has the same choice beside its buttons. The arrow at
 the right end of a folder opens and closes the folders inside it, and they are found as they were left. The

@@ -375,12 +375,10 @@ partial class MainForm
         {
             if (entry.IsGroup) continue;
             saved++;
-            for (string group = entry.Group; group != null; group = Texts.Parent(group))
-            {
-                int count;
-                held.TryGetValue(group, out count);
-                held[group] = count + 1;
-            }
+            if (entry.Group == null) continue;
+            int count;
+            held.TryGetValue(entry.Group, out count);
+            held[entry.Group] = count + 1;
         }
         int copied = 0, pinned = 0, numbered = 0;
         List<Source> sources = new List<Source>();

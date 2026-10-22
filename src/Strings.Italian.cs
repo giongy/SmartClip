@@ -428,14 +428,14 @@ static partial class Strings
 
             "# Le cartelle",
             "Quando i testi salvati diventano tanti puoi raccoglierli in cartelle, e le cartelle in altre cartelle. Stanno "
-                + "nella barra laterale, sotto «" + SavedTitle + "»: un clic su una cartella mostra i suoi testi, e quelli "
-                + "delle cartelle al suo interno.",
+                + "nella barra laterale, sotto «" + SavedTitle + "»: un clic su una cartella mostra i testi che contiene "
+                + "direttamente, non quelli delle cartelle al suo interno.",
             "- «" + NewFolder + "» sta in fondo alla barra laterale e nel menu del tasto destro di una cartella "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nasce dentro la cartella mostrata, "
                 + "ma nella sua finestra puoi scegliere dove metterla.",
             "- La freccia all'estremità destra di una cartella che ne contiene altre la apre e la chiude; quella di «"
-                + SavedTitle + "» le mostra o le nasconde tutte. Il numero dice quanti testi contiene una cartella, anche "
-                + "nelle cartelle al suo interno. Aperte e chiuse, le ritrovi come le hai lasciate.",
+                + SavedTitle + "» le mostra o le nasconde tutte. Il numero dice quanti testi sono in una cartella stessa, "
+                + "non in quelle al suo interno. Aperte e chiuse, le ritrovi come le hai lasciate.",
             "- La scheda di un testo salvato, o una cartella della barra con tutto quello che contiene, si trascina su una "
                 + "cartella della barra; lasciata su «" + SavedTitle + "», esce dalle cartelle.",
             "- «" + MoveTo + "», nel menu di un testo salvato o di una cartella, fa lo stesso. La stessa "

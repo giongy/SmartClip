@@ -434,14 +434,14 @@ static partial class Strings
 
             "# Carpetas",
             "Cuando los textos guardados son muchos puedes reunirlos en carpetas, y las carpetas en otras carpetas. Están "
-                + "en la barra lateral, bajo «" + SavedTitle + "»: un clic en una carpeta muestra sus textos, y los de las "
-                + "carpetas que tiene dentro.",
+                + "en la barra lateral, bajo «" + SavedTitle + "»: un clic en una carpeta muestra los textos que contiene "
+                + "directamente, no los de las carpetas que tiene dentro.",
             "- «" + NewFolder + "» está abajo en la barra lateral y en el menú del clic derecho de una carpeta "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nace dentro de la carpeta "
                 + "mostrada, pero en su ventana puedes elegir dónde ponerla.",
             "- La flecha del extremo derecho de una carpeta que contiene otras la abre y la cierra; la de «" + SavedTitle
-                + "» las muestra o las oculta todas. El número dice cuántos textos contiene una carpeta, también en las "
-                + "carpetas que tiene dentro. Abiertas o cerradas, las encuentras como las dejaste.",
+                + "» las muestra o las oculta todas. El número dice cuántos textos hay en la carpeta misma, no en las "
+                + "que tiene dentro. Abiertas o cerradas, las encuentras como las dejaste.",
             "- La tarjeta de un texto guardado, o una carpeta de la barra con todo lo que contiene, se arrastra sobre una "
                 + "carpeta de la barra; soltada sobre «" + SavedTitle + "», sale de las carpetas.",
             "- «" + MoveTo + "», en el menú de un texto guardado o de una carpeta, hace lo mismo. La "

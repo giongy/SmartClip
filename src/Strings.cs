@@ -484,13 +484,13 @@ static partial class Strings
 
             "# Folders",
             "When the saved texts become many you can gather them in folders, and folders in other folders. They are in "
-                + "the sidebar, under " + SavedTitle + ": a click on a folder shows its texts, and those of the folders inside it.",
+                + "the sidebar, under " + SavedTitle + ": a click on a folder shows the texts in it, not those of the folders inside it.",
             "- “" + NewFolder + "” is at the bottom of the sidebar and in the right-click menu of a folder "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): it is created inside the folder shown, "
                 + "but its window lets you choose where it goes.",
             "- The arrow at the right end of a folder that holds others opens and closes it; that of " + SavedTitle
-                + " shows or hides all of them. The number says how many texts a folder holds, those in the folders "
-                + "inside it too. Open or closed, you find them as you left them.",
+                + " shows or hides all of them. The number says how many texts are in a folder itself, not in the folders "
+                + "inside it. Open or closed, you find them as you left them.",
             "- The card of a saved text, or a folder of the sidebar with all it holds, can be dragged onto a folder of the "
                 + "sidebar; dropped onto " + SavedTitle + ", it leaves the folders.",
             "- “" + MoveTo + "”, in the menu of a saved text or of a folder, does the same. The same choice "
