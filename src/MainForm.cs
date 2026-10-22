@@ -85,6 +85,7 @@ partial class MainForm : Window
     const int FadeMs = 6000;                           // how long a passing message stays in the status line
     const int RestMs = 600;                            // how long the pointer rests on a row before it is shown whole
     const int AskedMs = 15000;                         // how long a saved text stays in view once asked for
+    const string PeekUnseen = "The preview was shown, but Windows has it not on the screen";   // for the log only
     public const Keys NewKey = Keys.N, SaveKey = Keys.S, DeleteKey = Keys.E, PinKey = Keys.P;   // in the list, all with Ctrl
     public const Keys AllKey = Keys.A;      // with Ctrl, in the cards: picks them all
     public const Keys SearchKey = Keys.F;   // with Ctrl, anywhere in the window: to the search box
@@ -160,7 +161,8 @@ partial class MainForm : Window
     Size leastSize;                               // the window as designed: it is never made less tall
     readonly ContextMenuStrip listMenu = new ContextMenuStrip();
     readonly ContextMenuStrip navMenu = new ContextMenuStrip();   // of a folder in the sidebar
-    readonly Peek peek = new Peek();              // shows whole the entry of a card
+    Peek peek = new Peek();                       // shows whole the entry of a card; a new one each time it comes into view
+    bool peekFailed;                              // it failed once in this session, which the log has
     readonly Timer rest = new Timer();            // runs while the pointer rests on a card, and while a text asked for is in view
     RowList resting;                              // the list whose row the pointer rests on
     bool peekAsked;                               // what is in view was asked for: moving the pointer leaves it there
@@ -762,6 +764,10 @@ partial class MainForm : Window
             && System.Runtime.InteropServices.Marshal.PtrToStringUni(m.LParam) == Look.ThemeChange)
         {
             Look.Follow();   // Windows went from light to dark or back: so do the open windows
+        }
+        else if (m.Msg == Native.WM_DISPLAYCHANGE)
+        {
+            HidePeek();   // the screens changed (a remote desktop, often): the next preview comes in a new window
         }
         else if (m.Msg == Native.WM_CLIPBOARDUPDATE)
         {

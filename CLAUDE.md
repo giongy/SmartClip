@@ -532,7 +532,15 @@ condiviso su GitHub).
   spenta di default (`restBox`, «Anteprima con il puntatore fermo» in «Aspetto», impostazione `PeekOnRest`): l'utente
   la voleva togliere o rendere facoltativa. `Peek` non prende il primo piano e lascia passare il puntatore
   (`HTTRANSPARENT`), così l'elenco continua a seguire il mouse; sparisce a ogni tasto, clic, rotella, ricarica
-  dell'elenco. Dei testi salvati con nome **non** compare mai passandoci sopra (potrebbero essere password).
+  dell'elenco. Doppia cintura (voluta dall'utente il 22/10/2026: usandolo molto, al lavoro tra desktop remoti, ogni tanto
+  l'anteprima smetteva di comparire, occhio compreso, fino al riavvio): la finestra è **nuova a ogni comparsa**
+  (`RevealPeek`, `RenewPeek`; il campo `peek` cambia, chi la legge per riflessione la rilegge); se è visibile lo chiede a
+  Windows (`Peek.Showing`, `IsWindowVisible`, e una dissolvenza ferma a metà non conta), non a `Visible` di WinForms, che
+  può dirla aperta quando Windows l'ha tolta, e allora il clic sull'occhio la «chiudeva» soltanto (`eyeCloses`); se fallisce
+  o non compare riprova con un'altra finestra nuova, e il primo fallimento della sessione va nel log (`peekFailed`). A ogni
+  `Reveal` torna in cima con `SetWindowPos(HWND_TOPMOST)`; in una sessione remota (`TerminalServerSession`) compare senza
+  dissolvenza, quindi senza diventare stratificata; `WM_DISPLAYCHANGE` la toglie. Il caso «Windows l'ha tolta» lo prova
+  `real` (con il codice di prima falliva); l'evento vero che la guastava non è stato trovato. Dei testi salvati con nome **non** compare mai passandoci sopra (potrebbero essere password).
 - Pausa della cattura (voluta dall'utente): «Sospendi/Riprendi la cattura» nel menu dell'icona e in fondo
   alla barra laterale (`Pause`, `paused`, `pauseItems` e `PauseRow` di `footList`). Non è un'impostazione: a ogni avvio si riparte in ascolto.
   Lo dicono il titolo (dove ci sono copiati), l'elenco vuoto e il suggerimento dell'icona.
@@ -819,6 +827,10 @@ condiviso su GitHub).
 - Un `ListBox` `OwnerDrawVariable` chiede l'altezza di ogni riga con `MeasureItem`, e WinForms crea per ognuna un
   `Graphics`: riempire 200 schede costava 20 ms invece di 13. Le schede la dicono da `RowList.RowHeight`, che risponde
   a `WM_MEASUREITEM` (riflesso) senza passare da WinForms.
+- Un `ListBox` allargato fa ridisegnare a Windows solo la striscia guadagnata: le schede, disegnate alla larghezza
+  dell'elenco con le parti all'estremità destra, finivano due volte (riga piccola ripetuta) riducendo la barra laterale
+  (trovato dall'utente il 22/10/2026; si vede anche in `real`, `-real-narrow`). `RowList` ha `ResizeRedraw`, come gli
+  altri controlli disegnati a mano.
 - `ListBox.IndexFromPoint` risponde la riga più vicina anche sotto l'ultima: per sapere su quale riga è il
   puntatore c'è `RowAt` (prima un clic nel vuoto sceglieva di nuovo la voce selezionata).
 - Nell'elenco Invio agisce al rilascio (`OnKeyUp`, con `enterDown`): alla pressione il tasto tenuto giù
@@ -950,6 +962,9 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
   `ShowDay` scorrendo, i messaggi del tasto sinistro mandati alla lista con e senza Ctrl, e viste le immagini in quattro
   lingue; mai il mouse vero, Ctrl+A e Maiusc+frecce premuti davvero, la domanda di «Elimina», il menu di «Sposta in» aperto dal
   pulsante, la rotella sopra la barra del giorno.
+- L'anteprima a prova di guasto (22/10/2026) dal vivo: mai visto l'evento che la rompeva (desktop remoto, cambio di
+  schermi, blocco del PC?), quindi nemmeno che la finestra nuova lo superi; mai una sessione remota senza dissolvenza.
+  Se ricapita, il log dice se Windows non la mostrava (`PeekUnseen`) o con quale errore.
 - L'avviso di SQLite mancante o troppo vecchio: nessun Windows a portata di mano ne è privo.
 - Il database con migliaia di voci dal vivo: `tests.exe many` (20/10/2026) ha misurato tutto con voci finte, mai
   con mesi di copie vere. A 5000 voci una ricarica fa 20 ms, una copia 35, un tasto nella ricerca 30–60; a 20.000

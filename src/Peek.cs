@@ -123,10 +123,25 @@ class Peek : Form
         Rectangle screen = Screen.FromRectangle(row).WorkingArea;
         int gap = (int)(RowGap * zoom), x = Math.Max(screen.Left, Math.Min(row.Left, screen.Right - Width));
         Location = new Point(x, row.Bottom + gap + Height <= screen.Bottom ? row.Bottom + gap : row.Top - gap - Height);
-        if (Visible) return;   // moving from a row to another, it is in view already
-        Opacity = 0;
-        Visible = true;
-        appear.Start();
+        if (!Showing)   // moving from a row to another, it is in view already
+        {
+            if (Visible) Hide();   // WinForms holds it in view, Windows does not: shown again from the start
+            // Gradually, except in a remote session, where Windows draws no animations either and a window made
+            // see-through is one more thing that may not be drawn.
+            bool fades = !SystemInformation.TerminalServerSession;
+            Opacity = fades ? 0 : 1;
+            Visible = true;
+            if (fades) appear.Start();
+        }
+        // Over every other window, whatever happened to them since it was made.
+        Native.SetWindowPos(Handle, Native.HWND_TOPMOST, 0, 0, 0, 0, Native.SWP_NOMOVE | Native.SWP_NOSIZE | Native.SWP_NOACTIVATE);
+    }
+
+    // Whether it is on the screen as Windows says, not only as WinForms remembers it, and not left unseen by a fade
+    // that stopped halfway.
+    public bool Showing
+    {
+        get { return Visible && IsHandleCreated && Native.IsWindowVisible(Handle) && (Opacity >= 1 || appear.Enabled); }
     }
 
     protected override void OnVisibleChanged(EventArgs e)

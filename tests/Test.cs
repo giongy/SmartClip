@@ -2491,11 +2491,25 @@ static class TestProgram
             CardParts longParts = (CardParts)typeof(MainForm).GetMethod("Lay", hidden).Invoke(form,
                 new object[] { recent.Items[longRow], recent.GetItemRectangle(longRow) });
             Rectangle eye = longParts.Buttons[Part.Show];
-            ClickAt(recent, new Point(eye.Left + eye.Width / 2, eye.Top + eye.Height / 2));
+            Point onEye = new Point(eye.Left + eye.Width / 2, eye.Top + eye.Height / 2);
+            ClickAt(recent, onEye);
+            shownPeek = (Form)typeof(MainForm).GetField("peek", hidden).GetValue(form);   // a new window each time it comes into view
             bool opened = shownPeek.Visible;
-            ClickAt(recent, new Point(eye.Left + eye.Width / 2, eye.Top + eye.Height / 2));
+            ClickAt(recent, onEye);
             Console.WriteLine("[{0}] a click on the eye shows the entry whole, another one puts it away", opened && !shownPeek.Visible
                 ? "PASS" : "FAIL");
+            // A window Windows took off the screen while WinForms still holds it in view, as something now and then did
+            // until a restart: the eye only put it away. Now it shows the entry in a new window.
+            ClickAt(recent, onEye);
+            Form lost = (Form)typeof(MainForm).GetField("peek", hidden).GetValue(form);
+            Native.SetWindowPos(lost.Handle, IntPtr.Zero, 0, 0, 0, 0,
+                Native.SWP_NOMOVE | Native.SWP_NOSIZE | Native.SWP_NOACTIVATE | Native.SWP_HIDEWINDOW);
+            bool broken = lost.Visible && !Native.IsWindowVisible(lost.Handle);
+            ClickAt(recent, onEye);
+            Form found = (Form)typeof(MainForm).GetField("peek", hidden).GetValue(form);
+            Console.WriteLine("[{0}] a preview Windows lost is shown again in a new window", broken && found != lost && found.Visible
+                && Native.IsWindowVisible(found.Handle) ? "PASS" : "FAIL");
+            typeof(MainForm).GetMethod("HidePeek", hidden).Invoke(form, null);
             // A long list, with the thin bar that scrolls it, moved a little way down.
             for (int i = 0; i < 40; i++) ClipsOf(form).Import(Sample.Current.Long + " " + i, DateTime.Today.AddMinutes(i), false);
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);

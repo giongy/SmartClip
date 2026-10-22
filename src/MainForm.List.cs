@@ -184,7 +184,7 @@ partial class MainForm
             int index = cardList.RowAt(e.Location);
             // The eye of the card whose entry is in view puts it away, as any click does, and the click does no more
             // (wanted by the user on 20/10/2026: it showed it again at once).
-            eyeCloses = e.Button == MouseButtons.Left && peek.Visible && index == peekRow && PartAt(index, e.Location) == Part.Show;
+            eyeCloses = e.Button == MouseButtons.Left && peek.Showing && index == peekRow && PartAt(index, e.Location) == Part.Show;
             HidePeek();
             HideHoverTip();
             Entry under = index < 0 ? null : cardList.Items[index] as Entry;
@@ -630,12 +630,58 @@ partial class MainForm
         Entry entry = list.Items[row] as Entry;
         Rectangle area = list.GetItemRectangle(row);
         if (entry == null || !asked && !entry.Picture && !Cut(list, entry, area)) return;
-        peek.Reveal(entry, list.RectangleToScreen(area), Zoom);
-        peekRow = peek.Visible ? row : -1;
-        peekAsked = asked && peek.Visible;
+        RevealPeek(entry, list.RectangleToScreen(area));
+        peekRow = peek.Showing ? row : -1;
+        peekAsked = asked && peekRow >= 0;
         if (!peekAsked) return;
         rest.Interval = AskedMs;
         rest.Start();
+    }
+
+    // Something now and then (a remote desktop, the screens that change) left the preview unseen until a restart, with
+    // the eye too. So the window is a new one each time the preview comes into view, which nothing before can have
+    // spoiled; if it fails all the same, or Windows does not have it on the screen, once more with another new one. The
+    // first failure of a session goes to the log.
+    void RevealPeek(Entry entry, Rectangle row)
+    {
+        for (int attempt = 0; attempt < 2; attempt++)
+        {
+            Exception failure;
+            try
+            {
+                if (attempt > 0 || !peek.Showing) RenewPeek();
+                peek.Reveal(entry, row, Zoom);
+                if (!peek.Visible || peek.Showing) return;   // nothing to show (a picture no longer there), or in view
+                failure = new InvalidOperationException(PeekUnseen);
+            }
+            catch (Exception ex)
+            {
+                failure = ex;
+            }
+            if (!peekFailed) Log.Error(failure);
+            peekFailed = true;
+        }
+        try
+        {
+            peek.Hide();   // out of the way: the next card tries again
+        }
+        catch (Exception)
+        {
+        }
+    }
+
+    void RenewPeek()
+    {
+        Peek old = peek;
+        peek = new Peek();
+        try
+        {
+            old.Dispose();
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex);   // a broken window that will not go is no reason to show no preview
+        }
     }
 
     void HidePeek()

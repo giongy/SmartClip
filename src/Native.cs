@@ -16,6 +16,9 @@ static class Native
     public const uint SIF_ALL = 0x17;
     public const int HTTRANSPARENT = -1;
     public const int WS_EX_TOPMOST = 0x00000008, WS_EX_TOOLWINDOW = 0x00000080, WS_EX_NOACTIVATE = 0x08000000;
+    public static readonly IntPtr HWND_TOPMOST = (IntPtr)(-1);
+    public const uint SWP_NOSIZE = 0x0001, SWP_NOMOVE = 0x0002, SWP_NOACTIVATE = 0x0010, SWP_HIDEWINDOW = 0x0080;
+    public const int WM_DISPLAYCHANGE = 0x007E;
     public const int CS_DROPSHADOW = 0x00020000;
     public const int DWMWA_USE_IMMERSIVE_DARK_MODE = 20, DWMWA_WINDOW_CORNER_PREFERENCE = 33, DWMWA_BORDER_COLOR = 34,
         DWMWA_CAPTION_COLOR = 35, DWMWA_TEXT_COLOR = 36;
@@ -136,6 +139,12 @@ static class Native
 
     [DllImport("user32.dll")]
     public static extern bool IsWindowEnabled(IntPtr window);
+
+    [DllImport("user32.dll")]
+    public static extern bool IsWindowVisible(IntPtr window);
+
+    [DllImport("user32.dll")]
+    public static extern bool SetWindowPos(IntPtr window, IntPtr after, int x, int y, int width, int height, uint flags);
 
     // ERROR_INSUFFICIENT_BUFFER asks for a larger buffer; APPMODEL_ERROR_NO_PACKAGE: not run from a package.
     [DllImport("kernel32.dll", CharSet = CharSet.Unicode)]

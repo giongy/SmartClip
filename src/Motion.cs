@@ -124,6 +124,10 @@ class RowList : ListBox
 
     public RowList()
     {
+        // Rows drawn to its width, as the cards are, with parts at their right end: made wider, Windows would draw again
+        // only the strip it gained, and the rest would stay as drawn before, each card ending twice (found by the user on
+        // 22/10/2026, reducing the sidebar).
+        ResizeRedraw = true;
         Glow = new Glow(this);
         slide.Interval = Fade.StepMs;
         slide.Tick += delegate
