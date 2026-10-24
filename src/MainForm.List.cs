@@ -93,7 +93,9 @@ partial class MainForm
     bool newest;                               // the next filling selects the latest copy, with the top of the list in view
     string[] searched = new string[0];         // the words of the search the cards were filled with, marked on them
     readonly Dictionary<Entry, Marked> marks = new Dictionary<Entry, Marked>();   // how each card writes them, until the next filling
+    readonly Dictionary<Entry, Marked> laid = new Dictionary<Entry, Marked>();    // and its text without them, when laid out by hand
     static Graphics measurer;                  // what their pieces are measured on (see Wide)
+    int metaWide;                              // how wide the small line of every card is (see MetaWide)
 
     // What the cards answer to: buttons, right-click menu, mouse, dragging a saved text into a folder.
     void WireLists()
@@ -349,6 +351,7 @@ partial class MainForm
         string[] words = Texts.Words(search.Text);   // taken from the box once, not for each entry
         searched = words;
         marks.Clear();
+        laid.Clear();
         Category? kind = TabKinds[tabs.Selected];
         List<Entry> copied = new List<Entry>();
         int total = 0;
@@ -490,6 +493,7 @@ partial class MainForm
         newest = false;
         int top = cardList.TopIndex;
         keepPicks = true;
+        metaWide = MetaWide();
         cardList.BeginUpdate();
         cardList.Items.Clear();
         int found = -1, first = -1, latest = -1;
@@ -756,14 +760,6 @@ partial class MainForm
         }
     }
 
-    // What a card says the entry is, at the right end of its top line: a formatted text says so, unless the user
-    // said what it is. Nothing for a plain text, which most are: said on every card, it would say nothing.
-    static string BadgeOf(Entry entry)
-    {
-        if (entry.Html != null && !entry.Chosen) return Strings.FormattedBadge;
-        return entry.Category == Category.Text ? null : KindName(entry.Category);
-    }
-
     static string KindName(Category category)
     {
         switch (category)
@@ -810,7 +806,6 @@ partial class MainForm
 
     const TextFormatFlags BodyFlags = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.TextBoxControl;
     const int MaxBody = 600;   // of a long text, what a card takes to show its first lines
-    const string Dot = " · ";  // between the parts of the small line under the entry
     const char JointSign = '↵';
     static readonly string Joint = " " + JointSign + " ";   // between the lines of a text on a card of one line
     const float MetaShare = 0.6f;   // how far that line goes from the card towards Muted, and how opaque its icon is
@@ -857,7 +852,7 @@ partial class MainForm
     {
         if (searched.Length == 0 || entry.Picture || width <= 0) return null;
         bool named = entry.Saved && entry.Name != null;
-        Font font = named ? Look.StrongEntryFont : Look.EntryFont;
+        Font font = BodyFont(entry);
         Marked marked;
         if (marks.TryGetValue(entry, out marked) && marked.Width == width && marked.Font == font)
             return marked.Found.Count > 0 ? marked : null;
@@ -889,6 +884,19 @@ partial class MainForm
         marked.Font = font;
         marks[entry] = marked;
         return marked.Found.Count > 0 ? marked : null;
+    }
+
+    // The text of a card laid out by LayMarked when nothing is searched, kept until the next filling: laying it out
+    // measures it many times.
+    Marked Laid(Entry entry, string text, Font font, int width)
+    {
+        Marked marked;
+        if (laid.TryGetValue(entry, out marked) && marked.Width == width && marked.Font == font && marked.Text == text) return marked;
+        marked = LayMarked(text, new List<CharacterRange>(), font, width, cardLines);
+        marked.Width = width;
+        marked.Font = font;
+        laid[entry] = marked;
+        return marked;
     }
 
     // Lays a text out as a card writes it, in at most 'most' lines 'width' wide: a line breaks after a space, or inside
@@ -958,7 +966,7 @@ partial class MainForm
 
     // Writes a text laid out by LayMarked in the body of a card, a faint shape of the accent colour under each word found,
     // the joints of its lines faint.
-    void DrawMarked(Graphics g, Marked marked, Font font, Rectangle body, Color fill)
+    void DrawMarked(Graphics g, Marked marked, Font font, Rectangle body, Color fill, Color ink)
     {
         // Where Windows would start it, with the room it leaves before a text.
         int lead = (TextRenderer.MeasureText(g, "x", font).Width - Wide("x", font)) / 2, y = body.Top, k = 0;
@@ -979,23 +987,23 @@ partial class MainForm
                     if (inside)
                         using (GraphicsPath shape = Look.Rounded(new Rectangle(x - 1, y, wide + 2, font.Height - 1)))
                             g.FillPath(tint, shape);
-                    Write(g, piece, font, new Point(x, y), faint);
+                    Write(g, piece, font, new Point(x, y), ink, faint);
                     x += wide;
                     at = stop;
                 }
-                if (marked.Cut && i == marked.Lines.Count - 1) TextRenderer.DrawText(g, Ellipsis, font, new Point(x, y), Look.Ink, MarkFlags);
+                if (marked.Cut && i == marked.Lines.Count - 1) TextRenderer.DrawText(g, Ellipsis, font, new Point(x, y), ink, MarkFlags);
             }
     }
 
     // Writes a piece of the text of a card from 'at', the signs of the joints between its lines 'faint'.
-    static void Write(Graphics g, string piece, Font font, Point at, Color faint)
+    static void Write(Graphics g, string piece, Font font, Point at, Color ink, Color faint)
     {
         int x = at.X, start = 0;
         while (start < piece.Length)
         {
             int sign = piece.IndexOf(JointSign, start), end = sign < 0 ? piece.Length : sign;
             string part = piece.Substring(start, end - start);
-            TextRenderer.DrawText(g, part, font, new Point(x, at.Y), Look.Ink, MarkFlags);
+            TextRenderer.DrawText(g, part, font, new Point(x, at.Y), ink, MarkFlags);
             if (sign < 0) return;
             x += Wide(part, font);
             TextRenderer.DrawText(g, JointSign.ToString(), font, new Point(x, at.Y), faint, MarkFlags);
@@ -1036,22 +1044,52 @@ partial class MainForm
         return Math.Min(MaxRow, 2 * (int)(CardPad * Zoom) + body + (int)(CardGap * Zoom));
     }
 
-    // The small line under or beside the entry: the program it was copied in, or the folder of a saved one; when;
-    // what it is.
-    string MetaText(Entry entry)
+    // Where an entry comes from, in the small line beside it: the program it was copied in, or the folder of a saved
+    // one; cut short after SourceLetters.
+    static string Source(Entry entry)
     {
         string source = entry.Saved ? (entry.Group != null ? Texts.Display(entry.Group) : Strings.SavedTitle)
             : entry.Origin != null ? entry.Origin.Name : null;
-        List<string> said = new List<string>();
-        foreach (string part in new string[] { source, When(entry), BadgeOf(entry) }) if (part != null) said.Add(part);
-        return string.Join(Dot, said.ToArray());
+        return source != null && source.Length > SourceLetters ? source.Substring(0, SourceLetters).TrimEnd() + Ellipsis : source;
+    }
+
+    // How wide the small line of the cards is, the same on all of them: as the widest of the rows needs, so that its
+    // parts make columns with no hole in the middle (wanted by the user on 24/10/2026: MetaWidth on every card left a
+    // short name far from its time); MetaWidth at most.
+    int MetaWide()
+    {
+        int side = Look.NoteFont.Height, gap = (int)(PartGap * Zoom), widest = 0;
+        foreach (object row in rows)
+        {
+            Entry entry = row as Entry;
+            if (entry == null) continue;
+            string source = Source(entry), when = When(entry);
+            widest = Math.Max(widest, (source == null ? 0 : Wide(source, Look.NoteFont)) + (when == null ? 0 : Wide(when, Look.NoteFont)));
+        }
+        return Math.Min((int)(MetaWidth * Zoom), side + 3 * gap + widest + 1);
+    }
+
+    // What a card writes its entry in, which says what it is (chosen by the user on 24/10/2026 among a sign and both;
+    // before, a word at the end of the small line, which pushed the program and the time of those cards to the left):
+    // a piece of code in a font of fixed width, a link underlined in blue; the name of a saved text in the heavier face.
+    Font BodyFont(Entry entry)
+    {
+        if (entry.Saved && entry.Name != null) return Look.StrongEntryFont;
+        if (entry.Category == Category.Code) return Look.CodeFont;
+        if (entry.Category == Category.Link) return Look.LinkFont;
+        return Look.EntryFont;
+    }
+
+    Color BodyInk(Entry entry)
+    {
+        return BodyFont(entry) == Look.LinkFont ? Look.Link : Look.Ink;
     }
 
     const TextFormatFlags MetaFlags = TextFormatFlags.VerticalCenter | LineFlags | TextFormatFlags.NoPadding;
 
     // The parts of the card of an entry in its row (see CardParts): the entry first, at the top left; at the right end
-    // of its first line the small line of where and when, and the small buttons in the same room, which is as wide as
-    // the wider of the two, the line cut short if the entry would keep less than its share; before them its number.
+    // of its first line the small line of where and when, as wide on every card (MetaWide) unless the entry would keep
+    // less than its share, and the small buttons in the same room, wider if they need it; before them its number.
     // The same whether the pointer is on the card or not, so that no card changes height under it, and every card
     // has its line on its first line (wanted by the user on 19/10/2026: beside the buttons or under them as there was
     // room, the cards of the same kind were of different heights). DrawEntry writes that line at the right end of Meta.
@@ -1071,8 +1109,7 @@ partial class MainForm
             end -= side + between;
         }
         int meta = Look.NoteFont.Height, room = right - left;
-        int wide = meta + (int)(PartGap * Zoom) + TextRenderer.MeasureText(MetaText(entry), Look.NoteFont, Size.Empty, MetaFlags & ~TextFormatFlags.EndEllipsis).Width;
-        int area = Math.Max(right - end - between, Math.Min(wide, (int)(room * MetaRoom)));
+        int area = Math.Max(right - end - between, Math.Min(metaWide, (int)(room * MetaRoom)));
         parts.Meta = new Rectangle(right - area, middle - meta / 2, area, meta);
         end = parts.Meta.Left - gap;
         if (entry.Number > 0)
@@ -1081,7 +1118,7 @@ partial class MainForm
             parts.Number = new Rectangle(end - width, middle - high / 2, width, high);
             end = parts.Number.Left - between;
         }
-        parts.Body = Rectangle.FromLTRB(left, top, end - 2 * gap, Math.Max(top, parts.Card.Bottom - pad));
+        parts.Body = Rectangle.FromLTRB(left, top, end - (int)(BodyGap * Zoom), Math.Max(top, parts.Card.Bottom - pad));
         return parts;
     }
 
@@ -1170,37 +1207,43 @@ partial class MainForm
         else
         {
             // With what a search found in it marked, laid out by hand (MarkedText); so too the lines of a text joined on
-            // one, for their faint joints; otherwise as Windows writes it.
+            // one, for their faint joints, and a text on cards of more lines (Windows, cutting it with an ellipsis, wrote
+            // what did not fit on its last line, the line breaks left out: the third line of a piece of code followed
+            // the second); otherwise as Windows writes it.
             Marked marked = MarkedText(entry, parts.Body.Width);
             bool named = entry.Saved && entry.Name != null;
             string text = CardText(entry);
-            if (marked != null) DrawMarked(g, marked, named ? Look.StrongEntryFont : e.Font, parts.Body, fill);
+            Font font = BodyFont(entry);
+            Color ink = BodyInk(entry);
+            if (marked != null) DrawMarked(g, marked, font, parts.Body, fill, ink);
             else if (named)
-                TextRenderer.DrawText(g, entry.Name, Look.StrongEntryFont, new Rectangle(parts.Body.Left, parts.Body.Top, parts.Body.Width,
-                    Look.StrongEntryFont.Height), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
-            else if (cardLines == 1 && text.IndexOf(JointSign) >= 0)
-                DrawMarked(g, LayMarked(text, new List<CharacterRange>(), e.Font, parts.Body.Width, 1), e.Font, parts.Body, fill);
-            else TextRenderer.DrawText(g, text, e.Font, parts.Body, Look.Ink, cardLines == 1 ? LineFlags : BodyFlags | TextFormatFlags.EndEllipsis);
+                TextRenderer.DrawText(g, entry.Name, font, new Rectangle(parts.Body.Left, parts.Body.Top, parts.Body.Width,
+                    font.Height), ink, TextFormatFlags.VerticalCenter | LineFlags);
+            else if (cardLines > 1 || text.IndexOf(JointSign) >= 0) DrawMarked(g, Laid(entry, text, font, parts.Body.Width), font, parts.Body, fill, ink);
+            else TextRenderer.DrawText(g, text, font, parts.Body, ink, LineFlags);
         }
 
         // At the right end of the first line, small and faint, so that the entry is what stands out: the program it was
-        // copied in with its icon, or the folder of a saved one; when; what it is. Under the pointer the small buttons
-        // take its place, the one going as the other comes (wanted by the user on 19/10/2026: always there on every
-        // card, they made the list look like a toolbar).
+        // copied in with its icon, or the folder of a saved one; when; last, in a place of its own, the sign of what it
+        // is. Under the pointer the small buttons take its place, the one going as the other comes (wanted by the user
+        // on 19/10/2026: always there on every card, they made the list look like a toolbar).
         float buttons = Math.Max(0, Math.Min(1, 2 * glow - 1)), written = Math.Max(0, 1 - 2 * glow);
         if (written > 0)
         {
-            string meta = MetaText(entry);
+            // In columns, the same on every card (wanted by the user on 24/10/2026: the icons were where the length of
+            // the line put them): the icon at the left of the room, the name after it; the time at its right end.
             int side = parts.Meta.Height, gap = (int)(PartGap * Zoom);
-            int width = Math.Min(parts.Meta.Width - side - gap, TextRenderer.MeasureText(g, meta, Look.NoteFont, Size.Empty,
-                MetaFlags & ~TextFormatFlags.EndEllipsis).Width);
-            Rectangle text = Rectangle.FromLTRB(parts.Meta.Right - width, parts.Meta.Top, parts.Meta.Right, parts.Meta.Bottom);
-            Rectangle icon = new Rectangle(text.Left - gap - side, parts.Meta.Top, side, side);
+            string when = When(entry) ?? "", source = Source(entry);
+            int timeWide = TextRenderer.MeasureText(g, when, Look.NoteFont, Size.Empty, MetaFlags & ~TextFormatFlags.EndEllipsis).Width;
+            Rectangle time = Rectangle.FromLTRB(parts.Meta.Right - timeWide, parts.Meta.Top, parts.Meta.Right, parts.Meta.Bottom);
+            Rectangle icon = new Rectangle(parts.Meta.Left, parts.Meta.Top, side, side);
+            Rectangle name = Rectangle.FromLTRB(icon.Right + gap, parts.Meta.Top, time.Left - 2 * gap, parts.Meta.Bottom);
             Color faint = Look.Blend(fill, Look.Muted, MetaShare * written);
             if (entry.Saved) Look.Draw(g, Sign.Star, icon, faint);
             else if (entry.Origin != null && entry.Origin.Icon != null) Look.DrawFaint(g, entry.Origin.Icon, icon, MetaShare * written);
-            else Look.Draw(g, entry.Origin != null ? Sign.Apps : SignOf(entry), icon, faint);
-            TextRenderer.DrawText(g, meta, Look.NoteFont, text, faint, MetaFlags);
+            else if (entry.Origin != null) Look.Draw(g, Sign.Apps, icon, faint);
+            if (source != null && name.Width > 0) TextRenderer.DrawText(g, source, Look.NoteFont, name, faint, MetaFlags);
+            TextRenderer.DrawText(g, when, Look.NoteFont, time, faint, MetaFlags);
         }
 
         // Before them, always, the number; then the buttons in their own colours, the arrow faint unless it keeps the

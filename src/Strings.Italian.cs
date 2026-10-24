@@ -20,7 +20,7 @@ static partial class Strings
         NewTip = "Scrive un testo nuovo da tenere, con un nome o senza ({0}).";
         HistoryPlace = "Cronologia"; PinnedPlace = "In alto"; SourcesPlace = "Provenienza"; GuideItem = "Guida";
         AllKinds = "Tutti"; TextKinds = "Testo"; CodeKinds = "Codice"; LinkKinds = "Link"; PictureKinds = "Immagini";
-        TextBadge = "Testo"; CodeBadge = "Codice"; LinkBadge = "Link"; PictureBadge = "Immagine"; FormattedBadge = "Formattato";
+        TextBadge = "Testo"; CodeBadge = "Codice"; LinkBadge = "Link"; PictureBadge = "Immagine";
         CopyButton = "Copia"; ShowFull = "Anteprima"; MoreItem = "Altro";
         Today = "Oggi"; Yesterday = "Ieri"; Undated = "Prima";
         NoPinned = "Niente in alto: la freccia di una voce copiata la porta qui per un po'";
@@ -355,7 +355,8 @@ static partial class Strings
                 + "», nel menu di un testo, dice che cos'è: copiato di nuovo o salvato, resta così.",
             "## Le schede",
             "Ogni scheda mostra prima la voce; a destra, in piccolo e tenue, il programma in cui è stata copiata, con la sua icona (o "
-                + "la cartella di un testo salvato), l'ora della copia e che cos'è, se non è un testo semplice. Con il puntatore "
+                + "la cartella di un testo salvato) e l'ora della copia. Il codice è scritto in un carattere a larghezza fissa, un "
+                + "link sottolineato in blu. Con il puntatore "
                 + "sulla scheda, al loro posto compaiono piccoli segni: la tengono in alto, la mostrano per intero, la copiano, la "
                 + "salvano o la modificano, la eliminano e aprono il suo menu; fermando il puntatore su uno, dice che cosa fa.",
             "## La ricerca",

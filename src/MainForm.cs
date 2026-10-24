@@ -64,6 +64,10 @@ partial class MainForm : Window
     const int HeadingAir = 6;                          // above the name of a day, among the cards
     // The most of a card the small line of where and when takes, beside the entry, unless the buttons need more.
     const float MetaRoom = 0.45f;
+    // How wide that line is at most, the same on every card so that its parts make columns (pixels at 96 dpi).
+    const int MetaWidth = 200;
+    const int SourceLetters = 20;
+    const int BodyGap = 20;         // between the entry and that line (or its number): the line starts at the same place on every card   // of the name of the program in that line, what is written before an ellipsis
     const int MaxRow = 255;                            // the tallest row a list box of Windows can have, in pixels
     const int PreviewMargin = 4;                       // around the preview, inside its card
     const int TileHeight = 56, TileGap = 0;            // the least an option is tall, and between two: none, they make one card

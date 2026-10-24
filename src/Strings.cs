@@ -64,7 +64,7 @@ static partial class Strings
     // The sidebar, the tabs above the list, and the cards of the entries.
     public static string HistoryPlace = "History", PinnedPlace = "Pinned", SourcesPlace = "Source", GuideItem = "Help";
     public static string AllKinds = "All", TextKinds = "Text", CodeKinds = "Code", LinkKinds = "Links", PictureKinds = "Images";
-    public static string TextBadge = "Text", CodeBadge = "Code", LinkBadge = "Link", PictureBadge = "Image", FormattedBadge = "Formatted";
+    public static string TextBadge = "Text", CodeBadge = "Code", LinkBadge = "Link", PictureBadge = "Image";
     public static string CopyButton = "Copy", ShowFull = "Preview", MoreItem = "More";
     public static string Today = "Today", Yesterday = "Yesterday", Undated = "Earlier";
     public static string NoPinned = "Nothing kept at the top: the arrow of a copied entry brings it here for a while",
@@ -420,7 +420,8 @@ static partial class Strings
                 + "”, in the menu of a text, says what it is: copied again or saved, it stays so.",
             "## The cards",
             "Each card shows the entry first; on its right, small and faint, the program it was copied in, with its icon (or the folder "
-                + "of a saved text), the time of the copy and what it is, unless it is a plain text. With the pointer on the card, "
+                + "of a saved text) and the time of the copy. Code is written in a font of fixed width, a link underlined in blue. "
+                + "With the pointer on the card, "
                 + "small signs take their place: they keep it at the top, show it whole, copy it, save or edit it, delete it and "
                 + "open its menu; resting the pointer on one says what it does.",
             "## Search",

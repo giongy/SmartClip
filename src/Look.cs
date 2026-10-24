@@ -746,7 +746,14 @@ static class Look
         EntryFont = new Font(name, points);
         StrongEntryFont = Heavy(name, points, false);
         CaptionFont = new Font(name, Points((int)Math.Round(size * CaptionShare)));
+        CodeFont = Installed(CodeFamily, points) ?? new Font(FontFamily.GenericMonospace, points);
+        LinkFont = new Font(EntryFont, FontStyle.Underline);
     }
+
+    // A piece of code on its card, in a font of fixed width; a link, underlined.
+    const string CodeFamily = "Consolas";
+    public static Font CodeFont { get; private set; }
+    public static Font LinkFont { get; private set; }
 
     // The size of a font in points, from pixels at 96 dpi: Windows makes it larger with the screen.
     static float Points(int pixels)
@@ -784,6 +791,7 @@ static class Look
     // The coloured part: the accent, a warm orange, deeper in the light; what is written on it (OnAccent); the colours
     // of what a message is (done, warning, error) and of a few kinds, brighter in the dark.
     public static Color Accent, OnAccent, Green, Amber, Red, Teal, Purple;
+    public static Color Link;   // an address written on its card, as links are blue
     public static bool Dark { get; private set; }   // what Windows draws (title bar, scroll bars, menus) follows
     public static Theme Chosen { get; private set; }   // in the options; until then, as Windows
     public static event EventHandler Changed;       // after the colours changed with those of Windows
@@ -810,6 +818,7 @@ static class Look
             Accent = Color.FromArgb(253, 130, 4); OnAccent = Color.FromArgb(38, 27, 19);
             Green = Color.FromArgb(138, 181, 73); Amber = Color.FromArgb(235, 170, 45);
             Red = Color.FromArgb(255, 145, 137); Teal = Color.FromArgb(0, 179, 194); Purple = Color.FromArgb(206, 124, 200);
+            Link = Color.FromArgb(96, 205, 255);
         }
         else
         {
@@ -820,6 +829,7 @@ static class Look
             Accent = Color.FromArgb(182, 78, 0); OnAccent = Color.FromArgb(255, 249, 240);
             Green = Color.FromArgb(83, 118, 14); Amber = Color.FromArgb(169, 107, 0);
             Red = Color.FromArgb(201, 34, 43); Teal = Color.FromArgb(0, 160, 175); Purple = Color.FromArgb(183, 97, 177);
+            Link = Color.FromArgb(0, 95, 184);
         }
         // The menus Windows draws itself, such as the one of a text box, in the same mode.
         if (WindowsBuild() < AppModeBuild) return;
@@ -869,7 +879,7 @@ static class Look
     // Every colour of the palette, always in the same order: the old and the new are matched by place.
     static Color[] Palette
     {
-        get { return new Color[] { Back, Well, Soft, Border, Selected, Ink, Muted, Raised, Accent, OnAccent, Green, Amber, Red, Teal, Purple }; }
+        get { return new Color[] { Back, Well, Soft, Border, Selected, Ink, Muted, Raised, Accent, OnAccent, Green, Amber, Red, Teal, Purple, Link }; }
     }
 
     // The theme chosen in the options: before the first window, from the settings, and then at once.

@@ -21,7 +21,7 @@ static partial class Strings
         NewTip = "Écrit un nouveau texte à garder, avec ou sans nom ({0}).";
         HistoryPlace = "Historique"; PinnedPlace = "En haut"; SourcesPlace = "Provenance"; GuideItem = "Aide";
         AllKinds = "Tout"; TextKinds = "Texte"; CodeKinds = "Code"; LinkKinds = "Liens"; PictureKinds = "Images";
-        TextBadge = "Texte"; CodeBadge = "Code"; LinkBadge = "Lien"; PictureBadge = "Image"; FormattedBadge = "Mis en forme";
+        TextBadge = "Texte"; CodeBadge = "Code"; LinkBadge = "Lien"; PictureBadge = "Image";
         CopyButton = "Copier"; ShowFull = "Aperçu"; MoreItem = "Plus";
         Today = "Aujourd'hui"; Yesterday = "Hier"; Undated = "Avant";
         NoPinned = "Rien en haut : la flèche d'un élément copié l'amène ici pour un moment";
@@ -369,8 +369,8 @@ static partial class Strings
                 + "nouveau ou enregistré, il le reste.",
             "## Les cartes",
             "Chaque carte montre d'abord l'élément ; à droite, en petit et discret, le programme dans lequel il a été copié, avec "
-                + "son icône (ou le dossier d'un texte enregistré), l'heure de la copie et ce qu'il est, si ce n'est pas un texte "
-                + "simple. Avec le pointeur sur la carte, de petits signes prennent leur place : ils le gardent en haut, le montrent "
+                + "son icône (ou le dossier d'un texte enregistré) et l'heure de la copie. Le code est écrit dans une police à "
+                + "chasse fixe, un lien souligné en bleu. Avec le pointeur sur la carte, de petits signes prennent leur place : ils le gardent en haut, le montrent "
                 + "en entier, le copient, l'enregistrent ou le modifient, le suppriment et ouvrent son menu ; en laissant le "
                 + "pointeur sur l'un d'eux, il dit ce qu'il fait.",
             "## La recherche",

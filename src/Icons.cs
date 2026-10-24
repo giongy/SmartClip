@@ -134,8 +134,8 @@ static class Icons
                     + "rect 8 2 8 4 1";
             case Sign.Unclip:   // clipboard-x
                 return "rect 8 2 8 4 1;M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2;m14.5 11.5-5 5;m9.5 11.5 5 5";
-            case Sign.Code:   // code
-                return "m16 18 6-6-6-6;m8 6-6 6 6 6";
+            case Sign.Code:   // code-xml
+                return "m18 16 4-4-4-4;m6 8-4 4 4 4;m14.5 4-5 16";
             case Sign.Picture:   // image
                 return "rect 3 3 18 18 2;circle 9 9 2;m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21";
             case Sign.Apps:   // layout-grid

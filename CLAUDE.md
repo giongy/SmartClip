@@ -531,8 +531,16 @@ condiviso su GitHub).
   grande (il testo, `CardText`; il nome di un salvato con nome; la miniatura con la misura); all'estremità destra
   della prima riga, piccola e tenue, sempre lì (`Lay`; schede compatte volute dall'utente il 19/10/2026, «molti
   spazi interni nelle celle»: margini `CardPad`; prima una scheda di testo era alta 73 px, ora 36 a una riga) (`MetaShare`, anche l'icona semitrasparente, `Look.DrawFaint`; voluto dall'utente il 19/10/2026, «per rendere ancora più chiaro cosa è copiato»), una riga sola: icona e nome del programma
-  (o stella e cartella di un salvato) · ora (`When`) · tipo (`BadgeOf`; niente per un testo semplice, che detto su
-  quasi ogni scheda non diceva niente). **Sotto il puntatore** i piccoli segni senza testo prendono il suo posto,
+  (o stella e cartella di un salvato), ora (`When`). È **in colonne, larga uguale su ogni scheda**: quanto serve alla
+  più larga delle schede in elenco (`MetaWide`, calcolata da `ShowRows`; con 200 px fissi un nome corto restava lontano
+  dalla sua ora, notato dall'utente), al massimo `MetaWidth` e `MetaRoom` della scheda: l'icona al bordo sinistro, il nome dopo, tagliato a `SourceLetters` (20) lettere e
+  se serve ancora con «…», l'ora allineata a destra (voluto dall'utente il 24/10/2026: allineata a destra tutta insieme,
+  icone e ore stavano dove le metteva la lunghezza della riga, e il tipo scritto a parole, «· Codice», spostava a
+  sinistra programma e ora solo su quelle schede). **Il tipo lo dice il testo stesso** (`BodyFont`, `BodyInk`; scelta
+  dell'utente tra un segno in fondo alla riga, il carattere, o tutti e due, viste le immagini): il codice in Consolas
+  (`Look.CodeFont`), un link sottolineato (`LinkFont`) nel blu `Look.Link`; un testo semplice, un'immagine e un testo
+  formattato non dicono niente. Tra la voce e la riga piccola c'è `BodyGap`: la colonna comincia sempre allo stesso
+  punto, e con i 12 pixel di prima un testo lungo arrivava a toccarne l'icona. **Sotto il puntatore** i piccoli segni senza testo prendono il suo posto,
   l'una che sfuma mentre gli altri compaiono con la luce della scheda (`Glow`): la freccia (solo dei copiati, colorata se
   la tiene in alto), anteprima (l'occhio), copia, salva/modifica, elimina, «⋯» (`CardButtons`, `CopiedButtons`). Voluto
   dall'utente il 19/10/2026: sempre lì su ogni scheda, l'elenco sembrava una barra degli strumenti; non sulla scheda
@@ -669,7 +677,7 @@ condiviso su GitHub).
     segno grande e tenue del perché (`EmptyNote`); la versione è passata dal titolo alle opzioni.
 - Aspetto (`Look`): barra del titolo nel colore della finestra
   (`DwmSetWindowAttribute`, solo Windows 11: altrove fallisce senza danni), pulsanti piatti con un solo
-  pulsante in colore d'accento, schede delle voci disegnate a mano (`DrawEntry`, vedi sopra); il segno di una voce dice che cos'è: testo, indirizzo, codice, immagine, testo formattato (`SignOf`, nel menu del tray e sulle schede senza programma).
+  pulsante in colore d'accento, schede delle voci disegnate a mano (`DrawEntry`, vedi sopra); il segno di una voce dice che cos'è: testo, indirizzo, codice, immagine, testo formattato (`SignOf`, nel menu del tray).
   I controlli che Windows non lascia scurire sono stati sostituiti: le caselle di testo stanno senza bordo
   dentro un pannello (`Look.Frame`), le spunte sono interruttori disegnati (`Toggle`, restano `CheckBox`; voluti
   dall'utente al posto dei quadratini), l'attesa è una casella di testo
@@ -868,6 +876,10 @@ condiviso su GitHub).
   dell'elenco con le parti all'estremità destra, finivano due volte (riga piccola ripetuta) riducendo la barra laterale
   (trovato dall'utente il 22/10/2026; si vede anche in `real`, `-real-narrow`). `RowList` ha `ResizeRedraw`, come gli
   altri controlli disegnati a mano.
+- `TextRenderer.DrawText` con `WordBreak` ed `EndEllipsis` scrive sull'ultima riga che ci sta tutto il resto del testo,
+  senza gli a capo: sulle schede a due righe la terza riga di un codice seguiva la seconda (trovato il 24/10/2026). Per
+  questo il testo delle schede a più righe si dispone a mano come quello della ricerca (`LayMarked`, tenuto da `Laid`
+  fino alla ricarica dopo).
 - `ListBox.IndexFromPoint` risponde la riga più vicina anche sotto l'ultima: per sapere su quale riga è il
   puntatore c'è `RowAt` (prima un clic nel vuoto sceglieva di nuovo la voce selezionata).
 - Nell'elenco Invio agisce al rilascio (`OnKeyUp`, con `enterDown`): alla pressione il tasto tenuto giù

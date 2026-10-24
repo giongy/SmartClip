@@ -20,7 +20,7 @@ static partial class Strings
         NewTip = "Escribe un texto nuevo para conservar, con nombre o sin él ({0}).";
         HistoryPlace = "Historial"; PinnedPlace = "Arriba"; SourcesPlace = "Origen"; GuideItem = "Ayuda";
         AllKinds = "Todo"; TextKinds = "Texto"; CodeKinds = "Código"; LinkKinds = "Enlaces"; PictureKinds = "Imágenes";
-        TextBadge = "Texto"; CodeBadge = "Código"; LinkBadge = "Enlace"; PictureBadge = "Imagen"; FormattedBadge = "Con formato";
+        TextBadge = "Texto"; CodeBadge = "Código"; LinkBadge = "Enlace"; PictureBadge = "Imagen";
         CopyButton = "Copiar"; ShowFull = "Vista previa"; MoreItem = "Más";
         Today = "Hoy"; Yesterday = "Ayer"; Undated = "Antes";
         NoPinned = "Nada arriba: la flecha de una entrada copiada la trae aquí por un tiempo";
@@ -361,7 +361,8 @@ static partial class Strings
                 + "guardado, se queda así.",
             "## Las tarjetas",
             "Cada tarjeta muestra primero la entrada; a la derecha, en pequeño y tenue, el programa en el que se copió, con su icono (o "
-                + "la carpeta de un texto guardado), la hora de la copia y qué es, si no es un texto simple. Con el puntero sobre "
+                + "la carpeta de un texto guardado) y la hora de la copia. El código se escribe en una fuente de ancho fijo, un "
+                + "enlace subrayado en azul. Con el puntero sobre "
                 + "la tarjeta, en su lugar aparecen pequeños signos: la mantienen arriba, la muestran entera, la copian, la "
                 + "guardan o la editan, la eliminan y abren su menú; dejando el puntero sobre uno, dice qué hace.",
             "## La búsqueda",
