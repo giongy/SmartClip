@@ -2729,7 +2729,10 @@ static class TestProgram
                     SnapArea(area, System.IO.Path.Combine(pictures, "7-guide.png"));
                 }
 
-                // The same list in the light, as when Windows is set so for its apps.
+                // The same list in the light, as when Windows is set so for its apps. Shown again first: closing the
+                // guide can hand the foreground to another program, and then the window hides in the tray.
+                form.Show();
+                form.BringToFront();
                 Look.Switch(false);
                 SnapArea(area, System.IO.Path.Combine(pictures, "8-light.png"));
                 Look.Switch(true);

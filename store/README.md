@@ -149,11 +149,7 @@ paste blocked
 ### What's new in this version
 
 ```
-A new look: warm greys with an orange accent, in light and in dark, and clean line icons throughout. The list now reaches the edges of the window, beside a sidebar a shade darker.
-
-The options are grouped in one card per page, each option with its own icon; choices from a list are drop-down boxes, and the switches are simpler.
-
-The guide is easier to read: each topic opens with a couple of lines, then short sections you open and close with a click, or all at once.
+Bug fixes.
 ```
 
 ### Screenshot captions
@@ -245,11 +241,7 @@ incolla bloccato
 ### Novità di questa versione
 
 ```
-Un aspetto nuovo: grigi caldi con un accento arancio, in chiaro e in scuro, e icone a linee pulite ovunque. L'elenco ora arriva ai bordi della finestra, accanto a una barra laterale un tono più scura.
-
-Le opzioni sono raggruppate in un riquadro per pagina, ognuna con la sua icona; le scelte da un elenco sono caselle a tendina, e gli interruttori sono più semplici.
-
-La guida si legge meglio: ogni argomento si apre con un paio di righe, poi sezioni brevi che apri e chiudi con un clic, o tutte insieme.
+Correzioni di bug.
 ```
 
 ### Didascalie delle schermate
@@ -341,11 +333,7 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Un aspecto nuevo: grises cálidos con un acento naranja, en claro y en oscuro, e iconos de línea limpios en todas partes. La lista ahora llega a los bordes de la ventana, junto a una barra lateral un tono más oscura.
-
-Las opciones se agrupan en una tarjeta por página, cada una con su icono; las elecciones de una lista son cuadros desplegables, y los interruptores son más sencillos.
-
-La guía se lee mejor: cada tema empieza con un par de líneas, y luego secciones breves que abres y cierras con un clic, o todas a la vez.
+Corrección de errores.
 ```
 
 ### Leyendas de las capturas
@@ -437,11 +425,7 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Un nouvel aspect : des gris chauds avec un accent orange, en clair et en sombre, et des icônes au trait épurées partout. La liste va maintenant jusqu'aux bords de la fenêtre, à côté d'une barre latérale un ton plus sombre.
-
-Les options sont regroupées dans une carte par page, chacune avec son icône ; les choix dans une liste sont des listes déroulantes, et les interrupteurs sont plus simples.
-
-Le guide se lit mieux : chaque sujet commence par quelques lignes, puis de courtes sections qu'on ouvre et ferme d'un clic, ou toutes à la fois.
+Corrections de bugs.
 ```
 
 ### Légendes des captures
