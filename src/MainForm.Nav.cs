@@ -223,6 +223,7 @@ partial class MainForm
         Tip(sideNarrow ? Strings.WideSideTip : Strings.NarrowSideTip, sideButton);
         navList.Invalidate();
         footList.Invalidate();
+        Invalidate();   // where the area of the work begins
     }
 
     // Reduces the sidebar to its signs, or gives it back its names, at the width it had.
@@ -295,6 +296,15 @@ partial class MainForm
     bool OnSideEdge(Point at)
     {
         return at.X >= navList.Right && at.X < pane.Left && at.Y >= pane.Top && at.Y < pane.Bottom;
+    }
+
+    // The sidebar is the window itself; the area of the work, on the right, reaches the top, the right and the bottom
+    // of it, and the pane, a little within, is of the same colour without an edge: the two are one.
+    protected override void OnPaintBackground(PaintEventArgs e)
+    {
+        base.OnPaintBackground(e);
+        using (Brush work = new SolidBrush(pane.BackColor))
+            e.Graphics.FillRectangle(work, pane.Left, 0, ClientSize.Width - pane.Left, ClientSize.Height);
     }
 
     protected override void OnMouseDown(MouseEventArgs e)

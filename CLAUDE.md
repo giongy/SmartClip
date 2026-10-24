@@ -38,12 +38,24 @@ condiviso su GitHub).
   - `EditForm.cs` — la finestra «Nuovo/Modifica».
   - `HelpForm.cs` — la guida (pulsante «?» o F1), divisa in argomenti scelti da una colonna a sinistra (voluta
     dall'utente: tutta di fila era illeggibile), disegnata come le righe dell'elenco (`DrawTopic`); a destra
-    solo l'argomento scelto (`Write`). Il testo è `Strings.Guide()`, uno per lingua (`EnglishGuide` in
+    solo l'argomento scelto, in `GuidePage` (dal 24/10/2026, voluto dall'utente: il testo di ogni argomento era
+    troppo lungo e tutto di fila per leggerlo bene). È disegnata a mano, senza `RichTextBox`: il nome
+    dell'argomento in grande, le poche righe che dicono di che cosa parla, sempre in vista, poi le sezioni, ognuna
+    un riquadro con il suo nome che un clic apre e chiude (come gli Expander di Windows 11; freccia a destra,
+    `Toggle`). La prima sezione è aperta la prima volta che si vede l'argomento; poi ognuna resta come l'utente
+    l'ha lasciata finché la finestra è aperta (`opened`, `seen`). Con più di una sezione, accanto al titolo «Apri
+    tutto/Chiudi tutto» (`ExpandAll`, `CollapseAll`). Tastiera: frecce tra le sezioni, Invio o spazio le aprono,
+    pagine e Home/Fine scorrono. Scorre da sé con una barra di Windows sempre presente (`WS_VSCROLL`,
+    `SetScrollInfo` con `SIF_DISABLENOSCROLL`, `WM_VSCROLL`), sotto la `Rail` (che segue chi implementa
+    `Scrolling`, come `RowList`). Il testo è `Strings.Guide()`, uno per lingua (`EnglishGuide` in
     `Strings.cs`, gli altri nei file delle lingue), una riga per paragrafo (`# ` apre un argomento e gli dà il
-    nome, che deve stare nella colonna; `- ` punto, tabulazione tra un tasto e ciò che fa), e prende nomi, tasti
-    e numeri dalle costanti pubbliche di `MainForm` e `Texts` e dagli altri campi di `Strings`. Le quattro guide
-    hanno gli stessi argomenti nello stesso ordine (lo controlla `tests.exe texts`). Non è modale: resta aperta
-    accanto alla finestra. **Va aggiornata in tutte le lingue quando cambia una funzione**, come il README.
+    nome, che deve stare nella colonna; `## ` apre una sezione e le dà il nome; `- ` punto, tabulazione tra un
+    tasto e ciò che fa), e prende nomi, tasti e numeri dalle costanti pubbliche di `MainForm` e `Texts` e dagli
+    altri campi di `Strings`. Le quattro guide hanno gli stessi argomenti, con le stesse sezioni, nello stesso
+    ordine (lo controlla `tests.exe texts`). Una sezione con un solo punto lo scrive come paragrafo, senza `- `.
+    Non è modale: resta aperta accanto alla finestra. **Va aggiornata in tutte le lingue quando cambia una
+    funzione**, come il README. `real` la fotografa su tre argomenti (`-real-help`, `-real-help-keys`,
+    `-real-help-list`).
   - `Strings.cs` — **ogni testo che il programma mostra**, come campo statico con il valore inglese (inglese =
     default ed elenco unico dei testi), più la scelta della lingua (`Use`, una volta sola all'avvio da `Main`,
     prima di ogni finestra). `Strings.Italian.cs`, `.Spanish.cs`, `.French.cs` sostituiscono i valori; ciò che una
@@ -53,8 +65,10 @@ condiviso su GitHub).
   - `Look.cs` — colori chiari e scuri, caratteri (`Look.TextFont`, `StrongFont`, `TitleFont`, `NoteFont`, `EntryFont`),
     icone (`Draw`, colore proprio in `Own`), righe (`DrawRow`, `DrawTopic`, la tacca `MarkIn`/`DrawMark`), forme
     (`Rounded`, `Pill`), menu (con i segni delle voci, `Look.Mark`), suggerimenti e controlli disegnati: `Look`,
-    `Card` (anche `Quiet`, senza bordo di focus: il pannello di destra), `RoundButton` (anche `Subtle`), `Toggle`
-    (anche `SaysState`), `Tile` (una scheda delle opzioni), `TabStrip` (le schede dei tipi sopra le voci),
+    `Card` (anche `Quiet`, senza bordo di focus; `Flat`, solo il suo colore, a filo dei bordi: il pannello di destra,
+    le colonne di opzioni e guida), `RoundButton` (anche `Subtle`; `Drops`, una casella a tendina con la freccia),
+    `Toggle` (anche `Alone`, il solo interruttore), `Tile` (una riga di opzione; righe attaccate fanno un riquadro
+    solo), `TabStrip` (le schede dei tipi sopra le voci),
     `InfoBar` (un messaggio con il suo tipo, `Notice`), `EmptyNote` (ciò che dice un elenco vuoto). Anche
     `Window`, la base di tutte le finestre tranne `Peek`: carattere e colori
     dell'interfaccia, barra del titolo (`Caption`), `Finish` alla fine del costruttore (la scala, vedi le trappole),
@@ -140,6 +154,16 @@ condiviso su GitHub).
   - `Origin.cs` — il programma in cui è stata copiata una voce (`Origin`: nome e icona), vedi «App di provenienza» sotto.
   - `Ocr.cs` — il testo di un'immagine letto dal riconoscimento di Windows (`Windows.Media.Ocr`, sul PC, senza
     rete; funziona anche fuori dal pacchetto): vedi «Copia il testo» sotto.
+  - `Icons.cs` — i segni (`Sign`), dal 24/10/2026 (voluto dall'utente: le icone a linee gli piacevano) le icone di
+    [Lucide](https://lucide.dev), licenza ISC, alcune derivate da Feather, MIT: **le due note stanno in fondo a
+    `LICENSE` e devono restarci**. Ogni segno è il testo SVG dell'icona (`Shapes`, con il nome Lucide accanto), letto
+    una volta da un piccolo lettore di tracciati (`Read`, `Trace`: M L H V C S Q A Z, `circle`, `rect`; gli archi
+    diventano curve, `Arc`) e disegnato con GDI+ su una griglia di 24 con linee larghe 2, arrotondate
+    (`Icons.Draw`, chiamato da `Look.Draw`). Uguali su ogni Windows, senza caratteri di icone. Un segno nuovo: il
+    nome nell'enum `Sign`, l'SVG da `lucide-icons/lucide`, cartella `icons` (`gh api …/contents/icons/<nome>.svg`),
+    con `<line>` scritte come `M x1 y1 x2 y2`. Alcuni nomi sono cambiati in Lucide 1.x: `trash-2` → `trash`,
+    `history` → `rotate-ccw-clock`. Ogni riga delle opzioni ha il suo segno (`Tile.Sign`, primo argomento di
+    `PlaceTile`/`PlaceOption`/`PlaceNumber`/`PlaceHotkey`), come le impostazioni del riferimento.
 - `packaging\` — il pacchetto MSIX per lo Store: `AppxManifest.xml` (identità da Partner Center, *Product
   management → Product identity*: `lsgag.SmartClipClipboardTyper`, editore `ls_gag`; il nome sullo Store è «SmartClip – Clipboard & Typer», scelto
   dall'utente perché «SmartClip» era preso e «ClipSmart» è già un gestore di appunti per Chrome: sta in
@@ -247,7 +271,8 @@ condiviso su GitHub).
   l'iniziale del nome ritagliata nel colore della riga (`InitialShare`, `InitialDrop`; voluto dall'utente il 19/10/2026:
   tutte uguali, non si distinguevano; nella cartella vuota la lettera toccava i bordi); con i nomi, un nome tagliato compare intero nel
   suggerimento (`NameCut`, `RowTip`; `PlaceParts` misura la riga per disegno e suggerimento). Sotto, `footList`: Nuova cartella, Sospendi/Riprendi la cattura, Opzioni, Guida. A destra, su un
-  pannello più chiaro (`pane`, un `Card` `Quiet`): titolo del posto con accanto, piccolo e grigio, il conteggio (`PlaceTitle`,
+  pannello più chiaro che arriva ai bordi della finestra (`pane`, un `Card` `Flat`; il resto dell'area lo dipinge
+  `OnPaintBackground` della finestra, che per il resto è la barra laterale): titolo del posto con accanto, piccolo e grigio, il conteggio (`PlaceTitle`,
   sulla stessa linea di base; prima stava all'altro capo del pannello), ricerca con «Nuovo…» e «Digita gli
   appunti», le schede dei tipi (`tabs`, `TabStrip`: Tutti, Testo, Codice, Link, Immagini, scelte dell'utente),
   l'elenco delle schede delle voci (`cardList`), la riga di stato. «Cronologia» mostra solo i copiati (voluto
@@ -561,15 +586,28 @@ condiviso su GitHub).
 
 - Tema (voluto dall'utente, a cui lo scuro con accenti pastello di prima non piaceva più, ma nemmeno il
   bianco): grigio caldo neutro con tocchi di colore nelle icone. I colori stanno tutti in cima a `Look`; i
-  segni (`Sign`, le icone di Windows dal carattere Segoe Fluent Icons, o Segoe MDL2 Assets su Windows 10, in
-  `Look.Glyph`; senza nessuno dei due disegnati a mano su una griglia di 16) dicono cos'è una voce — testo,
+  segni (`Sign`, le icone di Lucide disegnate dal programma, `Icons.cs`; fino al 24/10/2026 i glifi di Segoe Fluent
+  Icons o Segoe MDL2 Assets, e senza nessuno dei due disegnati a mano) dicono cos'è una voce — testo,
   indirizzo, testo formattato — e stanno sui pulsanti (`RoundButton.Sign`). Barra del titolo e barre di scorrimento
   seguono da sole la luminosità dello sfondo (`Look.Dark`).
+- Stile definitivo (voluto dall'utente il 24/10/2026, da un'app che gli piaceva, in chiaro e in scuro; **nessun nome
+  né riferimento a quell'app nel repository**, nemmeno nei commit: lo ha chiesto lui). Grigi caldi e accento
+  arancio: la barra laterale (`Back`) un tono più scura dell'area di lavoro (`Well`), che arriva ai bordi della
+  finestra senza cornice, le schede (`Raised`) un tono più chiare ancora, con il bordo sottile; la riga selezionata
+  della barra tinta d'arancio (`Selected`) con la tacca all'estremità sinistra, più alta (`MarkShare`); angoli di 8
+  pixel (`Look.Radius`). Accento più cupo nel chiaro, acceso nello scuro, dove ciò che vi si scrive è scuro
+  (`OnAccent`, nuovo colore della tavolozza). I segni sono **monocromi**, nel colore del testo; hanno un colore solo
+  fatto, avviso, errore (`Own`) e la freccia di una voce in alto (arancio). Opzioni: le righe di una pagina formano
+  un riquadro solo, con righe divisorie (`Tile.Joined`, `TileGap` 0), il nome in seminegretto, la nota più piccola
+  (`NoteShare`); interruttori senza «Attivato/Disattivato» (`Toggle.Alone`), grigi da spenti, arancio con la manopola
+  scura (nello scuro) da accesi; le scelte da un menu sono caselle a tendina (`RoundButton.Drops`, `PickerWidth`).
+  Opzioni e guida: la colonna a sinistra come la barra laterale, a filo dei bordi; il resto è area di lavoro. Le
+  caselle di testo con il focus hanno tutto il bordo d'accento (non più la riga sul fondo).
 - Chiaro o scuro come Windows per le app (voluto dall'utente il 15/10/2026: «il più moderno possibile»
   restando in WinForms, rinunciando a WinUI per non perdere la compilazione senza installare nulla), dalla
   chiave `Themes\Personalize`, `AppsUseLightTheme`. Lo scuro è un grigio neutro alla Windows 11 (aree un
-  tono più chiare della finestra), con i segni un po' più accesi; l'accento resta lo stesso blu fisso (scelta
-  dell'utente, non quello di Windows). Le due tavolozze stanno in `Look.Use`. Il cambio si segue a programma
+  tono più chiare della finestra), con i segni un po' più accesi; l'accento è un arancio fisso (scelta
+  dell'utente, non quello di Windows; vedi «Stile definitivo» sopra). Le due tavolozze stanno in `Look.Use`. Il cambio si segue a programma
   aperto: `WM_SETTINGCHANGE` con «ImmersiveColorSet» → `Look.Follow` → `Switch`, che ricolora ogni finestra
   aperta (`Recolor`): un colore assegnato a un controllo è sempre uno della tavolozza, e quello vecchio dice per
   posizione (`Palette`) quale diventa. **Un colore nuovo va messo in tutte e due le tavolozze e in `Palette`**,
@@ -613,7 +651,7 @@ condiviso su GitHub).
   - Opzioni come le Impostazioni di Windows 11: ogni opzione è una scheda (`Tile`, messa da `PlaceTile`) con il nome,
     sotto in grigio e più piccola che cosa fa in poche parole (`…Note` in `Strings`; la spiegazione completa resta
     nel suggerimento, su scheda e controllo: `TipOption`) e i controlli all'estremità destra; gli interruttori
-    dicono «Attivato/Disattivato» prima di sé (`Toggle.SaysState`, `Switch`). Carattere e dimensione stanno su una
+    dicevano «Attivato/Disattivato» prima di sé, tolto con lo stile del 24/10/2026 (`Toggle.Alone`, `Switch`). Carattere e dimensione stanno su una
     scheda sola. Cinque pagine: è nata «Aspetto» (lingua, tema, caratteri), perché «Programma» non ci stava più.
   - Riga di stato come l'InfoBar di Windows 11 (`InfoBar`): una barra arrotondata tinta del colore del tipo, con il
     suo segno (`Notice`: informazione, fatto, avviso, errore). `status.Tell(testo, tipo)`; `Say` è «fatto», `Warn`
@@ -666,8 +704,7 @@ condiviso su GitHub).
   Barra del titolo e barre di scorrimento scure non compaiono nelle immagini di `tests.exe shot`: per
   vederle c'è `tests.exe real <prefisso>`, che mostra le finestre un attimo e fotografa lo schermo.
   Forme arrotondate (l'utente trovava la finestra piatta e asettica, ma i colori vanno bene): ricerca, pannello
-  e caselle stanno in un `Card` (bordo sottile, d'accento quando il contenuto ha il focus; `Look.Wrap`; attorno
-  a una casella di testo invece, come in Windows 11, una riga d'accento sul fondo, `Card.Underline`), i
+  e caselle stanno in un `Card` (bordo sottile, d'accento quando il contenuto ha il focus; `Look.Wrap`), i
   pulsanti sono `RoundButton`, la riga selezionata è una forma arrotondata con una tacca d'accento e quella
   sotto il puntatore si illumina (`Hover`, indice e luce in `RowList.Glow`; `Look.DrawRow`). Le voci copiate mostrano sotto, a destra, l'ora
   (o il giorno, se non è oggi); accanto al titolo il numero di voci; un elenco vuoto dice perché (`emptyNote`).
@@ -719,7 +756,8 @@ condiviso su GitHub).
 - Aggiungere un'opzione: il campo in cima a `MainForm`, una riga `PlaceOption` (`PlaceNumber` se è un numero,
   `PlaceHotkey` se è una scorciatoia globale, `PlaceTile` con `Picker` se si sceglie da un menu) in `PlaceOptions`
   sotto la sua pagina (`Page`), una in `TransferSettings` e il suggerimento `TipOption`, tutto in
-  `MainForm.Options.cs`. Sulla pagina entra da sola, su una scheda alta quanto serve al suo testo.
+  `MainForm.Options.cs`. Sulla pagina entra da sola, su una riga alta quanto serve al suo testo, con il segno dato
+  come primo argomento (un'icona Lucide, vedi `Icons.cs`).
   Nome, descrizione breve (`…Note`) e suggerimento sono campi di `Strings` (inglese) tradotti nelle altre tre lingue.
 - **Nessun testo visibile scritto nel codice**: ogni testo nuovo è un campo di `Strings.cs` in inglese e una riga
   in ciascuno dei tre file delle lingue, con gli stessi `{0}`. `tests.exe texts` controlla che nessuna traduzione
@@ -740,8 +778,7 @@ condiviso su GitHub).
   Le opzioni stanno in pagine, una per categoria (voluto dall'utente il 16/10/2026: «fatte come la guida, schede
   verticali, divise per argomento»; prima erano su due colonne, e prima ancora in un elenco unico, caotico): a
   sinistra la colonna delle pagine (`pageList`, disegnata come gli argomenti della guida con `Look.DrawTopic`, in un
-  `Card` `Quiet` come quella della guida: con il bordo d'accento quando aveva il focus spiccava più della pagina; con
-  l'icona di ciascuna), a destra la pagina scelta (`pagePane`, `ShowPage`), con il nome in grande in cima
+  `Card` `Flat` del colore della barra laterale, a filo dei bordi come quella della guida; con l'icona di ciascuna), a destra la pagina scelta (`pagePane`, `ShowPage`), con il nome in grande in cima
   (`PageTop`) e le schede delle opzioni (`Tile`) larghe `PaneWidth`, una sotto l'altra. Ordine: Digitazione,
   Scorciatoie, Cronologia, Aspetto, Programma. Una pagina è un `Panel` con `Text` (il nome) e `Tag` (il segno), ed è
   lei l'elemento della colonna. Il colore d'accento resta a ciò che si clicca (il link alla cartella dei dati, sulla
@@ -1006,7 +1043,9 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - Il tema dal vivo: il cambio da Impostazioni di Windows a programma aperto (provati solo `Look.Switch` da
   `shot` e le immagini di `real` in chiaro e in scuro), il menu delle caselle di testo scurito da
   `SetPreferredAppMode`, l'interruttore che scorre, l'anello del focus, `AskForm` aperta dal programma vero.
+- La guida a sezioni (24/10/2026) dal vivo: viste le foto di `real` in italiano e francese, chiaro e scuro; mai il
+  clic vero su una sezione o su «Apri tutto», la rotella, la barra sottile trascinata, i tasti.
 - Le novità del 18/10/2026 dal vivo: i segni nei menu visti solo nelle immagini di `real` (menu del tray e
   dell'elenco), la tacca che scivola solo in quattro fotogrammi di un programmino usa e getta, mai le schede delle
   opzioni cliccate davvero né Ctrl+F premuto, i pulsanti sottili sotto il puntatore, i tipi della riga di stato
-  durante una digitazione vera. Da Windows 10 (Segoe MDL2 Assets) i glifi nuovi non sono mai stati guardati.
+  durante una digitazione vera.

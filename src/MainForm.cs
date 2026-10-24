@@ -66,12 +66,13 @@ partial class MainForm : Window
     const float MetaRoom = 0.45f;
     const int MaxRow = 255;                            // the tallest row a list box of Windows can have, in pixels
     const int PreviewMargin = 4;                       // around the preview, inside its card
-    const int TileHeight = 52, TileGap = 4;            // the least a card of the options is tall, and between two cards
+    const int TileHeight = 56, TileGap = 0;            // the least an option is tall, and between two: none, they make one card
     const int RowHeight = 22;                          // a line of text on the card of the folder of the database
     const int NoteHeight = 18;                         // the same for a line of what it says, smaller
     const int NumberWidth = 56, NumberHeight = 26;     // the box of an option that is a number
     const int OptionButtonWidth = 130;                 // a button among the options
-    const int SizeButtonWidth = 72;                    // the same for a size in pixels
+    const int PickerWidth = 160;                       // a box to choose from among the options, with its arrow
+    const int SizeButtonWidth = 80;                    // the same for a size in pixels
     public const int MaxShown = 200;                   // copied entries listed at once
     const int SearchHeight = 30, GlyphWidth = 20;      // the search box, and the magnifying glass on its left
     const int KeysWidth = 64, KeysPadding = 10;        // the frame of its keys on its right, and the air around them
@@ -291,11 +292,11 @@ partial class MainForm : Window
         PlaceOptions();
         options = new OptionsWindow(this);
 
-        // On the right a lighter pane, as in the apps of Windows 11: on top the name of the place and how many entries
-        // it has, then the search with a new text and the typing of the clipboard beside it, the tabs of the
-        // categories, the cards, and at the bottom the status line.
+        // On the right the area of the work, lighter than the sidebar and reaching the edges of the window: on top the
+        // name of the place and how many entries it has, then the search with a new text and the typing of the clipboard
+        // beside it, the tabs of the categories, the cards, and at the bottom the status line.
         int paneWidth = PaneInset + ContentWidth + PaneInset;
-        pane.Quiet = true;
+        pane.Flat = true;
         pane.BackColor = Look.Well;
         // The two as wide as what they say, the count right after the name (PlaceTitle).
         title.SetBounds(PaneInset, PaneInset, ContentWidth, TitleRow);
@@ -853,6 +854,7 @@ partial class MainForm : Window
     protected override void OnResize(EventArgs e)
     {
         base.OnResize(e);
+        Invalidate();   // the area of the work reaches the edges (OnPaintBackground)
         if (WindowState == FormWindowState.Minimized && trayBox.Checked) HideToTray();
         // In a wider window the same message may take one line less.
         else if (shown && WindowState != FormWindowState.Minimized) FitStatus();

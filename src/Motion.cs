@@ -110,9 +110,15 @@ class Glow
     }
 }
 
+// What a Rail stands over and follows: a control with a scroll bar of Windows that says when what it shows moved.
+interface Scrolling
+{
+    event EventHandler Scrolled;
+}
+
 // A list drawn by hand, row by row: its rows light up under the pointer (Glow), the mark of the selected one slides
 // to the row selected next, and a Rail can stand over its scroll bar, which it keeps told of where the rows are.
-class RowList : ListBox
+class RowList : ListBox, Scrolling
 {
     const int SlideSteps = 12;
     public readonly Glow Glow;
@@ -366,8 +372,8 @@ class Rail : Control
         target.Resize += delegate { rail.Place(); };
         target.Move += delegate { rail.Place(); };
         target.HandleCreated += delegate { rail.Place(); };
-        RowList rows = target as RowList;
-        if (rows != null) rows.Scrolled += delegate { rail.Follow(); };
+        Scrolling moving = target as Scrolling;
+        if (moving != null) moving.Scrolled += delegate { rail.Follow(); };
         RichTextBox text = target as RichTextBox;
         if (text != null)
         {

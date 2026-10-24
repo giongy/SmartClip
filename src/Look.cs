@@ -66,11 +66,10 @@ class Window : Form
     }
 }
 
-// A checkbox drawn as a switch in the colours of the window: the system one cannot be coloured. The knob is
-// on the right, on the accent colour, while it is on; it slides there when it changes, and grows a little
-// under the pointer, as the switches of Windows 11 do. On a card of the options (SaysState) it says instead,
-// before it, whether it is on, as those of the settings of Windows 11 do; its text is then only its name, for
-// those who cannot see it.
+// A checkbox drawn as a switch in the colours of the window: the system one cannot be coloured. Off, a grey track
+// with a light knob on the left; on, the track takes the accent colour and the knob, on the right, that of what is
+// written on it. The knob slides when it changes and grows a little under the pointer. On a card of the options
+// (Alone) it is the switch alone: its text is then only its name, for those who cannot see it.
 class Toggle : CheckBox
 {
     const int TextGap = 8;        // between the switch and its text, in pixels at 96 dpi
@@ -84,23 +83,15 @@ class Toggle : CheckBox
         lit = new Fade(this);
     }
 
-    public bool SaysState { get; set; }
+    public bool Alone { get; set; }
 
     int Side { get { return Font.Height; } }
     int Track { get { return (int)(Side * Stretch); } }
 
-    // What is written beside the switch.
-    string Shown
-    {
-        get { return SaysState ? (Checked ? Strings.On : Strings.Off) : Text; }
-    }
-
     public override Size GetPreferredSize(Size proposed)
     {
-        // Saying its state, as wide as the longer of the two: it does not move when it changes.
-        Size text = TextRenderer.MeasureText(SaysState ? Strings.On : Text, Font, Size.Empty, TextFormatFlags.NoPrefix);
-        if (SaysState)
-            text.Width = Math.Max(text.Width, TextRenderer.MeasureText(Strings.Off, Font, Size.Empty, TextFormatFlags.NoPrefix).Width);
+        if (Alone) return new Size(Track + 6, Side + 6);   // room for the ring of the focus around it
+        Size text = TextRenderer.MeasureText(Text, Font, Size.Empty, TextFormatFlags.NoPrefix);
         return new Size(Track + TextGap + text.Width, Math.Max(Side, text.Height) + 2);
     }
 
@@ -127,23 +118,29 @@ class Toggle : CheckBox
         Graphics g = e.Graphics;
         g.Clear(Parent.BackColor);
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        Rectangle box = new Rectangle(SaysState ? Width - Track : 0, (Height - Side) / 2, Track - 1, Side - 1);
+        Rectangle box = new Rectangle(Alone ? Width - Track - 3 : 0, (Height - Side) / 2, Track - 1, Side - 1);
         // The knob travels between its two ends, its colours with it; the focus is shown only to the keyboard.
         float on = knob.Value, size = box.Height - 2 * KnobInset, grown = size + (Enabled ? 2 * lit.Value : 0);
         float x = box.Left + KnobInset + size / 2 + on * (box.Width - 2 * KnobInset - size), y = box.Top + box.Height / 2f;
-        bool ring = Focused && ShowFocusCues;
+        // Off, the track a mid grey, the knob light; in the dark the track is only an edge's grey.
+        Color track = Look.Dark ? Look.Border : Look.Blend(Look.Border, Look.Muted, 0.7f);
+        Color light = Look.Dark ? Look.Blend(Look.Muted, Look.Ink, 0.5f) : Look.Raised;
+        Color fill = Look.Blend(track, Look.Accent, on);
+        if (!Enabled) fill = Look.Blend(fill, Parent.BackColor, 0.5f);
         using (GraphicsPath shape = Look.Pill(box))
-        using (Brush fill = new SolidBrush(Look.Blend(Look.Well, Look.Accent, on)))
-        using (Pen edge = new Pen(ring ? Look.Ink : Look.Blend(Look.Border, Look.Accent, on), ring ? 2 : 1))
-        using (Brush dot = new SolidBrush(Look.Blend(Look.Muted, Color.White, on)))
+        using (Brush back = new SolidBrush(fill))
+        using (Brush dot = new SolidBrush(Look.Blend(light, Look.OnAccent, on)))
         {
-            g.FillPath(fill, shape);
-            g.DrawPath(edge, shape);
+            g.FillPath(back, shape);
             g.FillEllipse(dot, x - grown / 2, y - grown / 2, grown, grown);
+            if (Focused && ShowFocusCues)
+                using (GraphicsPath ring = Look.Pill(RectangleF.Inflate(box, 2, 2)))
+                using (Pen pen = new Pen(Look.Accent, 1.5f))
+                    g.DrawPath(pen, ring);
         }
-        Rectangle text = SaysState ? Rectangle.FromLTRB(0, 0, box.Left - TextGap, Height) : Rectangle.FromLTRB(box.Right + 1 + TextGap, 0, Width, Height);
-        TextRenderer.DrawText(g, Shown, Font, text, ForeColor, TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine
-            | TextFormatFlags.NoPrefix | (SaysState ? TextFormatFlags.Right : 0));
+        if (Alone) return;
+        TextRenderer.DrawText(g, Text, Font, Rectangle.FromLTRB(box.Right + 1 + TextGap, 0, Width, Height), ForeColor,
+            TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix);
     }
 }
 
@@ -287,22 +284,51 @@ class EmptyNote : Label
     }
 }
 
-// One option as Windows 11 lists its settings: a rounded card a shade off the window, with its name and, under it
-// in grey, what it does (Note); its controls at the right end. A card without a name only holds controls, placed by
-// whoever fills it.
+// One option, a row of a card of options: its sign on the left, then its name in the heavier face and, under it in
+// grey, what it does (Note); its controls at the right end. Rows placed one right under the other make one card:
+// rounded only at its two ends, with a thin line between a row and the next. A row without a name only holds
+// controls, placed by whoever fills it from TextLeft.
 class Tile : Panel
 {
     public const int Inset = 14, Air = 9;   // around its text, in pixels at 96 dpi: at its sides, above and below
     public const int ControlGap = 8;        // between its text and its controls, and between one control and the next
+    const int SignSize = 18, SignGap = 16;  // its sign, and between it and the text
+    public const int TextLeft = Inset + SignSize + SignGap;
+    const int Joint = 2;   // at most between two rows of one card, in pixels: scaled one by one, they may not meet exactly
 
     public Tile()
     {
         DoubleBuffered = true;
         ResizeRedraw = true;
-        BackColor = Look.Well;
+        BackColor = Look.Raised;
+    }
+
+    // Whether another row lies right above or right under it, on the same card.
+    bool Joined(bool above)
+    {
+        if (Parent != null)
+            foreach (Control other in Parent.Controls)
+                if (other != this && other is Tile && other.Left == Left && (above ? other.Bottom == Top : other.Top == Bottom))
+                    return true;
+        return false;
+    }
+
+    // Scaled one by one, two rows of one card may no longer meet exactly, by a pixel: once the window has its scale,
+    // each is put right under the one above it, in the order they were placed.
+    public static void Snap(Control page)
+    {
+        Control above = null;
+        foreach (Control row in page.Controls)
+        {
+            if (!(row is Tile)) continue;
+            if (above != null && Math.Abs(row.Top - above.Bottom) <= Joint) row.Top = above.Bottom;
+            above = row;
+        }
     }
 
     public string Note { get; set; }
+
+    public Sign? Sign { get; set; }
 
     const TextFormatFlags NameFlags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;
     const TextFormatFlags NoteFlags = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix;
@@ -310,7 +336,7 @@ class Tile : Panel
     // How tall its name and note are, written 'width' pixels wide.
     public static int TextHeight(string name, string note, int width)
     {
-        int height = TextRenderer.MeasureText(name, Look.TextFont, Size.Empty, NameFlags).Height;
+        int height = TextRenderer.MeasureText(name, Look.StrongFont, Size.Empty, NameFlags).Height;
         if (!string.IsNullOrEmpty(note))
             height += TextRenderer.MeasureText(note, Look.NoteFont, new Size(width, 0), NoteFlags).Height;
         return height;
@@ -321,62 +347,68 @@ class Tile : Panel
         Graphics g = e.Graphics;
         g.Clear(Parent.BackColor);
         g.SmoothingMode = SmoothingMode.AntiAlias;
-        using (GraphicsPath shape = Look.Rounded(new Rectangle(0, 0, Width - 1, Height - 1)))
+        // Joined to the row above, it goes up past its own top so as not to round it; joined to the row under it, it goes
+        // down past its bottom, and draws the line between the two along it.
+        bool above = Joined(true), under = Joined(false);
+        int extra = 3 * Look.Radius;
+        Rectangle area = Rectangle.FromLTRB(0, above ? -extra : 0, Width - 1, under ? Height + extra : Height - 1);
+        using (GraphicsPath shape = Look.Rounded(area))
         using (Brush fill = new SolidBrush(BackColor))
         using (Pen edge = new Pen(Look.Border))
         {
             g.FillPath(fill, shape);
             g.DrawPath(edge, shape);
+            if (under) g.DrawLine(edge, 0, Height - 1, Width, Height - 1);
         }
+        int side = (int)(SignSize * Look.Zoom);
+        if (Sign.HasValue)
+            Look.Draw(g, Sign.Value, new Rectangle((int)(Inset * Look.Zoom), (Height - side) / 2, side, side), null);
         if (Text.Length == 0) return;
         // The text takes what the controls leave, in the middle of the height.
-        int inset = (int)(Inset * Look.Zoom), right = Width - inset;
+        int inset = (int)(TextLeft * Look.Zoom), right = Width - (int)(Inset * Look.Zoom);
         foreach (Control control in Controls) right = Math.Min(right, control.Left - (int)(ControlGap * Look.Zoom));
         int width = right - inset, top = (Height - TextHeight(Text, Note, width)) / 2;
-        int name = TextRenderer.MeasureText(g, Text, Look.TextFont, Size.Empty, NameFlags).Height;
-        TextRenderer.DrawText(g, Text, Look.TextFont, new Rectangle(inset, top, width, name), Look.Ink, NameFlags);
+        int name = TextRenderer.MeasureText(g, Text, Look.StrongFont, Size.Empty, NameFlags).Height;
+        TextRenderer.DrawText(g, Text, Look.StrongFont, new Rectangle(inset, top, width, name), Look.Ink, NameFlags);
         if (!string.IsNullOrEmpty(Note))
             TextRenderer.DrawText(g, Note, Look.NoteFont, new Rectangle(inset, top + name, width, Height - top - name), Look.Muted, NoteFlags);
     }
 }
 
-// A panel drawn as a rounded shape a shade off the window, with a thin edge. While what it holds has the
-// focus, the edge takes the accent colour; around a text box, as in Windows 11, a line along its bottom does.
+// A panel drawn as a rounded shape in its own colour, with a thin edge. While what it holds has the focus, the edge
+// takes the accent colour.
 class Card : Panel
 {
-    const int LineWidth = 2;   // of that line, in pixels at 96 dpi
-
     public Card()
     {
         DoubleBuffered = true;
         ResizeRedraw = true;
     }
 
-    public bool Underline { get; set; }
-
     // A card that holds a whole part of a window, not a field: its edge never changes.
     public bool Quiet { get; set; }
+
+    // A part of a window that reaches its edges, as the sidebar and the area of the work: only its colour, square.
+    public bool Flat { get; set; }
 
     protected override void OnPaint(PaintEventArgs e)
     {
         Graphics g = e.Graphics;
+        if (Flat)
+        {
+            g.Clear(BackColor);
+            base.OnPaint(e);
+            return;
+        }
         g.Clear(Parent.BackColor);
         g.SmoothingMode = SmoothingMode.AntiAlias;
         bool focus = ContainsFocus && !Quiet;
         using (GraphicsPath shape = Look.Rounded(new Rectangle(0, 0, Width - 1, Height - 1)))
-        using (Brush fill = new SolidBrush(Look.Well))
-        using (Pen edge = new Pen(focus && !Underline ? Look.Accent : Look.Border))
-        using (Brush line = new SolidBrush(Look.Accent))
+        using (Brush fill = new SolidBrush(BackColor))
+        using (Pen edge = new Pen(focus ? Look.Accent : Look.Border))
         {
             g.FillPath(fill, shape);
             g.DrawPath(edge, shape);
-            if (focus && Underline)
-            {
-                int width = (int)Math.Round(LineWidth * Look.Zoom);
-                g.SetClip(shape);
-                g.FillRectangle(line, 0, Height - width, Width, width);
-                g.ResetClip();
-            }
         }
         base.OnPaint(e);
     }
@@ -514,6 +546,11 @@ class RoundButton : Button
     // pointer brings up its shape.
     public bool Subtle { get; set; }
 
+    // A button that opens a list of choices and shows the one in use: drawn as a box to choose from, the choice on
+    // the left and an arrow pointing down at the right end; while pressed, its edge in the accent colour.
+    public bool Drops { get; set; }
+    const int DropPad = 10, ArrowSize = 10;   // in pixels at 96 dpi: at its sides, and the arrow
+
     protected override void OnMouseEnter(EventArgs e)
     {
         base.OnMouseEnter(e);
@@ -560,15 +597,24 @@ class RoundButton : Button
                 g.FillPath(back, shape);
                 g.DrawPath(edge, shape);
             }
-        if (Focused && ShowFocusCues)
+        if (Focused && ShowFocusCues || Drops && Enabled && pressed)
             using (GraphicsPath ring = Look.Rounded(Rectangle.Inflate(area, -1, -1)))
-            using (Pen pen = new Pen(coloured ? Color.White : Look.Ink, 2))
+            using (Pen pen = new Pen(coloured ? Look.OnAccent : Drops ? Look.Accent : Look.Ink, Drops ? 1 : 2))
                 g.DrawPath(pen, ring);
         // Sign and text together are centred. On a coloured button the sign takes the colour of the text.
         const TextFormatFlags flags = TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix
             | TextFormatFlags.NoPadding;
         Color ink = Enabled ? ForeColor : Look.Blend(Look.Muted, Parent.BackColor, 0.5f);
         float scale = (float)Height / Window.ButtonHeight;
+        if (Drops)
+        {
+            // The choice on the left, the arrow at the right end.
+            int pad = (int)(DropPad * scale), arrow = (int)(ArrowSize * scale);
+            Look.Draw(g, global::Sign.Opened, new Rectangle(Width - pad - arrow, (Height - arrow) / 2, arrow, arrow), Look.Muted);
+            TextRenderer.DrawText(g, Text, Font, Rectangle.FromLTRB(pad, 0, Width - 2 * pad - arrow, Height), ink,
+                flags | TextFormatFlags.EndEllipsis);
+            return;
+        }
         int side = sign.HasValue ? (int)(SignSize * scale) : 0;
         int gap = sign.HasValue && Text.Length > 0 ? (int)(SignGap * scale) : 0;   // a sign alone stays in the middle
         int text = TextRenderer.MeasureText(g, Text, Font, Size.Empty, flags).Width, left = (Width - side - gap - text) / 2;
@@ -579,10 +625,12 @@ class RoundButton : Button
     }
 }
 
-// The small signs drawn beside entries, on buttons and beside the pages of the options: they are where the colour is.
+// The small signs drawn beside entries, on buttons, beside the pages and the options, in menus (see Icons).
 enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, Keys, Search, Help, Opened, Closed, Bolt, History, Up,
     Bold, Italic, Underline, Erase, Formatted, Folder, NewFolder, Move, Pause, Resume, Open, Exit, Show, Check, Paint,
-    Info, Done, Warning, Error, Paste, Code, Picture, Apps, More, Copy, Menu, FullFolder, Cancel }
+    Info, Done, Warning, Error, Paste, Code, Picture, Apps, More, Copy, Menu, FullFolder, Cancel,
+    Timer, Globe, Enter, Unclip, Slow, Hash, Pin, Numbers, Calendar, Clean, Language, Contrast, Letters, Rows, Tray, Hide,
+    Archive, Power }
 
 // The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
 enum Theme { System, Light, Dark }
@@ -593,16 +641,13 @@ enum Theme { System, Light, Dark }
 static class Look
 {
     const int FramePadding = 6;   // between the edge of a framed text box and its text
-    const int Radius = 6;         // of the rounded corners
-    const float MarkShare = 0.45f;   // how much of the height of a selected row its mark takes
+    public const int Radius = 8;  // of the rounded corners
+    const float MarkShare = 0.6f;    // how much of the height of a selected row its mark takes
     const string ModernFont = "Segoe UI Variable Text";   // what Windows 11 writes its own windows in
     // Its heavier face, for what stands out in a list, and the one of the titles, larger: Windows writes the name
     // of that one cut at 31 letters. Where they are missing (Windows 10), the semibold face of the family.
     const string StrongName = "Segoe UI Variable Text Semibold", TitleName = "Segoe UI Variable Display Semib";
     const float TitleGrowth = 1.45f;   // a title is this much larger than the text, as in Windows 11
-    // The signs are the icons of Windows itself, from its font of icons: that of Windows 11, or the older one of
-    // Windows 10. Without either they are drawn by hand.
-    const string IconName = "Segoe Fluent Icons", OldIconName = "Segoe MDL2 Assets";
     // Air above and below a menu, above and below each of its rows and before their text; beside the shape
     // under the pointer.
     const int MenuEdge = 4, MenuRow = 5, MenuText = 8, MenuInset = 4;
@@ -621,8 +666,6 @@ static class Look
     {
         get { return ScreenZoom * InterfaceSize / DesignedSize; }
     }
-    static readonly Font IconProbe = Installed(IconName, 10) ?? Installed(OldIconName, 10);   // null: no font of icons
-    static readonly Dictionary<int, Font> IconFonts = new Dictionary<int, Font>();   // by size in pixels
 
     // The font of the interface, the same in every window: buttons, labels, options, the guide, menus, questions.
     // The user chooses it among those of Families that Windows has, with its size in pixels at 96 dpi; the first
@@ -636,7 +679,7 @@ static class Look
     public static Font StrongFont { get; private set; }
     public static Font TitleFont { get; private set; }
     public static Font NoteFont { get; private set; }   // what an option does, under its name: smaller
-    const float NoteShare = 0.9f;                       // of the size of the interface
+    const float NoteShare = 0.85f;                      // of the size of the interface
     public static string InterfaceFamily { get; private set; }   // one of FontNames
     public static int InterfaceSize { get; private set; }        // one of InterfaceSizes
 
@@ -734,12 +777,13 @@ static class Look
         using (Graphics screen = Graphics.FromHwnd(IntPtr.Zero)) return screen.DpiX / 96f;
     }
 
-    // The neutral part: a warm grey window, neither too dark nor white, with lighter areas where text is
-    // written or listed; in the dark a neutral grey, the areas again a shade lighter, as in Windows 11.
+    // The neutral part, warm greys: the window (the sidebar) a shade darker than the area where the work is (Well), on
+    // which cards stand a shade lighter still (Raised); the selected row tinted with the accent.
     public static Color Back, Well, Soft, Border, Selected, Ink, Muted;
     public static Color Raised;   // a card standing on an area: a shade lighter than it
-    // The coloured part: the accent, the same blue in both, and the colours of the signs, brighter in the dark.
-    public static Color Accent, Green, Amber, Red, Teal, Purple;
+    // The coloured part: the accent, a warm orange, deeper in the light; what is written on it (OnAccent); the colours
+    // of what a message is (done, warning, error) and of a few kinds, brighter in the dark.
+    public static Color Accent, OnAccent, Green, Amber, Red, Teal, Purple;
     public static bool Dark { get; private set; }   // what Windows draws (title bar, scroll bars, menus) follows
     public static Theme Chosen { get; private set; }   // in the options; until then, as Windows
     public static event EventHandler Changed;       // after the colours changed with those of Windows
@@ -759,21 +803,23 @@ static class Look
         Dark = dark;
         if (dark)
         {
-            Back = Color.FromArgb(32, 32, 32); Well = Color.FromArgb(43, 43, 43); Soft = Color.FromArgb(56, 56, 56);
-            Raised = Color.FromArgb(50, 50, 50);
-            Border = Color.FromArgb(68, 68, 68); Selected = Color.FromArgb(42, 56, 86);
-            Ink = Color.FromArgb(238, 238, 238); Muted = Color.FromArgb(160, 160, 160);
-            Accent = Color.FromArgb(70, 116, 224); Green = Color.FromArgb(72, 190, 132); Amber = Color.FromArgb(236, 168, 58);
-            Red = Color.FromArgb(234, 104, 100); Teal = Color.FromArgb(48, 184, 194); Purple = Color.FromArgb(160, 126, 240);
+            Back = Color.FromArgb(25, 23, 21); Well = Color.FromArgb(35, 33, 31); Soft = Color.FromArgb(57, 54, 51);
+            Raised = Color.FromArgb(45, 43, 40);
+            Border = Color.FromArgb(80, 76, 72); Selected = Color.FromArgb(68, 50, 36);
+            Ink = Color.FromArgb(237, 235, 231); Muted = Color.FromArgb(177, 173, 168);
+            Accent = Color.FromArgb(253, 130, 4); OnAccent = Color.FromArgb(38, 27, 19);
+            Green = Color.FromArgb(138, 181, 73); Amber = Color.FromArgb(235, 170, 45);
+            Red = Color.FromArgb(255, 145, 137); Teal = Color.FromArgb(0, 179, 194); Purple = Color.FromArgb(206, 124, 200);
         }
         else
         {
-            Back = Color.FromArgb(232, 230, 225); Well = Color.FromArgb(247, 246, 243); Soft = Color.FromArgb(219, 216, 210);
-            Raised = Color.FromArgb(253, 252, 250);
-            Border = Color.FromArgb(198, 194, 186); Selected = Color.FromArgb(214, 224, 244);
-            Ink = Color.FromArgb(38, 40, 46); Muted = Color.FromArgb(108, 110, 116);
-            Accent = Color.FromArgb(62, 108, 214); Green = Color.FromArgb(40, 158, 104); Amber = Color.FromArgb(222, 148, 30);
-            Red = Color.FromArgb(214, 76, 72); Teal = Color.FromArgb(22, 152, 164); Purple = Color.FromArgb(132, 92, 220);
+            Back = Color.FromArgb(244, 239, 234); Well = Color.FromArgb(254, 253, 252); Soft = Color.FromArgb(233, 228, 222);
+            Raised = Color.FromArgb(255, 255, 254);   // not quite white: a colour of the palette must be one of its own
+            Border = Color.FromArgb(211, 207, 200); Selected = Color.FromArgb(247, 226, 207);
+            Ink = Color.FromArgb(38, 33, 28); Muted = Color.FromArgb(102, 95, 88);
+            Accent = Color.FromArgb(182, 78, 0); OnAccent = Color.FromArgb(255, 249, 240);
+            Green = Color.FromArgb(83, 118, 14); Amber = Color.FromArgb(169, 107, 0);
+            Red = Color.FromArgb(201, 34, 43); Teal = Color.FromArgb(0, 160, 175); Purple = Color.FromArgb(183, 97, 177);
         }
         // The menus Windows draws itself, such as the one of a text box, in the same mode.
         if (WindowsBuild() < AppModeBuild) return;
@@ -823,7 +869,7 @@ static class Look
     // Every colour of the palette, always in the same order: the old and the new are matched by place.
     static Color[] Palette
     {
-        get { return new Color[] { Back, Well, Soft, Border, Selected, Ink, Muted, Raised, Accent, Green, Amber, Red, Teal, Purple }; }
+        get { return new Color[] { Back, Well, Soft, Border, Selected, Ink, Muted, Raised, Accent, OnAccent, Green, Amber, Red, Teal, Purple }; }
     }
 
     // The theme chosen in the options: before the first window, from the settings, and then at once.
@@ -956,7 +1002,7 @@ static class Look
     {
         Rectangle row = RowShape(bounds);
         float height = row.Height * MarkShare;
-        return new RectangleF(row.Left + 3, row.Top + (row.Height - height) / 2, 3 * Zoom, height);
+        return new RectangleF(row.Left + 1, row.Top + (row.Height - height) / 2, 3 * Zoom, height);
     }
 
     public static void DrawMark(Graphics g, RectangleF mark)
@@ -1010,7 +1056,7 @@ static class Look
         button.FlatStyle = FlatStyle.Flat;
         button.FlatAppearance.BorderColor = primary ? Accent : Border;
         button.BackColor = primary ? Accent : Well;
-        button.ForeColor = primary ? Color.White : Ink;
+        button.ForeColor = primary ? OnAccent : Ink;
     }
 
     // A place where text is written or listed: a shade off the window, with scroll bars to match.
@@ -1026,329 +1072,24 @@ static class Look
         Native.SetWindowTheme(field.Handle, Dark ? "DarkMode_Explorer" : "Explorer", null);
     }
 
-    // The icon of each sign in the fonts of icons of Windows, which share them.
-    static string Glyph(Sign sign)
-    {
-        switch (sign)
-        {
-            case Sign.Text: return "\uE8A5";                        // Document
-            case Sign.Link: return "\uE71B";                        // Link
-            case Sign.Star: return "\uE735";                        // FavoriteStarFill
-            case Sign.Plus: return "\uE710";                        // Add
-            case Sign.Edit: return "\uE70F";                        // Edit
-            case Sign.Delete: return "\uE74D";                      // Delete
-            case Sign.Options: return "\uE713";                     // Settings
-            case Sign.Keys: return "\uE765";                        // KeyboardClassic
-            case Sign.Search: return "\uE721";                      // Search
-            case Sign.Help: return "\uE897";                        // Help
-            case Sign.Opened: return "\uE70D";                      // ChevronDown
-            case Sign.Closed: return "\uE76C";                      // ChevronRight
-            case Sign.Bolt: return "\uE945";                        // LightningBolt
-            case Sign.Up: return "\uE74A";                          // Up
-            case Sign.Bold: return "\uE8DD";                        // Bold
-            case Sign.Italic: return "\uE8DB";                      // Italic
-            case Sign.Underline: return "\uE8DC";                   // Underline
-            case Sign.Formatted: return "\uE8D2";                   // Font
-            case Sign.Erase: return "\uE75C";                       // EraseTool
-            case Sign.Folder: return "\uE8B7";                      // Folder
-            case Sign.FullFolder: return "\uE8D5";                  // FolderFill
-            case Sign.NewFolder: return "\uE8F4";                   // NewFolder
-            case Sign.Move: return "\uE8DE";                        // MoveToFolder
-            case Sign.Pause: return "\uE769";                       // Pause
-            case Sign.Resume: return "\uE768";                      // Play
-            case Sign.Open: return "\uE8A7";                        // OpenInNewWindow
-            case Sign.Exit: return "\uE7E8";                        // PowerButton
-            case Sign.Show: return "\uE890";                        // View
-            case Sign.Check: return "\uE73E";                       // CheckMark
-            case Sign.Paint: return "\uE771";                       // Personalize
-            case Sign.Info: return "\uE946";                        // Info
-            case Sign.Done: return "\uE930";                        // Completed
-            case Sign.Warning: return "\uE7BA";                     // Warning
-            case Sign.Error: return "\uEA39";                       // ErrorBadge
-            case Sign.Paste: return "\uE77F";                       // Paste
-            case Sign.Code: return "\uE943";                        // Code
-            case Sign.Picture: return "\uE91B";                     // Photo
-            case Sign.Apps: return "\uE71D";                        // AllApps
-            case Sign.More: return "\uE712";                        // More
-            case Sign.Copy: return "\uE8C8";                        // Copy
-            case Sign.Menu: return "\uE700";                        // GlobalNavigationButton
-            case Sign.Cancel: return "\uE711";                      // Cancel
-            default: return "\uE81C";                               // History
-        }
-    }
-
-    // The colour a sign has of its own.
+    // The colour a sign has of its own: the signs are drawn in ink, as lines; only what a message is has a colour.
+    // Those that only point somewhere (opening, closing, more) are grey.
     public static Color Own(Sign sign)
     {
         switch (sign)
         {
-            case Sign.Text: case Sign.Search: case Sign.Keys: case Sign.Up: case Sign.Pause: case Sign.Resume: case Sign.Open:
-            case Sign.Show: case Sign.Check: case Sign.Info: case Sign.Paste: case Sign.Apps: case Sign.Copy:
-                return Accent;
-            case Sign.Code: return Purple;
-            case Sign.Picture: return Teal;
-            case Sign.More: return Muted;
             case Sign.Done: return Green;
             case Sign.Warning: return Amber;
             case Sign.Error: return Red;
-            case Sign.Link: case Sign.Opened: case Sign.Closed: case Sign.History: case Sign.Move:
-                return Teal;
-            case Sign.Star: case Sign.Edit: case Sign.Bolt: case Sign.Erase: case Sign.Folder: case Sign.FullFolder: case Sign.NewFolder:
-                return Amber;
-            case Sign.Plus: return Green;
-            case Sign.Delete: return Red;
-            case Sign.Exit: case Sign.Cancel: return Muted;
-            case Sign.Menu: return Ink;
-            default: return Letter(sign) != null && sign != Sign.Formatted ? Ink : Purple;
+            case Sign.More: case Sign.Opened: case Sign.Closed: case Sign.Exit: case Sign.Cancel: return Muted;
+            default: return Ink;
         }
     }
 
-    // Draws one of the small signs in its own colour, or in the given one, inside a square box: the icon of
-    // Windows where there is one, otherwise drawn by hand on a grid of 16.
+    // Draws one of the small signs in its own colour, or in the given one, inside a square box (see Icons).
     public static void Draw(Graphics g, Sign sign, Rectangle box, Color? colour)
     {
-        float u = box.Width / 16f, x = box.Left, y = box.Top;
-        Color own = Own(sign);
-        if (IconProbe != null)
-        {
-            Font icons;
-            if (!IconFonts.TryGetValue(box.Height, out icons))
-                IconFonts[box.Height] = icons = new Font(IconProbe.FontFamily, box.Height, GraphicsUnit.Pixel);
-            TextRenderer.DrawText(g, Glyph(sign), icons, box, colour ?? own, TextFormatFlags.HorizontalCenter
-                | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding
-                | TextFormatFlags.NoPrefix | TextFormatFlags.NoClipping);
-            return;
-        }
-        SmoothingMode mode = g.SmoothingMode;
-        g.SmoothingMode = SmoothingMode.AntiAlias;
-        using (Pen pen = new Pen(colour ?? own, 1.7f * u))
-        using (Brush fill = new SolidBrush(colour ?? own))
-        {
-            pen.StartCap = pen.EndCap = LineCap.Round;
-            pen.LineJoin = LineJoin.Round;
-            switch (sign)
-            {
-                case Sign.Text:
-                    g.DrawLine(pen, x + 2.5f * u, y + 4 * u, x + 13.5f * u, y + 4 * u);
-                    g.DrawLine(pen, x + 2.5f * u, y + 8 * u, x + 13.5f * u, y + 8 * u);
-                    g.DrawLine(pen, x + 2.5f * u, y + 12 * u, x + 9 * u, y + 12 * u);
-                    break;
-                case Sign.Link:
-                    g.DrawLine(pen, x + 4 * u, y + 12 * u, x + 12 * u, y + 4 * u);
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 6 * u, y + 4 * u), new PointF(x + 12 * u, y + 4 * u),
-                        new PointF(x + 12 * u, y + 10 * u) });
-                    break;
-                case Sign.Star:
-                    PointF[] star = new PointF[10];
-                    for (int i = 0; i < star.Length; i++)
-                    {
-                        double angle = -Math.PI / 2 + i * Math.PI / 5, radius = (i % 2 == 0 ? 7 : 3) * u;
-                        star[i] = new PointF(x + 8 * u + (float)(radius * Math.Cos(angle)), y + 8.5f * u + (float)(radius * Math.Sin(angle)));
-                    }
-                    g.FillPolygon(fill, star);
-                    break;
-                case Sign.Plus:
-                    g.DrawLine(pen, x + 8 * u, y + 3 * u, x + 8 * u, y + 13 * u);
-                    g.DrawLine(pen, x + 3 * u, y + 8 * u, x + 13 * u, y + 8 * u);
-                    break;
-                case Sign.Edit:   // a pencil, and the line it leaves
-                    pen.Width = 2.6f * u;
-                    g.DrawLine(pen, x + 5.5f * u, y + 10.5f * u, x + 11.5f * u, y + 4.5f * u);
-                    pen.Width = 1.4f * u;
-                    g.DrawLine(pen, x + 3 * u, y + 13.5f * u, x + 13 * u, y + 13.5f * u);
-                    break;
-                case Sign.Delete:
-                case Sign.Cancel:
-                    g.DrawLine(pen, x + 4 * u, y + 4 * u, x + 12 * u, y + 12 * u);
-                    g.DrawLine(pen, x + 12 * u, y + 4 * u, x + 4 * u, y + 12 * u);
-                    break;
-                case Sign.Options:   // two sliders
-                    g.DrawLine(pen, x + 2.5f * u, y + 5 * u, x + 13.5f * u, y + 5 * u);
-                    g.DrawLine(pen, x + 2.5f * u, y + 11 * u, x + 13.5f * u, y + 11 * u);
-                    g.FillEllipse(fill, x + 8 * u, y + 2.5f * u, 5 * u, 5 * u);
-                    g.FillEllipse(fill, x + 3 * u, y + 8.5f * u, 5 * u, 5 * u);
-                    break;
-                case Sign.Keys:   // a keyboard
-                    pen.Width = 1.4f * u;
-                    g.DrawRectangle(pen, x + 1.5f * u, y + 3.5f * u, 13 * u, 9 * u);
-                    foreach (float key in new float[] { 4.5f, 8, 11.5f })
-                        g.FillEllipse(fill, x + (key - 0.9f) * u, y + 5.6f * u, 1.8f * u, 1.8f * u);
-                    g.DrawLine(pen, x + 5 * u, y + 10 * u, x + 11 * u, y + 10 * u);
-                    break;
-                case Sign.Search:
-                    g.DrawEllipse(pen, x + 2 * u, y + 2 * u, 8.5f * u, 8.5f * u);
-                    g.DrawLine(pen, x + 9.6f * u, y + 9.6f * u, x + 14 * u, y + 14 * u);
-                    break;
-                case Sign.Opened:   // of a folder: an arrowhead pointing down, or to the right when it is closed
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 4 * u, y + 6 * u), new PointF(x + 8 * u, y + 10 * u),
-                        new PointF(x + 12 * u, y + 6 * u) });
-                    break;
-                case Sign.Closed:
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 6 * u, y + 4 * u), new PointF(x + 10 * u, y + 8 * u),
-                        new PointF(x + 6 * u, y + 12 * u) });
-                    break;
-                case Sign.Help:   // a question mark
-                    g.DrawArc(pen, x + 5 * u, y + 2 * u, 6 * u, 6 * u, 180, 270);
-                    g.DrawLine(pen, x + 8 * u, y + 8 * u, x + 8 * u, y + 10 * u);
-                    g.FillEllipse(fill, x + 6.9f * u, y + 12.2f * u, 2.2f * u, 2.2f * u);
-                    break;
-                case Sign.Bolt:
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 9.5f * u, y + 2 * u), new PointF(x + 5 * u, y + 9 * u),
-                        new PointF(x + 11 * u, y + 7.5f * u), new PointF(x + 6.5f * u, y + 14 * u) });
-                    break;
-                case Sign.Up:   // an arrow pointing up
-                    g.DrawLine(pen, x + 8 * u, y + 13 * u, x + 8 * u, y + 3.5f * u);
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 3.5f * u, y + 8 * u), new PointF(x + 8 * u, y + 3.5f * u),
-                        new PointF(x + 12.5f * u, y + 8 * u) });
-                    break;
-                case Sign.History:   // a clock
-                    g.DrawEllipse(pen, x + 2 * u, y + 2 * u, 12 * u, 12 * u);
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 8 * u, y + 4.5f * u), new PointF(x + 8 * u, y + 8 * u),
-                        new PointF(x + 10.5f * u, y + 9.5f * u) });
-                    break;
-                case Sign.Erase:   // a rubber lying aslant
-                    g.DrawPolygon(pen, new PointF[] { new PointF(x + 2.5f * u, y + 10 * u), new PointF(x + 9 * u, y + 3.5f * u),
-                        new PointF(x + 13.5f * u, y + 8 * u), new PointF(x + 8 * u, y + 13.5f * u), new PointF(x + 6 * u, y + 13.5f * u) });
-                    break;
-                case Sign.Folder:
-                case Sign.NewFolder:   // a folder, and a plus on a new one
-                    pen.Width = 1.4f * u;
-                    g.DrawPolygon(pen, new PointF[] { new PointF(x + 1.5f * u, y + 3.5f * u), new PointF(x + 6 * u, y + 3.5f * u),
-                        new PointF(x + 7.5f * u, y + 5 * u), new PointF(x + 14.5f * u, y + 5 * u), new PointF(x + 14.5f * u, y + 13 * u),
-                        new PointF(x + 1.5f * u, y + 13 * u) });
-                    if (sign == Sign.NewFolder)
-                    {
-                        g.DrawLine(pen, x + 8 * u, y + 7 * u, x + 8 * u, y + 11 * u);
-                        g.DrawLine(pen, x + 6 * u, y + 9 * u, x + 10 * u, y + 9 * u);
-                    }
-                    break;
-                case Sign.FullFolder:   // the same, filled
-                    g.FillPolygon(fill, new PointF[] { new PointF(x + 1 * u, y + 3 * u), new PointF(x + 6.2f * u, y + 3 * u),
-                        new PointF(x + 7.7f * u, y + 4.5f * u), new PointF(x + 15 * u, y + 4.5f * u), new PointF(x + 15 * u, y + 13.5f * u),
-                        new PointF(x + 1 * u, y + 13.5f * u) });
-                    break;
-                case Sign.Move:   // an arrow pointing right
-                    g.DrawLine(pen, x + 3 * u, y + 8 * u, x + 12.5f * u, y + 8 * u);
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 8 * u, y + 3.5f * u), new PointF(x + 12.5f * u, y + 8 * u),
-                        new PointF(x + 8 * u, y + 12.5f * u) });
-                    break;
-                case Sign.Pause:
-                    g.DrawLine(pen, x + 5.5f * u, y + 3 * u, x + 5.5f * u, y + 13 * u);
-                    g.DrawLine(pen, x + 10.5f * u, y + 3 * u, x + 10.5f * u, y + 13 * u);
-                    break;
-                case Sign.Resume:   // a triangle pointing right
-                    g.FillPolygon(fill, new PointF[] { new PointF(x + 4.5f * u, y + 2.5f * u), new PointF(x + 13 * u, y + 8 * u),
-                        new PointF(x + 4.5f * u, y + 13.5f * u) });
-                    break;
-                case Sign.Open:   // a window with its title bar
-                    pen.Width = 1.4f * u;
-                    g.DrawRectangle(pen, x + 2 * u, y + 3 * u, 12 * u, 10 * u);
-                    g.DrawLine(pen, x + 2 * u, y + 6 * u, x + 14 * u, y + 6 * u);
-                    break;
-                case Sign.Exit:   // the sign of a power button
-                    g.DrawArc(pen, x + 2.5f * u, y + 3 * u, 11 * u, 11 * u, -60, 300);
-                    g.DrawLine(pen, x + 8 * u, y + 1.5f * u, x + 8 * u, y + 7.5f * u);
-                    break;
-                case Sign.Show:   // an eye
-                    pen.Width = 1.4f * u;
-                    g.DrawEllipse(pen, x + 1.5f * u, y + 4.5f * u, 13 * u, 7 * u);
-                    g.FillEllipse(fill, x + 6 * u, y + 5.5f * u, 4 * u, 4 * u);
-                    break;
-                case Sign.Check:
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 2.5f * u, y + 8.5f * u), new PointF(x + 6 * u, y + 12 * u),
-                        new PointF(x + 13.5f * u, y + 4 * u) });
-                    break;
-                case Sign.Info:
-                case Sign.Done:
-                case Sign.Error:   // in a circle: an i, a tick, a cross
-                    pen.Width = 1.4f * u;
-                    g.DrawEllipse(pen, x + 1.5f * u, y + 1.5f * u, 13 * u, 13 * u);
-                    if (sign == Sign.Info)
-                    {
-                        g.DrawLine(pen, x + 8 * u, y + 7 * u, x + 8 * u, y + 11.5f * u);
-                        g.FillEllipse(fill, x + 7.1f * u, y + 4 * u, 1.8f * u, 1.8f * u);
-                    }
-                    else if (sign == Sign.Done)
-                        g.DrawLines(pen, new PointF[] { new PointF(x + 5 * u, y + 8.2f * u), new PointF(x + 7.2f * u, y + 10.5f * u),
-                            new PointF(x + 11 * u, y + 5.8f * u) });
-                    else
-                    {
-                        g.DrawLine(pen, x + 5.5f * u, y + 5.5f * u, x + 10.5f * u, y + 10.5f * u);
-                        g.DrawLine(pen, x + 10.5f * u, y + 5.5f * u, x + 5.5f * u, y + 10.5f * u);
-                    }
-                    break;
-                case Sign.Warning:   // a triangle with an exclamation mark
-                    pen.Width = 1.4f * u;
-                    g.DrawPolygon(pen, new PointF[] { new PointF(x + 8 * u, y + 1.5f * u), new PointF(x + 15 * u, y + 14 * u),
-                        new PointF(x + 1 * u, y + 14 * u) });
-                    g.DrawLine(pen, x + 8 * u, y + 6 * u, x + 8 * u, y + 9.5f * u);
-                    g.FillEllipse(fill, x + 7.1f * u, y + 11 * u, 1.8f * u, 1.8f * u);
-                    break;
-                case Sign.Paste:   // a clipboard
-                    pen.Width = 1.4f * u;
-                    g.DrawRectangle(pen, x + 3 * u, y + 2.5f * u, 10 * u, 12 * u);
-                    g.DrawRectangle(pen, x + 6 * u, y + 1.5f * u, 4 * u, 2.5f * u);
-                    break;
-                case Sign.Code:   // two angle brackets
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 5.5f * u, y + 4 * u), new PointF(x + 1.5f * u, y + 8 * u),
-                        new PointF(x + 5.5f * u, y + 12 * u) });
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 10.5f * u, y + 4 * u), new PointF(x + 14.5f * u, y + 8 * u),
-                        new PointF(x + 10.5f * u, y + 12 * u) });
-                    break;
-                case Sign.Picture:   // a frame with a hill and the sun
-                    pen.Width = 1.4f * u;
-                    g.DrawRectangle(pen, x + 1.5f * u, y + 2.5f * u, 13 * u, 11 * u);
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 2 * u, y + 12 * u), new PointF(x + 6.5f * u, y + 7.5f * u),
-                        new PointF(x + 10 * u, y + 11 * u), new PointF(x + 14 * u, y + 8 * u) });
-                    g.FillEllipse(fill, x + 9.5f * u, y + 4 * u, 2.4f * u, 2.4f * u);
-                    break;
-                case Sign.Apps:   // four squares
-                    foreach (PointF corner in new PointF[] { new PointF(2, 2), new PointF(9, 2), new PointF(2, 9), new PointF(9, 9) })
-                        g.FillRectangle(fill, x + corner.X * u, y + corner.Y * u, 5 * u, 5 * u);
-                    break;
-                case Sign.Menu:   // three lines
-                    foreach (float line in new float[] { 4, 8, 12 })
-                        g.DrawLine(pen, x + 2.5f * u, y + line * u, x + 13.5f * u, y + line * u);
-                    break;
-                case Sign.More:   // three dots
-                    foreach (float dot in new float[] { 3.5f, 8, 12.5f })
-                        g.FillEllipse(fill, x + (dot - 1.2f) * u, y + 6.8f * u, 2.4f * u, 2.4f * u);
-                    break;
-                case Sign.Copy:   // two sheets, one over the other
-                    pen.Width = 1.4f * u;
-                    g.DrawRectangle(pen, x + 5 * u, y + 4.5f * u, 9 * u, 10 * u);
-                    g.DrawLines(pen, new PointF[] { new PointF(x + 2.5f * u, y + 11.5f * u), new PointF(x + 2.5f * u, y + 1.5f * u),
-                        new PointF(x + 10.5f * u, y + 1.5f * u) });
-                    break;
-                case Sign.Paint:   // a palette with its colours
-                    pen.Width = 1.4f * u;
-                    g.DrawEllipse(pen, x + 1.5f * u, y + 2 * u, 13 * u, 12 * u);
-                    foreach (PointF dot in new PointF[] { new PointF(5, 6), new PointF(8.5f, 4.5f), new PointF(11, 7.5f) })
-                        g.FillEllipse(fill, x + (dot.X - 1.2f) * u, y + (dot.Y - 1.2f) * u, 2.4f * u, 2.4f * u);
-                    break;
-                default:   // the formatting of text: its letter, written as it says
-                    using (Font letter = new Font(TextFont.FontFamily, box.Height * 0.8f, Letter(sign).Value, GraphicsUnit.Pixel))
-                        TextRenderer.DrawText(g, sign == Sign.Formatted ? "A" : sign.ToString().Substring(0, 1),
-                            letter, box, colour ?? own, TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter
-                            | TextFormatFlags.SingleLine | TextFormatFlags.NoPadding | TextFormatFlags.NoClipping);
-                    break;
-            }
-        }
-        g.SmoothingMode = mode;
-    }
-
-    // Of a sign of the formatting of text, the style its letter is drawn in where there is no font of icons;
-    // null for the other signs.
-    static FontStyle? Letter(Sign sign)
-    {
-        switch (sign)
-        {
-            case Sign.Bold: return FontStyle.Bold;
-            case Sign.Italic: return FontStyle.Italic;
-            case Sign.Underline: return FontStyle.Underline;
-            case Sign.Formatted: return FontStyle.Regular;
-            default: return null;
-        }
+        Icons.Draw(g, sign, box, colour ?? Own(sign));
     }
 
     // A text box as a flat area a shade off the window. The system border cannot be coloured, so the box goes
@@ -1359,7 +1100,6 @@ static class Look
         Field(box);
         int textHeight = box.Height;
         Card frame = Wrap(box, FramePadding);
-        frame.Underline = true;
         // A single-line box keeps the height of its text, whatever it is asked: the frame is built around it.
         if (!box.Multiline)
         {

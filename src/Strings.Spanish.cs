@@ -170,7 +170,6 @@ static partial class Strings
 
         TypingTitle = "Escritura"; ProgramTitle = "Programa"; HotkeysTitle = "Atajos"; HistoryTitle = "Historial";
         AppearanceTitle = "Apariencia";
-        On = "Activado"; Off = "Desactivado";
         DelayOption = "Espera antes de teclear"; DelayNote = "Segundos para hacer clic en el campo correcto";
         UsOption = "El servidor usa teclado inglés (EE. UU.)"; UsNote = "Solo si los símbolos llegan mal";
         EnterOption = "Pulsar Intro al final"; EnterNote = "Confirma enseguida el inicio de sesión";
@@ -323,6 +322,7 @@ static partial class Strings
             + "archivo, déjala en su sitio.";
 
         HelpTitle = "Guía de {0}"; OptionsTitle = "Opciones de {0}"; Close = "Cerrar";
+        ExpandAll = "Abrir todo"; CollapseAll = "Cerrar todo";
         Guide = SpanishGuide;
     }
 
@@ -338,7 +338,8 @@ static partial class Strings
                 + "escritorios remotos.",
 
             "# La lista",
-            "A la izquierda está la barra lateral, a la derecha las tarjetas de las entradas del lugar elegido en ella:",
+            "A la izquierda está la barra lateral, a la derecha las tarjetas de las entradas del lugar elegido en ella.",
+            "## Los lugares de la barra lateral",
             "- «" + HistoryPlace + "»: lo que copiaste, de lo más nuevo a lo más antiguo, cada día bajo su nombre; las "
                 + "entradas mantenidas arriba van antes que las demás. Al desplazarte, el nombre del día de la primera tarjeta "
                 + "queda encima de las tarjetas.",
@@ -352,19 +353,25 @@ static partial class Strings
             "El botón en lo alto de la barra lateral la reduce a sus iconos, y le devuelve los nombres: si dejas el puntero "
                 + "sobre un icono, ves su nombre, y cada carpeta muestra la inicial de su nombre. Arrastrando el borde entre la barra y las tarjetas la ensanchas o la "
                 + "estrechas; más estrecha de lo que puede, se reduce a los iconos.",
+            "## Tipos de entrada",
             "Las pestañas sobre las tarjetas (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") muestran un solo tipo de entrada. «" + CodeKinds + "» es una suposición hecha por el "
                 + "aspecto de las líneas: de vez en cuando acaba ahí un texto, o un trozo de código entre los textos. "
                 + "Cuando se equivoca, «" + KindMenu + "», en el menú de un texto, dice qué es: copiado de nuevo o "
                 + "guardado, se queda así.",
+            "## Las tarjetas",
             "Cada tarjeta muestra primero la entrada; a la derecha, en pequeño y tenue, el programa en el que se copió, con su icono (o "
                 + "la carpeta de un texto guardado), la hora de la copia y qué es, si no es un texto simple. Con el puntero sobre "
                 + "la tarjeta, en su lugar aparecen pequeños signos: la mantienen arriba, la muestran entera, la copian, la "
                 + "guardan o la editan, la eliminan y abren su menú; dejando el puntero sobre uno, dice qué hace.",
-            "- Escribe en la casilla de arriba para buscar entre las entradas del lugar: las palabras valen en cualquier "
+            "## La búsqueda",
+            "Escribe en la casilla de arriba para buscar entre las entradas del lugar: las palabras valen en cualquier "
                 + "orden, sin importar mayúsculas ni acentos. En «" + HistoryPlace + "» aparecen también los textos guardados "
                 + "que coinciden, después de lo copiado, bajo «" + SavedTitle + "». Las palabras encontradas se resaltan "
                 + "en las tarjetas; encontradas muy adelante en un texto largo, la tarjeta muestra esa parte.",
+            "La lista muestra las " + MainForm.MaxShown + " entradas copiadas más recientes: las demás se "
+                + "encuentran buscando.",
+            "## Usar una entrada",
             "- Un clic en una tarjeta la selecciona. El signo de copiar («" + CopyButton + "») pone la entrada en el portapapeles y deja la "
                 + "ventana abierta, para que aún puedas guardarla o eliminarla.",
             "- " + EnterKeyName + " o un doble clic la ponen en el portapapeles y, si habías abierto la lista con "
@@ -375,36 +382,40 @@ static partial class Strings
                 + "activada, en las opciones, dejar el puntero sobre una tarjeta que corta su texto hace lo mismo, hasta que "
                 + "mueves el puntero.",
             "- Los tres puntos de la derecha, o el clic derecho, abren el menú de la entrada, sin tocar el portapapeles.",
-            "- Ctrl+clic añade una tarjeta a la selección o la quita, " + ShiftName + "+clic selecciona todas las tarjetas hasta "
+            "## Varias tarjetas a la vez",
+            "Ctrl+clic añade una tarjeta a la selección o la quita, " + ShiftName + "+clic selecciona todas las tarjetas hasta "
                 + "esa (también " + ShiftName + " con las flechas), " + Key(Keys.Control | MainForm.AllKey) + " las selecciona todas. "
                 + "Con varias seleccionadas, una barra en el lugar de las pestañas dice cuántas son y ofrece «" + KeepTop + "», «" + MoveTo
                 + "» y «" + Delete + "», que también están en el menú del clic derecho y en sus teclas. «" + MoveTo + "» una carpeta, "
                 + "o «" + SavedTitle + "», guarda allí las entradas copiadas. " + EscapeKeyName + ", o la cruz al final de la barra, "
                 + "vuelve a una sola tarjeta.",
-            "- «" + CopyPictureText + "», en el menú de una imagen, pone en el portapapeles el texto "
+            "## El texto de una imagen",
+            "«" + CopyPictureText + "», en el menú de una imagen, pone en el portapapeles el texto "
                 + "que Windows lee en ella, aquí en el PC, sin internet: entra en la lista como todo lo que copias (el de "
                 + "una imagen guardada es privado, como un texto guardado). El texto pequeño puede salir con algún error: "
                 + "revísalo antes.",
-            "- La flecha de la derecha de una entrada copiada (" + Key(Keys.Control | MainForm.PinKey) + ") la "
+            "## Mantener una entrada arriba",
+            "La flecha de la derecha de una entrada copiada (" + Key(Keys.Control | MainForm.PinKey) + ") la "
                 + "mantiene arriba un tiempo: está en color mientras lo hace, y un clic la enciende o la apaga. La entrada "
                 + "se va igualmente cuando vencen los días del historial: lo que deba quedarse, guárdalo. Copiar de nuevo "
                 + "el mismo texto lo devuelve arriba con la hora nueva, flecha y número incluidos.",
-            "- «" + NumberMenu + "», en el menú, da a un texto guardado o a una entrada copiada un "
+            "## Los números",
+            "«" + NumberMenu + "», en el menú, da a un texto guardado o a una entrada copiada un "
                 + "número del 1 al " + MainForm.MaxNumber + ": luego, desde cualquier programa, " + MainForm.NumbersName
                 + " la pegan enseguida en la ventana en la que estás trabajando, sin abrir esta (la entrada va al "
                 + "portapapeles y Ctrl+V sigue solo). El número aparece en un pequeño recuadro a la derecha de la tarjeta, "
                 + "y junto al texto guardado en el menú del icono. Una entrada copiada conserva su número hasta que "
                 + "vencen sus días. Cada número es de una sola entrada: si se lo das a otra, pasa a ella.",
+            "## La pausa",
             "Para no recordar lo que vas a copiar, «" + Pause + "» está abajo en la barra lateral y en "
                 + "el menú del icono junto al reloj: el título dice «en pausa» hasta que eliges «" + Resume
                 + "». En el siguiente inicio la captura vuelve a estar activa.",
-            "La lista muestra las " + MainForm.MaxShown + " entradas copiadas más recientes: las demás se "
-                + "encuentran buscando.",
 
             "# Textos guardados",
             "Son lo que quieres tener siempre a mano: una firma, una dirección, un código de acceso. No vencen nunca. El "
                 + "nombre es opcional: con nombre, la lista muestra solo el nombre y el contenido queda oculto, ideal "
                 + "para un texto privado; sin él, la lista muestra el contenido, como para una segunda dirección de correo.",
+            "## Escribirlos y cambiarlos",
             "- «" + New + "» (" + Key(Keys.Control | MainForm.NewKey) + ") escribe un texto desde cero.",
             "- «" + SaveDots + "» (" + Key(Keys.Control | MainForm.SaveKey) + "), en una entrada copiada, la conserva, "
                 + "con nombre o sin él; antes de guardar puedes retocar su contenido.",
@@ -412,14 +423,17 @@ static partial class Strings
                 + "nombre o su contenido.",
             "- «" + Delete + "» (" + Key(Keys.Control | MainForm.DeleteKey) + ") borra el texto guardado, o quita de la "
                 + "lista la entrada copiada.",
+            "## Verlos y usarlos",
             "- El ojo de un texto guardado con nombre («" + ShowContent + "», también en su menú) muestra su contenido en un "
                 + "recuadro unos segundos: la lista solo muestra su nombre, y pasar el puntero por encima nunca basta.",
             "- Los textos guardados también están en el menú del icono junto al reloj: elegir uno lo devuelve al "
                 + "portapapeles sin abrir la ventana.",
+            "## A salvo",
             "Los textos guardados no vencen nunca. Están en la base de datos del programa, cifrados para tu usuario: "
                 + "otro usuario del mismo PC no puede leerlos. Cuando devuelves uno al portapapeles se marca como privado, para que el "
                 + "historial de Windows (Win+V) y los demás gestores del portapapeles lo ignoren. También se puede "
                 + "guardar una imagen copiada: siempre muestra su miniatura, con su nombre al lado si lo tiene.",
+            "## Textos con formato",
             "Un texto guardado puede tener formato, como una firma de correo: negrita, cursiva, subrayado, fuentes y tamaños.",
             "- Copia la firma de un correo o de un documento y guárdala: conserva su formato. El historial guarda "
                 + "texto sin formato, así que una entrada copiada lo tiene todavía solo mientras está entre las últimas "
@@ -436,31 +450,38 @@ static partial class Strings
             "Cuando los textos guardados son muchos puedes reunirlos en carpetas, y las carpetas en otras carpetas. Están "
                 + "en la barra lateral, bajo «" + SavedTitle + "»: un clic en una carpeta muestra los textos que contiene "
                 + "directamente, no los de las carpetas que tiene dentro.",
+            "## Crearlas y abrirlas",
             "- «" + NewFolder + "» está abajo en la barra lateral y en el menú del clic derecho de una carpeta "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nace dentro de la carpeta "
                 + "mostrada, pero en su ventana puedes elegir dónde ponerla.",
             "- La flecha del extremo derecho de una carpeta que contiene otras la abre y la cierra; la de «" + SavedTitle
                 + "» las muestra o las oculta todas. El número dice cuántos textos hay en la carpeta misma, no en las "
                 + "que tiene dentro. Abiertas o cerradas, las encuentras como las dejaste.",
+            "## Mover textos y carpetas",
             "- La tarjeta de un texto guardado, o una carpeta de la barra con todo lo que contiene, se arrastra sobre una "
                 + "carpeta de la barra; soltada sobre «" + SavedTitle + "», sale de las carpetas.",
             "- «" + MoveTo + "», en el menú de un texto guardado o de una carpeta, hace lo mismo. La "
                 + "misma elección está en la ventana donde lo escribes, a la izquierda de los botones.",
+            "## Renombrarlas y eliminarlas",
             "- En el menú del clic derecho de una carpeta, «" + RenameDots + "» cambia su nombre o su lugar y «" + Delete
                 + "» quita solo la carpeta: lo que contenía, textos y carpetas, sube a la carpeta que la contenía, o queda "
                 + "entre los guardados fuera de las carpetas.",
             "- El nombre de una carpeta no puede contener «" + Texts.Separator + "».",
+            "## En otros lugares",
             "- En el menú del icono junto al reloj cada carpeta es un submenú con sus textos.",
             "- El nombre de una carpeta encuentra sus textos en la búsqueda.",
 
             "# Teclear donde pegar no funciona",
             "Donde Ctrl+V no funciona, " + app + " escribe el texto del portapapeles tecla por tecla, como harías tú "
                 + "en el teclado.",
+            "## Con el botón",
             "- Copia el texto.",
             "- Pulsa «" + TypeButton + "».",
             "- Haz clic en el campo de la ventana remota: tienes " + MainForm.ArmedSeconds + " segundos para hacerlo.",
             "- Cuando esa ventana ha estado en primer plano el tiempo de la espera, empieza el tecleo.",
-            "Si no, pulsa " + type + " directamente en el campo: teclea enseguida, sin espera.",
+            "## Con las teclas",
+            "O pulsa " + type + " directamente en el campo: teclea enseguida, sin espera.",
+            "## Nunca en el sitio equivocado",
             "Para no enviar un texto privado al sitio equivocado:",
             "- el tecleo se detiene solo si la ventana de destino pierde el primer plano;",
             "- durante la espera y el tecleo el mismo botón se convierte en «" + Cancel + "»;",
@@ -470,9 +491,13 @@ static partial class Strings
             "- con Bloq Mayús activado no se teclea: hay que desactivarlo antes.",
 
             "# Teclas",
+            "Los tres primeros funcionan en todas partes; los demás, en la lista. Mientras está activo, " + pick
+                + " ya no llega a los demás programas, ni tampoco las teclas de los números que tiene alguna entrada.",
+            "## En todas partes",
             pick + "\tAbre la lista en " + HistoryPlace + ", desde cualquier programa.",
             type + "\tTeclea enseguida el portapapeles en la ventana activa.",
             MainForm.NumbersName + "\tPega en la ventana activa la entrada con ese número.",
+            "## En la lista",
             "F1\tAbre esta guía.",
             ArrowsName + "\tRecorre las entradas, o los lugares de la barra lateral.",
             Key(Keys.Control | MainForm.AllKey) + "\tSelecciona todas las tarjetas; Ctrl o " + ShiftName + " con un clic, varias.",
@@ -484,8 +509,7 @@ static partial class Strings
             Key(Keys.Control | MainForm.SaveKey) + "\tGuarda la entrada copiada, o edita la guardada.",
             Key(Keys.Control | MainForm.DeleteKey) + "\tElimina la entrada seleccionada.",
             Key(Keys.Control | MainForm.PinKey) + "\tMantiene arriba la entrada copiada, o la suelta.",
-            "Los tres primeros funcionan en todas partes; los demás, en la lista. Mientras está activo, " + pick
-                + " ya no llega a los demás programas, ni tampoco las teclas de los números que tiene alguna entrada.",
+            "## Cambiar los atajos",
             "En las opciones, bajo «" + HotkeysTitle + "», los tres primeros se desactivan y se cambian: el botón junto "
                 + "a cada uno muestra sus teclas, y al pulsarlo espera las nuevas. Para los números se pulsan las "
                 + "teclas que hay que mantener junto con una cifra cualquiera; si otro programa ya tiene alguna, dice cuáles.",
@@ -497,18 +521,21 @@ static partial class Strings
             "# El historial",
             "Lo que copias se queda en la lista el número de días que decidas (" + Texts.DefaultKeepDays
                 + " si no lo cambias), también después de cerrar el programa o apagar el PC.",
+            "## Dónde está",
             "- Se guarda sin cifrar en una base de datos, por defecto " + Clips.DefaultFile + ", junto a los textos "
                 + "guardados, que en cambio están cifrados. Los días vencidos se borran solos.",
             "- En las opciones, «" + ChangeFolderButton + "» lleva la base de datos a otra carpeta, o usa la que ya "
                 + "está allí; «" + DefaultFolderButton + "» la devuelve. No sirve para compartir la lista entre PC: los "
                 + "textos guardados solo se leen en este PC. Si al iniciar no se puede acceder a la carpeta elegida, la "
                 + "lista trabaja en memoria y lo dice.",
+            "## Qué se queda y qué se va",
             "- Con 0 días solo queda lo que copiaste hoy.",
             "- Las imágenes copiadas ocupan como máximo " + Size(Clips.PictureSpace) + ": por encima, las más antiguas se "
                 + "van aunque no hayan vencido sus días, y una barra roja bajo la lista lo dice. Las imágenes guardadas no "
                 + "cuentan.",
             "- Las copias que otros programas marcan como privadas no se recuerdan.",
             "- También las entradas arriba se van cuando vencen sus días: lo que deba quedarse, guárdalo.",
+            "## Limpiar",
             "- En las opciones, «" + CleanButton + "» borra enseguida lo que copiaste antes de los últimos días que "
                 + "escribes al lado: con 1 solo queda hoy, con 0 no queda nada. Pide confirmación; también se van las "
                 + "entradas arriba, los textos guardados no se tocan nunca.",
@@ -517,49 +544,61 @@ static partial class Strings
             "# Las opciones",
             "El botón «" + Options + "» las abre en una ventana aparte, que puede quedarse abierta junto a la lista. Cada "
                 + "opción dice en pocas palabras, bajo su nombre, qué hace; si dejas el puntero encima aparece su explicación "
-                + "completa. Están en cinco páginas, que se eligen en la columna de la izquierda como los temas de esta guía:",
-            "- " + TypingTitle + ": cuántos segundos esperar antes de teclear (de " + MainForm.MinDelay + " a "
+                + "completa. Están en cinco páginas, que se eligen en la columna de la izquierda como los temas de esta guía.",
+            "## " + TypingTitle,
+            "Cuántos segundos esperar antes de teclear (de " + MainForm.MinDelay + " a "
                 + MainForm.MaxDelay + "), si el servidor usa el teclado estadounidense, si pulsar Intro al final, si "
                 + "vaciar el portapapeles después, el tecleo lento y los símbolos compuestos con códigos Alt.",
-            "- " + HotkeysTitle + ": activa y desactiva " + type + ", " + pick + " y " + MainForm.NumbersName
+            "## " + HotkeysTitle,
+            "Activa y desactiva " + type + ", " + pick + " y " + MainForm.NumbersName
                 + ", y les da otras teclas; y si " + pick + " abre la lista donde la dejaste.",
-            "- " + HistoryTitle + ": si recordar lo que copias, durante cuántos días, la carpeta de la base de datos "
+            "## " + HistoryTitle,
+            "Si recordar lo que copias, durante cuántos días, la carpeta de la base de datos "
                 + "(que se puede cambiar) con el enlace que la abre, y el botón que limpia enseguida el historial.",
-            "- " + AppearanceTitle + ": el idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño "
+            "## " + AppearanceTitle,
+            "El idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño "
                 + "de la interfaz (botones, opciones, esta guía: en píxeles, reinician el programa), los de las entradas "
                 + "(cambian enseguida), y si dejar el puntero sobre una tarjeta la muestra entera.",
-            "- " + ProgramTitle + ": si seguir en el área de notificación y ocultarse al cambiar a otro programa, si "
+            "## " + ProgramTitle,
+            "Si seguir en el área de notificación y ocultarse al cambiar a otro programa, si "
                 + "iniciarse con Windows, los botones para exportar e importar, y la versión del programa.",
 
             "# Exportar e importar",
             "En las opciones, bajo «" + ProgramTitle + "», dos botones sacan tus textos del programa y los recuperan, "
                 + "como copia de seguridad o para pasarlos a otro PC. Cada uno pregunta si quieres solo los textos "
                 + "guardados o todo, es decir también lo copiado.",
+            "## Exportar",
             "- «" + ExportButton + "» escribe un archivo de texto que se abre con el Bloc de notas: los textos "
                 + "guardados con sus carpetas (los que tienen formato, con su HTML antes del texto) y, si lo pides, "
                 + "lo copiado con su hora y su flecha. Las imágenes no "
                 + "se incluyen.",
             "- En el archivo los textos van sin cifrar, también los privados: guárdalo en un lugar seguro.",
-            "- «" + ImportButton + "» lee un archivo así y añade lo que contiene a lo que ya hay. Si un texto guardado "
-                + "tiene el nombre de uno existente pregunta cuál conservar; lo copiado que la lista ya tiene no se "
-                + "repite. Un archivo exportado en otro idioma se lee igual.",
             "- El archivo se puede retocar a mano: el texto de cada entrada está en las líneas que empiezan con una "
                 + "tabulación, que debe quedarse en su sitio.",
+            "## Importar",
+            "«" + ImportButton + "» lee un archivo así y añade lo que contiene a lo que ya hay. Si un texto guardado "
+                + "tiene el nombre de uno existente pregunta cuál conservar; lo copiado que la lista ya tiene no se "
+                + "repite. Un archivo exportado en otro idioma se lee igual.",
 
             "# El icono de la bandeja",
             "Con la opción activada, cerrar o minimizar la ventana solo la oculta: el programa sigue funcionando y "
                 + "los atajos siguen respondiendo.",
+            "## La ventana",
             "- Un clic en el icono vuelve a abrir la ventana; clic derecho y luego «" + Exit + "» cierra de verdad.",
             "- Con «" + LeaveOption + "» la ventana vuelve ahí también cuando haces clic en otro sitio; desactivada, "
                 + "sigue abierta detrás de las demás. Mientras espera y teclea, en cambio, está por encima de todo: "
                 + "la cuenta atrás y «" + Cancel + "» quedan a la vista.",
+            "- Iniciar el programa una segunda vez hace reaparecer la ventana del que ya está abierto.",
+            "## El menú y el icono",
             "- En el menú del clic derecho también están los textos guardados, cada carpeta un submenú: elegir uno lo "
                 + "devuelve al portapapeles, listo para Ctrl+V o para " + type + ", sin abrir la ventana.",
             "- Junto a un texto guardado con número aparecen sus teclas.",
             "- El icono está en color si en el portapapeles hay texto, gris si no lo hay.",
-            "- Iniciar el programa una segunda vez hace reaparecer la ventana del que ya está abierto.",
 
             "# Si algo no funciona",
+            "La línea bajo las tarjetas dice qué acaba de pasar, y por qué. Las confirmaciones desaparecen tras "
+                + "unos segundos y dejan el sitio a la lista; los avisos y errores se quedan hasta el siguiente mensaje.",
+            "## El tecleo",
             "- Los símbolos llegan mal: el servidor usa otro teclado. Prueba la opción del teclado inglés (EE. UU.).",
             "- Faltan caracteres, o llegan desordenados: activa el tecleo lento.",
             "- No llegan los símbolos que tu teclado no tiene (~ y ` en el italiano): activa los códigos Alt, que "
@@ -568,9 +607,8 @@ static partial class Strings
                 + "atajos. Usa el botón.",
             "- Windows bloquea el envío de teclas: el programa de escritorio remoto se ejecuta como administrador. "
                 + "Inicia " + app + " de la misma forma.",
-            "- Un atajo se desactiva solo: ya lo usa otro programa. Dale otras teclas en las opciones.",
-            "La línea bajo las tarjetas dice qué acaba de pasar, y por qué. Las confirmaciones desaparecen tras "
-                + "unos segundos y dejan el sitio a la lista; los avisos y errores se quedan hasta el siguiente mensaje."
+            "## Los atajos",
+            "Un atajo se desactiva solo: ya lo usa otro programa. Dale otras teclas en las opciones."
         };
     }
 }

@@ -177,7 +177,6 @@ static partial class Strings
 
         TypingTitle = "Saisie"; ProgramTitle = "Programme"; HotkeysTitle = "Raccourcis"; HistoryTitle = "Historique";
         AppearanceTitle = "Apparence";
-        On = "Activé"; Off = "Désactivé";
         DelayOption = "Attente avant la saisie"; DelayNote = "Secondes pour cliquer dans le bon champ";
         UsOption = "Le serveur a un clavier anglais (US)"; UsNote = "Seulement si les symboles arrivent faux";
         EnterOption = "Appuyer sur Entrée à la fin"; EnterNote = "Valide aussitôt la connexion";
@@ -330,6 +329,7 @@ static partial class Strings
             + "modifiez le fichier, laissez-la en place.";
 
         HelpTitle = "Guide de {0}"; OptionsTitle = "Options de {0}"; Close = "Fermer";
+        ExpandAll = "Tout ouvrir"; CollapseAll = "Tout fermer";
         Guide = FrenchGuide;
     }
 
@@ -345,7 +345,8 @@ static partial class Strings
                 + "écrans de verrouillage des bureaux à distance.",
 
             "# La liste",
-            "À gauche la barre latérale, à droite les cartes des éléments de l'endroit choisi dans celle-ci :",
+            "À gauche la barre latérale, à droite les cartes des éléments de l'endroit choisi dans celle-ci.",
+            "## Les endroits de la barre latérale",
             "- « " + HistoryPlace + " » : ce que vous avez copié, du plus récent au plus ancien, chaque jour sous son nom ; "
                 + "les éléments gardés en haut passent avant les autres. Pendant le défilement, le nom du jour de la première "
                 + "carte reste au-dessus des cartes.",
@@ -360,20 +361,25 @@ static partial class Strings
             "Le bouton en haut de la barre latérale la réduit à ses icônes, et lui rend ses noms : en laissant le pointeur "
                 + "sur une icône, vous voyez son nom, et chaque dossier montre l'initiale de son nom. En faisant glisser le bord entre la barre et les cartes, vous l'élargissez "
                 + "ou la rétrécissez ; plus étroite qu'elle ne peut l'être, elle se réduit à ses icônes.",
+            "## Types d'élément",
             "Les onglets au-dessus des cartes (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") ne montrent qu'un type d'élément. « " + CodeKinds + " » est une supposition faite d'après "
                 + "l'allure des lignes : de temps en temps un texte s'y retrouve, ou un morceau de code parmi les textes. "
                 + "Quand elle se trompe, « " + KindMenu + " », dans le menu d'un texte, dit ce qu'il est : copié à "
                 + "nouveau ou enregistré, il le reste.",
+            "## Les cartes",
             "Chaque carte montre d'abord l'élément ; à droite, en petit et discret, le programme dans lequel il a été copié, avec "
                 + "son icône (ou le dossier d'un texte enregistré), l'heure de la copie et ce qu'il est, si ce n'est pas un texte "
                 + "simple. Avec le pointeur sur la carte, de petits signes prennent leur place : ils le gardent en haut, le montrent "
                 + "en entier, le copient, l'enregistrent ou le modifient, le suppriment et ouvrent son menu ; en laissant le "
                 + "pointeur sur l'un d'eux, il dit ce qu'il fait.",
-            "- Tapez dans la case du haut pour chercher parmi les éléments de l'endroit : les mots comptent dans "
+            "## La recherche",
+            "Tapez dans la case du haut pour chercher parmi les éléments de l'endroit : les mots comptent dans "
                 + "n'importe quel ordre, sans tenir compte des majuscules ni des accents. Dans « " + HistoryPlace + " » "
                 + "viennent aussi les textes enregistrés qui correspondent, après ce que vous avez copié, sous « " + SavedTitle + " ». "
                 + "Les mots trouvés sont surlignés sur les cartes ; trouvés loin dans un long texte, la carte en montre ce passage.",
+            "La liste montre les " + MainForm.MaxShown + " éléments copiés les plus récents : la recherche trouve les autres.",
+            "## Utiliser un élément",
             "- Un clic sur une carte la sélectionne. Le signe de copie (« " + CopyButton + " ») met l'élément dans le presse-papiers et laisse la "
                 + "fenêtre ouverte, pour que vous puissiez encore l'enregistrer ou le supprimer.",
             "- " + EnterKeyName + " ou un double-clic le mettent dans le presse-papiers et, si vous aviez ouvert la "
@@ -384,38 +390,43 @@ static partial class Strings
                 + "Avec « " + RestOption + " » activée, dans les options, laisser le pointeur sur une carte qui coupe son texte "
                 + "fait de même, jusqu'à ce que vous bougiez le pointeur.",
             "- Les trois points à droite, ou le clic droit, ouvrent le menu de l'élément, sans toucher au presse-papiers.",
-            "- Ctrl+clic ajoute une carte à la sélection ou l'en retire, " + ShiftName + "+clic sélectionne toutes les cartes "
+            "## Plusieurs cartes à la fois",
+            "Ctrl+clic ajoute une carte à la sélection ou l'en retire, " + ShiftName + "+clic sélectionne toutes les cartes "
                 + "jusqu'à celle-ci (" + ShiftName + " avec les flèches aussi), " + Key(Keys.Control | MainForm.AllKey) + " les "
                 + "sélectionne toutes. Avec plusieurs cartes sélectionnées, une barre à la place des onglets dit combien elles sont "
                 + "et propose « " + KeepTop + " », « " + MoveTo + " » et « " + Delete + " », qui sont aussi dans le menu du clic droit "
                 + "et sur leurs touches. « " + MoveTo + " » un dossier, ou « " + SavedTitle + " », y enregistre les éléments copiés. "
                 + EscapeKeyName + ", ou la croix au bout de la barre, revient à une seule carte.",
-            "- « " + CopyPictureText + " », dans le menu d'une image, met dans le presse-papiers le texte "
+            "## Le texte d'une image",
+            "« " + CopyPictureText + " », dans le menu d'une image, met dans le presse-papiers le texte "
                 + "que Windows y lit, ici sur le PC, sans internet : il entre dans la liste comme tout ce que vous copiez "
                 + "(celui d'une image enregistrée est privé, comme un texte enregistré). Un petit texte peut sortir avec "
                 + "des erreurs : vérifiez-le d'abord.",
-            "- La flèche à droite d'un élément copié (" + Key(Keys.Control | MainForm.PinKey) + ") le garde "
+            "## Garder un élément en haut",
+            "La flèche à droite d'un élément copié (" + Key(Keys.Control | MainForm.PinKey) + ") le garde "
                 + "en haut un moment : elle est en couleur tant qu'elle le fait, et un clic l'allume ou l'éteint. "
                 + "L'élément part quand même quand les jours de l'historique expirent : ce qui doit rester, "
                 + "enregistrez-le. Copier à nouveau le même texte le ramène en haut avec la nouvelle heure, flèche et "
                 + "numéro compris.",
-            "- « " + NumberMenu + " », dans le menu, donne à un texte enregistré ou à un élément copié "
+            "## Les numéros",
+            "« " + NumberMenu + " », dans le menu, donne à un texte enregistré ou à un élément copié "
                 + "un numéro de 1 à " + MainForm.MaxNumber + " : ensuite, depuis n'importe quel programme, "
                 + MainForm.NumbersName + " le collent aussitôt dans la fenêtre où vous travaillez, sans ouvrir celle-ci "
                 + "(l'élément va dans le presse-papiers et Ctrl+V suit tout seul). Le numéro apparaît dans un petit "
                 + "cadre à droite de la carte, et à côté du texte enregistré dans le menu de l'icône. Un élément copié "
                 + "garde son numéro jusqu'à ce que ses jours expirent. Chaque numéro appartient à un seul élément : "
                 + "donné à un autre, il passe à celui-ci.",
+            "## La pause",
             "Pour ne pas mémoriser ce que vous allez copier, « " + Pause + " » est en bas de la barre latérale "
                 + "et dans le menu de l'icône près de l'horloge : le titre indique « en pause » "
                 + "jusqu'à ce que vous choisissiez « " + Resume + " ». Au démarrage suivant, la capture est de nouveau active.",
-            "La liste montre les " + MainForm.MaxShown + " éléments copiés les plus récents : la recherche trouve les autres.",
 
             "# Les textes enregistrés",
             "Ce sont les choses que vous voulez toujours avoir sous la main : une signature, une adresse, un code "
                 + "d'accès. Ils n'expirent jamais. Le nom est facultatif : avec un nom, la liste ne montre que le nom et le "
                 + "contenu reste caché, ce qui convient à un texte privé ; sans, la liste montre le contenu, comme pour "
                 + "une deuxième adresse e-mail.",
+            "## Les écrire et les modifier",
             "- « " + New + " » (" + Key(Keys.Control | MainForm.NewKey) + ") écrit un texte de zéro.",
             "- « " + SaveDots + " » (" + Key(Keys.Control | MainForm.SaveKey) + "), sur un élément copié, le garde, avec "
                 + "ou sans nom ; avant d'enregistrer, vous pouvez retoucher son contenu.",
@@ -423,15 +434,18 @@ static partial class Strings
                 + "son nom ou son contenu.",
             "- « " + Delete + " » (" + Key(Keys.Control | MainForm.DeleteKey) + ") supprime le texte enregistré, ou "
                 + "retire l'élément copié de la liste.",
+            "## Les voir et les utiliser",
             "- L'œil d'un texte enregistré avec un nom (« " + ShowContent + " », aussi dans son menu) montre son contenu dans "
                 + "un petit cadre pendant quelques secondes : la liste ne montre que son nom, et le survoler ne suffit jamais.",
             "- Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge : en choisir un le remet "
                 + "dans le presse-papiers sans ouvrir la fenêtre.",
+            "## En sécurité",
             "Les textes enregistrés n'expirent jamais. Ils sont dans la base de données du programme, chiffrés pour "
                 + "votre utilisateur : un autre utilisateur du même PC ne peut pas les lire. Quand vous en remettez un dans le presse-papiers, il "
                 + "est marqué comme privé, pour que l'historique de Windows (Win+V) et les autres gestionnaires de "
                 + "presse-papiers l'ignorent. Une image copiée peut aussi être enregistrée : elle montre "
                 + "toujours sa miniature, avec son nom à côté si elle en a un.",
+            "## Textes mis en forme",
             "Un texte enregistré peut être mis en forme, comme une signature de courriel : gras, italique, souligné, polices et tailles.",
             "- Copiez la signature depuis un courriel ou un document et enregistrez-la : elle garde sa mise en forme. "
                 + "L'historique garde le texte brut, donc un élément copié l'a encore seulement tant qu'il est parmi les "
@@ -450,31 +464,38 @@ static partial class Strings
             "Quand les textes enregistrés deviennent nombreux, vous pouvez les regrouper en dossiers, et les dossiers "
                 + "dans d'autres dossiers. Ils sont dans la barre latérale, sous « " + SavedTitle + " » : un clic sur un "
                 + "dossier montre les textes qu'il contient directement, pas ceux des dossiers qu'il contient.",
+            "## Les créer et les ouvrir",
             "- « " + NewFolder + " » est en bas de la barre latérale et dans le menu du clic droit d'un dossier "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + ") : il est créé dans le dossier "
                 + "affiché, mais sa fenêtre permet de choisir où le mettre.",
             "- La flèche à l'extrémité droite d'un dossier qui en contient d'autres l'ouvre et le ferme ; celle de « "
                 + SavedTitle + " » les montre ou les cache tous. Le nombre dit combien de textes sont dans le dossier même, "
                 + "pas dans ceux qu'il contient. Ouverts ou fermés, vous les retrouvez comme vous les avez laissés.",
+            "## Déplacer textes et dossiers",
             "- La carte d'un texte enregistré, ou un dossier de la barre avec tout son contenu, se fait glisser sur un "
                 + "dossier de la barre ; lâché sur « " + SavedTitle + " », il sort des dossiers.",
             "- « " + MoveTo + " », dans le menu d'un texte enregistré ou d'un dossier, fait de même. Le "
                 + "même choix est dans la fenêtre où vous l'écrivez, à gauche des boutons.",
+            "## Les renommer et les supprimer",
             "- Dans le menu du clic droit d'un dossier, « " + RenameDots + " » change son nom ou sa place et « " + Delete
                 + " » retire seulement le dossier : son contenu, textes et dossiers, remonte dans le dossier qui le "
                 + "contenait, ou reste parmi les textes enregistrés hors des dossiers.",
             "- Le nom d'un dossier ne peut pas contenir « " + Texts.Separator + " ».",
+            "## Ailleurs",
             "- Dans le menu de l'icône près de l'horloge, chaque dossier est un sous-menu avec ses textes.",
             "- Le nom d'un dossier trouve ses textes dans la recherche.",
 
             "# Saisir là où coller ne marche pas",
             "Là où Ctrl+V ne marche pas, " + app + " écrit le texte du presse-papiers une touche à la fois, comme vous "
                 + "le feriez au clavier.",
+            "## Avec le bouton",
             "- Copiez le texte.",
             "- Appuyez sur « " + TypeButton + " ».",
             "- Cliquez dans le champ de la fenêtre distante : vous avez " + MainForm.ArmedSeconds + " secondes pour le faire.",
             "- Quand cette fenêtre est restée au premier plan le temps de l'attente, la saisie commence.",
-            "Sinon, appuyez sur " + type + " directement dans le champ : la saisie démarre aussitôt, sans attente.",
+            "## Avec les touches",
+            "Ou appuyez sur " + type + " directement dans le champ : la saisie démarre aussitôt, sans attente.",
+            "## Jamais au mauvais endroit",
             "Pour ne pas envoyer un texte privé au mauvais endroit :",
             "- la saisie s'arrête toute seule si la fenêtre cible perd le premier plan ;",
             "- pendant l'attente et la saisie, le même bouton devient « " + Cancel + " » ;",
@@ -484,9 +505,13 @@ static partial class Strings
             "- rien n'est saisi tant que Verr. Maj est activé : désactivez-le d'abord.",
 
             "# Les touches",
+            "Les trois premiers marchent partout ; les autres dans la liste. Tant qu'il est actif, " + pick
+                + " n'arrive plus aux autres programmes, pas plus que les touches des numéros qu'un élément possède.",
+            "## Partout",
             pick + "\tOuvre la liste sur " + HistoryPlace + ", depuis n'importe quel programme.",
             type + "\tSaisit aussitôt le presse-papiers dans la fenêtre active.",
             MainForm.NumbersName + "\tColle dans la fenêtre active l'élément qui a ce numéro.",
+            "## Dans la liste",
             "F1\tOuvre ce guide.",
             ArrowsName + "\tParcourt les éléments, ou les endroits de la barre latérale.",
             Key(Keys.Control | MainForm.AllKey) + "\tSélectionne toutes les cartes ; Ctrl ou " + ShiftName + " avec un clic, plusieurs.",
@@ -498,8 +523,7 @@ static partial class Strings
             Key(Keys.Control | MainForm.SaveKey) + "\tEnregistre l'élément copié, ou modifie l'élément enregistré.",
             Key(Keys.Control | MainForm.DeleteKey) + "\tSupprime l'élément sélectionné.",
             Key(Keys.Control | MainForm.PinKey) + "\tGarde l'élément copié en haut, ou le laisse partir.",
-            "Les trois premiers marchent partout ; les autres dans la liste. Tant qu'il est actif, " + pick
-                + " n'arrive plus aux autres programmes, pas plus que les touches des numéros qu'un élément possède.",
+            "## Changer les raccourcis",
             "Dans les options, sous « " + HotkeysTitle + " », les trois premiers se désactivent et se changent : le "
                 + "bouton à côté de chacun montre ses touches, et en appuyant dessus il attend les nouvelles. Pour les "
                 + "numéros, on appuie sur les touches à maintenir avec un chiffre quelconque ; si un autre programme en "
@@ -512,18 +536,21 @@ static partial class Strings
             "# L'historique",
             "Ce que vous copiez reste dans la liste pendant un nombre de jours que vous choisissez ("
                 + Texts.DefaultKeepDays + " si vous ne le changez pas), même après avoir fermé le programme ou éteint le PC.",
+            "## Où il est gardé",
             "- Il est gardé en clair dans une base de données, par défaut " + Clips.DefaultFile + ", avec les textes "
                 + "enregistrés, qui eux sont chiffrés. Les jours expirés s'effacent tout seuls.",
             "- Dans les options, « " + ChangeFolderButton + " » emmène la base de données dans un autre dossier, ou "
                 + "utilise celle qui s'y trouve déjà ; « " + DefaultFolderButton + " » la ramène. Ce n'est pas un moyen "
                 + "de partager la liste entre PC : les textes enregistrés ne se lisent que sur ce PC. Si le dossier "
                 + "choisi est inaccessible au démarrage, la liste travaille en mémoire et le dit.",
+            "## Ce qui reste et ce qui part",
             "- Avec 0 jour, seul ce que vous avez copié aujourd'hui reste.",
             "- Les images copiées occupent au maximum " + Size(Clips.PictureSpace) + " : au-delà, les plus anciennes "
                 + "partent même avant la fin de leurs jours, et une barre rouge sous la liste le signale. Les images "
                 + "enregistrées ne comptent pas.",
             "- Les copies que d'autres programmes marquent comme privées ne sont pas mémorisées.",
             "- Les éléments en haut partent aussi quand leurs jours expirent : ce qui doit rester, enregistrez-le.",
+            "## Nettoyer",
             "- Dans les options, « " + CleanButton + " » efface aussitôt ce que vous avez copié avant les derniers jours "
                 + "indiqués à côté : avec 1, seul aujourd'hui reste ; avec 0, rien. Une confirmation est demandée ; les "
                 + "éléments en haut partent aussi, les textes enregistrés ne sont jamais touchés.",
@@ -533,49 +560,62 @@ static partial class Strings
             "Le bouton « " + Options + " » les ouvre dans une fenêtre à part, qui peut rester ouverte à côté de la liste. "
                 + "Chaque option dit en quelques mots, sous son nom, ce qu'elle fait ; en laissant le pointeur dessus, son "
                 + "explication complète apparaît. Elles sont réparties en cinq pages, choisies dans la colonne de gauche comme "
-                + "les sujets de ce guide :",
-            "- " + TypingTitle + " : combien de secondes attendre avant la saisie (de " + MainForm.MinDelay + " à "
+                + "les sujets de ce guide.",
+            "## " + TypingTitle,
+            "Combien de secondes attendre avant la saisie (de " + MainForm.MinDelay + " à "
                 + MainForm.MaxDelay + "), si le serveur a un clavier américain, s'il faut appuyer sur Entrée à la fin, "
                 + "s'il faut vider le presse-papiers ensuite, la saisie lente et les symboles composés avec des codes Alt.",
-            "- " + HotkeysTitle + " : active et désactive " + type + ", " + pick + " et " + MainForm.NumbersName
+            "## " + HotkeysTitle,
+            "Active et désactive " + type + ", " + pick + " et " + MainForm.NumbersName
                 + ", et leur donne d'autres touches ; et si " + pick + " rouvre la liste là où vous l'avez laissée.",
-            "- " + HistoryTitle + " : s'il faut mémoriser ce que vous copiez, pendant combien de jours, le dossier de la base de données "
+            "## " + HistoryTitle,
+            "S'il faut mémoriser ce que vous copiez, pendant combien de jours, le dossier de la base de données "
                 + "(qu'on peut changer) avec le lien qui l'ouvre, et le bouton qui nettoie aussitôt l'historique.",
-            "- " + AppearanceTitle + " : la langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la "
+            "## " + AppearanceTitle,
+            "La langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la "
                 + "taille de l'interface (boutons, options, ce guide : en pixels, elles redémarrent le programme), celles des "
                 + "éléments (elles changent aussitôt), et si laisser le pointeur sur une carte la montre en entier.",
-            "- " + ProgramTitle + " : s'il faut rester dans la zone de notification et se masquer en passant à un autre "
+            "## " + ProgramTitle,
+            "S'il faut rester dans la zone de notification et se masquer en passant à un autre "
                 + "programme, s'il faut démarrer avec Windows, les boutons pour exporter et importer, et la version du programme.",
 
             "# Exporter et importer",
             "Dans les options, sous « " + ProgramTitle + " », deux boutons sortent vos textes du programme et les "
                 + "reprennent, comme sauvegarde ou pour les passer à un autre PC. Chacun demande si vous voulez "
                 + "seulement les textes enregistrés ou tout, c'est-à-dire aussi les éléments copiés.",
+            "## Exporter",
             "- « " + ExportButton + " » écrit un fichier texte que le Bloc-notes ouvre : les textes enregistrés avec "
                 + "leurs dossiers (ceux mis en forme avec leur HTML avant le texte) et, si vous le demandez, les "
                 + "éléments copiés avec leur heure et leur flèche. Les "
                 + "images n'y vont pas.",
             "- Dans le fichier, les textes sont en clair, y compris les privés : gardez-le en lieu sûr.",
-            "- « " + ImportButton + " » lit un tel fichier et ajoute son contenu à ce qui existe déjà. Si un texte "
-                + "enregistré porte le nom d'un texte existant, il demande lequel garder ; les éléments copiés que la "
-                + "liste a déjà ne sont pas répétés. Un fichier exporté dans une autre langue se lit de la même façon.",
             "- Le fichier peut être retouché à la main : le texte de chaque élément est dans les lignes qui commencent "
                 + "par une tabulation, qui doit rester en place.",
+            "## Importer",
+            "« " + ImportButton + " » lit un tel fichier et ajoute son contenu à ce qui existe déjà. Si un texte "
+                + "enregistré porte le nom d'un texte existant, il demande lequel garder ; les éléments copiés que la "
+                + "liste a déjà ne sont pas répétés. Un fichier exporté dans une autre langue se lit de la même façon.",
 
             "# L'icône de notification",
             "Avec l'option active, fermer ou réduire la fenêtre la masque seulement : le programme continue de tourner "
                 + "et les raccourcis continuent de répondre.",
+            "## La fenêtre",
             "- Un clic sur l'icône rouvre la fenêtre ; clic droit puis « " + Exit + " » ferme vraiment.",
             "- Avec « " + LeaveOption + " », la fenêtre y retourne aussi quand vous cliquez ailleurs ; désactivée, elle "
                 + "reste ouverte derrière les autres. Pendant l'attente et la saisie, en revanche, elle reste au-dessus "
                 + "de tout : le compte à rebours et « " + Cancel + " » restent visibles.",
+            "- Lancer le programme une seconde fois fait réapparaître la fenêtre de celui déjà ouvert.",
+            "## Le menu et l'icône",
             "- Le menu du clic droit contient aussi les textes enregistrés, chaque dossier un sous-menu : en choisir un "
                 + "le remet dans le presse-papiers, prêt pour Ctrl+V ou pour " + type + ", sans ouvrir la fenêtre.",
             "- À côté d'un texte enregistré qui a un numéro figurent ses touches.",
             "- L'icône est en couleur quand le presse-papiers contient du texte, grise sinon.",
-            "- Lancer le programme une seconde fois fait réapparaître la fenêtre de celui déjà ouvert.",
 
             "# Si quelque chose ne va pas",
+            "La ligne sous les cartes dit ce qui vient de se passer, et pourquoi. Les confirmations disparaissent "
+                + "après quelques secondes et laissent la place à la liste ; les avertissements et les erreurs restent "
+                + "jusqu'au message suivant.",
+            "## La saisie",
             "- Les symboles arrivent faux : le serveur utilise un autre clavier. Essayez l'option du clavier anglais (US).",
             "- Des caractères manquent, ou arrivent dans le désordre : activez la saisie lente.",
             "- Les symboles que votre clavier n'a pas n'arrivent pas (~ et ` sur un clavier italien) : activez les "
@@ -584,11 +624,9 @@ static partial class Strings
                 + "raccourcis. Utilisez le bouton.",
             "- Windows bloque l'envoi des touches : le programme de bureau à distance est lancé en tant "
                 + "qu'administrateur. Lancez aussi " + app + " ainsi.",
-            "- Un raccourci se désactive tout seul : un autre programme l'utilise déjà. Donnez-lui d'autres touches "
-                + "dans les options.",
-            "La ligne sous les cartes dit ce qui vient de se passer, et pourquoi. Les confirmations disparaissent "
-                + "après quelques secondes et laissent la place à la liste ; les avertissements et les erreurs restent "
-                + "jusqu'au message suivant."
+            "## Les raccourcis",
+            "Un raccourci se désactive tout seul : un autre programme l'utilise déjà. Donnez-lui d'autres touches "
+                + "dans les options."
         };
     }
 }

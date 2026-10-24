@@ -1705,6 +1705,16 @@ static class TestProgram
             return Array.FindAll(lines, delegate(string line) { return line.StartsWith("# "); }).Length;
         };
         int englishSubjects = subjects(Strings.Guide());
+        // How many sections each subject has, one number after the other.
+        Func<string[], string> sections = delegate(string[] lines)
+        {
+            List<int> counts = new List<int>();
+            foreach (string line in lines)
+                if (line.StartsWith("# ")) counts.Add(0);
+                else if (line.StartsWith("## ") && counts.Count > 0) counts[counts.Count - 1]++;
+            return string.Join(" ", counts.ConvertAll(delegate(int count) { return count.ToString(); }).ToArray());
+        };
+        string englishSections = sections(Strings.Guide());
         Entry folder = new Entry("A", "", DateTime.MinValue);
         folder.IsGroup = folder.Saved = true;
         Entry text = new Entry("B", "riga\r\n\tuna tabulazione", new DateTime(2026, 5, 6, 7, 8, 9));
@@ -1728,6 +1738,9 @@ static class TestProgram
             }
             Check(tooMany.Count == 0, code + ": every text fits the values it is given" + (tooMany.Count == 0 ? "" : ": " + string.Join(", ", tooMany.ToArray())));
             Check(subjects(Strings.Guide()) == englishSubjects, code + ": the guide has the " + englishSubjects + " subjects");
+            string own = sections(Strings.Guide());
+            Check(own == englishSections, code + ": its subjects have the sections of the English ones (" + englishSections + ")"
+                + (own == englishSections ? "" : ", not " + own));
             // Nothing the program says, nor the made-up entries of the pictures of the Store, has a word kept out of it.
             List<string> said = new List<string>(Strings.Guide());
             foreach (FieldInfo field in english.Keys) if (field.GetValue(null) is string) said.Add((string)field.GetValue(null));
@@ -1994,10 +2007,10 @@ static class TestProgram
             GoTo(form, PlaceKind.Saved, null);
             bool savedOnly = Cards(cards).Count == 4 && Cards(cards).TrueForAll(delegate(Entry e) { return e.Saved; }) && !(cards.Items[0] is Heading);
             GoTo(form, PlaceKind.Folder, s.Work);
-            bool inWork = Cards(cards).Count == 2;
+            bool inWork = Cards(cards).Count == 1;   // its own text, not that of the folder inside it
             GoTo(form, PlaceKind.Pinned, null);
             bool pinnedOnly = Cards(cards).Count == 1 && Cards(cards)[0].Pinned;
-            Console.WriteLine("[{0}] saved, a folder with those inside it, pinned", savedOnly && inWork && pinnedOnly ? "PASS" : "FAIL");
+            Console.WriteLine("[{0}] saved, a folder with its own, pinned", savedOnly && inWork && pinnedOnly ? "PASS" : "FAIL");
             // The programs from that of the latest copy: PowerShell, then Edge.
             bool byTime = ((Place)nav.Items[8]).Origin.Name.Contains("PowerShell");
             nav.SelectedIndex = 9;
@@ -2179,10 +2192,10 @@ static class TestProgram
             Form options = (Form)typeof(MainForm).GetField("options", hidden).GetValue(form);
             ListBox pages = (ListBox)typeof(MainForm).GetField("pageList", hidden).GetValue(form);
             Look.Switch(!Look.Dark);
-            bool followed = options.BackColor == Look.Back && pages.BackColor == Look.Well;
+            bool followed = options.BackColor == Look.Well && pages.BackColor == Look.Back;
             Look.Switch(!Look.Dark);
             Console.WriteLine("[{0}] the window of the options follows the theme before it first shows", followed
-                && options.BackColor == Look.Back && pages.BackColor == Look.Well ? "PASS" : "FAIL");
+                && options.BackColor == Look.Well && pages.BackColor == Look.Back ? "PASS" : "FAIL");
             options.Location = new Point(-30000, -30000);
             typeof(MainForm).GetMethod("ShowSize", hidden).Invoke(form, null);   // as opening them does
             options.Show();
@@ -2591,6 +2604,9 @@ static class TestProgram
                 ListBox topics = (ListBox)typeof(HelpForm).GetField("topics", hidden).GetValue(help);
                 topics.SelectedIndex = topics.Items.Count / 2;
                 Snap(help, path + "-real-help-keys.png");
+                // The longest subject, in sections that open and close.
+                topics.SelectedIndex = 1;
+                Snap(help, path + "-real-help-list.png");
             }
         }
         return 0;

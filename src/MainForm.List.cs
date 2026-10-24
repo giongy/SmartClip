@@ -1220,7 +1220,8 @@ partial class MainForm
             Sign sign = PartSignOf(button.Key, entry);
             bool hovered = IsHovered(e.Index, button.Key);
             Color colour = button.Key == Part.More ? (hovered ? Look.Ink : Look.Blend(fill, Look.Muted, 0.8f))
-                : button.Key == Part.Arrow && !entry.Pinned && !hovered ? Look.Blend(fill, Look.Muted, 0.5f) : Look.Own(sign);
+                : button.Key == Part.Arrow ? (entry.Pinned ? Look.Accent : hovered ? Look.Ink : Look.Blend(fill, Look.Muted, 0.5f))
+                : Look.Own(sign);
             DrawPart(g, hovered, button.Value, sign, Look.Blend(fill, colour, buttons), fill);
         }
     }

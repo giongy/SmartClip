@@ -224,7 +224,6 @@ static partial class Strings
     // --- Options ---
     public static string TypingTitle = "Typing", ProgramTitle = "Program", HotkeysTitle = "Hotkeys", HistoryTitle = "History";
     public static string AppearanceTitle = "Appearance";
-    public static string On = "On", Off = "Off";   // beside a switch of the options
     // Each option has its name and, under it, what it does in a few words: the tooltip says the rest.
     public static string DelayOption = "Wait before typing", DelayNote = "Seconds to click into the right field";
     public static string UsOption = "The server uses a US English keyboard", UsNote = "Only if symbols arrive wrong";
@@ -381,10 +380,14 @@ static partial class Strings
 
     // --- The guide ---
     public static string HelpTitle = "{0} guide", OptionsTitle = "{0} options", Close = "Close";
+    public static string ExpandAll = "Open all", CollapseAll = "Close all";   // the sections of a subject of the guide
     public static Func<string[]> Guide = EnglishGuide;
 
-    // A line starting with "# " begins a subject and names it, one starting with "- " is a point of a list, one
-    // with a tab a key and what it does. Built when the guide opens: the user can change the hotkeys.
+    // A line starting with "# " begins a subject and names it, one starting with "## " a section of it, which the
+    // guide shows as a card that opens and closes: the lines before the first section are the few that say what the
+    // subject is about, always in view. One starting with "- " is a point of a list, one with a tab a key and what it
+    // does. Every language has the same subjects with the same sections, in the same order. Built when the guide
+    // opens: the user can change the hotkeys.
     static string[] EnglishGuide()
     {
         string pick = MainForm.PickName, type = MainForm.HotkeyName, app = Program.AppName;
@@ -396,7 +399,8 @@ static partial class Strings
                 + "in where paste does not work, for example on the lock screens of remote desktops.",
 
             "# The list",
-            "On the left the sidebar, on the right the cards of the place chosen there:",
+            "On the left the sidebar, on the right the cards of the place chosen there.",
+            "## The places of the sidebar",
             "- " + HistoryPlace + ": what you copied, newest first, each day under its name; the entries kept at the top come "
                 + "before the others. While you scroll, the name of the day of the top card stays above the cards.",
             "- " + PinnedPlace + ": only the copied entries kept at the top.",
@@ -409,17 +413,22 @@ static partial class Strings
             "The button at the top of the sidebar reduces it to its icons, and gives it its names back: resting the pointer "
                 + "on an icon says its name, and each folder shows the first letter of its name. Dragging the edge between the sidebar and the cards makes it wider or narrower; "
                 + "dragged narrower than it can be, it is reduced to its icons.",
+            "## Kinds of entry",
             "The tabs above the cards (" + AllKinds + ", " + TextKinds + ", " + CodeKinds + ", " + LinkKinds + ", "
                 + PictureKinds + ") show one kind of entry only. " + CodeKinds + " is a guess from how the lines look: now "
                 + "and then a text ends up there, or a piece of code among the texts. When it guesses wrong, “" + KindMenu
                 + "”, in the menu of a text, says what it is: copied again or saved, it stays so.",
+            "## The cards",
             "Each card shows the entry first; on its right, small and faint, the program it was copied in, with its icon (or the folder "
                 + "of a saved text), the time of the copy and what it is, unless it is a plain text. With the pointer on the card, "
                 + "small signs take their place: they keep it at the top, show it whole, copy it, save or edit it, delete it and "
                 + "open its menu; resting the pointer on one says what it does.",
-            "- Type in the box at the top to search the cards of the place: words count in any order, ignoring case and accents. "
+            "## Search",
+            "Type in the box at the top to search the cards of the place: words count in any order, ignoring case and accents. "
                 + "In " + HistoryPlace + " the saved texts that match come too, after what you copied, under " + SavedTitle + ". "
                 + "The words found are highlighted on the cards; found far into a long text, its card shows that part of it.",
+            "The list shows the " + MainForm.MaxShown + " most recent copied entries: search finds the others.",
+            "## Using an entry",
             "- A click on a card selects it. The copy sign (“" + CopyButton + "”) puts the entry on the clipboard and leaves the "
                 + "window open, so that you can still save or delete it.",
             "- " + EnterKeyName + " or a double click put it on the clipboard and, if you opened the list with " + pick
@@ -429,47 +438,55 @@ static partial class Strings
                 + "the picture larger. It stays a few seconds, wherever the pointer goes. With “" + RestOption + "” on, in the "
                 + "options, resting the pointer on a card that cuts its text short does the same, until the pointer moves.",
             "- The three dots on the right, or right-click, open the menu of the entry, without touching the clipboard.",
-            "- Ctrl+click adds a card to the selection or takes it away, " + ShiftName + "+click selects all the cards up to that one "
+            "## Several cards at once",
+            "Ctrl+click adds a card to the selection or takes it away, " + ShiftName + "+click selects all the cards up to that one "
                 + "(" + ShiftName + " with the arrows too), " + Key(Keys.Control | MainForm.AllKey) + " selects them all. With several "
                 + "selected, a bar in the place of the tabs says how many and offers “" + KeepTop + "”, “" + MoveTo + "” and “" + Delete
                 + "”, which are also in the right-click menu and on their keys. “" + MoveTo + "” a folder, or " + SavedTitle
                 + ", saves the copied entries there. " + EscapeKeyName + ", or the cross at the end of the bar, goes back to one card.",
-            "- “" + CopyPictureText + "”, in the menu of a picture, puts on the clipboard the text Windows "
+            "## The text of a picture",
+            "“" + CopyPictureText + "”, in the menu of a picture, puts on the clipboard the text Windows "
                 + "reads in it, here on the PC, without the internet: it comes into the list as anything you copy (that of "
                 + "a saved picture is private, as a saved text is). Small text can come out with mistakes: look at it first.",
-            "- The arrow on the right of a copied entry (" + Key(Keys.Control | MainForm.PinKey) + ") keeps it at "
+            "## Keeping an entry at the top",
+            "The arrow on the right of a copied entry (" + Key(Keys.Control | MainForm.PinKey) + ") keeps it at "
                 + "the top for a while: in colour while it does, and a click turns it on or off. The entry still goes when "
                 + "the days of the history are over: what is to stay, save it. Copying the same text again brings it back "
                 + "to the top with the new time, arrow and number included.",
-            "- “" + NumberMenu + "”, in the menu, gives a saved text or a copied entry a number from 1 to "
+            "## Numbers",
+            "“" + NumberMenu + "”, in the menu, gives a saved text or a copied entry a number from 1 to "
                 + MainForm.MaxNumber + ": then, from any program, " + MainForm.NumbersName + " paste it at once into "
                 + "the window you are working in, without opening this one (the entry goes on the clipboard and Ctrl+V "
                 + "follows by itself). The number shows in a small frame on the right of the card, and beside the saved "
                 + "text in the icon menu. A copied entry keeps its number until its days are over. Each number "
                 + "belongs to one entry: given to another, it moves.",
+            "## Pausing",
             "Not to remember what you are about to copy, “" + Pause + "” is at the bottom of the sidebar and "
                 + "in the menu of the icon by the clock: the title says “paused” until you choose “" + Resume + "”. At "
                 + "the next start capturing is on again.",
-            "The list shows the " + MainForm.MaxShown + " most recent copied entries: search finds the others.",
 
             "# Saved texts",
             "They are what you want always at hand: a signature, an address, an access code. They never expire. The "
                 + "name is optional: with one, the list shows only the name and the content stays hidden, which suits "
                 + "a private text; without, the list shows the content, as for a second email address.",
+            "## Writing and changing them",
             "- “" + New + "” (" + Key(Keys.Control | MainForm.NewKey) + ") writes a text from scratch.",
             "- “" + SaveDots + "” (" + Key(Keys.Control | MainForm.SaveKey) + "), on a copied entry, keeps it, with "
                 + "a name or without; before saving you can touch up its content.",
             "- “" + EditDots + "” (" + Key(Keys.Control | MainForm.SaveKey) + "), on a saved entry, changes its name or content.",
             "- “" + Delete + "” (" + Key(Keys.Control | MainForm.DeleteKey) + ") deletes the saved text, or drops the "
                 + "copied entry from the list.",
+            "## Seeing and using them",
             "- The eye of a saved text with a name (“" + ShowContent + "”, also in its menu) shows its content in a small box "
                 + "for a few seconds: the list shows only its name, and resting the pointer on it is never enough.",
             "- Saved texts are also in the menu of the icon by the clock: choosing one puts it back on the "
                 + "clipboard without opening the window.",
+            "## Kept safe",
             "Saved texts never expire. They are kept in the program's database, encrypted for your user: another "
                 + "user of the same PC cannot read them. When you put one back on the clipboard it is marked as private, so that Windows "
                 + "clipboard history (Win+V) and other clipboard managers ignore it. A copied picture can be saved too: it always shows its thumbnail, with "
                 + "its name beside it if it has one.",
+            "## Formatted texts",
             "A saved text can be formatted, as a mail signature is: bold, italic, underlined, fonts and sizes.",
             "- Copy the signature from a mail or a document and save it: it keeps its formatting. The history keeps "
                 + "plain text, so a copied entry still has it only while it is among the last " + Rich.KeptCopies
@@ -485,30 +502,37 @@ static partial class Strings
             "# Folders",
             "When the saved texts become many you can gather them in folders, and folders in other folders. They are in "
                 + "the sidebar, under " + SavedTitle + ": a click on a folder shows the texts in it, not those of the folders inside it.",
+            "## Making and opening them",
             "- “" + NewFolder + "” is at the bottom of the sidebar and in the right-click menu of a folder "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): it is created inside the folder shown, "
                 + "but its window lets you choose where it goes.",
             "- The arrow at the right end of a folder that holds others opens and closes it; that of " + SavedTitle
                 + " shows or hides all of them. The number says how many texts are in a folder itself, not in the folders "
                 + "inside it. Open or closed, you find them as you left them.",
+            "## Moving texts and folders",
             "- The card of a saved text, or a folder of the sidebar with all it holds, can be dragged onto a folder of the "
                 + "sidebar; dropped onto " + SavedTitle + ", it leaves the folders.",
             "- “" + MoveTo + "”, in the menu of a saved text or of a folder, does the same. The same choice "
                 + "is in the window where you write it, to the left of the buttons.",
+            "## Renaming and deleting",
             "- In the right-click menu of a folder, “" + RenameDots + "” changes its name or place and “" + Delete
                 + "” removes the folder only: what it held, texts and folders, moves up into the folder that held it, or "
                 + "stays among the saved texts outside the folders.",
             "- The name of a folder cannot contain “" + Texts.Separator + "”.",
+            "## Elsewhere",
             "- In the menu of the icon by the clock each folder is a submenu with its texts.",
             "- The name of a folder finds its texts in a search.",
 
             "# Typing where paste does not work",
             "Where Ctrl+V does not work, " + app + " writes the clipboard text one key at a time, as you would on the keyboard.",
+            "## With the button",
             "- Copy the text.",
             "- Press “" + TypeButton + "”.",
             "- Click into the field of the remote window: you have " + MainForm.ArmedSeconds + " seconds to do it.",
             "- When that window has stayed in the foreground for the wait, typing starts.",
-            "Otherwise press " + type + " right in the field: it types at once, with no wait.",
+            "## With the keys",
+            "Or press " + type + " right in the field: it types at once, with no wait.",
+            "## Never in the wrong place",
             "Not to send a private text to the wrong place:",
             "- typing stops by itself if the target window loses the foreground;",
             "- while waiting and typing the same button becomes “" + Cancel + "”;",
@@ -517,9 +541,13 @@ static partial class Strings
             "- nothing is typed while Caps Lock is on: turn it off first.",
 
             "# Keys",
+            "The first three work everywhere; the others in the list. While it is on, " + pick + " no longer reaches "
+                + "other programs, nor do the keys of the numbers that some entry has.",
+            "## Everywhere",
             pick + "\tOpens the list on " + HistoryPlace + ", from any program.",
             type + "\tTypes the clipboard into the active window at once.",
             MainForm.NumbersName + "\tPastes the entry with that number into the active window.",
+            "## In the list",
             "F1\tOpens this guide.",
             ArrowsName + "\tMoves through the cards, or the places of the sidebar.",
             Key(Keys.Control | MainForm.AllKey) + "\tSelects all the cards; Ctrl or " + ShiftName + " with a click, several.",
@@ -531,8 +559,7 @@ static partial class Strings
             Key(Keys.Control | MainForm.SaveKey) + "\tSaves the copied entry, or edits the saved one.",
             Key(Keys.Control | MainForm.DeleteKey) + "\tDeletes the selected entry.",
             Key(Keys.Control | MainForm.PinKey) + "\tKeeps the copied entry at the top, or lets it go.",
-            "The first three work everywhere; the others in the list. While it is on, " + pick + " no longer reaches "
-                + "other programs, nor do the keys of the numbers that some entry has.",
+            "## Changing the hotkeys",
             "In the options, under “" + HotkeysTitle + "”, the first three can be turned off and changed: the button "
                 + "beside each shows its keys, and pressing it waits for new ones. For the numbers you press the keys "
                 + "to hold together with any digit; if another program already has some of them, it says which.",
@@ -544,17 +571,20 @@ static partial class Strings
             "# History",
             "What you copy stays in the list for a number of days you decide (" + Texts.DefaultKeepDays
                 + " unless you change it), also after closing the program or turning off the PC.",
+            "## Where it is kept",
             "- It is kept unencrypted in a database, by default " + Clips.DefaultFile + ", together with the saved "
                 + "texts, which are encrypted. Expired days are deleted by themselves.",
             "- In the options, “" + ChangeFolderButton + "” takes the database to another folder, or uses the one "
                 + "already there; “" + DefaultFolderButton + "” brings it back. It is not a way to share the list "
                 + "between PCs: saved texts can be read only on this PC. If the folder chosen cannot be reached at the "
                 + "start, the list works in memory and says so.",
+            "## What stays and what goes",
             "- With 0 days only what you copied today stays.",
             "- Copied pictures take at most " + Size(Clips.PictureSpace) + ": beyond that the oldest go, even before their "
                 + "days are over, and a red bar under the list says so. Saved pictures do not count.",
             "- Copies that other programs mark as private are not remembered.",
             "- Entries kept at the top go when their days are over too: what is to stay, save it.",
+            "## Cleaning",
             "- In the options, “" + CleanButton + "” deletes at once what you copied before the last days written "
                 + "beside it: with 1 only today stays, with 0 nothing does. It asks first; entries kept at the top "
                 + "go too, saved texts are never touched.",
@@ -563,48 +593,60 @@ static partial class Strings
             "# Options",
             "The “" + Options + "” button opens them in a window of their own, which can stay open beside the list. Each option "
                 + "says in a few words what it does, under its name; resting the pointer on it shows its full explanation. They "
-                + "are in five pages, chosen from the column on the left as the subjects of this guide are:",
-            "- " + TypingTitle + ": how many seconds to wait before typing (" + MainForm.MinDelay + " to "
+                + "are in five pages, chosen from the column on the left as the subjects of this guide are.",
+            "## " + TypingTitle,
+            "How many seconds to wait before typing (" + MainForm.MinDelay + " to "
                 + MainForm.MaxDelay + "), whether the server uses a US keyboard, whether to press Enter at the end, "
                 + "whether to clear the clipboard afterwards, slow typing and symbols composed with Alt codes.",
-            "- " + HotkeysTitle + ": turns " + type + ", " + pick + " and " + MainForm.NumbersName + " on and off, and "
+            "## " + HotkeysTitle,
+            "Turns " + type + ", " + pick + " and " + MainForm.NumbersName + " on and off, and "
                 + "gives them other keys; and whether " + pick + " opens the list where you left it.",
-            "- " + HistoryTitle + ": whether to remember what you copy, for how many days, the folder of the database "
+            "## " + HistoryTitle,
+            "Whether to remember what you copy, for how many days, the folder of the database "
                 + "(which can be changed) with the link that opens it, and the button that cleans the history at once.",
-            "- " + AppearanceTitle + ": the language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of "
+            "## " + AppearanceTitle,
+            "The language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of "
                 + "the interface (buttons, options, this guide: in pixels, they restart the program), those of the entries "
                 + "(they change at once), and whether resting the pointer on a card shows it whole.",
-            "- " + ProgramTitle + ": whether to stay in the notification area and hide when you switch to another program, "
+            "## " + ProgramTitle,
+            "Whether to stay in the notification area and hide when you switch to another program, "
                 + "whether to start with Windows, the buttons to export and import, and the version of the program.",
 
             "# Export and import",
             "In the options, under “" + ProgramTitle + "”, two buttons take your texts out of the program and bring "
                 + "them back, as a backup or to move them to another PC. Each asks whether you want the saved texts "
                 + "only or everything, that is the copied items too.",
+            "## Exporting",
             "- “" + ExportButton + "” writes a text file that Notepad opens: the saved texts with their folders "
                 + "(formatted ones with their HTML before the text) and, if you ask, the copied items with their time "
                 + "and arrow. Pictures are left out.",
             "- In the file the texts are unencrypted, private ones included: keep it somewhere safe.",
-            "- “" + ImportButton + "” reads such a file and adds what it holds to what is already here. If a saved "
-                + "text has the name of an existing one it asks which to keep; copied items the list already has "
-                + "are not repeated. A file exported in another language is read just the same.",
             "- The file can be edited by hand: the text of each entry is in the lines that start with a tab, "
                 + "which must stay in place.",
+            "## Importing",
+            "“" + ImportButton + "” reads such a file and adds what it holds to what is already here. If a saved "
+                + "text has the name of an existing one it asks which to keep; copied items the list already has "
+                + "are not repeated. A file exported in another language is read just the same.",
 
             "# The tray icon",
             "With the option on, closing or minimising the window only hides it: the program keeps running and "
                 + "the hotkeys keep answering.",
+            "## The window",
             "- A click on the icon reopens the window; right-click and then “" + Exit + "” really quits.",
             "- With “" + LeaveOption + "” the window goes back there also when you click elsewhere; off, it stays "
                 + "open behind the others. While it waits and types, instead, it stays on top of everything: the "
                 + "countdown and “" + Cancel + "” remain in view.",
+            "- Starting the program a second time brings back the window of the one already open.",
+            "## The menu and the icon",
             "- The right-click menu also lists the saved texts, each folder a submenu: choosing one puts it back on "
                 + "the clipboard, ready for Ctrl+V or " + type + ", without opening the window.",
             "- Beside a saved text with a number are its keys.",
             "- The icon is in colour when the clipboard holds text, grey when it does not.",
-            "- Starting the program a second time brings back the window of the one already open.",
 
             "# If something goes wrong",
+            "The line under the cards says what just happened, and why. Confirmations go after a few seconds and "
+                + "leave the room to the list; warnings and errors stay until the next message.",
+            "## Typing",
             "- Symbols arrive wrong: the server uses another keyboard. Try the US keyboard option.",
             "- Characters go missing, or arrive out of order: turn on slow typing.",
             "- Symbols your keyboard has no key for do not arrive (~ and ` on an Italian keyboard): turn on Alt "
@@ -612,9 +654,8 @@ static partial class Strings
             "- " + type + " does nothing with a full-screen remote desktop: that program captures every hotkey. Use the button.",
             "- Windows blocks the keystrokes: the remote desktop program runs as administrator. Start " + app
                 + " that way too.",
-            "- A hotkey turns itself off: another program already uses it. Give it other keys in the options.",
-            "The line under the cards says what just happened, and why. Confirmations go after a few seconds and "
-                + "leave the room to the list; warnings and errors stay until the next message."
+            "## Hotkeys",
+            "A hotkey turns itself off: another program already uses it. Give it other keys in the options."
         };
     }
 }

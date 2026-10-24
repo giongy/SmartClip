@@ -12,8 +12,10 @@ static class Native
     // byte 8, its height at byte 16.
     public const int WM_MEASUREITEM = 0x002C, WM_REFLECT = 0x2000, MeasureItemId = 8, MeasureItemHeight = 16;
     public const int WM_LBUTTONDOWN = 0x0201, WM_LBUTTONDBLCLK = 0x0203, MK_SHIFT = 0x0004, MK_CONTROL = 0x0008;
-    public const int SB_VERT = 1, SB_PAGEUP = 2, SB_PAGEDOWN = 3, SB_THUMBPOSITION = 4, SB_ENDSCROLL = 8;
-    public const uint SIF_ALL = 0x17;
+    public const int SB_VERT = 1, SB_LINEUP = 0, SB_LINEDOWN = 1, SB_PAGEUP = 2, SB_PAGEDOWN = 3, SB_THUMBPOSITION = 4,
+        SB_THUMBTRACK = 5, SB_TOP = 6, SB_BOTTOM = 7, SB_ENDSCROLL = 8;
+    public const uint SIF_ALL = 0x17, SIF_DISABLENOSCROLL = 0x0008;
+    public const int WS_VSCROLL = 0x00200000;
     public const int HTTRANSPARENT = -1;
     public const int WS_EX_TOPMOST = 0x00000008, WS_EX_TOOLWINDOW = 0x00000080, WS_EX_NOACTIVATE = 0x08000000;
     public static readonly IntPtr HWND_TOPMOST = (IntPtr)(-1);
@@ -108,6 +110,9 @@ static class Native
 
     [DllImport("user32.dll")]
     public static extern bool GetScrollInfo(IntPtr window, int bar, ref SCROLLINFO info);
+
+    [DllImport("user32.dll")]
+    public static extern int SetScrollInfo(IntPtr window, int bar, ref SCROLLINFO info, bool redraw);
 
     [DllImport("user32.dll")]
     public static extern IntPtr SendMessage(IntPtr window, int message, IntPtr wParam, IntPtr lParam);

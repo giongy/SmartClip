@@ -22,8 +22,8 @@ Formerly called PasswordPaste.
 - The history of copied items is kept for the number of days you choose, or today only; saved texts never
   expire and are encrypted for your Windows account. Everything is in one SQLite file, through the SQLite that
   comes with Windows.
-- Light or dark theme, or the same as Windows sets for apps, switching on the fly: warm grey in the light,
-  neutral grey in the dark, the icons of Windows itself (Segoe Fluent Icons), rounded menus, rows and buttons that
+- Light or dark theme, or the same as Windows sets for apps, switching on the fly: warm greys with an orange accent,
+  line icons from [Lucide](https://lucide.dev) drawn by the program itself, rounded menus, rows and buttons that
   light up gradually, thin scroll bars and the font of Windows 11 where it is installed, all without extra libraries.
 - In English, Spanish, French and Italian, chosen in the options (English by default).
 
