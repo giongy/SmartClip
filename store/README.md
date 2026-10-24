@@ -128,8 +128,8 @@ Full preview of long texts and pictures, and the text in a picture copied with t
 Copies that other programs mark as private are not remembered, and capturing pauses with one click
 Export and import to a text file, and the database in the folder you choose
 Starts with Windows, hidden in the notification area
-Built-in guide, organized by topic
-Windows 11 look: options like Windows Settings, icons in menus, light or dark theme, fonts and sizes of the interface and of the entries of your choice
+Built-in guide by topic, in short sections that open and close
+Clean look in warm greys with an orange accent, line icons, options grouped like Windows Settings, light or dark theme, fonts and sizes of your choice
 In English, Spanish, French and Italian
 No account, no ads, no Internet connection
 ```
@@ -149,7 +149,11 @@ paste blocked
 ### What's new in this version
 
 ```
-Opening a folder of the saved texts now shows only the texts it holds itself, not those of the folders inside it. Those folders stay in the sidebar under it, and the number beside a folder counts only its own texts.
+A new look: warm greys with an orange accent, in light and in dark, and clean line icons throughout. The list now reaches the edges of the window, beside a sidebar a shade darker.
+
+The options are grouped in one card per page, each option with its own icon; choices from a list are drop-down boxes, and the switches are simpler.
+
+The guide is easier to read: each topic opens with a couple of lines, then short sections you open and close with a click, or all at once.
 ```
 
 ### Screenshot captions
@@ -161,8 +165,8 @@ Opening a folder of the saved texts now shows only the texts it holds itself, no
 | `3-preview.png` | The eye on a card shows the entry whole: every line of a text, a larger picture. |
 | `4-save.png` | Save a text under a name, in its folder, formatted too: a mail signature keeps its bold and its fonts. |
 | `5-tray-menu.png` | Saved texts are also in the menu of the icon by the clock. |
-| `6-options.png` | Options like Windows Settings, one card each: typing, hotkeys, history, appearance and the program. |
-| `7-guide.png` | A guide organized by topic, always one F1 away. |
+| `6-options.png` | Options grouped like Windows Settings, each with its icon: typing, hotkeys, history, appearance and the program. |
+| `7-guide.png` | A guide by topic, in short sections that open and close, always one F1 away. |
 | `8-light.png` | Dark or light: choose it in the options, or let it follow Windows. |
 
 ## Italiano (it-IT)
@@ -220,8 +224,8 @@ Anteprima completa di testi lunghi e immagini, e il testo di un'immagine copiato
 Le copie che altri programmi segnano come riservate non vengono ricordate, e la cattura si sospende con un clic
 Esportazione e importazione in un file di testo, e il database nella cartella che scegli
 Avvio con Windows, nascosto nell'area di notifica
-Guida integrata, divisa per argomenti
-Aspetto da Windows 11: opzioni come Impostazioni, icone nei menu, tema chiaro o scuro, caratteri e dimensioni di interfaccia e voci a scelta
+Guida integrata per argomenti, in sezioni brevi che si aprono e si chiudono
+Aspetto pulito in grigi caldi con un accento arancio, icone a linee, opzioni raggruppate come Impostazioni, tema chiaro o scuro, caratteri e dimensioni a scelta
 In italiano, inglese, spagnolo e francese
 Nessun account, nessuna pubblicità, nessuna connessione a Internet
 ```
@@ -241,7 +245,11 @@ incolla bloccato
 ### Novità di questa versione
 
 ```
-Aprendo una cartella dei testi salvati ora si vedono solo i testi che contiene direttamente, non quelli delle cartelle al suo interno. Le cartelle restano nella barra laterale sotto di lei, e il numero accanto a una cartella conta solo i suoi testi.
+Un aspetto nuovo: grigi caldi con un accento arancio, in chiaro e in scuro, e icone a linee pulite ovunque. L'elenco ora arriva ai bordi della finestra, accanto a una barra laterale un tono più scura.
+
+Le opzioni sono raggruppate in un riquadro per pagina, ognuna con la sua icona; le scelte da un elenco sono caselle a tendina, e gli interruttori sono più semplici.
+
+La guida si legge meglio: ogni argomento si apre con un paio di righe, poi sezioni brevi che apri e chiudi con un clic, o tutte insieme.
 ```
 
 ### Didascalie delle schermate
@@ -253,8 +261,8 @@ Aprendo una cartella dei testi salvati ora si vedono solo i testi che contiene d
 | `3-preview.png` | L'occhio di una scheda mostra la voce per intero: ogni riga di un testo, un'immagine più grande. |
 | `4-save.png` | Salva un testo con un nome, nella sua cartella, anche formattato: una firma di posta tiene grassetti e caratteri. |
 | `5-tray-menu.png` | I testi salvati anche nel menu dell'icona vicino all'orologio. |
-| `6-options.png` | Opzioni come in Impostazioni di Windows, una scheda ciascuna: digitazione, scorciatoie, cronologia, aspetto e programma. |
-| `7-guide.png` | Una guida divisa per argomenti, sempre a portata di F1. |
+| `6-options.png` | Opzioni raggruppate come in Impostazioni di Windows, ognuna con la sua icona: digitazione, scorciatoie, cronologia, aspetto e programma. |
+| `7-guide.png` | Una guida per argomenti, in sezioni brevi che si aprono e si chiudono, sempre a portata di F1. |
 | `8-light.png` | Scuro o chiaro: si sceglie nelle opzioni, o segue Windows. |
 
 ## Español (es-ES)
@@ -312,8 +320,8 @@ Vista previa completa de textos largos e imágenes, y el texto de una imagen cop
 Las copias que otros programas marcan como privadas no se recuerdan, y la captura se pausa con un clic
 Exportación e importación a un archivo de texto, y la base de datos en la carpeta que elijas
 Inicio con Windows, oculto en el área de notificación
-Guía integrada, dividida por temas
-Aspecto de Windows 11: opciones como Configuración, iconos en los menús, tema claro u oscuro, fuentes y tamaños de la interfaz y de las entradas a elegir
+Guía integrada por temas, en secciones breves que se abren y se cierran
+Aspecto limpio en grises cálidos con un acento naranja, iconos de línea, opciones agrupadas como Configuración, tema claro u oscuro, fuentes y tamaños a elegir
 En español, inglés, francés e italiano
 Sin cuenta, sin publicidad, sin conexión a Internet
 ```
@@ -333,7 +341,11 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Al abrir una carpeta de los textos guardados ahora se muestran solo los textos que contiene directamente, no los de las carpetas que tiene dentro. Las carpetas siguen en la barra lateral bajo ella, y el número junto a una carpeta cuenta solo sus textos.
+Un aspecto nuevo: grises cálidos con un acento naranja, en claro y en oscuro, e iconos de línea limpios en todas partes. La lista ahora llega a los bordes de la ventana, junto a una barra lateral un tono más oscura.
+
+Las opciones se agrupan en una tarjeta por página, cada una con su icono; las elecciones de una lista son cuadros desplegables, y los interruptores son más sencillos.
+
+La guía se lee mejor: cada tema empieza con un par de líneas, y luego secciones breves que abres y cierras con un clic, o todas a la vez.
 ```
 
 ### Leyendas de las capturas
@@ -345,8 +357,8 @@ Al abrir una carpeta de los textos guardados ahora se muestran solo los textos q
 | `3-preview.png` | El ojo de una tarjeta muestra la entrada entera: cada línea de un texto, una imagen más grande. |
 | `4-save.png` | Guarda un texto con un nombre, en su carpeta, también con formato: una firma de correo conserva sus negritas y sus fuentes. |
 | `5-tray-menu.png` | Los textos guardados también están en el menú del icono junto al reloj. |
-| `6-options.png` | Opciones como en Configuración de Windows, una tarjeta cada una: tecleo, atajos, historial, apariencia y programa. |
-| `7-guide.png` | Una guía dividida por temas, siempre a un F1 de distancia. |
+| `6-options.png` | Opciones agrupadas como en Configuración de Windows, cada una con su icono: tecleo, atajos, historial, apariencia y programa. |
+| `7-guide.png` | Una guía por temas, en secciones breves que se abren y se cierran, siempre a un F1 de distancia. |
 | `8-light.png` | Oscuro o claro: se elige en las opciones, o sigue a Windows. |
 
 ## Français (fr-FR)
@@ -404,8 +416,8 @@ Aperçu complet des textes longs et des images, et le texte d'une image copié g
 Les copies que d'autres programmes marquent comme privées ne sont pas mémorisées, et la capture se suspend en un clic
 Export et import dans un fichier texte, et la base de données dans le dossier de votre choix
 Démarrage avec Windows, caché dans la zone de notification
-Guide intégré, organisé par sujet
-Aspect Windows 11 : options comme les Paramètres, icônes dans les menus, thème clair ou sombre, polices et tailles de l'interface et des éléments au choix
+Guide intégré par sujet, en courtes sections qui s'ouvrent et se ferment
+Aspect épuré en gris chauds avec un accent orange, icônes au trait, options regroupées comme les Paramètres, thème clair ou sombre, polices et tailles au choix
 En français, anglais, espagnol et italien
 Pas de compte, pas de publicité, pas de connexion à Internet
 ```
@@ -425,7 +437,11 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Ouvrir un dossier des textes enregistrés montre maintenant seulement les textes qu'il contient directement, pas ceux des dossiers qu'il contient. Les sous-dossiers restent dans la barre latérale sous lui, et le nombre à côté d'un dossier ne compte que ses propres textes.
+Un nouvel aspect : des gris chauds avec un accent orange, en clair et en sombre, et des icônes au trait épurées partout. La liste va maintenant jusqu'aux bords de la fenêtre, à côté d'une barre latérale un ton plus sombre.
+
+Les options sont regroupées dans une carte par page, chacune avec son icône ; les choix dans une liste sont des listes déroulantes, et les interrupteurs sont plus simples.
+
+Le guide se lit mieux : chaque sujet commence par quelques lignes, puis de courtes sections qu'on ouvre et ferme d'un clic, ou toutes à la fois.
 ```
 
 ### Légendes des captures
@@ -437,8 +453,8 @@ Ouvrir un dossier des textes enregistrés montre maintenant seulement les textes
 | `3-preview.png` | L'œil d'une carte montre l'élément en entier : chaque ligne d'un texte, une image plus grande. |
 | `4-save.png` | Enregistrez un texte sous un nom, dans son dossier, même mis en forme : une signature de courriel garde son gras et ses polices. |
 | `5-tray-menu.png` | Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge. |
-| `6-options.png` | Des options comme dans les Paramètres de Windows, une carte chacune : saisie, raccourcis, historique, apparence et programme. |
-| `7-guide.png` | Un guide organisé par sujet, toujours à portée de F1. |
+| `6-options.png` | Des options regroupées comme dans les Paramètres de Windows, chacune avec son icône : saisie, raccourcis, historique, apparence et programme. |
+| `7-guide.png` | Un guide par sujet, en courtes sections qui s'ouvrent et se ferment, toujours à portée de F1. |
 | `8-light.png` | Sombre ou clair : à choisir dans les options, ou comme Windows. |
 
 ## Note per la verifica
