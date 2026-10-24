@@ -187,15 +187,14 @@ partial class MainForm
             eyeCloses = e.Button == MouseButtons.Left && peek.Showing && index == peekRow && PartAt(index, e.Location) == Part.Show;
             HidePeek();
             HideHoverTip();
-            Entry under = index < 0 ? null : cardList.Items[index] as Entry;
+            Entry entry = index < 0 ? null : cardList.Items[index] as Entry;
             if (e.Button == MouseButtons.Left) ClearPicks();   // also on the card already selected, which Windows leaves as it is
-            else if (e.Button == MouseButtons.Right && under != null && !picked.Contains(under.Id))
+            else if (e.Button == MouseButtons.Right && entry != null && !picked.Contains(entry.Id))
             {
                 ClearPicks();
                 cardList.SelectedIndex = index;
             }
             // A saved text may be dragged to a folder of the sidebar.
-            Entry entry = index < 0 ? null : cardList.Items[index] as Entry;
             grabbed = e.Button == MouseButtons.Left && entry != null && entry.Saved && PartAt(index, e.Location) == Part.Body ? entry : null;
             grabbedAt = e.Location;
         };
@@ -277,7 +276,7 @@ partial class MainForm
         rest.Tick += delegate
         {
             rest.Stop();
-            if (peek.Visible || resting == null)
+            if (peekAsked || resting == null)
             {
                 HidePeek();
                 return;
@@ -340,12 +339,6 @@ partial class MainForm
         return saved;
     }
 
-    // The id of the folder at a path the list knows, or 0 for none.
-    long FolderAt(string path)
-    {
-        return clips.FindFolder(path);
-    }
-
     // The cards of the place chosen in the sidebar, of the category of the tabs, with the words of the search: the
     // copied entries from the database, which searches them itself (the history can hold thousands), the saved ones
     // from those in memory, whose content only this program can read.
@@ -399,17 +392,29 @@ partial class MainForm
         // What the copied pictures take may have changed: in the red bar, and in the options if they are open.
         ShowPictureRoom();
         if (options.Visible) ShowSize();
-        bool searching = words.Length > 0;
-        emptyNote.Text = searching ? Strings.NoResults : kind.HasValue ? Strings.NoneOfKind
-            : place.Kind == PlaceKind.Pinned ? Strings.NoPinned
-            : numbered ? string.Format(Strings.NoShortcuts, Strings.NumberMenu, NumbersName)
-            : place.Kind == PlaceKind.Folder ? Strings.EmptyFolder : place.Kind == PlaceKind.Saved ? Strings.NoSaved
-            : !historyBox.Checked ? Strings.HistoryOffEmpty : paused ? Strings.PausedEmpty : Strings.CopyHint;
-        emptyNote.Sign = searching ? Sign.Search : kind.HasValue ? Sign.Search : place.Kind == PlaceKind.Pinned ? Sign.Up
-            : numbered ? Sign.Keys : place.HasSaved ? Sign.Star
-            : !historyBox.Checked ? Sign.History : paused ? Sign.Pause : Sign.Paste;
+        SayWhyEmpty(words.Length > 0, kind.HasValue);
         emptyNote.Visible = shownCount == 0;
         FillNav();   // the counts of the sidebar, and the programs, may have changed
+    }
+
+    // What an empty list says, and the sign over it: why it is empty, the first reason that holds.
+    void SayWhyEmpty(bool searching, bool ofKind)
+    {
+        if (searching) SayEmpty(Strings.NoResults, Sign.Search);
+        else if (ofKind) SayEmpty(Strings.NoneOfKind, Sign.Search);
+        else if (place.Kind == PlaceKind.Pinned) SayEmpty(Strings.NoPinned, Sign.Up);
+        else if (place.Kind == PlaceKind.Shortcuts) SayEmpty(string.Format(Strings.NoShortcuts, Strings.NumberMenu, NumbersName), Sign.Keys);
+        else if (place.Kind == PlaceKind.Folder) SayEmpty(Strings.EmptyFolder, Sign.Star);
+        else if (place.Kind == PlaceKind.Saved) SayEmpty(Strings.NoSaved, Sign.Star);
+        else if (!historyBox.Checked) SayEmpty(Strings.HistoryOffEmpty, Sign.History);
+        else if (paused) SayEmpty(Strings.PausedEmpty, Sign.Pause);
+        else SayEmpty(Strings.CopyHint, Sign.Paste);
+    }
+
+    void SayEmpty(string text, Sign sign)
+    {
+        emptyNote.Text = text;
+        emptyNote.Sign = sign;
     }
 
     // The cards in their order. In Shortcuts by number; in Saved and its folders the texts by name; elsewhere those kept
@@ -426,12 +431,12 @@ partial class MainForm
             List<Entry> both = new List<Entry>(copied);
             both.AddRange(saved);
             both.Sort(delegate(Entry a, Entry b) { return a.Number.CompareTo(b.Number); });
-            arranged.AddRange(both.ToArray());
+            arranged.AddRange(both);
             return arranged;
         }
         if (!headed)
         {
-            arranged.AddRange(saved.ToArray());
+            arranged.AddRange(saved);
             return arranged;
         }
         List<Entry> rest = new List<Entry>();
@@ -460,7 +465,7 @@ partial class MainForm
         }
         if (saved.Count == 0) return arranged;
         arranged.Add(new Heading(Strings.SavedTitle));
-        arranged.AddRange(saved.ToArray());
+        arranged.AddRange(saved);
         return arranged;
     }
 
@@ -1481,7 +1486,7 @@ partial class MainForm
         {
             using (Transaction transaction = clips.Begin())
             {
-                long folder = FolderAt(group);
+                long folder = clips.FindFolder(group);
                 foreach (Entry entry in targets)
                 {
                     if (entry.Saved)
@@ -1756,7 +1761,7 @@ partial class MainForm
                     using (Transaction transaction = clips.Begin())
                     {
                         if (taken) clips.Remove(other);
-                        long folder = FolderAt(edit.Group);
+                        long folder = clips.FindFolder(edit.Group);
                         if (source == null) clips.AddSaved(name, edit.Content, edit.Html, edit.Rtf, folder, DateTime.Now);
                         else
                         {
@@ -1830,9 +1835,9 @@ partial class MainForm
                 if (Refused(edit.EntryName, edit.Group, old)) continue;
                 if (!Change(delegate
                 {
-                    long parentId = FolderAt(edit.Group);
+                    long parentId = clips.FindFolder(edit.Group);
                     if (old == null) clips.AddFolder(parentId, edit.EntryName);
-                    else clips.PlaceFolder(FolderAt(old), parentId, edit.EntryName);
+                    else clips.PlaceFolder(clips.FindFolder(old), parentId, edit.EntryName);
                     clips.Reveal(parentId);   // or the folder would not be seen
                 })) continue;
                 Say(string.Format(old == null ? Strings.FolderCreated : Texts.SameName(Texts.Parent(path), Texts.Parent(old))
@@ -1857,7 +1862,7 @@ partial class MainForm
         if (entry.IsGroup && Refused(Texts.Leaf(entry.Name), group, entry.Name)) return;
         if (!Change(delegate
         {
-            long folder = FolderAt(group);
+            long folder = clips.FindFolder(group);
             if (entry.IsGroup) clips.MoveFolder(entry.FolderId, folder);
             else clips.Move(entry.Id, folder);
             clips.Reveal(folder);

@@ -459,7 +459,7 @@ condiviso su GitHub).
 - Cartelle dei testi salvati (volute dall'utente), anche una dentro l'altra (sottocartelle volute dopo, dalla
   3.8). Nel codice si chiamano «group». Nel database sono un albero (`folders`, `parent_id`, `Folder`), ma la
   finestra continua a conoscerle per **percorso**, i nomi uniti da `Texts.Separator` (`\`, vietato nei nomi,
-  `Refused`): `Lavoro\Server`. `LoadSaved` costruisce i percorsi e `FolderAt` (`Clips.FindFolder`) fa il
+  `Refused`): `Lavoro\Server`. `LoadSaved` costruisce i percorsi e `Clips.FindFolder` fa il
   contrario; una riga di cartella ha in `FolderId` l'id della cartella. Gli aiuti sui percorsi stanno in `Texts`
   (`Parent`, `Leaf`, `Join`, `Within`, `Depth`, `Display` con « › », `CleanPath` per i file esportati). In `entries`
   una cartella è una `Entry` con `IsGroup` (e `Saved`) e `Name` uguale al percorso (`Label` ne mostra l'ultimo

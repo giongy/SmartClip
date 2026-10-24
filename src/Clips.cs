@@ -603,7 +603,9 @@ sealed class Clips : IDisposable
     // The condition of the copied entries a sieve lets through, its values added to 'values'.
     static string Where(Sieve sieve, List<object> values)
     {
-        StringBuilder sql = new StringBuilder("saved = 0");
+        // With a number, through the index of the numbers, which only a few have: through that of the copied entries
+        // SQLite would read them all.
+        StringBuilder sql = new StringBuilder(sieve.Numbered ? "+saved = 0 AND number > 0" : "saved = 0");
         foreach (string word in sieve.Words)
         {
             values.Add(word);
@@ -620,9 +622,6 @@ sealed class Clips : IDisposable
             sql.Append(" AND app_id = ?" + values.Count);
         }
         if (sieve.Pinned) sql.Append(" AND pinned = 1");
-        // Through the index of the numbers, which only a few have: through that of the copied entries SQLite would
-        // read them all.
-        if (sieve.Numbered) sql.Replace("saved = 0", "+saved = 0").Append(" AND number > 0");
         return sql.ToString();
     }
 
