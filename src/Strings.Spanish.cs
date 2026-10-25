@@ -47,6 +47,9 @@ static partial class Strings
         Open = "Abrir"; Exit = "Salir"; Pause = "Pausar la captura"; Resume = "Reanudar la captura";
         ShowContent = "Mostrar el contenido"; MoveTo = "Mover a"; NewFolder = "Nueva carpeta…";
         CopyPictureText = "Copiar el texto";
+        QrMenu = "Código QR";
+        QrNote = "Escanéalo con el teléfono para tener allí el texto.";
+        QrTooLong = "Demasiado largo para un código QR: caben como máximo {0} caracteres, y una letra con tilde cuenta como dos.";
         KeepTop = "Mantener arriba"; Unpin = "Quitar de arriba"; OutOfFolders = "Fuera de las carpetas"; EmptyFolder = "Vacía";
         NumberMenu = "Atajo"; NoNumber = "Ninguno";
         KindMenu = "Tipo";
@@ -395,6 +398,11 @@ static partial class Strings
                 + "que Windows lee en ella, aquí en el PC, sin internet: entra en la lista como todo lo que copias (el de "
                 + "una imagen guardada es privado, como un texto guardado). El texto pequeño puede salir con algún error: "
                 + "revísalo antes.",
+            "## Al teléfono",
+            "«" + QrMenu + "», en el menú de un texto, lo muestra como código QR: escanéalo con el teléfono (la cámara, "
+                + "o una aplicación que lea códigos QR) y el texto está allí, para copiarlo, o para abrirlo si es un enlace. "
+                + "Nada pasa por internet. Un código admite como máximo " + Qr.MaxBytes + " caracteres, y una letra con "
+                + "tilde cuenta como dos; cuanto más largo el texto, más denso el código: si al teléfono le cuesta, acércalo.",
             "## Mantener una entrada arriba",
             "La flecha de la derecha de una entrada copiada (" + Key(Keys.Control | MainForm.PinKey) + ") la "
                 + "mantiene arriba un tiempo: está en color mientras lo hace, y un clic la enciende o la apaga. La entrada "

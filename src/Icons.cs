@@ -182,6 +182,9 @@ static class Icons
                 return "rect 3 3 18 18 2;M3 15h18";
             case Sign.Archive:   // archive
                 return "rect 2 3 20 5 1;M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8;M10 12h4";
+            case Sign.Qr:   // qr-code
+                return "rect 3 3 5 5 1;rect 16 3 5 5 1;rect 3 16 5 5 1;M21 16h-3a2 2 0 0 0-2 2v3;M21 21v.01;M12 7v3a2 2 0 0 1-2 2H7;"
+                    + "M3 12h.01;M12 3h.01;M12 16v.01;M16 12h1;M21 12v.01;M12 21v-1";
             default:
                 throw new ArgumentException("No icon for " + sign);
         }

@@ -66,7 +66,7 @@ ESRB Everyone.
 ## In tutte le schede
 
 - **Logo** (*Icona del riquadro dell'app 1:1, 300 × 300*): [`images/tile-300.png`](images/tile-300.png).
-- **Schermate**: le otto della cartella della lingua, nell'ordine dei nomi; in tema scuro, l'ultima in chiaro. La prima (1920 × 1080) ha a sinistra le caratteristiche principali, le altre sono 1366 × 768.
+- **Schermate**: le nove della cartella della lingua, nell'ordine dei nomi, 1920 × 1080: la prima con tutte le caratteristiche principali, le altre una caratteristica ciascuna (nome e poche righe a sinistra, la finestra a destra); in tema scuro, l'ultima in chiaro.
 - **Copyright e marchi**: `© 2026 Luca Andreoli`
 - **Termini di licenza aggiuntivi**: `Open source software under the MIT license: https://github.com/giongy/SmartClip/blob/main/LICENSE`
 - **Sviluppato da**: `Luca Andreoli`
@@ -156,14 +156,15 @@ No copy is missed any more when another program, such as a remote desktop, is re
 
 | File | Caption |
 | --- | --- |
-| `1-list.png` | The history of what you copy: places in the sidebar, kinds in the tabs, and the program each entry was copied in. |
+| `1-overview.png` | All SmartClip does at a glance: history, typing where paste is blocked, QR codes, text from pictures, hotkeys, saved texts. |
 | `2-typing.png` | Where Ctrl+V does not work, SmartClip types the clipboard key by key, after giving you time to click the right field. |
-| `3-preview.png` | The eye on a card shows the entry whole: every line of a text, a larger picture. |
-| `4-save.png` | Save a text under a name, in its folder, formatted too: a mail signature keeps its bold and its fonts. |
-| `5-tray-menu.png` | Saved texts are also in the menu of the icon by the clock. |
-| `6-options.png` | Options grouped like Windows Settings, each with its icon: typing, hotkeys, history, appearance and the program. |
-| `7-guide.png` | A guide by topic, in short sections that open and close, always one F1 away. |
-| `8-light.png` | Dark or light: choose it in the options, or let it follow Windows. |
+| `3-qr-code.png` | Any text as a QR code: scan it with your phone and the text is there. |
+| `4-picture-text.png` | Copy the text in a picture, read on your PC by the text recognition of Windows. |
+| `5-hotkeys.png` | Hotkeys of your choice: the list from any program, typing, and favourites pasted with Ctrl+Shift+1…9. |
+| `6-sources.png` | Every entry remembers the program it was copied in: choose one in the sidebar to see only what came from there. |
+| `7-saved.png` | Save a text under a name, in its folder, formatted too: a mail signature keeps its bold and its fonts. |
+| `8-tray-menu.png` | Saved texts are also in the menu of the icon by the clock. |
+| `9-light.png` | Dark or light: choose it in the options, or let it follow Windows. |
 
 ## Italiano (it-IT)
 
@@ -248,14 +249,15 @@ Nessuna copia va più persa quando un altro programma, per esempio un desktop re
 
 | File | Didascalia |
 | --- | --- |
-| `1-list.png` | La cronologia di ciò che copi: i posti nella barra laterale, i tipi nelle schede e il programma in cui è stata copiata ogni voce. |
+| `1-overview.png` | Tutto ciò che fa SmartClip, in un colpo d'occhio: cronologia, digitazione dove incollare è bloccato, codici QR, testo delle immagini, scorciatoie, testi salvati. |
 | `2-typing.png` | Dove Ctrl+V non funziona, SmartClip digita gli appunti tasto per tasto, dopo averti dato il tempo di cliccare nel campo giusto. |
-| `3-preview.png` | L'occhio di una scheda mostra la voce per intero: ogni riga di un testo, un'immagine più grande. |
-| `4-save.png` | Salva un testo con un nome, nella sua cartella, anche formattato: una firma di posta tiene grassetti e caratteri. |
-| `5-tray-menu.png` | I testi salvati anche nel menu dell'icona vicino all'orologio. |
-| `6-options.png` | Opzioni raggruppate come in Impostazioni di Windows, ognuna con la sua icona: digitazione, scorciatoie, cronologia, aspetto e programma. |
-| `7-guide.png` | Una guida per argomenti, in sezioni brevi che si aprono e si chiudono, sempre a portata di F1. |
-| `8-light.png` | Scuro o chiaro: si sceglie nelle opzioni, o segue Windows. |
+| `3-qr-code.png` | Ogni testo come codice QR: inquadralo con il telefono e il testo è lì. |
+| `4-picture-text.png` | Copia il testo di un'immagine, letto sul tuo PC dal riconoscimento del testo di Windows. |
+| `5-hotkeys.png` | Scorciatoie a tua scelta: l'elenco da qualsiasi programma, la digitazione e le voci preferite incollate con Ctrl+Maiusc+1…9. |
+| `6-sources.png` | Ogni voce ricorda il programma in cui è stata copiata: scegline uno nella barra laterale per vedere solo ciò che viene da lì. |
+| `7-saved.png` | Salva un testo con un nome, nella sua cartella, anche formattato: una firma di posta tiene grassetti e caratteri. |
+| `8-tray-menu.png` | I testi salvati anche nel menu dell'icona vicino all'orologio. |
+| `9-light.png` | Scuro o chiaro: si sceglie nelle opzioni, o segue Windows. |
 
 ## Español (es-ES)
 
@@ -340,14 +342,15 @@ Ya no se pierde ninguna copia cuando otro programa, como un escritorio remoto, e
 
 | File | Leyenda |
 | --- | --- |
-| `1-list.png` | El historial de lo que copias: los lugares en la barra lateral, los tipos en las pestañas y el programa en el que se copió cada entrada. |
+| `1-overview.png` | Todo lo que hace SmartClip de un vistazo: historial, tecleo donde pegar está bloqueado, códigos QR, texto de las imágenes, atajos, textos guardados. |
 | `2-typing.png` | Donde Ctrl+V no funciona, SmartClip teclea el portapapeles tecla por tecla, tras darte tiempo para hacer clic en el campo correcto. |
-| `3-preview.png` | El ojo de una tarjeta muestra la entrada entera: cada línea de un texto, una imagen más grande. |
-| `4-save.png` | Guarda un texto con un nombre, en su carpeta, también con formato: una firma de correo conserva sus negritas y sus fuentes. |
-| `5-tray-menu.png` | Los textos guardados también están en el menú del icono junto al reloj. |
-| `6-options.png` | Opciones agrupadas como en Configuración de Windows, cada una con su icono: tecleo, atajos, historial, apariencia y programa. |
-| `7-guide.png` | Una guía por temas, en secciones breves que se abren y se cierran, siempre a un F1 de distancia. |
-| `8-light.png` | Oscuro o claro: se elige en las opciones, o sigue a Windows. |
+| `3-qr-code.png` | Cualquier texto como código QR: escanéalo con el teléfono y el texto está allí. |
+| `4-picture-text.png` | Copia el texto de una imagen, leído en tu PC por el reconocimiento de texto de Windows. |
+| `5-hotkeys.png` | Atajos a tu medida: la lista desde cualquier programa, el tecleo y las entradas favoritas pegadas con Ctrl+Mayús+1…9. |
+| `6-sources.png` | Cada entrada recuerda el programa en el que se copió: elige uno en la barra lateral para ver solo lo que vino de allí. |
+| `7-saved.png` | Guarda un texto con un nombre, en su carpeta, también con formato: una firma de correo conserva sus negritas y sus fuentes. |
+| `8-tray-menu.png` | Los textos guardados también están en el menú del icono junto al reloj. |
+| `9-light.png` | Oscuro o claro: se elige en las opciones, o sigue a Windows. |
 
 ## Français (fr-FR)
 
@@ -432,14 +435,15 @@ Plus aucune copie n'est perdue quand un autre programme, comme un bureau à dist
 
 | File | Légende |
 | --- | --- |
-| `1-list.png` | L'historique de ce que vous copiez : les endroits dans la barre latérale, les types dans les onglets et le programme où chaque élément a été copié. |
+| `1-overview.png` | Tout ce que fait SmartClip d'un coup d'œil : historique, saisie là où coller est bloqué, codes QR, texte des images, raccourcis, textes enregistrés. |
 | `2-typing.png` | Là où Ctrl+V ne marche pas, SmartClip saisit le presse-papiers touche par touche, après vous avoir laissé le temps de cliquer dans le bon champ. |
-| `3-preview.png` | L'œil d'une carte montre l'élément en entier : chaque ligne d'un texte, une image plus grande. |
-| `4-save.png` | Enregistrez un texte sous un nom, dans son dossier, même mis en forme : une signature de courriel garde son gras et ses polices. |
-| `5-tray-menu.png` | Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge. |
-| `6-options.png` | Des options regroupées comme dans les Paramètres de Windows, chacune avec son icône : saisie, raccourcis, historique, apparence et programme. |
-| `7-guide.png` | Un guide par sujet, en courtes sections qui s'ouvrent et se ferment, toujours à portée de F1. |
-| `8-light.png` | Sombre ou clair : à choisir dans les options, ou comme Windows. |
+| `3-qr-code.png` | N'importe quel texte en code QR : scannez-le avec le téléphone et le texte s'y trouve. |
+| `4-picture-text.png` | Copiez le texte d'une image, lu sur votre PC par la reconnaissance de texte de Windows. |
+| `5-hotkeys.png` | Raccourcis à votre choix : la liste depuis n'importe quel programme, la saisie et les favoris collés avec Ctrl+Maj+1…9. |
+| `6-sources.png` | Chaque élément se souvient du programme où il a été copié : choisissez-en un dans la barre latérale pour ne voir que ce qui en vient. |
+| `7-saved.png` | Enregistrez un texte sous un nom, dans son dossier, même mis en forme : une signature de courriel garde son gras et ses polices. |
+| `8-tray-menu.png` | Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge. |
+| `9-light.png` | Sombre ou clair : à choisir dans les options, ou comme Windows. |
 
 ## Note per la verifica
 

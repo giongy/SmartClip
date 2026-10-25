@@ -152,6 +152,11 @@ picture, puts on the clipboard the text in it, read by the text recognition buil
 comes into the list like any copy (from a saved picture it is marked private). Small screen text can come out with
 a few mistakes.
 
+**QR code**, in the right-click menu of a text, copied or saved, shows it as a QR code: scan it with your phone and
+the text is there, to copy, or to open if it is a link, without anything going through the internet. The code is
+made by the program itself (byte mode, UTF-8, versions 1 to 40) and holds up to 2953 bytes, about as many characters,
+an accented letter counting as two.
+
 Press **Ctrl+D** in any program to bring the window up on **History**, every kind, with your latest copy selected and the
 cursor in the search box (**Open where you left it**, among the hotkeys in the options, keeps the place and the kind instead). After you choose an
 entry the focus returns to the program you were in, and the window hides again if it was hidden. Esc goes back
@@ -249,6 +254,8 @@ Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key t
 - Versions before 4.0 kept saved texts in the registry and the history in one file per day. The first start of
   4.0 copies them into the database, all at once or not at all; then the folder of the history files is deleted.
   Since 4.3.7 the saved texts left in the registry are deleted too, as soon as the database is open.
+- A QR code of a text is shown only when you ask for it, from the menu of that entry: anyone who can see the screen
+  can scan it, a saved text included.
 - A saved text put back on the clipboard is marked as private, so that Windows clipboard history (Win+V) and other
   clipboard managers skip it.
 - When something goes wrong, what failed and where is written to `SmartClip.log` beside the database, to

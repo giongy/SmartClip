@@ -156,6 +156,8 @@ condiviso su GitHub).
   - `Origin.cs` — il programma in cui è stata copiata una voce (`Origin`: nome e icona), vedi «App di provenienza» sotto.
   - `Ocr.cs` — il testo di un'immagine letto dal riconoscimento di Windows (`Windows.Media.Ocr`, sul PC, senza
     rete; funziona anche fuori dal pacchetto): vedi «Copia il testo» sotto.
+  - `Qr.cs` — il codice QR di un testo (`Qr.Of`), scritto qui perché non si può aggiungere niente alla compilazione;
+    `QrForm.cs` — la finestra che lo mostra. Vedi «Codice QR» sotto.
   - `Icons.cs` — i segni (`Sign`), dal 24/10/2026 (voluto dall'utente: le icone a linee gli piacevano) le icone di
     [Lucide](https://lucide.dev), licenza ISC, alcune derivate da Feather, MIT: **le due note stanno in fondo a
     `LICENSE` e devono restarci**. Ogni segno è il testo SVG dell'icona (`Shapes`, con il nome Lucide accanto), letto
@@ -440,6 +442,18 @@ condiviso su GitHub).
   esatte da 86 a 144 su 240), e una trasparente su bianco. Il testo sotto i 10 pt esce comunque con qualche
   errore («second fine here»): è il motore di Windows, e la guida lo dice. La ricerca nel testo delle immagini
   non c'è (vorrebbe leggerle tutte alla copia).
+- «Codice QR» (voluto dall'utente il 25/10/2026, per passare un appunto dal PC al telefono), nel menu del tasto destro
+  di un testo, copiato o salvato (`ShowQr`): `QrForm` lo mostra come codice QR, modale, sempre nero su bianco anche
+  nello scuro (i telefoni leggono il chiaro attorno allo scuro), con i moduli di pixel interi e mai meno di
+  `LeastModule` (3) l'uno: un codice fitto allarga la finestra. `Qr` è scritto qui (C# 5, niente pacchetti), sui passi
+  del generatore di Project Nayuki (MIT): modo byte, testo in UTF-8 senza ECI (i lettori riconoscono l'UTF-8 da soli),
+  versioni 1–40, la più piccola che lo contiene con correzione M (o L se solo così ci sta), poi la correzione più forte
+  che quella versione regge ancora. Al massimo `Qr.MaxBytes` (2953 byte, versione 40 L; una lettera accentata conta
+  due): oltre, la riga di stato lo dice (`QrTooLong`) e niente finestra. Il testo semplice, anche di un testo
+  formattato; il codice di un salvato con nome mostra il contenuto, ma solo a richiesta. Provato il 25/10/2026 con un
+  programmino usa e getta in .NET 10 e ZXing.Net: 223 testi di ogni lunghezza, tutte le 40 versioni e i quattro
+  livelli, accenti ed euro, letti uguali; letta anche la foto della finestra vera di `real` (`-real-qr`), in chiaro e
+  in scuro. `texts` controlla le capacità dello standard, la scelta di versione e livello e i motivi fissi.
 - App di provenienza (voluta dall'utente il 18/10/2026: «serve per ogni voce copiata»): nella riga piccola sotto la scheda di ogni
   voce copiata, icona e nome del programma in cui è stata copiata (`DrawEntry`); nella barra laterale, sotto
   «Provenienza», un posto per programma (`Clips.Sources`, con quante voci; prima quello della copia più recente, voluto dall'utente il 19/10/2026, prima erano per nome). `Texts.Remember`
@@ -968,14 +982,14 @@ cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
   all'avvio, prima nel database e poi nella finestra, segnando `SLOW` ciò che supera il suo limite. Con 150 immagini
   basta mezzo minuto.
 - `tests.exe store <cartella> <lingua>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno
-  sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768; la prima, `1-list`, 1920 × 1080 con a sinistra nome, una frase e le caratteristiche principali, testi in `Sample`: `Headline`, `Promise`, `Features`), in `<cartella>\<lingua>` (in scuro, che sullo Store fa più effetto, tranne l'ultima, `8-light`; lo sfondo si scurisce con il tema), e
+  sfondo nei colori dell'icona (`Backdrop`) a 1920 × 1080: la finestra a destra, a sinistra ciò che mostra (la prima, `1-overview`, nome, una frase e le caratteristiche principali; ognuna delle altre una caratteristica, con il suo segno, il nome e poche righe; testi in `Sample`: `Headline`, `Promise`, `Features`, `Pages`, segni in `Backdrop`), in `<cartella>\<lingua>` (in scuro, che sullo Store fa più effetto, tranne l'ultima, `9-light`; lo sfondo si scurisce con il tema), e
   l'icona 300 × 300 in `<cartella>`. Mostra le finestre qualche secondo; a programma chiuso, come `real`, perché le
   scorciatoie non risultino occupate.
 - `shot`, `real` e `store` accettano la lingua come ultimo argomento (`en`, `es`, `fr`, `it`; senza, inglese) e
   usano voci finte in quella lingua (`Sample`). Per le immagini vere `tests.exe` va compilato con
   `/resource:SmartClip.ico,SmartClip.ico`, altrimenti la barra del titolo ha l'icona generica; `real` mette dietro
   le finestre lo stesso sfondo di `store`, perché ai bordi non compaia lo schermo. Dopo la lingua accettano
-  `dark` o `light` (senza, il tema di Windows). `real` fotografa anche una domanda (`-real-ask`), il menu del
+  `dark` o `light` (senza, il tema di Windows). `real` fotografa anche una domanda (`-real-ask`), il codice QR di un link (`-real-qr`), il menu del
   tray con una cartella aperta (`-real-menu`), la scelta del numero di una voce
   (`-real-number`), un elenco lungo con la barra sottile (`-real-scroll`) e un suggerimento (`-real-tip`).
 
@@ -996,6 +1010,9 @@ da ridotta a icona, Esci chiude, opzione spenta toglie l'icona e la X torna a ch
 - Che il formato «riservato» messo sui testi salvati tenga davvero fuori la cronologia di Windows (Win+V).
 - I formati riservati sugli appunti veri (provati solo su oggetti in memoria) e la cattura a ogni copia.
 - Le immagini dal vivo: cattura di una schermata vera e ritorno negli appunti.
+- Il codice QR letto da un telefono vero (letto solo da ZXing, sui dati e sulla foto della finestra): la fotocamera di
+  Android e dell'iPhone con un testo semplice, un testo accentato, un codice fitto vicino al massimo; il clic vero su
+  «Codice QR» nel menu.
 - «Copia il testo» dal vivo: il clic sulla voce del menu, la copia che entra nell'elenco, un Windows senza lingue
   per il riconoscimento (l'avviso), Windows 10, il pacchetto dello Store. Provati `Ocr.Read` (`texts`, e una
   schermata intera letta da un programmino usa e getta) e la compilazione.

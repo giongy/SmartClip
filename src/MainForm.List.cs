@@ -109,6 +109,8 @@ partial class MainForm
         ToolStripItem showItem = listMenu.Items.Add(Strings.ShowFull, null, delegate { PeekSelected(); });
         // Only for a picture: the text Windows reads in it.
         ToolStripItem readItem = listMenu.Items.Add(Strings.CopyPictureText, null, delegate { CopyText(Selected); });
+        // Only for a text: a QR code of it, for a phone to take it.
+        ToolStripItem qrItem = listMenu.Items.Add(Strings.QrMenu, null, delegate { ShowQr(Selected); });
         // Only for a copied entry: the same as a click on its arrow.
         ToolStripItem pinItem = listMenu.Items.Add("", null, delegate { PinSelected(); });
         // The number that pastes the entry from anywhere: the numbers are listed when the menu opens.
@@ -125,6 +127,7 @@ partial class MainForm
         // Each with its sign, as in the menus of Windows 11.
         Look.Mark(showItem, Sign.Show);
         Look.Mark(readItem, Sign.Text);
+        Look.Mark(qrItem, Sign.Qr);
         Look.Mark(pinItem, Sign.Up);
         Look.Mark(numberItem, Sign.Keys);
         Look.Mark(kindItem, Sign.Code);
@@ -145,6 +148,7 @@ partial class MainForm
             showItem.Visible = entry != null;
             if (entry != null) showItem.Text = ShowText(entry);
             readItem.Visible = entry != null && entry.Picture;
+            qrItem.Visible = entry != null && !entry.Picture;
             pinItem.Visible = entry != null ? !entry.Saved : many && PickedCopied().Count > 0;
             pinItem.Text = (entry != null ? entry.Pinned : many && AllPinned()) ? Strings.Unpin : Strings.KeepTop;
             newItem.Visible = !many;
@@ -1677,6 +1681,14 @@ partial class MainForm
         DataObject data = new DataObject();
         if (saved) data.SetData(Texts.PrivateMarker, new MemoryStream(new byte[sizeof(int)]));
         return data;
+    }
+
+    // A text as a QR code, for a phone to read off the screen (wanted by the user on 25/10/2026, to take an entry from
+    // the PC to the phone); too long for one, the status line says how much fits.
+    void ShowQr(Entry entry)
+    {
+        if (entry == null) return;
+        if (!QrForm.Display(this, entry.Text)) Warn(string.Format(Strings.QrTooLong, Qr.MaxBytes));
     }
 
     // The text Windows reads in a picture, onto the clipboard as if the user had copied it: so it also comes into

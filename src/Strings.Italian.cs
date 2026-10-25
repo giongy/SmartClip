@@ -47,6 +47,9 @@ static partial class Strings
         Open = "Apri"; Exit = "Esci"; Pause = "Sospendi la cattura"; Resume = "Riprendi la cattura";
         ShowContent = "Mostra il contenuto"; MoveTo = "Sposta in"; NewFolder = "Nuova cartella…";
         CopyPictureText = "Copia il testo";
+        QrMenu = "Codice QR";
+        QrNote = "Inquadralo con il telefono per avere lì il testo.";
+        QrTooLong = "Troppo lungo per un codice QR: ne contiene al massimo {0} caratteri, e una lettera accentata conta due.";
         KeepTop = "Tieni in alto"; Unpin = "Togli dall'alto"; OutOfFolders = "Fuori dalle cartelle"; EmptyFolder = "Vuota";
         NumberMenu = "Scorciatoia"; NoNumber = "Nessuna";
         KindMenu = "Tipo";
@@ -388,6 +391,11 @@ static partial class Strings
                 + "Windows ci legge, qui sul PC, senza internet: entra nell'elenco come ogni cosa che copi (quello di "
                 + "un'immagine salvata è riservato, come un testo salvato). Il testo piccolo può uscire con qualche errore: "
                 + "guardalo prima.",
+            "## Al telefono",
+            "«" + QrMenu + "», nel menu di un testo, lo mostra come codice QR: inquadralo con il telefono (la fotocamera, "
+                + "o un'app che legge i codici QR) e il testo è lì, da copiare, o da aprire se è un link. Niente passa da "
+                + "internet. Un codice contiene al massimo " + Qr.MaxBytes + " caratteri, e una lettera accentata conta due; "
+                + "più il testo è lungo, più il codice è fitto: se il telefono fatica, avvicinalo.",
             "## Tenere una voce in alto",
             "La freccia a destra di una voce copiata (" + Key(Keys.Control | MainForm.PinKey) + ") la "
                 + "tiene in alto per un po': è colorata finché lo fa, e un clic la accende o la spegne. La voce se ne va "

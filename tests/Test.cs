@@ -28,8 +28,9 @@ class Sample
     public string Signature, SignatureText, Work, Address, Servers, TestServer, Home, Wifi, Long, TwoLines, Remote;
     public string Probe;   // a word found only in the name of the test server, for a search
     // What the first picture of the Store says beside the window: a line, the promise under it, and the main features,
-    // one per line, each a name and a note after a tab, in the order of Backdrop.FeatureSigns.
-    public string Headline, Promise, Features;
+    // one per line, each a name and a note after a tab, in the order of Backdrop.FeatureSigns. Then what each of the
+    // other pictures says of the feature it shows, a name and a few lines after a tab, in the order of Backdrop.PageSigns.
+    public string Headline, Promise, Features, Pages;
 
     public static Sample Current
     {
@@ -48,10 +49,30 @@ class Sample
                     s.Promise = "E dove incollare non funziona, SmartClip lo digita per te.";
                     s.Features = "Digita dove incollare è bloccato\tDesktop remoti, macchine virtuali, schermate di blocco\n"
                         + "Cronologia con ricerca\tTesti e immagini, a una scorciatoia da qualsiasi programma\n"
+                        + "Dal PC al telefono\tOgni testo come codice QR da inquadrare\n"
                         + "Il testo delle immagini\tCopia le parole di un'immagine, lette sul tuo PC\n"
                         + "Scorciatoie a tua scelta\tIncolla le voci preferite con Ctrl+Maiusc+1…9\n"
+                        + "Da dove viene ogni copia\tIl programma di ogni voce, con la sua icona\n"
                         + "Testi salvati, cifrati\tIn cartelle, con la loro formattazione\n"
                         + "Riservato per natura\tNessun account, nessuna pubblicità, nessuna connessione";
+                    s.Pages = "Digita dove incollare è bloccato\tSchermate di blocco dei desktop remoti, console di macchine virtuali, "
+                            + "pagine di gestione dei server: SmartClip digita gli appunti tasto per tasto, dopo averti dato il tempo "
+                            + "di cliccare nel campo giusto. Se la finestra cambia, si ferma.\n"
+                        + "Dal PC al telefono\tOgni testo come codice QR: inquadralo con il telefono e il testo è lì, da copiare, "
+                            + "o da aprire se è un link. Niente passa da internet.\n"
+                        + "Il testo delle immagini\tCopia le parole di una schermata o di una foto: le legge il riconoscimento del "
+                            + "testo di Windows, sul tuo PC, ed entrano nell'elenco come ogni cosa che copi.\n"
+                        + "Scorciatoie a tua scelta\tApri l'elenco da qualsiasi programma, digita gli appunti dove sei e incolla "
+                            + "fino a nove voci preferite con Ctrl+Maiusc+1…9. Ogni tasto si può cambiare.\n"
+                        + "Da dove viene ogni copia\tOgni voce ricorda il programma in cui l'hai copiata, con la sua icona. Scegli "
+                            + "un programma nella barra laterale per vedere solo ciò che viene da lì.\n"
+                        + "Testi salvati, cifrati\tTieni una firma, un indirizzo o un codice di accesso con un nome, in cartelle e "
+                            + "sottocartelle. Una firma di posta tiene grassetti e caratteri; tutto ciò che salvi è cifrato per il "
+                            + "tuo utente di Windows.\n"
+                        + "Sempre a portata di mano\tI testi salvati sono anche nel menu dell'icona vicino all'orologio, cartelle "
+                            + "comprese: prendine uno senza nemmeno aprire la finestra.\n"
+                        + "Chiaro o scuro\tGrigi caldi con un accento arancio, in chiaro o in scuro, come Windows o come scegli tu. "
+                            + "Caratteri e dimensioni li decidi tu.";
                     break;
                 case "es":
                     s.Signature = "Firma de correo"; s.SignatureText = "Saludos cordiales,\nMaría García\n\nOficina técnica\nTel. 91 123 45 67";
@@ -63,10 +84,30 @@ class Sample
                     s.Promise = "Y donde pegar no funciona, SmartClip lo teclea por ti.";
                     s.Features = "Teclea donde pegar está bloqueado\tEscritorios remotos, máquinas virtuales, pantallas de bloqueo\n"
                         + "Historial con búsqueda\tTextos e imágenes, a un atajo desde cualquier programa\n"
+                        + "Del PC al teléfono\tCualquier texto como código QR para escanear\n"
                         + "El texto de las imágenes\tCopia las palabras de una imagen, leídas en tu PC\n"
                         + "Atajos a tu medida\tPega tus favoritos con Ctrl+Mayús+1…9\n"
+                        + "De dónde viene cada copia\tEl programa de cada entrada, con su icono\n"
                         + "Textos guardados, cifrados\tEn carpetas, con su formato\n"
                         + "Privado por diseño\tSin cuenta, sin anuncios, sin conexión a Internet";
+                    s.Pages = "Teclea donde pegar está bloqueado\tPantallas de bloqueo de escritorios remotos, consolas de máquinas "
+                            + "virtuales, páginas de gestión de servidores: SmartClip teclea el portapapeles tecla por tecla, tras "
+                            + "darte tiempo para hacer clic en el campo correcto. Si la ventana cambia, se detiene.\n"
+                        + "Del PC al teléfono\tCualquier texto como código QR: escanéalo con el teléfono y el texto está allí, "
+                            + "para copiarlo, o para abrirlo si es un enlace. Nada pasa por internet.\n"
+                        + "El texto de las imágenes\tCopia las palabras de una captura o de una foto: las lee el reconocimiento de "
+                            + "texto de Windows, en tu PC, y entran en la lista como todo lo que copias.\n"
+                        + "Atajos a tu medida\tAbre la lista desde cualquier programa, teclea el portapapeles donde estés y pega "
+                            + "hasta nueve entradas favoritas con Ctrl+Mayús+1…9. Cada tecla se puede cambiar.\n"
+                        + "De dónde viene cada copia\tCada entrada recuerda el programa en el que la copiaste, con su icono. Elige "
+                            + "un programa en la barra lateral para ver solo lo que vino de allí.\n"
+                        + "Textos guardados, cifrados\tGuarda una firma, una dirección o un código de acceso con un nombre, en "
+                            + "carpetas y subcarpetas. Una firma de correo conserva negritas y fuentes; todo lo guardado se cifra "
+                            + "para tu usuario de Windows.\n"
+                        + "Siempre a mano\tLos textos guardados están también en el menú del icono junto al reloj, con sus "
+                            + "carpetas: toma uno sin abrir siquiera la ventana.\n"
+                        + "Claro u oscuro\tGrises cálidos con un acento naranja, en claro o en oscuro, como Windows o como elijas. "
+                            + "Las fuentes y los tamaños los decides tú.";
                     break;
                 case "fr":
                     s.Signature = "Signature e-mail"; s.SignatureText = "Cordialement,\nMarie Dupont\n\nBureau technique\nTél. 01 23 45 67 89";
@@ -75,13 +116,33 @@ class Sample
                     s.Long = "Une phrase copiée plus longue que la fenêtre, coupée au bord droit par des points de suspension";
                     s.TwoLines = "première ligne\r\ndeuxième ligne"; s.Remote = "srv-database-01 - Connexion Bureau à distance"; s.Probe = "test";
                     s.Headline = "Tout ce que vous copiez, toujours à portée de main.";
-                    s.Promise = "Et là où coller ne marche pas, SmartClip le tape pour vous.";
-                    s.Features = "Tape là où coller est bloqué\tBureaux à distance, machines virtuelles, écrans de verrouillage\n"
+                    s.Promise = "Et là où coller ne marche pas, SmartClip le saisit pour vous.";
+                    s.Features = "Saisit là où coller est bloqué\tBureaux à distance, machines virtuelles, écrans de verrouillage\n"
                         + "Historique avec recherche\tTextes et images, à un raccourci de n'importe quel programme\n"
+                        + "Du PC au téléphone\tN'importe quel texte en code QR à scanner\n"
                         + "Le texte des images\tCopie les mots d'une image, lus sur votre PC\n"
                         + "Raccourcis à votre choix\tCollez vos favoris avec Ctrl+Maj+1…9\n"
+                        + "D'où vient chaque copie\tLe programme de chaque élément, avec son icône\n"
                         + "Textes enregistrés, chiffrés\tDans des dossiers, avec leur mise en forme\n"
                         + "Privé par nature\tSans compte, sans publicité, sans connexion Internet";
+                    s.Pages = "Saisit là où coller est bloqué\tÉcrans de verrouillage des bureaux à distance, consoles de machines "
+                            + "virtuelles, pages d'administration des serveurs : SmartClip saisit le presse-papiers touche par touche, "
+                            + "après vous avoir laissé le temps de cliquer dans le bon champ. Si la fenêtre change, il s'arrête.\n"
+                        + "Du PC au téléphone\tN'importe quel texte en code QR : scannez-le avec le téléphone et le texte s'y "
+                            + "trouve, à copier, ou à ouvrir si c'est un lien. Rien ne passe par internet.\n"
+                        + "Le texte des images\tCopiez les mots d'une capture ou d'une photo : la reconnaissance de texte de "
+                            + "Windows les lit sur votre PC, et ils entrent dans la liste comme tout ce que vous copiez.\n"
+                        + "Raccourcis à votre choix\tOuvrez la liste depuis n'importe quel programme, saisissez le presse-papiers là "
+                            + "où vous êtes et collez jusqu'à neuf favoris avec Ctrl+Maj+1…9. Chaque touche se change.\n"
+                        + "D'où vient chaque copie\tChaque élément se souvient du programme où vous l'avez copié, avec son icône. "
+                            + "Choisissez un programme dans la barre latérale pour ne voir que ce qui en vient.\n"
+                        + "Textes enregistrés, chiffrés\tGardez une signature, une adresse ou un code d'accès sous un nom, dans des "
+                            + "dossiers et sous-dossiers. Une signature d'e-mail garde ses gras et ses polices ; tout ce que vous "
+                            + "enregistrez est chiffré pour votre utilisateur Windows.\n"
+                        + "Toujours à portée de main\tLes textes enregistrés sont aussi dans le menu de l'icône près de l'horloge, "
+                            + "avec leurs dossiers : prenez-en un sans même ouvrir la fenêtre.\n"
+                        + "Clair ou sombre\tDes gris chauds avec une touche d'orange, en clair ou en sombre, comme Windows ou comme "
+                            + "vous voulez. Polices et tailles sont à votre choix.";
                     break;
                 default:
                     s.Signature = "Email signature"; s.SignatureText = "Kind regards,\nJohn Smith\n\nTechnical office\nTel. 020 7946 0958";
@@ -93,10 +154,30 @@ class Sample
                     s.Promise = "And where paste does not work, SmartClip types it for you.";
                     s.Features = "Types where paste is blocked\tRemote desktops, virtual machines, lock screens\n"
                         + "Searchable history\tTexts and pictures, one hotkey away from any program\n"
+                        + "From PC to phone\tAny text as a QR code to scan\n"
                         + "Text from pictures\tCopies the words in a picture, read on your PC\n"
                         + "Hotkeys of your choice\tPaste your favourites with Ctrl+Shift+1…9\n"
+                        + "Where each copy comes from\tThe program of every entry, with its icon\n"
                         + "Saved texts, encrypted\tIn folders, with their formatting\n"
                         + "Private by design\tNo account, no ads, no Internet connection";
+                    s.Pages = "Types where paste is blocked\tRemote desktop lock screens, virtual machine consoles, server management "
+                            + "pages: SmartClip types the clipboard key by key, after giving you time to click the right field. If "
+                            + "the window changes, it stops.\n"
+                        + "From your PC to your phone\tAny text as a QR code: scan it with your phone and the text is there, to "
+                            + "copy, or to open if it is a link. Nothing goes through the internet.\n"
+                        + "The text in a picture\tCopy the words in a screenshot or a photo: the text recognition of Windows reads "
+                            + "them on your PC, and they come into the list like anything you copy.\n"
+                        + "Hotkeys of your choice\tBring up the list from any program, type the clipboard where you are, and paste "
+                            + "up to nine favourite entries with Ctrl+Shift+1…9. Every key can be changed.\n"
+                        + "Where each copy comes from\tEvery entry remembers the program it was copied in, with its icon. Choose a "
+                            + "program in the sidebar to see only what came from there.\n"
+                        + "Saved texts, encrypted\tKeep a signature, an address or an access code under a name, in folders and "
+                            + "subfolders. A mail signature keeps its bold and its fonts; everything saved is encrypted for your "
+                            + "Windows user.\n"
+                        + "Always at hand\tThe saved texts are also in the menu of the icon by the clock, folders included: take "
+                            + "one without even opening the window.\n"
+                        + "Light or dark\tWarm greys with an orange accent, in the light or in the dark, as Windows does or as you "
+                            + "choose. Fonts and sizes are yours to pick.";
                     break;
             }
             return s;
@@ -130,22 +211,33 @@ class Backdrop : Form
         }
     }
 
-    // The first picture of the Store says beside the window what the program does: the icon and the name, a line,
-    // the promise under it, then the main features, each with its sign. Quiet on purpose: white and greys on the
-    // dark backdrop, the signs in the accent, nothing boxed.
+    // Beside the windows each picture of the Store says what it shows. The first one what the program does: the icon
+    // and the name, a line, the promise under it, then the main features, each with its sign. The others one feature
+    // each (Page): its sign, its name, a few lines. Quiet on purpose: light and greys on the dark backdrop (dark on the
+    // light one), the signs in the accent, nothing boxed.
     public Sample Pitch;
+    public int Page = -1;      // the feature of the picture, in Sample.Pages; none, the first picture
     public Rectangle Column;   // where it goes, in the backdrop
     public Image Logo;
-    static readonly Sign[] FeatureSigns = { Sign.Keys, Sign.History, Sign.Picture, Sign.Bolt, Sign.Folder, Sign.Hide };
-    const int LogoSide = 40, SignSide = 24, SignGap = 20;   // pixels: the picture is taken at 100%
-    const int AfterBrand = 44, AfterHeadline = 14, AfterPromise = 56, BetweenFeatures = 26, AfterName = 4;
+    static readonly Sign[] FeatureSigns = { Sign.Keys, Sign.History, Sign.Qr, Sign.Picture, Sign.Bolt, Sign.Apps, Sign.Folder, Sign.Hide };
+    public static readonly Sign[] PageSigns = { Sign.Keys, Sign.Qr, Sign.Picture, Sign.Bolt, Sign.Apps, Sign.Folder, Sign.Tray, Sign.Contrast };
+    const int LogoSide = 40, SignSide = 24, SignGap = 20, PageSign = 36;   // pixels: the picture is taken at 100%
+    const int AfterBrand = 40, AfterHeadline = 12, AfterPromise = 44, BetweenFeatures = 20, AfterName = 3;
+    const int AfterPageSign = 22, AfterPageName = 20;
     const TextFormatFlags Flow = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
-    static readonly Color Bright = Color.FromArgb(244, 242, 238), Soft = Color.FromArgb(178, 196, 194);
+
+    static Color Bright { get { return Look.Dark ? Color.FromArgb(244, 242, 238) : Color.FromArgb(24, 40, 42); } }
+    static Color Soft { get { return Look.Dark ? Color.FromArgb(178, 196, 194) : Color.FromArgb(62, 84, 86); } }
 
     protected override void OnPaint(PaintEventArgs e)
     {
         if (Pitch == null) return;
-        Graphics g = e.Graphics;
+        if (Page >= 0) PaintPage(e.Graphics);
+        else PaintPitch(e.Graphics);
+    }
+
+    void PaintPitch(Graphics g)
+    {
         string[] features = Pitch.Features.Split('\n');
         using (Font brand = Face(22, true), headline = Face(42, true), promise = Face(20, false),
             name = Face(20, true), note = Face(17, false))
@@ -178,6 +270,22 @@ class Backdrop : Form
                 y = Write(g, parts[0], name, left, y, inner, Bright) + AfterName;
                 y = Write(g, parts[1], note, left, y, inner, Soft) + BetweenFeatures;
             }
+        }
+    }
+
+    // One feature: its sign, its name large, what it does under it, all in the middle of the column.
+    void PaintPage(Graphics g)
+    {
+        string[] parts = Pitch.Pages.Split('\n')[Page].Split('\t');
+        using (Font name = Face(42, true), text = Face(21, false))
+        {
+            int wide = Column.Width;
+            int height = PageSign + AfterPageSign + High(g, parts[0], name, wide) + AfterPageName + High(g, parts[1], text, wide);
+            int x = Column.Left, y = Column.Top + (Column.Height - height) / 2;
+            Look.Draw(g, PageSigns[Page], new Rectangle(x, y, PageSign, PageSign), Look.Accent);
+            y += PageSign + AfterPageSign;
+            y = Write(g, parts[0], name, x, y, wide, Bright) + AfterPageName;
+            Write(g, parts[1], text, x, y, wide, Soft);
         }
     }
 
@@ -1563,6 +1671,7 @@ static class TestProgram
         RichTest();
         LanguagesTest();
         OcrTest();
+        QrTest();
         using (Form own = new Form())
             Check(string.Equals(Origin.ProgramOf(own.Handle), System.Diagnostics.Process.GetCurrentProcess().MainModule.FileName,
                 StringComparison.OrdinalIgnoreCase) && Origin.ProgramOf(IntPtr.Zero) == null, "the program of a window is that of its process");
@@ -1596,6 +1705,36 @@ static class TestProgram
             picture.Save(png, ImageFormat.Png);
             return png.ToArray();
         }
+    }
+
+    // The QR codes of texts: the capacities of the standard, the smallest version and the strongest correction that fit,
+    // and the patterns where readers look for them. That phones read them was tried with a reader of QR codes
+    // (ZXing.Net) on texts of every version, accents included, in a throwaway program: nothing to add to the build.
+    static void QrTest()
+    {
+        Check(Qr.Capacity(1, Qr.Level.Low) == 17 && Qr.Capacity(1, Qr.Level.Medium) == 14 && Qr.Capacity(1, Qr.Level.Quartile) == 11
+            && Qr.Capacity(1, Qr.Level.High) == 7 && Qr.Capacity(10, Qr.Level.Medium) == 213 && Qr.Capacity(10, Qr.Level.High) == 119
+            && Qr.Capacity(40, Qr.Level.Medium) == 2331 && Qr.Capacity(40, Qr.Level.Quartile) == 1663
+            && Qr.Capacity(40, Qr.Level.High) == 1273 && Qr.MaxBytes == 2953, "a QR code holds the bytes the standard says");
+        Qr small = Qr.Of("1234567"), medium = Qr.Of(new string('x', 14)), next = Qr.Of(new string('x', 15));
+        Check(small.Version == 1 && small.Correction == Qr.Level.High && medium.Version == 1 && medium.Correction == Qr.Level.Medium
+            && next.Version == 2, "a QR code takes the smallest version, with the strongest correction it still holds");
+        Check(Qr.Of(new string('è', Qr.MaxBytes / 2)) != null && Qr.Of(new string('è', Qr.MaxBytes / 2 + 1)) == null
+            && Qr.Of(new string('x', Qr.MaxBytes + 1)) == null && Qr.Of("").Version == 1,
+            "a text too long for a QR code has none, an accented letter counting as two bytes");
+        bool shaped = true;
+        foreach (int length in new int[] { 10, 100, 1000, 2900 })
+        {
+            Qr code = Qr.Of(new string('a', length));
+            int size = code.Size;
+            shaped &= size == code.Version * 4 + 17 && code[8, size - 8];   // the module always dark
+            foreach (Point corner in new Point[] { new Point(0, 0), new Point(size - 7, 0), new Point(0, size - 7) })
+                for (int i = 0; i < 7; i++)
+                    shaped &= code[corner.X + i, corner.Y] && code[corner.X, corner.Y + i] && !code[corner.X + 1, corner.Y + 1 + i % 5]
+                        && code[corner.X + 2 + i % 3, corner.Y + 2 + i / 3 % 3];
+            for (int i = 8; i < size - 8; i++) shaped &= code[i, 6] == (i % 2 == 0) && code[6, i] == (i % 2 == 0);
+        }
+        Check(shaped, "a QR code has its finders, its timing lines and its dark module");
     }
 
     // The text of a picture, read by Windows. Where it reads none of the languages (a server may not), only said.
@@ -2665,6 +2804,16 @@ static class TestProgram
                 ask.Show();
                 Snap(ask, path + "-real-ask.png");
             }
+            // A link as a QR code, for a phone to open it.
+            using (Form qr = (Form)Activator.CreateInstance(typeof(QrForm), hidden, null,
+                new object[] { Qr.Of("https://github.com/giongy/SmartClip") }, null))
+            {
+                qr.TopMost = true;
+                qr.StartPosition = FormStartPosition.Manual;
+                qr.Location = new Point(80, 80);
+                qr.Show();
+                Snap(qr, path + "-real-qr.png");
+            }
             // The menu of the icon with a folder open, and a tooltip, over the window.
             using (ContextMenuStrip menu = new ContextMenuStrip())
             {
@@ -2719,16 +2868,17 @@ static class TestProgram
         return 0;
     }
 
-    // The pictures of the Store listing: the windows as the screen shows them, with made-up entries, on a plain
-    // background of the size the Store asks for (1366 x 768, or 1920 x 1080 where the windows need it), and the
-    // icon at 300 x 300. The windows appear for a moment, without taking the focus; SmartClip must be closed,
-    // or its hotkeys are taken and the status line says so.
+    // The pictures of the Store listing, 1920 x 1080: the windows as the screen shows them, with made-up entries, on the
+    // right of a plain background, and on its left what they show. The first says all the program does; each of the
+    // others shows one feature, with what it says of it (Backdrop.PageSigns, Sample.Pages). Also the icon at 300 x 300.
+    // The windows appear for a moment; SmartClip must be closed, or its hotkeys are taken and the status line says so.
     static int Store(string folder)
     {
-        const int Top = 40;   // the windows high up: the Store may lay text over the bottom third
-        // The pictures in a folder of their language; the icon, the same for all, beside those folders.
+        // The pictures in a folder of their language, made anew: the set changes with the features. The icon, the
+        // same for all, beside those folders.
         string pictures = System.IO.Path.Combine(folder, Strings.Code);
         System.IO.Directory.CreateDirectory(pictures);
+        foreach (string old in System.IO.Directory.GetFiles(pictures, "*.png")) System.IO.File.Delete(old);
         BindingFlags hidden = BindingFlags.NonPublic | BindingFlags.Instance;
         Look.Use(true);   // dark, whatever Windows has, which stands out more in the Store: only the last picture is light
         SaveTile(System.IO.Path.Combine(folder, "tile-300.png"));
@@ -2740,88 +2890,121 @@ static class TestProgram
             form.Location = new Point(-30000, -30000);
             FillSample(form, Wider);
             form.Show();   // now it has the size of this screen's scale
-            Rectangle screen = Screen.PrimaryScreen.Bounds;
-            Size size = form.Width + 2 * Top <= 1366 && form.Height + 2 * Top <= 768 ? new Size(1366, 768) : new Size(1920, 1080);
-            if (size.Width > screen.Width || size.Height > screen.Height)
+            Rectangle screen = Screen.PrimaryScreen.Bounds, area = new Rectangle(screen.Location, new Size(1920, 1080));
+            if (area.Width > screen.Width || area.Height > screen.Height)
             {
-                Console.WriteLine("FAIL: the screen is smaller than {0} x {1}", size.Width, size.Height);
+                Console.WriteLine("FAIL: the screen is smaller than {0} x {1}", area.Width, area.Height);
                 return 1;
             }
+            Sample s = Sample.Current;
             Label status = (Label)typeof(MainForm).GetField("status", hidden).GetValue(form);
             status.Text = "";
             ListBox recent = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
-            recent.SelectedIndex = RowOf(recent, delegate(Entry e) { return e.Pinned; });
-
-            // The first picture, the one the Store shows first: the list on the right, and on the left, in a quiet
-            // column, what the program does. Larger, so that both fit without making the window smaller.
-            Rectangle wide = new Rectangle(screen.Location, new Size(1920, 1080));
-            if (wide.Width > screen.Width || wide.Height > screen.Height)
-            {
-                Console.WriteLine("FAIL: the screen is smaller than {0} x {1}", wide.Width, wide.Height);
-                return 1;
-            }
-            using (Backdrop pitch = new Backdrop(wide))
+            Predicate<Entry> pinned = delegate(Entry e) { return e.Pinned; };
+            recent.SelectedIndex = RowOf(recent, pinned);
+            using (Backdrop backdrop = new Backdrop(area))
             using (Image logo = LargestIcon())
             {
                 const int Edge = 88, Between = 64;   // from the edges of the picture to the column and the window; between them
-                int windowLeft = wide.Right - Edge - form.Width;
-                pitch.Pitch = Sample.Current;
-                pitch.Logo = logo;
-                pitch.Column = new Rectangle(Edge, 0, windowLeft - wide.Left - Between - Edge, wide.Height);
-                pitch.Show();
-                form.Location = new Point(windowLeft, wide.Top + (wide.Height - form.Height) / 2);
-                form.BringToFront();
-                SnapArea(wide, System.IO.Path.Combine(pictures, "1-list.png"));
-            }
-
-            Rectangle area = new Rectangle(screen.Location, size);
-            using (Backdrop backdrop = new Backdrop(area))
-            {
+                int windowLeft = area.Right - Edge - form.Width;
+                backdrop.Pitch = s;
+                backdrop.Logo = logo;
+                backdrop.Column = new Rectangle(Edge, 0, windowLeft - area.Left - Between - Edge, area.Height);
                 backdrop.Show();
-                form.Location = new Point(area.Left + (area.Width - form.Width) / 2, area.Top + Top);
+                form.Location = new Point(windowLeft, area.Top + (area.Height - form.Height) / 2);
                 form.BringToFront();   // above the backdrop, which came later
+                Action<int, string> snap = delegate(int page, string name)
+                {
+                    Cursor.Position = new Point(area.Left + 1, area.Bottom - 2);   // nothing lit under the pointer
+                    backdrop.Page = page;
+                    backdrop.Invalidate();
+                    SnapArea(area, System.IO.Path.Combine(pictures, name));
+                };
+                // A window of the program in the middle of the main one.
+                Action<Form> over = delegate(Form window)
+                {
+                    window.TopMost = true;
+                    window.StartPosition = FormStartPosition.Manual;
+                    window.Show();
+                    window.Location = new Point(form.Left + (form.Width - window.Width) / 2, form.Top + (form.Height - window.Height) / 2);
+                };
 
-                // Typing a password: the countdown, with the button that cancels it.
+                snap(-1, "1-overview.png");
+
+                // Typing where paste does not work: the countdown, with the button that cancels it.
                 Button typeButton = (Button)typeof(MainForm).GetField("typeButton", hidden).GetValue(form);
-                status.Text = string.Format(Strings.Countdown, 3, string.Format(Strings.Quote, Sample.Current.Remote));
+                status.Text = string.Format(Strings.Countdown, 3, string.Format(Strings.Quote, s.Remote));
                 typeButton.Text = Strings.Cancel;
-                SnapArea(area, System.IO.Path.Combine(pictures, "2-typing.png"));
+                snap(0, "2-typing.png");
                 status.Text = "";
                 typeButton.Text = Strings.TypeButton;
 
-                // A copied picture shown whole, larger, from the eye of its card: its card at the top, so that it fits under
-                // it. The compact cards all fit in the list, which then cannot scroll: the tab of the pictures does it.
+                // The link of the list as a QR code, for a phone to open it.
+                int link = RowOf(recent, delegate(Entry e) { return e.Text.StartsWith("http"); });
+                recent.SelectedIndex = link;
+                using (Form qr = (Form)Activator.CreateInstance(typeof(QrForm), hidden, null,
+                    new object[] { Qr.Of(((Entry)recent.Items[link]).Text) }, null))
+                {
+                    over(qr);
+                    snap(1, "3-qr-code.png");
+                }
+
+                // The menu of a copied picture, at the text Windows reads in it.
                 TabStrip kinds = (TabStrip)typeof(MainForm).GetField("tabs", hidden).GetValue(form);
                 kinds.Selected = Array.IndexOf((Category?[])typeof(MainForm).GetField("TabKinds", BindingFlags.NonPublic | BindingFlags.Static)
                     .GetValue(null), (Category?)Category.Picture);
                 Application.DoEvents();
                 int pictureRow = RowOf(recent, delegate(Entry e) { return e.Picture; });
-                recent.TopIndex = pictureRow;
-                typeof(MainForm).GetMethod("ShowPeek", hidden).Invoke(form, new object[] { recent, pictureRow, true });
-                SnapArea(area, System.IO.Path.Combine(pictures, "3-preview.png"));
-                typeof(MainForm).GetMethod("HidePeek", hidden).Invoke(form, null);
+                recent.SelectedIndex = pictureRow;
+                ContextMenuStrip listMenu = (ContextMenuStrip)typeof(MainForm).GetField("listMenu", hidden).GetValue(form);
+                Rectangle card = recent.GetItemRectangle(pictureRow);
+                listMenu.Show(recent, new Point(card.Left + card.Width / 4, card.Bottom - card.Height / 4));
+                foreach (ToolStripItem item in listMenu.Items)
+                    if (item.Text == Strings.CopyPictureText) item.Select();
+                snap(2, "4-picture-text.png");
+                listMenu.Close();
                 kinds.Selected = 0;
                 Application.DoEvents();
-                recent.TopIndex = 0;
+                recent.SelectedIndex = RowOf(recent, pinned);
+
+                // The options at the page of the hotkeys, where the numbers are pasted from.
+                ListBox pages = (ListBox)typeof(MainForm).GetField("pageList", hidden).GetValue(form);
+                pages.SelectedIndex = 1;
+                typeof(MainForm).GetMethod("OpenOptions", hidden).Invoke(form, null);
+                snap(3, "5-hotkeys.png");
+                ((Form)typeof(MainForm).GetField("options", hidden).GetValue(form)).Hide();
+                pages.SelectedIndex = 0;
+                form.BringToFront();
+
+                // Only what was copied in one program, chosen in the sidebar: the one with the most entries.
+                ListBox nav = (ListBox)typeof(MainForm).GetField("navList", hidden).GetValue(form);
+                int source = -1;
+                for (int i = 0; i < nav.Items.Count; i++)
+                {
+                    Place place = nav.Items[i] as Place;
+                    if (place != null && place.Kind == PlaceKind.Source && (source < 0 || place.Count > ((Place)nav.Items[source]).Count)) source = i;
+                }
+                nav.SelectedIndex = source;
+                Application.DoEvents();
+                snap(4, "6-sources.png");
+                nav.SelectedIndex = 0;
+                Application.DoEvents();
+                recent.SelectedIndex = RowOf(recent, pinned);
 
                 // A copied signature being saved under a name, into a folder, with its formatting: as just copied
                 // from a mail, which the program remembers.
-                Sample s = Sample.Current;
                 string servers = Texts.Join(s.Work, s.Servers);
                 DataObject copiedSignature = new DataObject();
                 Rich.Put(copiedSignature, SavedSample().Html, null);
                 Rich.Remember(s.SignatureText, copiedSignature);
                 using (ShotEdit edit = new ShotEdit(new Entry(null, s.SignatureText), servers, new List<string>(new string[] { s.Work, servers, s.Home })))
                 {
-                    edit.TopMost = true;
-                    edit.StartPosition = FormStartPosition.Manual;
                     ((TextBox)typeof(EditForm).GetField("nameBox", hidden).GetValue(edit)).Text = s.Signature;
-                    edit.Show();
-                    edit.Location = new Point(form.Left + (form.Width - edit.Width) / 2, form.Top + (form.Height - edit.Height) / 2);
-                    SnapArea(area, System.IO.Path.Combine(pictures, "4-save.png"));
+                    over(edit);
+                    snap(5, "7-saved.png");
                 }
 
-                // The menu of the icon by the clock, with the saved texts in their folders, alone on the background.
+                // The menu of the icon by the clock, with the saved texts in their folders, alone where the window was.
                 form.Hide();
                 using (ContextMenuStrip menu = new ContextMenuStrip())
                 {
@@ -2830,40 +3013,19 @@ static class TestProgram
                     Look.Mark(menu.Items.Add(Strings.Exit), Sign.Exit);
                     Look.Style(menu);
                     typeof(MainForm).GetMethod("ShowSaved", hidden).Invoke(form, new object[] { menu });
-                    menu.Show(new Point(area.Left + area.Width / 3, area.Top + Top * 3));
+                    menu.Show(new Point(windowLeft + form.Width / 5, area.Top + area.Height * 2 / 5));
                     ToolStripMenuItem work = (ToolStripMenuItem)menu.Items[4];
                     work.ShowDropDown();
                     ((ToolStripMenuItem)work.DropDownItems[1]).ShowDropDown();
-                    SnapArea(area, System.IO.Path.Combine(pictures, "5-tray-menu.png"));
+                    snap(6, "8-tray-menu.png");
                     menu.Close();
                 }
                 form.Show();
                 form.BringToFront();
 
-                // The options at the page of the hotkeys, where the numbers are pasted from.
-                ListBox pages = (ListBox)typeof(MainForm).GetField("pageList", hidden).GetValue(form);
-                pages.SelectedIndex = 1;
-                typeof(MainForm).GetMethod("OpenOptions", hidden).Invoke(form, null);
-                SnapArea(area, System.IO.Path.Combine(pictures, "6-options.png"));
-                ((Form)typeof(MainForm).GetField("options", hidden).GetValue(form)).Hide();
-                pages.SelectedIndex = 0;
-
-                // The guide, open at how a password is typed: the fifth subject in every language.
-                using (ShotHelp help = new ShotHelp())
-                {
-                    help.TopMost = true;
-                    help.Show(form);
-                    help.Location = new Point(area.Left + (area.Width - help.Width) / 2, area.Top + Top);
-                    ((ListBox)typeof(HelpForm).GetField("topics", hidden).GetValue(help)).SelectedIndex = 4;
-                    SnapArea(area, System.IO.Path.Combine(pictures, "7-guide.png"));
-                }
-
-                // The same list in the light, as when Windows is set so for its apps. Shown again first: closing the
-                // guide can hand the foreground to another program, and then the window hides in the tray.
-                form.Show();
-                form.BringToFront();
+                // The same list in the light, as when Windows is set so for its apps.
                 Look.Switch(false);
-                SnapArea(area, System.IO.Path.Combine(pictures, "8-light.png"));
+                snap(7, "9-light.png");
                 Look.Switch(true);
             }
         }

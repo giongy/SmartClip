@@ -95,6 +95,8 @@ static partial class Strings
         KeepTop = "Keep at the top", Unpin = "Release from the top", OutOfFolders = "Out of the folders", EmptyFolder = "Empty";
     public static string NumberMenu = "Shortcut", NoNumber = "None", KindMenu = "Type";
     public static string CopyPictureText = "Copy the text";
+    public static string QrMenu = "QR code";
+    public static string QrNote = "Scan it with your phone to have the text there.";
 
     // --- Tray ---
     public static string TrayReady = ": text ready on the clipboard", TrayEmpty = ": no text on the clipboard",
@@ -122,6 +124,7 @@ static partial class Strings
     public static string OnClipboardOrType = "On the clipboard: {0}.\tPaste it with Ctrl+V or type it with {1}.";
     public static string ReadingPicture = "Reading the text in the picture…";
     public static string NoPictureText = "Windows found no text in the picture.";
+    public static string QrTooLong = "Too long for a QR code: one holds up to {0} characters, and an accented letter counts as two.";
     public static string NoRecognition = "Windows cannot read pictures in your languages: install the optical character recognition "
         + "of one from its options, in Settings > Time & language.";
     public static string AskReplace = "“{0}” already exists. Replace it?";
@@ -449,6 +452,11 @@ static partial class Strings
             "“" + CopyPictureText + "”, in the menu of a picture, puts on the clipboard the text Windows "
                 + "reads in it, here on the PC, without the internet: it comes into the list as anything you copy (that of "
                 + "a saved picture is private, as a saved text is). Small text can come out with mistakes: look at it first.",
+            "## To the phone",
+            "“" + QrMenu + "”, in the menu of a text, shows it as a QR code: scan it with your phone (its camera, or an app "
+                + "that reads QR codes) and the text is there, to copy, or to open if it is a link. Nothing goes through the "
+                + "internet. A code holds up to " + Qr.MaxBytes + " characters, and an accented letter counts as two; the "
+                + "longer the text, the denser the code: if the phone struggles, bring it closer.",
             "## Keeping an entry at the top",
             "The arrow on the right of a copied entry (" + Key(Keys.Control | MainForm.PinKey) + ") keeps it at "
                 + "the top for a while: in colour while it does, and a click turns it on or off. The entry still goes when "

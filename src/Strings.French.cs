@@ -48,6 +48,9 @@ static partial class Strings
         Open = "Ouvrir"; Exit = "Quitter"; Pause = "Suspendre la capture"; Resume = "Reprendre la capture";
         ShowContent = "Afficher le contenu"; MoveTo = "Déplacer vers"; NewFolder = "Nouveau dossier…";
         CopyPictureText = "Copier le texte";
+        QrMenu = "Code QR";
+        QrNote = "Scannez-le avec le téléphone pour y retrouver le texte.";
+        QrTooLong = "Trop long pour un code QR : il contient au plus {0} caractères, et une lettre accentuée compte double.";
         KeepTop = "Garder en haut"; Unpin = "Retirer du haut"; OutOfFolders = "Hors des dossiers"; EmptyFolder = "Vide";
         NumberMenu = "Raccourci"; NoNumber = "Aucun";
         KindMenu = "Type";
@@ -402,6 +405,11 @@ static partial class Strings
                 + "que Windows y lit, ici sur le PC, sans internet : il entre dans la liste comme tout ce que vous copiez "
                 + "(celui d'une image enregistrée est privé, comme un texte enregistré). Un petit texte peut sortir avec "
                 + "des erreurs : vérifiez-le d'abord.",
+            "## Vers le téléphone",
+            "« " + QrMenu + " », dans le menu d'un texte, l'affiche en code QR : scannez-le avec le téléphone (l'appareil "
+                + "photo, ou une application qui lit les codes QR) et le texte s'y trouve, à copier, ou à ouvrir si c'est un "
+                + "lien. Rien ne passe par internet. Un code contient au plus " + Qr.MaxBytes + " caractères, et une lettre "
+                + "accentuée compte double ; plus le texte est long, plus le code est dense : si le téléphone peine, rapprochez-le.",
             "## Garder un élément en haut",
             "La flèche à droite d'un élément copié (" + Key(Keys.Control | MainForm.PinKey) + ") le garde "
                 + "en haut un moment : elle est en couleur tant qu'elle le fait, et un clic l'allume ou l'éteint. "
