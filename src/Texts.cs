@@ -12,6 +12,10 @@ using System.Windows.Forms;
 // The numbers are those the database keeps for the copied entries.
 enum Category { Text = 1, Code = 2, Link = 3, Picture = 4 }
 
+// What came of a look at the clipboard: something remembered, nothing to remember (left out, or nothing a list keeps),
+// or something it holds that could not be read in that moment.
+enum Taken { Remembered, Left, Unread }
+
 // What the list offers: something copied, a text or a picture, or an entry the user saved, which may have a name.
 // Also the row of a folder of saved entries (IsGroup), named by its path. Where they are kept: Clips.
 class Entry
@@ -165,13 +169,16 @@ static class Texts
     static readonly string[] PrivateIfZero = { "CanIncludeInClipboardHistory", "CanUploadToCloudClipboard" };
 
     // Called at every clipboard change: what it holds goes to the copied entries, unless it is marked private.
-    // Returns whether the copied entries may have changed, and the list has to be read again.
-    public static bool Remember(Clips clips)
+    // Remembered: the copied entries may have changed, and the list has to be read again. Unread: the clipboard holds a
+    // text or a picture that it would not give (another program reading it at the same moment, a remote desktop still
+    // fetching it), and it is worth trying again.
+    public static Taken Remember(Clips clips)
     {
         try
         {
             IDataObject data = Clipboard.GetDataObject();
-            if (data == null || IsPrivate(data)) return false;
+            if (data == null) return Holding() ? Taken.Unread : Taken.Left;
+            if (IsPrivate(data)) return Taken.Left;
             string program = Origin.Find();   // now, while the program that copied still owns the clipboard
             // Programs that copy both (a spreadsheet, a word processor) mean the text. Its formatting, if it has
             // some, stays in memory for a while, in case it is saved.
@@ -179,27 +186,38 @@ static class Texts
             if (text != null && clips.AddText(text, program))
             {
                 Rich.Remember(text, data);
-                return true;
+                return Taken.Remembered;
             }
             using (Image picture = data.GetData(DataFormats.Bitmap) as Image)
             {
-                if (picture == null) return false;
-                clips.AddPicture(picture, program);
-                return true;
+                if (picture != null)
+                {
+                    clips.AddPicture(picture, program);
+                    return Taken.Remembered;
+                }
             }
+            // WinForms answers null, not an error, for a format it could not get. A text that was there and was
+            // left out (blank, too long) leaves nothing more to get.
+            return text == null && Holding() ? Taken.Unread : Taken.Left;
         }
         catch (ExternalException)
         {
-            // The clipboard held by another program: this copy is not remembered, and that is all.
-            return false;
+            // The clipboard held by another program for longer than WinForms waits for it.
+            return Holding() ? Taken.Unread : Taken.Left;
         }
         catch (Exception ex)
         {
             // A picture that cannot be read, a database that refuses: written down, never in the way of the copy
             // just made in another program. Something may have been written all the same.
             Log.Error(ex);
-            return true;
+            return Taken.Remembered;
         }
+    }
+
+    // Whether the clipboard holds a text or a picture, as Windows says without opening it.
+    static bool Holding()
+    {
+        return Native.IsClipboardFormatAvailable(Native.CF_UNICODETEXT) || Native.IsClipboardFormatAvailable(Native.CF_BITMAP);
     }
 
     public static bool IsPrivate(IDataObject data)

@@ -20,7 +20,9 @@ condiviso su GitHub).
   - `Log.cs` — il registro degli errori, `SmartClip.log` nella cartella dei dati (ricomincia oltre 256 KB, il
     precedente resta come `.old`). Mai il contenuto di ciò che si copia o si salva. Lo scrivono `Report`,
     `ShowError` (gli errori della riga di stato), le impostazioni illeggibili, i file della cronologia rifiutati
-    dal disco o illeggibili. Non lo scrive `Texts.Remember`: gli appunti occupati da un altro programma sono normali.
+    dal disco o illeggibili, una copia che gli appunti non hanno mai dato (`CopyUnread`, dopo l'ultimo tentativo di
+    `TakeCopy`, con il programma ma senza il testo). Un solo tentativo fallito non lo scrive: gli appunti occupati
+    per un attimo da un altro programma sono normali.
   - `MainForm*.cs` — la finestra, una sola classe `partial` divisa in cinque file quando ha superato di nuovo
     le 2000 righe (i nomi dei membri non sono cambiati: i test li cercano per riflessione):
     - `MainForm.cs` — costanti e campi (tutti qui, in cima), costruttore con la disposizione, viste, riga di
@@ -363,7 +365,17 @@ condiviso su GitHub).
   spenta cancella tutti i copiati (`ClearCopied`). L'elenco ne chiede al database solo `MaxShown`, già filtrati
   dalla ricerca (`Clips.Copied`, con `instr` sul testo per la ricerca `folded`): a ogni copia si rileggono solo i
   copiati (`ReloadCopied`), mai i salvati, e solo se la copia è entrata (`Texts.Remember` dice se qualcosa è
-  cambiato: non con la cronologia spenta o in pausa, né per una copia riservata o fatta dall'elenco).
+  cambiato, `Taken`: non con la cronologia spenta o in pausa, né per una copia riservata o fatta dall'elenco).
+  Una copia che gli appunti non danno si riprova (voluto dall'utente il 25/10/2026: «a volte manca un colpo»). Ogni
+  `WM_CLIPBOARDUPDATE` lo leggono insieme tutti quelli che ascoltano (Win+V, `rdpclip`, Citrix), ma gli appunti li
+  apre uno alla volta; e ciò che arriva da un desktop remoto si va a prendere sul server solo quando lo si legge.
+  WinForms aspetta circa un secondo `Clipboard.GetDataObject` (poi `ExternalException`), ma un `GetData` che non
+  riesce risponde `null`, senza errore: prima la copia andava persa in silenzio. Ora, se Windows dice che c'è testo o
+  un'immagine (`Holding`, `IsClipboardFormatAvailable`, che non apre gli appunti), `Remember` risponde `Unread` e
+  `TakeCopy` riprova dopo `RereadMs` (100, 400, 1500 ms; una copia nuova riparte da capo), e dopo l'ultimo lo scrive
+  nel log. Riprovare non fa doppioni, grazie all'impronta. Provato il 25/10/2026 con un programmino usa e getta che
+  tiene aperti gli appunti dopo aver copiato: 1,5 secondi, persa prima ed entrata ora; 9 secondi, nel log. Mai visto
+  sui colpi mancati veri: se ricapita, il log dice se era questo e da quale programma.
 - Una voce copiata si può tenere in cima **per un po'** (`Entry.Pinned`, la freccia, voluta
   dall'utente al posto della stellina il 17/10/2026; nella barra il posto «In alto»): freccia a destra della prima riga della
   scheda (`Part.Arrow`: lì il clic non sceglie la voce, `Sign.Up`), menu e Ctrl+P, tutti in `TogglePin`. **Scade come

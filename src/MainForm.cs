@@ -91,6 +91,9 @@ partial class MainForm : Window
     const int RestMs = 600;                            // how long the pointer rests on a row before it is shown whole
     const int AskedMs = 15000;                         // how long a saved text stays in view once asked for
     const string PeekUnseen = "The preview was shown, but Windows has it not on the screen";   // for the log only
+    // After a copy the clipboard would not give: how long to wait before each new try.
+    static readonly int[] RereadMs = { 100, 400, 1500 };
+    const string CopyUnread = "A copy could not be read from the clipboard, tried {0} times; copied in: {1}";   // for the log only
     public const Keys NewKey = Keys.N, SaveKey = Keys.S, DeleteKey = Keys.E, PinKey = Keys.P;   // in the list, all with Ctrl
     public const Keys AllKey = Keys.A;      // with Ctrl, in the cards: picks them all
     public const Keys SearchKey = Keys.F;   // with Ctrl, anywhere in the window: to the search box
@@ -233,6 +236,8 @@ partial class MainForm : Window
     IntPtr previous;    // the window the list hotkey was pressed in: the foreground goes back there
     bool wasHidden;     // the list hotkey found the window hidden: after the choice it hides again
     uint ownCopy;       // clipboard sequence number of what was put there from the list: not to be remembered again
+    readonly Timer reread = new Timer();   // runs while a copy the clipboard would not give waits to be tried again
+    int rereads;        // how many times it has been tried again
     readonly List<CheckBox> refused = new List<CheckBox>();   // hotkey checkboxes unticked by Windows, not by the user
     readonly List<ToolStripItem> traySaved = new List<ToolStripItem>();   // what the icon menu lists of the saved texts
     readonly RoundButton languageButton = new RoundButton();   // shows the language and opens the list of the others
@@ -282,6 +287,11 @@ partial class MainForm : Window
             fade.Stop();
             FitStatus();
             if (options != null) options.Note(status.Text, status.Kind);
+        };
+        reread.Tick += delegate
+        {
+            reread.Stop();
+            TakeCopy();
         };
         fade.Interval = FadeMs;
         fade.Tick += delegate
@@ -777,15 +787,34 @@ partial class MainForm : Window
         else if (m.Msg == Native.WM_CLIPBOARDUPDATE)
         {
             ShowClipboardState();
-            // Only the copied entries can have changed, and only if something was remembered: the saved ones are
-            // not read again, nor the copied ones after a copy that is left out (paused, private, chosen in the list).
-            if (historyBox.Checked && !paused && Native.GetClipboardSequenceNumber() != ownCopy && Texts.Remember(clips))
-            {
-                newest = true;   // what was just copied, selected and in view
-                ReloadCopied();
-            }
+            reread.Stop();   // a newer copy: the one before, if it was still being tried, is no longer there to read
+            rereads = 0;
+            TakeCopy();
         }
         base.WndProc(ref m);
+    }
+
+    // Remembers what was just copied. Only the copied entries can have changed, and only if something was remembered:
+    // the saved ones are not read again, nor the copied ones after a copy that is left out (paused, private, chosen in
+    // the list). What the clipboard would not give is tried again a little later; if never, the log says so.
+    void TakeCopy()
+    {
+        if (!historyBox.Checked || paused || Native.GetClipboardSequenceNumber() == ownCopy) return;
+        Taken taken = Texts.Remember(clips);
+        if (taken == Taken.Remembered)
+        {
+            newest = true;   // what was just copied, selected and in view
+            ReloadCopied();
+        }
+        else if (taken == Taken.Unread)
+        {
+            if (rereads < RereadMs.Length)
+            {
+                reread.Interval = RereadMs[rereads++];
+                reread.Start();
+            }
+            else Log.Error(new InvalidOperationException(string.Format(CopyUnread, rereads + 1, Origin.Find() ?? "?")));
+        }
     }
 
     // Brings the window to the foreground, whether it is minimised or hidden in the notification area.

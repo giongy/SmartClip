@@ -26,7 +26,7 @@ static class Native
         DWMWA_CAPTION_COLOR = 35, DWMWA_TEXT_COLOR = 36;
     public const int DWMWCP_ROUND = 2, DWMWCP_ROUNDSMALL = 3;
     public const int ForceDark = 2, ForceLight = 3;   // modes of SetPreferredAppMode
-    public const uint CF_UNICODETEXT = 13;
+    public const uint CF_BITMAP = 2, CF_UNICODETEXT = 13;
     public const int ERROR_SUCCESS = 0, ERROR_INSUFFICIENT_BUFFER = 122;
     public const uint MOD_ALT = 0x0001, MOD_CONTROL = 0x0002, MOD_SHIFT = 0x0004, MOD_NOREPEAT = 0x4000;
     public const int VK_SHIFT = 0x10, VK_CONTROL = 0x11, VK_MENU = 0x12, VK_CAPITAL = 0x14, VK_SPACE = 0x20,
