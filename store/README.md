@@ -149,7 +149,7 @@ paste blocked
 ### What's new in this version
 
 ```
-Bug fixes.
+No copy is missed any more when another program, such as a remote desktop, is reading the clipboard at the same moment: SmartClip tries again a moment later.
 ```
 
 ### Screenshot captions
@@ -241,7 +241,7 @@ incolla bloccato
 ### Novità di questa versione
 
 ```
-Correzioni di bug.
+Nessuna copia va più persa quando un altro programma, per esempio un desktop remoto, sta leggendo gli appunti nello stesso momento: SmartClip riprova un attimo dopo.
 ```
 
 ### Didascalie delle schermate
@@ -333,7 +333,7 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Corrección de errores.
+Ya no se pierde ninguna copia cuando otro programa, como un escritorio remoto, está leyendo el portapapeles en ese mismo momento: SmartClip lo vuelve a intentar un instante después.
 ```
 
 ### Leyendas de las capturas
@@ -425,7 +425,7 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Corrections de bugs.
+Plus aucune copie n'est perdue quand un autre programme, comme un bureau à distance, lit le presse-papiers au même moment : SmartClip réessaie un instant plus tard.
 ```
 
 ### Légendes des captures
