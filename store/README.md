@@ -123,11 +123,11 @@ Entries kept at the top for a while with an arrow, and saved texts or copied ent
 Several cards selected at once, with Ctrl or Shift, to keep at the top, move into a folder or delete together
 Encrypted saved texts and pictures, with or without a name, in folders and subfolders
 Formatted saved texts, such as mail signatures: bold, italic, fonts and sizes, pasted as they are
-Saved texts also in the tray icon menu, without opening the window
+Any text as a QR code to scan with your phone, to take it from the PC without the internet
 Full preview of long texts and pictures, and the text in a picture copied with the text recognition of Windows
 Copies that other programs mark as private are not remembered, and capturing pauses with one click
 Export and import to a text file, and the database in the folder you choose
-Starts with Windows, hidden in the notification area
+Starts with Windows, hidden in the notification area, with the saved texts in the menu of its icon
 Built-in guide by topic, in short sections that open and close
 Clean look in warm greys with an orange accent, line icons, options grouped like Windows Settings, light or dark theme, fonts and sizes of your choice
 In English, Spanish, French and Italian
@@ -149,7 +149,7 @@ paste blocked
 ### What's new in this version
 
 ```
-No copy is missed any more when another program, such as a remote desktop, is reading the clipboard at the same moment: SmartClip tries again a moment later.
+New: any text as a QR code. Choose “QR code” in the menu of a text, copied or saved, and scan it with your phone: the text is there, to copy, or to open if it is a link. The code is made on your PC and nothing goes through the internet; it holds up to about 2,900 characters.
 ```
 
 ### Screenshot captions
@@ -216,11 +216,11 @@ Voci tenute in cima per un po' con una freccia, e testi salvati o voci copiate i
 Più schede selezionate insieme, con Ctrl o Maiusc, da tenere in cima, spostare in una cartella o eliminare in una volta
 Testi e immagini salvati cifrati, con o senza nome, in cartelle e sottocartelle
 Testi salvati formattati, come le firme di posta: grassetto, corsivo, caratteri e dimensioni, incollati così come sono
-Testi salvati anche nel menu dell'icona, senza aprire la finestra
+Ogni testo come codice QR da inquadrare con il telefono, per portarlo via dal PC senza internet
 Anteprima completa di testi lunghi e immagini, e il testo di un'immagine copiato con il riconoscimento di Windows
 Le copie che altri programmi segnano come riservate non vengono ricordate, e la cattura si sospende con un clic
 Esportazione e importazione in un file di testo, e il database nella cartella che scegli
-Avvio con Windows, nascosto nell'area di notifica
+Avvio con Windows, nascosto nell'area di notifica, con i testi salvati nel menu della sua icona
 Guida integrata per argomenti, in sezioni brevi che si aprono e si chiudono
 Aspetto pulito in grigi caldi con un accento arancio, icone a linee, opzioni raggruppate come Impostazioni, tema chiaro o scuro, caratteri e dimensioni a scelta
 In italiano, inglese, spagnolo e francese
@@ -242,7 +242,7 @@ incolla bloccato
 ### Novità di questa versione
 
 ```
-Nessuna copia va più persa quando un altro programma, per esempio un desktop remoto, sta leggendo gli appunti nello stesso momento: SmartClip riprova un attimo dopo.
+Novità: ogni testo come codice QR. Scegli «Codice QR» nel menu di un testo, copiato o salvato, e inquadralo con il telefono: il testo è lì, da copiare, o da aprire se è un link. Il codice nasce sul tuo PC e niente passa da internet; contiene fino a circa 2900 caratteri.
 ```
 
 ### Didascalie delle schermate
@@ -309,11 +309,11 @@ Entradas mantenidas arriba un tiempo con una flecha, y textos guardados o entrad
 Varias tarjetas seleccionadas a la vez, con Ctrl o Mayús, para mantener arriba, mover a una carpeta o eliminar juntas
 Textos e imágenes guardados cifrados, con o sin nombre, en carpetas y subcarpetas
 Textos guardados con formato, como las firmas de correo: negrita, cursiva, fuentes y tamaños, pegados tal cual
-Textos guardados también en el menú del icono, sin abrir la ventana
+Cualquier texto como código QR para escanear con el teléfono y llevarlo del PC sin internet
 Vista previa completa de textos largos e imágenes, y el texto de una imagen copiado con el reconocimiento de Windows
 Las copias que otros programas marcan como privadas no se recuerdan, y la captura se pausa con un clic
 Exportación e importación a un archivo de texto, y la base de datos en la carpeta que elijas
-Inicio con Windows, oculto en el área de notificación
+Inicio con Windows, oculto en el área de notificación, con los textos guardados en el menú de su icono
 Guía integrada por temas, en secciones breves que se abren y se cierran
 Aspecto limpio en grises cálidos con un acento naranja, iconos de línea, opciones agrupadas como Configuración, tema claro u oscuro, fuentes y tamaños a elegir
 En español, inglés, francés e italiano
@@ -335,7 +335,7 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Ya no se pierde ninguna copia cuando otro programa, como un escritorio remoto, está leyendo el portapapeles en ese mismo momento: SmartClip lo vuelve a intentar un instante después.
+Novedad: cualquier texto como código QR. Elige «Código QR» en el menú de un texto, copiado o guardado, y escanéalo con el teléfono: el texto está allí, para copiarlo, o para abrirlo si es un enlace. El código se crea en tu PC y nada pasa por internet; admite hasta unos 2900 caracteres.
 ```
 
 ### Leyendas de las capturas
@@ -402,11 +402,11 @@ Liste accessible depuis n'importe quel programme avec un raccourci, et raccourci
 Plusieurs cartes sélectionnées à la fois, avec Ctrl ou Maj, à garder en haut, déplacer dans un dossier ou supprimer ensemble
 Textes et images enregistrés chiffrés, avec ou sans nom, dans des dossiers et sous-dossiers
 Textes enregistrés mis en forme, comme les signatures de courriel : gras, italique, polices et tailles, collés tels quels
-Textes enregistrés aussi dans le menu de l'icône, sans ouvrir la fenêtre
+N'importe quel texte en code QR à scanner avec le téléphone, pour l'emporter du PC sans internet
 Aperçu complet des textes longs et des images, et le texte d'une image copié grâce à la reconnaissance de Windows
 Les copies que d'autres programmes marquent comme privées ne sont pas mémorisées, et la capture se suspend en un clic
 Export et import dans un fichier texte, et la base de données dans le dossier de votre choix
-Démarrage avec Windows, caché dans la zone de notification
+Démarrage avec Windows, caché dans la zone de notification, avec les textes enregistrés dans le menu de son icône
 Guide intégré par sujet, en courtes sections qui s'ouvrent et se ferment
 Aspect épuré en gris chauds avec un accent orange, icônes au trait, options regroupées comme les Paramètres, thème clair ou sombre, polices et tailles au choix
 En français, anglais, espagnol et italien
@@ -428,7 +428,7 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Plus aucune copie n'est perdue quand un autre programme, comme un bureau à distance, lit le presse-papiers au même moment : SmartClip réessaie un instant plus tard.
+Nouveau : n'importe quel texte en code QR. Choisissez « Code QR » dans le menu d'un texte, copié ou enregistré, et scannez-le avec le téléphone : le texte s'y trouve, à copier, ou à ouvrir si c'est un lien. Le code est créé sur votre PC et rien ne passe par internet ; il contient jusqu'à environ 2 900 caractères.
 ```
 
 ### Légendes des captures
