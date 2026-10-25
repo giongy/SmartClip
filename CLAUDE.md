@@ -968,7 +968,7 @@ cartelle vi stanno in ordine di nome, quindi «Casa» viene prima di «Lavoro».
   all'avvio, prima nel database e poi nella finestra, segnando `SLOW` ciò che supera il suo limite. Con 150 immagini
   basta mezzo minuto.
 - `tests.exe store <cartella> <lingua>` — nemmeno: le immagini della scheda dello Store, finestre vere su uno
-  sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768), in `<cartella>\<lingua>` (in scuro, che sullo Store fa più effetto, tranne l'ultima, `8-light`; lo sfondo si scurisce con il tema), e
+  sfondo nei colori dell'icona (`Backdrop`) alla misura richiesta (1366 × 768; la prima, `1-list`, 1920 × 1080 con a sinistra nome, una frase e le caratteristiche principali, testi in `Sample`: `Headline`, `Promise`, `Features`), in `<cartella>\<lingua>` (in scuro, che sullo Store fa più effetto, tranne l'ultima, `8-light`; lo sfondo si scurisce con il tema), e
   l'icona 300 × 300 in `<cartella>`. Mostra le finestre qualche secondo; a programma chiuso, come `real`, perché le
   scorciatoie non risultino occupate.
 - `shot`, `real` e `store` accettano la lingua come ultimo argomento (`en`, `es`, `fr`, `it`; senza, inglese) e

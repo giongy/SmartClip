@@ -66,7 +66,7 @@ ESRB Everyone.
 ## In tutte le schede
 
 - **Logo** (*Icona del riquadro dell'app 1:1, 300 × 300*): [`images/tile-300.png`](images/tile-300.png).
-- **Schermate**: le otto della cartella della lingua, nell'ordine dei nomi (1366 × 768); in tema scuro, l'ultima in chiaro.
+- **Schermate**: le otto della cartella della lingua, nell'ordine dei nomi; in tema scuro, l'ultima in chiaro. La prima (1920 × 1080) ha a sinistra le caratteristiche principali, le altre sono 1366 × 768.
 - **Copyright e marchi**: `© 2026 Luca Andreoli`
 - **Termini di licenza aggiuntivi**: `Open source software under the MIT license: https://github.com/giongy/SmartClip/blob/main/LICENSE`
 - **Sviluppato da**: `Luca Andreoli`

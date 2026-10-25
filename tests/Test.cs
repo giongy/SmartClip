@@ -27,6 +27,9 @@ class Sample
 {
     public string Signature, SignatureText, Work, Address, Servers, TestServer, Home, Wifi, Long, TwoLines, Remote;
     public string Probe;   // a word found only in the name of the test server, for a search
+    // What the first picture of the Store says beside the window: a line, the promise under it, and the main features,
+    // one per line, each a name and a note after a tab, in the order of Backdrop.FeatureSigns.
+    public string Headline, Promise, Features;
 
     public static Sample Current
     {
@@ -41,6 +44,14 @@ class Sample
                     s.TestServer = "Accesso al server di prova"; s.Home = "Casa"; s.Wifi = "Wi-Fi di casa";
                     s.Long = "Una frase copiata più lunga della finestra, che finisce tagliata sul bordo destro con i puntini";
                     s.TwoLines = "prima riga\r\nseconda riga"; s.Remote = "srv-database-01 - Connessione Desktop remoto"; s.Probe = "prova";
+                    s.Headline = "Tutto ciò che copi, sempre a portata di mano.";
+                    s.Promise = "E dove incollare non funziona, SmartClip lo digita per te.";
+                    s.Features = "Digita dove incollare è bloccato\tDesktop remoti, macchine virtuali, schermate di blocco\n"
+                        + "Cronologia con ricerca\tTesti e immagini, a una scorciatoia da qualsiasi programma\n"
+                        + "Il testo delle immagini\tCopia le parole di un'immagine, lette sul tuo PC\n"
+                        + "Scorciatoie a tua scelta\tIncolla le voci preferite con Ctrl+Maiusc+1…9\n"
+                        + "Testi salvati, cifrati\tIn cartelle, con la loro formattazione\n"
+                        + "Riservato per natura\tNessun account, nessuna pubblicità, nessuna connessione";
                     break;
                 case "es":
                     s.Signature = "Firma de correo"; s.SignatureText = "Saludos cordiales,\nMaría García\n\nOficina técnica\nTel. 91 123 45 67";
@@ -48,6 +59,14 @@ class Sample
                     s.TestServer = "Acceso al servidor de pruebas"; s.Home = "Casa"; s.Wifi = "Wi-Fi de casa";
                     s.Long = "Una frase copiada más larga que la ventana, que termina cortada en el borde derecho con puntos suspensivos";
                     s.TwoLines = "primera línea\r\nsegunda línea"; s.Remote = "srv-database-01 - Conexión a Escritorio remoto"; s.Probe = "pruebas";
+                    s.Headline = "Todo lo que copias, siempre a mano.";
+                    s.Promise = "Y donde pegar no funciona, SmartClip lo teclea por ti.";
+                    s.Features = "Teclea donde pegar está bloqueado\tEscritorios remotos, máquinas virtuales, pantallas de bloqueo\n"
+                        + "Historial con búsqueda\tTextos e imágenes, a un atajo desde cualquier programa\n"
+                        + "El texto de las imágenes\tCopia las palabras de una imagen, leídas en tu PC\n"
+                        + "Atajos a tu medida\tPega tus favoritos con Ctrl+Mayús+1…9\n"
+                        + "Textos guardados, cifrados\tEn carpetas, con su formato\n"
+                        + "Privado por diseño\tSin cuenta, sin anuncios, sin conexión a Internet";
                     break;
                 case "fr":
                     s.Signature = "Signature e-mail"; s.SignatureText = "Cordialement,\nMarie Dupont\n\nBureau technique\nTél. 01 23 45 67 89";
@@ -55,6 +74,14 @@ class Sample
                     s.TestServer = "Accès au serveur de test"; s.Home = "Maison"; s.Wifi = "Wi-Fi de la maison";
                     s.Long = "Une phrase copiée plus longue que la fenêtre, coupée au bord droit par des points de suspension";
                     s.TwoLines = "première ligne\r\ndeuxième ligne"; s.Remote = "srv-database-01 - Connexion Bureau à distance"; s.Probe = "test";
+                    s.Headline = "Tout ce que vous copiez, toujours à portée de main.";
+                    s.Promise = "Et là où coller ne marche pas, SmartClip le tape pour vous.";
+                    s.Features = "Tape là où coller est bloqué\tBureaux à distance, machines virtuelles, écrans de verrouillage\n"
+                        + "Historique avec recherche\tTextes et images, à un raccourci de n'importe quel programme\n"
+                        + "Le texte des images\tCopie les mots d'une image, lus sur votre PC\n"
+                        + "Raccourcis à votre choix\tCollez vos favoris avec Ctrl+Maj+1…9\n"
+                        + "Textes enregistrés, chiffrés\tDans des dossiers, avec leur mise en forme\n"
+                        + "Privé par nature\tSans compte, sans publicité, sans connexion Internet";
                     break;
                 default:
                     s.Signature = "Email signature"; s.SignatureText = "Kind regards,\nJohn Smith\n\nTechnical office\nTel. 020 7946 0958";
@@ -62,6 +89,14 @@ class Sample
                     s.TestServer = "Test server access"; s.Home = "Home"; s.Wifi = "Home Wi-Fi";
                     s.Long = "A copied sentence longer than the window, which ends cut short at the right edge with an ellipsis";
                     s.TwoLines = "first line\r\nsecond line"; s.Remote = "srv-database-01 - Remote Desktop Connection"; s.Probe = "test";
+                    s.Headline = "Everything you copy, always at hand.";
+                    s.Promise = "And where paste does not work, SmartClip types it for you.";
+                    s.Features = "Types where paste is blocked\tRemote desktops, virtual machines, lock screens\n"
+                        + "Searchable history\tTexts and pictures, one hotkey away from any program\n"
+                        + "Text from pictures\tCopies the words in a picture, read on your PC\n"
+                        + "Hotkeys of your choice\tPaste your favourites with Ctrl+Shift+1…9\n"
+                        + "Saved texts, encrypted\tIn folders, with their formatting\n"
+                        + "Private by design\tNo account, no ads, no Internet connection";
                     break;
             }
             return s;
@@ -93,6 +128,78 @@ class Backdrop : Form
         {
             e.Graphics.FillRectangle(brush, ClientRectangle);
         }
+    }
+
+    // The first picture of the Store says beside the window what the program does: the icon and the name, a line,
+    // the promise under it, then the main features, each with its sign. Quiet on purpose: white and greys on the
+    // dark backdrop, the signs in the accent, nothing boxed.
+    public Sample Pitch;
+    public Rectangle Column;   // where it goes, in the backdrop
+    public Image Logo;
+    static readonly Sign[] FeatureSigns = { Sign.Keys, Sign.History, Sign.Picture, Sign.Bolt, Sign.Folder, Sign.Hide };
+    const int LogoSide = 40, SignSide = 24, SignGap = 20;   // pixels: the picture is taken at 100%
+    const int AfterBrand = 44, AfterHeadline = 14, AfterPromise = 56, BetweenFeatures = 26, AfterName = 4;
+    const TextFormatFlags Flow = TextFormatFlags.WordBreak | TextFormatFlags.NoPrefix | TextFormatFlags.NoPadding;
+    static readonly Color Bright = Color.FromArgb(244, 242, 238), Soft = Color.FromArgb(178, 196, 194);
+
+    protected override void OnPaint(PaintEventArgs e)
+    {
+        if (Pitch == null) return;
+        Graphics g = e.Graphics;
+        string[] features = Pitch.Features.Split('\n');
+        using (Font brand = Face(22, true), headline = Face(42, true), promise = Face(20, false),
+            name = Face(20, true), note = Face(17, false))
+        {
+            int wide = Column.Width, inner = wide - SignSide - SignGap;
+            // Measured first, so that the whole stands in the middle of the column.
+            int height = LogoSide + AfterBrand + High(g, Pitch.Headline, headline, wide) + AfterHeadline
+                + High(g, Pitch.Promise, promise, wide) + AfterPromise;
+            foreach (string feature in features)
+            {
+                string[] parts = feature.Split('\t');
+                height += High(g, parts[0], name, inner) + AfterName + High(g, parts[1], note, inner) + BetweenFeatures;
+            }
+            height -= BetweenFeatures;
+            int x = Column.Left, y = Column.Top + (Column.Height - height) / 2;
+
+            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+            if (Logo != null) g.DrawImage(Logo, x, y, LogoSide, LogoSide);
+            int brandHigh = TextRenderer.MeasureText(g, Program.AppName, brand, Size.Empty, Flow).Height;
+            TextRenderer.DrawText(g, Program.AppName, brand, new Point(x + LogoSide + 12, y + (LogoSide - brandHigh) / 2), Bright, Flow);
+            y += LogoSide + AfterBrand;
+            y = Write(g, Pitch.Headline, headline, x, y, wide, Bright) + AfterHeadline;
+            y = Write(g, Pitch.Promise, promise, x, y, wide, Soft) + AfterPromise;
+            for (int i = 0; i < features.Length; i++)
+            {
+                string[] parts = features[i].Split('\t');
+                int nameHigh = High(g, parts[0], name, inner);
+                Look.Draw(g, FeatureSigns[i], new Rectangle(x, y + (nameHigh - SignSide) / 2, SignSide, SignSide), Look.Accent);
+                int left = x + SignSide + SignGap;
+                y = Write(g, parts[0], name, left, y, inner, Bright) + AfterName;
+                y = Write(g, parts[1], note, left, y, inner, Soft) + BetweenFeatures;
+            }
+        }
+    }
+
+    // The fonts of the titles of Windows 11, in pixels; the semibold one where Segoe UI Variable is missing.
+    static Font Face(int pixels, bool strong)
+    {
+        string name = strong ? "Segoe UI Variable Display Semib" : "Segoe UI Variable Display";
+        if (!Look.Has(name)) name = strong ? "Segoe UI Semibold" : "Segoe UI";
+        return new Font(name, pixels, GraphicsUnit.Pixel);
+    }
+
+    static int High(Graphics g, string text, Font font, int width)
+    {
+        return TextRenderer.MeasureText(g, text, font, new Size(width, 0), Flow).Height;
+    }
+
+    // Writes a text wrapped in its width and says where it ends.
+    static int Write(Graphics g, string text, Font font, int x, int y, int width, Color colour)
+    {
+        int height = High(g, text, font, width);
+        TextRenderer.DrawText(g, text, font, new Rectangle(x, y, width, height), colour, Flow);
+        return y + height;
     }
 }
 
@@ -2640,17 +2747,39 @@ static class TestProgram
                 Console.WriteLine("FAIL: the screen is smaller than {0} x {1}", size.Width, size.Height);
                 return 1;
             }
+            Label status = (Label)typeof(MainForm).GetField("status", hidden).GetValue(form);
+            status.Text = "";
+            ListBox recent = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
+            recent.SelectedIndex = RowOf(recent, delegate(Entry e) { return e.Pinned; });
+
+            // The first picture, the one the Store shows first: the list on the right, and on the left, in a quiet
+            // column, what the program does. Larger, so that both fit without making the window smaller.
+            Rectangle wide = new Rectangle(screen.Location, new Size(1920, 1080));
+            if (wide.Width > screen.Width || wide.Height > screen.Height)
+            {
+                Console.WriteLine("FAIL: the screen is smaller than {0} x {1}", wide.Width, wide.Height);
+                return 1;
+            }
+            using (Backdrop pitch = new Backdrop(wide))
+            using (Image logo = LargestIcon())
+            {
+                const int Edge = 88, Between = 64;   // from the edges of the picture to the column and the window; between them
+                int windowLeft = wide.Right - Edge - form.Width;
+                pitch.Pitch = Sample.Current;
+                pitch.Logo = logo;
+                pitch.Column = new Rectangle(Edge, 0, windowLeft - wide.Left - Between - Edge, wide.Height);
+                pitch.Show();
+                form.Location = new Point(windowLeft, wide.Top + (wide.Height - form.Height) / 2);
+                form.BringToFront();
+                SnapArea(wide, System.IO.Path.Combine(pictures, "1-list.png"));
+            }
+
             Rectangle area = new Rectangle(screen.Location, size);
             using (Backdrop backdrop = new Backdrop(area))
             {
                 backdrop.Show();
                 form.Location = new Point(area.Left + (area.Width - form.Width) / 2, area.Top + Top);
                 form.BringToFront();   // above the backdrop, which came later
-                Label status = (Label)typeof(MainForm).GetField("status", hidden).GetValue(form);
-                status.Text = "";
-                ListBox recent = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
-                recent.SelectedIndex = RowOf(recent, delegate(Entry e) { return e.Pinned; });
-                SnapArea(area, System.IO.Path.Combine(pictures, "1-list.png"));
 
                 // Typing a password: the countdown, with the button that cancels it.
                 Button typeButton = (Button)typeof(MainForm).GetField("typeButton", hidden).GetValue(form);
@@ -2746,6 +2875,17 @@ static class TestProgram
     // is, rather than enlarged.
     static void SaveTile(string path)
     {
+        using (Image icon = LargestIcon())
+        using (Bitmap tile = new Bitmap(300, 300))
+        {
+            using (Graphics g = Graphics.FromImage(tile)) g.DrawImage(icon, (300 - icon.Width) / 2, (300 - icon.Height) / 2, icon.Width, icon.Height);
+            tile.Save(path, ImageFormat.Png);
+        }
+    }
+
+    // The largest frame of the icon, a PNG inside the .ico.
+    static Image LargestIcon()
+    {
         byte[] bytes = System.IO.File.ReadAllBytes(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"..\SmartClip.ico"));
         int best = -1, side = 0;
         for (int i = 0; i < BitConverter.ToUInt16(bytes, 4); i++)
@@ -2755,12 +2895,7 @@ static class TestProgram
         }
         int length = BitConverter.ToInt32(bytes, best + 8), offset = BitConverter.ToInt32(bytes, best + 12);
         using (System.IO.MemoryStream png = new System.IO.MemoryStream(bytes, offset, length))
-        using (Image icon = Image.FromStream(png))
-        using (Bitmap tile = new Bitmap(300, 300))
-        {
-            using (Graphics g = Graphics.FromImage(tile)) g.DrawImage(icon, (300 - icon.Width) / 2, (300 - icon.Height) / 2, icon.Width, icon.Height);
-            tile.Save(path, ImageFormat.Png);
-        }
+        using (Image icon = Image.FromStream(png)) return new Bitmap(icon);   // a copy: the stream goes
     }
 
     static void SnapArea(Rectangle area, string path)
