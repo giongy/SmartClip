@@ -88,6 +88,7 @@ static partial class Strings
         + "as you copy new ones.";
     // The bar of the cards picked together, in the place of the tabs: how many, and taking them back.
     public static string PickedCount = "{0} selected", PickNone = "Clear the selection";
+    public static string CopyPickedTip = "Puts their texts on the clipboard, one after the other";
 
     // --- Menus ---
     public static string Open = "Open", Exit = "Exit", Pause = "Pause capture", Resume = "Resume capture";
@@ -112,6 +113,10 @@ static partial class Strings
     public static string Pinned = "Kept at the top: {0}.", Unpinned = "No longer at the top: {0}.";
     public static string PinnedMany = "{0} entries kept at the top.", UnpinnedMany = "{0} entries no longer at the top.";
     public static string DeletedMany = "{0} entries deleted.";
+    // The texts of several cards copied together: then, after the tab, what to do with them.
+    public static string JoinedOnClipboard = "{0} texts on the clipboard, one after the other.",
+        JoinedWithoutPictures = "The pictures are left out.",
+        PasteThem = "Paste them with Ctrl+V.", PasteOrTypeThem = "Paste them with Ctrl+V or type them with {0}.";
     public static string PickedSaved = "{0} entries are among the saved texts, outside the folders.",
         PickedInFolder = "{0} entries are in the folder “{1}”.";
     public static string KindChanged = "Marked as {1}: {0}.";
@@ -433,8 +438,8 @@ static partial class Strings
                 + "The words found are highlighted on the cards; found far into a long text, its card shows that part of it.",
             "The list shows the " + MainForm.MaxShown + " most recent copied entries: search finds the others.",
             "## Using an entry",
-            "- A click on a card selects it. The copy sign (“" + CopyButton + "”) puts the entry on the clipboard and leaves the "
-                + "window open, so that you can still save or delete it.",
+            "- A click on a card selects it. The copy sign (“" + CopyButton + "”, or " + Key(Keys.Control | MainForm.CopyKey)
+                + ") puts the entry on the clipboard and leaves the window open, so that you can still save or delete it.",
             "- " + EnterKeyName + " or a double click put it on the clipboard and, if you opened the list with " + pick
                 + ", take you back to the window you were working in.",
             "- Then paste it with Ctrl+V, or type it with " + type + ".",
@@ -445,8 +450,10 @@ static partial class Strings
             "## Several cards at once",
             "Ctrl+click adds a card to the selection or takes it away, " + ShiftName + "+click selects all the cards up to that one "
                 + "(" + ShiftName + " with the arrows too), " + Key(Keys.Control | MainForm.AllKey) + " selects them all. With several "
-                + "selected, a bar in the place of the tabs says how many and offers “" + KeepTop + "”, “" + MoveTo + "” and “" + Delete
-                + "”, which are also in the right-click menu and on their keys. “" + MoveTo + "” a folder, or " + SavedTitle
+                + "selected, a bar in the place of the tabs says how many and offers “" + CopyButton + "”, “" + KeepTop + "”, “"
+                + MoveTo + "” and “" + Delete + "”, which are also in the right-click menu and on their keys. “" + CopyButton
+                + "” puts their texts on the clipboard from the oldest to the latest, with an empty line between them; "
+                + "the pictures are left out. “" + MoveTo + "” a folder, or " + SavedTitle
                 + ", saves the copied entries there. " + EscapeKeyName + ", or the cross at the end of the bar, goes back to one card.",
             "## The text of a picture",
             "“" + CopyPictureText + "”, in the menu of a picture, puts on the clipboard the text Windows "

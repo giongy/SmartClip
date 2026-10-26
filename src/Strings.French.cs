@@ -44,6 +44,7 @@ static partial class Strings
         PicturesFull = "L'espace des images copiées ({0}) est plein : les plus anciennes sont supprimées, une à une, au fur "
             + "et à mesure que vous en copiez de nouvelles.";
         PickedCount = "{0} sélectionnés"; PickNone = "Désélectionner";
+        CopyPickedTip = "Met leurs textes dans le presse-papiers, l'un après l'autre";
 
         Open = "Ouvrir"; Exit = "Quitter"; Pause = "Suspendre la capture"; Resume = "Reprendre la capture";
         ShowContent = "Afficher le contenu"; MoveTo = "Déplacer vers"; NewFolder = "Nouveau dossier…";
@@ -67,6 +68,8 @@ static partial class Strings
         Pinned = "Reste en haut : {0}."; Unpinned = "N'est plus en haut : {0}.";
         PinnedMany = "{0} éléments restent en haut."; UnpinnedMany = "{0} éléments ne sont plus en haut.";
         DeletedMany = "{0} éléments supprimés.";
+        JoinedOnClipboard = "{0} textes dans le presse-papiers, l'un après l'autre."; JoinedWithoutPictures = "Les images sont laissées de côté.";
+        PasteThem = "Collez-les avec Ctrl+V."; PasteOrTypeThem = "Collez-les avec Ctrl+V ou saisissez-les avec {0}.";
         PickedSaved = "{0} éléments sont parmi les textes enregistrés, hors des dossiers.";
         PickedInFolder = "{0} éléments sont dans le dossier « {1} ».";
         KindChanged = "Marqué comme {1} : {0}.";
@@ -383,8 +386,9 @@ static partial class Strings
                 + "Les mots trouvés sont surlignés sur les cartes ; trouvés loin dans un long texte, la carte en montre ce passage.",
             "La liste montre les " + MainForm.MaxShown + " éléments copiés les plus récents : la recherche trouve les autres.",
             "## Utiliser un élément",
-            "- Un clic sur une carte la sélectionne. Le signe de copie (« " + CopyButton + " ») met l'élément dans le presse-papiers et laisse la "
-                + "fenêtre ouverte, pour que vous puissiez encore l'enregistrer ou le supprimer.",
+            "- Un clic sur une carte la sélectionne. Le signe de copie (« " + CopyButton + " », ou " + Key(Keys.Control | MainForm.CopyKey)
+                + ") met l'élément dans le presse-papiers et laisse la fenêtre ouverte, pour que vous puissiez encore l'enregistrer ou le "
+                + "supprimer.",
             "- " + EnterKeyName + " ou un double-clic le mettent dans le presse-papiers et, si vous aviez ouvert la "
                 + "liste avec " + pick + ", vous ramènent à la fenêtre où vous travailliez.",
             "- Collez-le alors avec Ctrl+V, ou saisissez-le avec " + type + ".",
@@ -397,8 +401,10 @@ static partial class Strings
             "Ctrl+clic ajoute une carte à la sélection ou l'en retire, " + ShiftName + "+clic sélectionne toutes les cartes "
                 + "jusqu'à celle-ci (" + ShiftName + " avec les flèches aussi), " + Key(Keys.Control | MainForm.AllKey) + " les "
                 + "sélectionne toutes. Avec plusieurs cartes sélectionnées, une barre à la place des onglets dit combien elles sont "
-                + "et propose « " + KeepTop + " », « " + MoveTo + " » et « " + Delete + " », qui sont aussi dans le menu du clic droit "
-                + "et sur leurs touches. « " + MoveTo + " » un dossier, ou « " + SavedTitle + " », y enregistre les éléments copiés. "
+                + "et propose « " + CopyButton + " », « " + KeepTop + " », « " + MoveTo + " » et « " + Delete + " », qui sont aussi dans "
+                + "le menu du clic droit et sur leurs touches. « " + CopyButton + " » met leurs textes dans le presse-papiers du "
+                + "plus ancien au plus récent, avec une ligne vide entre l'un et l'autre ; les images sont laissées de côté. « "
+                + MoveTo + " » un dossier, ou « " + SavedTitle + " », y enregistre les éléments copiés. "
                 + EscapeKeyName + ", ou la croix au bout de la barre, revient à une seule carte.",
             "## Le texte d'une image",
             "« " + CopyPictureText + " », dans le menu d'une image, met dans le presse-papiers le texte "

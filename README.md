@@ -95,8 +95,8 @@ only the name and the content stays hidden, which suits a password; without, the
 | Up / Down | Moves through the cards |
 | Ctrl+F | Takes the cursor to the search box, from anywhere in the window |
 | Click | Selects the card |
-| Ctrl+click, Shift+click (or Shift with the arrows), Ctrl+A | Selects several cards: one more or one less, all up to that one, all of them. A bar in the place of the tabs says how many and offers **Keep at the top**, **Move to** and **Delete**, also in the right-click menu and on Ctrl+P and Ctrl+E. **Move to** a folder, or **Saved**, saves the copied entries there. Esc, or the × at the end of the bar, goes back to one card |
-| **Copy** | Puts the entry back on the clipboard; the window stays, so you can still save or delete it |
+| Ctrl+click, Shift+click (or Shift with the arrows), Ctrl+A | Selects several cards: one more or one less, all up to that one, all of them. A bar in the place of the tabs says how many and offers **Copy**, **Keep at the top**, **Move to** and **Delete**, also in the right-click menu and on Ctrl+C, Ctrl+P and Ctrl+E. **Copy** puts their texts on the clipboard from the oldest to the latest, with an empty line between them (pictures are left out). **Move to** a folder, or **Saved**, saves the copied entries there. Esc, or the × at the end of the bar, goes back to one card |
+| **Copy**, or Ctrl+C | Puts the entry back on the clipboard; the window stays, so you can still save or delete it |
 | Enter, or a double click | Puts the entry back on the clipboard and returns to the window you came from |
 | Right click, or the three dots on the right | Opens the menu of the entry |
 | The eye on the right of a card (**Preview**), also in the menu | Shows the entry whole in a small box for a few seconds: every line of a text, a larger picture; of a saved text with a name, its content. With **Preview when the pointer rests** on, resting the pointer on a card cut short does the same |

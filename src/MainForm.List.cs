@@ -104,6 +104,8 @@ partial class MainForm
         EventHandler change = delegate { Edit(Selected); };
         EventHandler delete = delegate { DeleteSelected(); };
         newButton.Click += create;
+        // Only for several cards picked: their texts onto the clipboard, one after the other.
+        ToolStripItem copyItem = listMenu.Items.Add(Strings.CopyButton, null, delegate { CopyPicked(); });
         ToolStripItem changeItem = listMenu.Items.Add("", null, change);
         // The whole entry, for a while: what the card cuts short, or the content of a saved text it shows by its name.
         ToolStripItem showItem = listMenu.Items.Add(Strings.ShowFull, null, delegate { PeekSelected(); });
@@ -125,6 +127,7 @@ partial class MainForm
         ToolStripItem deleteItem = listMenu.Items.Add(Strings.Delete, null, delete);
         ToolStripItem newItem = listMenu.Items.Add(Strings.New, null, create);
         // Each with its sign, as in the menus of Windows 11.
+        Look.Mark(copyItem, Sign.Copy);
         Look.Mark(showItem, Sign.Show);
         Look.Mark(readItem, Sign.Text);
         Look.Mark(qrItem, Sign.Qr);
@@ -144,6 +147,7 @@ partial class MainForm
             changeItem.Text = entry != null && entry.Saved ? Strings.EditDots : Strings.SaveDots;
             Look.Mark(changeItem, entry != null && entry.Saved ? Sign.Edit : Sign.Star);
             changeItem.Visible = entry != null;
+            copyItem.Visible = many && PickedTexts().Count > 0;
             deleteItem.Visible = entry != null || many;
             showItem.Visible = entry != null;
             if (entry != null) showItem.Text = ShowText(entry);
@@ -1387,6 +1391,12 @@ partial class MainForm
         return Targets().FindAll(delegate(Entry entry) { return !entry.Saved; });
     }
 
+    // The texts among them, which can be copied together: the pictures cannot.
+    List<Entry> PickedTexts()
+    {
+        return Targets().FindAll(delegate(Entry entry) { return !entry.Picture; });
+    }
+
     bool AllPinned()
     {
         List<Entry> copied = PickedCopied();
@@ -1555,25 +1565,57 @@ partial class MainForm
         Reload();
     }
 
+    // The texts of the cards picked onto the clipboard, one after the other (Texts.Concatenate); the pictures stay out.
+    // Plain text only, as a typing would take it, and private if one of them is a saved text. Of one card alone, the
+    // entry itself, as its copy sign does. The cards stay picked, so that something else can still be done with them.
+    void CopyPicked()
+    {
+        if (!Many)
+        {
+            if (Selected != null) Use(Selected);
+            return;
+        }
+        List<Entry> texts = PickedTexts();
+        if (texts.Count == 0) return;
+        try
+        {
+            DataObject data = NewData(texts.Exists(delegate(Entry entry) { return entry.Saved; }));
+            data.SetText(Texts.Concatenate(texts));
+            Clipboard.SetDataObject(data, true);
+            ownCopy = Native.GetClipboardSequenceNumber();
+        }
+        catch (Exception ex)   // the clipboard locked by another program
+        {
+            ShowError(ex);
+            return;
+        }
+        int pictures = Targets().Count - texts.Count;
+        Say(string.Format(Strings.JoinedOnClipboard, texts.Count) + (pictures > 0 ? " " + Strings.JoinedWithoutPictures : "") + "\t"
+            + (hotkeyBox.Checked ? string.Format(Strings.PasteOrTypeThem, HotkeyName) : Strings.PasteThem));
+    }
+
     // The bar of the cards picked: how many, then what to do with all of them, each with its sign. The list keeps the
     // focus, so that Esc and the arrows still reach it.
     void WirePicks()
     {
         pickCount.Font = Look.StrongFont;
         pickCount.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+        pickCopy.Sign = Sign.Copy;
+        pickCopy.Text = Strings.CopyButton;
         pickPin.Sign = Sign.Up;
         pickMove.Sign = Sign.Move;
         pickMove.Text = Strings.MoveTo;
         pickDelete.Sign = Sign.Delete;
         pickDelete.Text = Strings.Delete;
         pickNone.Sign = Sign.Cancel;   // its tooltip says what it does
-        foreach (RoundButton button in new RoundButton[] { pickPin, pickMove, pickDelete, pickNone })
+        foreach (RoundButton button in new RoundButton[] { pickCopy, pickPin, pickMove, pickDelete, pickNone })
         {
             Look.Style(button, false);
             button.Subtle = true;
             button.TabStop = false;
             button.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         }
+        pickCopy.Click += delegate { cardList.Focus(); CopyPicked(); };
         pickPin.Click += delegate { cardList.Focus(); PinSelected(); };
         pickMove.Click += delegate
         {
@@ -1584,6 +1626,7 @@ partial class MainForm
         pickDelete.Click += delegate { cardList.Focus(); DeleteSelected(); };
         pickNone.Click += delegate { cardList.Focus(); ClearPicks(); };
         Look.Style(pickPlaces);
+        Tip(string.Format(Strings.WithKeys, Strings.CopyPickedTip, NameOf(CopyKeys)), pickCopy);
         Tip(string.Format(Strings.WithKeys, Strings.Delete, NameOf(DeleteKeys)), pickDelete);
         Tip(string.Format(Strings.WithKeys, Strings.PickNone, Strings.EscapeKeyName), pickNone);
     }
@@ -1600,19 +1643,20 @@ partial class MainForm
         pickPin.Text = AllPinned() ? Strings.Unpin : Strings.KeepTop;
         Tip(string.Format(Strings.WithKeys, pickPin.Text, NameOf(PinKeys)), pickPin);
         pickMove.Enabled = ListMoves(pickPlaces.Items, targets);
-        PlacePickBar(PickedCopied().Count > 0);
+        PlacePickBar(PickedCopied().Count > 0, PickedTexts().Count > 0);
     }
 
-    // Its buttons at its right end, each as wide as what it says, the arrow only where some card picked is a copied one;
-    // the count takes the rest.
-    void PlacePickBar(bool arrow)
+    // Its buttons at its right end, each as wide as what it says, the arrow only where some card picked is a copied one,
+    // the copy only where some is a text; the count takes the rest.
+    void PlacePickBar(bool arrow, bool copy)
     {
         if (!shown) return;
         int gap = (int)(Gap * Zoom), high = (int)(ButtonHeight * Zoom), top = (pickBar.Height - high) / 2, right = pickBar.Width;
         pickPin.Visible = arrow;
-        foreach (RoundButton button in new RoundButton[] { pickNone, pickDelete, pickMove, pickPin })
+        pickCopy.Visible = copy;
+        foreach (RoundButton button in new RoundButton[] { pickNone, pickDelete, pickMove, pickPin, pickCopy })
         {
-            if (button == pickPin && !arrow) continue;
+            if (button == pickPin && !arrow || button == pickCopy && !copy) continue;
             int wide = button.Text.Length == 0 ? high : TextRenderer.MeasureText(button.Text, button.Font).Width + (int)(PickPadding * Zoom);
             right -= wide;
             button.SetBounds(right, top, wide, high);
@@ -2037,6 +2081,10 @@ partial class MainForm
             case AllKeys:
                 if (!cardList.Focused) break;   // in the search box, all its text
                 PickAll();
+                return true;
+            case CopyKeys:
+                if (!cardList.Focused) break;   // in the search box, the text selected there
+                CopyPicked();
                 return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);

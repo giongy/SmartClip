@@ -321,11 +321,16 @@ condiviso su GitHub).
   `WM_LBUTTONDOWN`), così tutto ciò che usa `SelectedIndex` non è cambiato. Un clic senza tasti, le frecce, un altro
   posto, una ricerca o un'altra scheda dei tipi tornano a una scheda sola (`ClearPicks`, anche da `SelectedIndexChanged`
   fuori da `keepPicks`); una ricarica tiene quelle ancora in elenco (`ShowRows`). Le scelte hanno il bordo d'accento
-  (`DrawEntry`); al posto delle schede dei tipi compare `pickBar` (`ShowPickBar`, `PlacePickBar`): quante, «Tieni in
+  (`DrawEntry`); al posto delle schede dei tipi compare `pickBar` (`ShowPickBar`, `PlacePickBar`): quante, «Copia» (voluta
+  dall'utente il 26/10/2026, solo se c'è un testo: `CopyPicked` mette negli appunti i testi dal più vecchio al più recente,
+  per ora di copia o di salvataggio, con una riga vuota tra l'uno e l'altro e senza gli a capo in fondo a ciascuno
+  (`Texts.Concatenate`, scelte dell'utente), solo testo semplice, con il formato riservato se c'è un salvato, senza le immagini;
+  `ownCopy`, quindi l'unione non entra nell'elenco; le schede restano scelte), «Tieni in
   alto» (solo se c'è un copiato; tutte in alto, o tutte giù se lo sono già: `PinSelected`), «Sposta in» (`ListMoves`,
   `MoveAll`: un copiato si salva lì senza nome, formattato se è tra le ultime copie, `Rich.Kept`), «Elimina»
   (`DeleteSelected`, chiede sempre per più di una e dice quanti salvati ci sono) e ✕ (`Sign.Cancel`). Le stesse nel menu
-  del tasto destro (un clic destro su una scelta le tiene) e su Ctrl+P, Ctrl+E; Esc le lascia prima di tornare indietro;
+  del tasto destro (un clic destro su una scelta le tiene) e su Ctrl+C, Ctrl+P, Ctrl+E (Ctrl+C nelle schede, `CopyKeys`,
+  copia anche una scheda sola, come il suo segno; nella ricerca resta quello della casella); Esc le lascia prima di tornare indietro;
   Invio e Ctrl+S non fanno niente. I pulsanti di una scheda agiscono solo su lei (il clic toglie le altre). Il
   trascinamento in una cartella resta di una scheda sola.
 - Ctrl+D (`OpenList`) porta la finestra in primo piano da qualsiasi programma; dopo la scelta con Invio o

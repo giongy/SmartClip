@@ -43,6 +43,7 @@ static partial class Strings
         PicturesFull = "El espacio para las imágenes copiadas ({0}) está lleno: las más antiguas se borran, una a una, a "
             + "medida que copias otras nuevas.";
         PickedCount = "{0} seleccionadas"; PickNone = "Quitar la selección";
+        CopyPickedTip = "Pone sus textos en el portapapeles, uno tras otro";
 
         Open = "Abrir"; Exit = "Salir"; Pause = "Pausar la captura"; Resume = "Reanudar la captura";
         ShowContent = "Mostrar el contenido"; MoveTo = "Mover a"; NewFolder = "Nueva carpeta…";
@@ -66,6 +67,8 @@ static partial class Strings
         Pinned = "Se queda arriba: {0}."; Unpinned = "Ya no está arriba: {0}.";
         PinnedMany = "{0} entradas se quedan arriba."; UnpinnedMany = "{0} entradas ya no están arriba.";
         DeletedMany = "{0} entradas eliminadas.";
+        JoinedOnClipboard = "{0} textos en el portapapeles, uno tras otro."; JoinedWithoutPictures = "Las imágenes se quedan fuera.";
+        PasteThem = "Pégalos con Ctrl+V."; PasteOrTypeThem = "Pégalos con Ctrl+V o tecléalos con {0}.";
         PickedSaved = "{0} entradas están entre los guardados, fuera de las carpetas.";
         PickedInFolder = "{0} entradas están en la carpeta «{1}».";
         KindChanged = "Marcada como {1}: {0}.";
@@ -376,8 +379,8 @@ static partial class Strings
             "La lista muestra las " + MainForm.MaxShown + " entradas copiadas más recientes: las demás se "
                 + "encuentran buscando.",
             "## Usar una entrada",
-            "- Un clic en una tarjeta la selecciona. El signo de copiar («" + CopyButton + "») pone la entrada en el portapapeles y deja la "
-                + "ventana abierta, para que aún puedas guardarla o eliminarla.",
+            "- Un clic en una tarjeta la selecciona. El signo de copiar («" + CopyButton + "», o " + Key(Keys.Control | MainForm.CopyKey)
+                + ") pone la entrada en el portapapeles y deja la ventana abierta, para que aún puedas guardarla o eliminarla.",
             "- " + EnterKeyName + " o un doble clic la ponen en el portapapeles y, si habías abierto la lista con "
                 + pick + ", te devuelven a la ventana en la que estabas trabajando.",
             "- Luego la pegas con Ctrl+V, o la tecleas con " + type + ".",
@@ -389,8 +392,10 @@ static partial class Strings
             "## Varias tarjetas a la vez",
             "Ctrl+clic añade una tarjeta a la selección o la quita, " + ShiftName + "+clic selecciona todas las tarjetas hasta "
                 + "esa (también " + ShiftName + " con las flechas), " + Key(Keys.Control | MainForm.AllKey) + " las selecciona todas. "
-                + "Con varias seleccionadas, una barra en el lugar de las pestañas dice cuántas son y ofrece «" + KeepTop + "», «" + MoveTo
-                + "» y «" + Delete + "», que también están en el menú del clic derecho y en sus teclas. «" + MoveTo + "» una carpeta, "
+                + "Con varias seleccionadas, una barra en el lugar de las pestañas dice cuántas son y ofrece «" + CopyButton + "», «"
+                + KeepTop + "», «" + MoveTo + "» y «" + Delete + "», que también están en el menú del clic derecho y en sus teclas. «"
+                + CopyButton + "» pone sus textos en el portapapeles del más antiguo al más reciente, con una línea vacía entre uno y otro; "
+                + "las imágenes se quedan fuera. «" + MoveTo + "» una carpeta, "
                 + "o «" + SavedTitle + "», guarda allí las entradas copiadas. " + EscapeKeyName + ", o la cruz al final de la barra, "
                 + "vuelve a una sola tarjeta.",
             "## El texto de una imagen",

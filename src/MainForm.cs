@@ -96,12 +96,13 @@ partial class MainForm : Window
     const string CopyUnread = "A copy could not be read from the clipboard, tried {0} times; copied in: {1}";   // for the log only
     public const Keys NewKey = Keys.N, SaveKey = Keys.S, DeleteKey = Keys.E, PinKey = Keys.P;   // in the list, all with Ctrl
     public const Keys AllKey = Keys.A;      // with Ctrl, in the cards: picks them all
+    public const Keys CopyKey = Keys.C;     // with Ctrl, in the cards: their texts onto the clipboard
     public const Keys SearchKey = Keys.F;   // with Ctrl, anywhere in the window: to the search box
     const Keys NewKeys = Keys.Control | NewKey, GroupKeys = Keys.Control | Keys.Shift | NewKey, SaveKeys = Keys.Control | SaveKey,
         DeleteKeys = Keys.Control | DeleteKey, PinKeys = Keys.Control | PinKey, SearchKeys = Keys.Control | SearchKey,
-        AllKeys = Keys.Control | AllKey;
+        AllKeys = Keys.Control | AllKey, CopyKeys = Keys.Control | CopyKey;
     // What the list itself answers to: a global hotkey on the same keys would take them away from it.
-    static readonly Keys[] ListKeys = { NewKeys, GroupKeys, SaveKeys, DeleteKeys, PinKeys, SearchKeys, AllKeys };
+    static readonly Keys[] ListKeys = { NewKeys, GroupKeys, SaveKeys, DeleteKeys, PinKeys, SearchKeys, AllKeys, CopyKeys };
     const TextFormatFlags LineFlags = TextFormatFlags.SingleLine | TextFormatFlags.NoPrefix | TextFormatFlags.EndEllipsis;   // one line of a row
     // What a row says at its right end: when it was copied, how many texts a folder holds.
     const TextFormatFlags RightFlags = TextFormatFlags.VerticalCenter | TextFormatFlags.Right | TextFormatFlags.SingleLine
@@ -146,7 +147,7 @@ partial class MainForm : Window
     bool keepPicks;                               // the selection moves for the picking, or for a refill: those picked stay
     readonly Panel pickBar = new Panel();
     readonly Label pickCount = new Label();       // how many
-    readonly RoundButton pickPin = new RoundButton(), pickMove = new RoundButton(), pickDelete = new RoundButton(), pickNone = new RoundButton();
+    readonly RoundButton pickCopy = new RoundButton(), pickPin = new RoundButton(), pickMove = new RoundButton(), pickDelete = new RoundButton(), pickNone = new RoundButton();
     readonly ContextMenuStrip pickPlaces = new ContextMenuStrip();   // where the move button sends them
     readonly RowList navList = new RowList();     // the sidebar: the places (see Place)
     readonly RowList footList = new RowList();    // under it: a new folder, the options, the guide
@@ -340,7 +341,7 @@ partial class MainForm : Window
         pickCount.UseMnemonic = false;
         pickCount.AutoEllipsis = true;
         pickCount.TextAlign = ContentAlignment.MiddleLeft;
-        pickBar.Controls.AddRange(new Control[] { pickCount, pickPin, pickMove, pickDelete, pickNone });
+        pickBar.Controls.AddRange(new Control[] { pickCount, pickCopy, pickPin, pickMove, pickDelete, pickNone });
         int listTop = tabs.Bottom + Gap, statusTop = listTop + ListHeight + Gap;
         cardList.SetBounds(PaneInset, listTop, ContentWidth, ListHeight);
         // Over the cards, where they have days, the name of the day of the top one, which the cards make room for (PlaceDay).

@@ -1599,6 +1599,14 @@ static class TestProgram
         Check(!Texts.IsPrivate(Copied("CanIncludeInClipboardHistory", 1)), "history allowed = 1 does not");
         Check(Texts.IsPrivate(Copied("CanUploadToCloudClipboard", 0)), "cloud upload = 0 makes it private");
 
+        DateTime noon = DateTime.Today.AddHours(12);
+        string n = Environment.NewLine;
+        Check(Texts.Concatenate(new List<Entry> { new Entry(null, "latest", noon), new Entry(null, "oldest\r\n", noon.AddHours(-2)),
+            new Entry(null, "middle\nsecond line", noon.AddHours(-1)) }) == "oldest" + n + n + "middle\nsecond line" + n + n + "latest",
+            "texts copied together go from the oldest to the latest, an empty line between them");
+        Check(Texts.Concatenate(new List<Entry> { new Entry("b", "first", DateTime.MinValue), new Entry("a", "second", DateTime.MinValue) })
+            == "first" + n + n + "second", "those of the same moment keep their order");
+
         Entry city = new Entry("Città di Torino", "riga uno\nSeconda RIGA");
         city.Saved = true;
         Check(Texts.Matches(city, ""), "an empty search matches everything");

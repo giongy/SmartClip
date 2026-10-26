@@ -43,6 +43,7 @@ static partial class Strings
         PicturesFull = "Lo spazio per le immagini copiate ({0}) è pieno: le più vecchie vengono cancellate, una alla volta, "
             + "man mano che ne copi di nuove.";
         PickedCount = "{0} selezionate"; PickNone = "Annulla la selezione";
+        CopyPickedTip = "Mette negli appunti i loro testi, uno dopo l'altro";
 
         Open = "Apri"; Exit = "Esci"; Pause = "Sospendi la cattura"; Resume = "Riprendi la cattura";
         ShowContent = "Mostra il contenuto"; MoveTo = "Sposta in"; NewFolder = "Nuova cartella…";
@@ -65,6 +66,8 @@ static partial class Strings
         Pinned = "Resta in alto: {0}."; Unpinned = "Non è più in alto: {0}.";
         PinnedMany = "{0} voci restano in alto."; UnpinnedMany = "{0} voci non sono più in alto.";
         DeletedMany = "{0} voci eliminate.";
+        JoinedOnClipboard = "{0} testi negli appunti, uno dopo l'altro."; JoinedWithoutPictures = "Le immagini restano fuori.";
+        PasteThem = "Incollali con Ctrl+V."; PasteOrTypeThem = "Incollali con Ctrl+V o digitali con {0}.";
         PickedSaved = "{0} voci sono tra i salvati, fuori dalle cartelle."; PickedInFolder = "{0} voci sono nella cartella «{1}».";
         KindChanged = "Segnata come {1}: {0}.";
         NumberGiven = "{0} ora incolla «{1}» ovunque tu sia.";
@@ -369,8 +372,8 @@ static partial class Strings
                 + "sulle schede; trovate molto avanti in un testo lungo, la scheda ne mostra quel punto.",
             "L'elenco mostra le " + MainForm.MaxShown + " voci copiate più recenti: le altre si trovano con la ricerca.",
             "## Usare una voce",
-            "- Un clic su una scheda la seleziona. Il segno della copia («" + CopyButton + "») mette la voce negli appunti e lascia la "
-                + "finestra aperta, così puoi ancora salvarla o eliminarla.",
+            "- Un clic su una scheda la seleziona. Il segno della copia («" + CopyButton + "», o " + Key(Keys.Control | MainForm.CopyKey)
+                + ") mette la voce negli appunti e lascia la finestra aperta, così puoi ancora salvarla o eliminarla.",
             "- " + EnterKeyName + " o un doppio clic la mettono negli appunti e, se avevi aperto l'elenco con " + pick
                 + ", ti riportano alla finestra in cui stavi lavorando.",
             "- A quel punto la incolli con Ctrl+V, oppure la digiti con " + type + ".",
@@ -382,8 +385,10 @@ static partial class Strings
             "## Più schede insieme",
             "Ctrl+clic aggiunge una scheda alla selezione o la toglie, " + ShiftName + "+clic seleziona tutte le schede fino a "
                 + "quella (anche " + ShiftName + " con le frecce), " + Key(Keys.Control | MainForm.AllKey) + " le seleziona tutte. Con "
-                + "più schede selezionate, una barra al posto delle schede dei tipi dice quante sono e offre «" + KeepTop + "», «" + MoveTo
-                + "» ed «" + Delete + "», che stanno anche nel menu del tasto destro e sui loro tasti. «" + MoveTo + "» una cartella, "
+                + "più schede selezionate, una barra al posto delle schede dei tipi dice quante sono e offre «" + CopyButton + "», «"
+                + KeepTop + "», «" + MoveTo + "» ed «" + Delete + "», che stanno anche nel menu del tasto destro e sui loro tasti. «"
+                + CopyButton + "» mette negli appunti i loro testi dal più vecchio al più recente, con una riga vuota tra l'uno e l'altro; "
+                + "le immagini restano fuori. «" + MoveTo + "» una cartella, "
                 + "o «" + SavedTitle + "», vi salva le voci copiate. " + EscapeKeyName + ", o la croce in fondo alla barra, torna a una "
                 + "scheda sola.",
             "## Il testo di un'immagine",

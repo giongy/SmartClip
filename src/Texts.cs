@@ -414,6 +414,27 @@ static class Texts
         return found;
     }
 
+    // The texts of several entries as one, for the clipboard (wanted by the user on 26/10/2026): from the oldest to the
+    // latest, by when they were copied or saved (those of the same moment, or whose moment nobody knows, as given), each
+    // without the line ends it closes with, and an empty line between one and the next.
+    public static string Concatenate(List<Entry> entries)
+    {
+        List<int> order = new List<int>();
+        for (int i = 0; i < entries.Count; i++) order.Add(i);
+        order.Sort(delegate(int a, int b)
+        {
+            int by = entries[a].Time.CompareTo(entries[b].Time);
+            return by != 0 ? by : a.CompareTo(b);
+        });
+        StringBuilder joined = new StringBuilder();
+        foreach (int i in order)
+        {
+            if (joined.Length > 0) joined.Append(Environment.NewLine).Append(Environment.NewLine);
+            joined.Append(entries[i].Text.TrimEnd('\r', '\n'));
+        }
+        return joined.ToString();
+    }
+
     // A text as the search compares it: without accents and in small letters, "Città" as "citta". Done once per
     // text, it makes the search many times faster than comparing while ignoring them.
     public static string Fold(string text)
