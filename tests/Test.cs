@@ -2258,13 +2258,30 @@ static class TestProgram
                 && cards.Items.Count == 3 && numberedCards[0].Number == 1 && numberedCards[1].Number == 2 && numberedCards[2].Number == 3
                 && numberedCards.Exists(delegate(Entry e) { return !e.Saved; }) && numberPart ? "PASS" : "FAIL");
             Save(form, path + "-shortcuts.png");
+            // As in File Explorer: Saved has its folders first, then the texts outside them; a folder the folders and the
+            // texts in it itself.
             GoTo(form, PlaceKind.Saved, null);
-            bool savedOnly = Cards(cards).Count == 4 && Cards(cards).TrueForAll(delegate(Entry e) { return e.Saved; }) && !(cards.Items[0] is Heading);
+            bool savedOnly = Cards(cards).Count == 1 && Cards(cards)[0].Saved && Cards(cards)[0].Group == null && cards.Items.Count == 3
+                && ((FolderCard)cards.Items[0]).Folder.Label == s.Home && ((FolderCard)cards.Items[1]).Folder.Label == s.Work;
             GoTo(form, PlaceKind.Folder, s.Work);
-            bool inWork = Cards(cards).Count == 1;   // its own text, not that of the folder inside it
+            bool inWork = Cards(cards).Count == 1 && cards.Items.Count == 2 && ((FolderCard)cards.Items[0]).Folder.Label == s.Servers
+                && ((FolderCard)cards.Items[0]).Count == 1;
             GoTo(form, PlaceKind.Pinned, null);
             bool pinnedOnly = Cards(cards).Count == 1 && Cards(cards)[0].Pinned;
-            Console.WriteLine("[{0}] saved, a folder with its own, pinned", savedOnly && inWork && pinnedOnly ? "PASS" : "FAIL");
+            Console.WriteLine("[{0}] saved and a folder with their folders and their own texts, pinned", savedOnly && inWork && pinnedOnly ? "PASS" : "FAIL");
+            // The card of a folder opens it, as Enter does; a search in Saved finds the texts inside the folders too, and no folder.
+            GoTo(form, PlaceKind.Folder, s.Work);
+            cards.SelectedIndex = 0;
+            typeof(MainForm).GetMethod("Accept", hidden).Invoke(form, null);
+            Place inside = (Place)typeof(MainForm).GetField("place", hidden).GetValue(form);
+            bool intoServers = inside.Kind == PlaceKind.Folder && inside.Path == s.Work + Texts.Separator + s.Servers
+                && Cards(cards).Count == 1 && Cards(cards)[0].Label == s.TestServer && ((ListBox)nav).SelectedItem == inside;
+            GoTo(form, PlaceKind.Saved, null);
+            TextBox savedSearch = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
+            savedSearch.Text = s.TestServer;
+            bool foundInside = Cards(cards).Count == 1 && Cards(cards)[0].Label == s.TestServer && cards.Items.Count == 1;
+            savedSearch.Text = "";
+            Console.WriteLine("[{0}] the card of a folder opens it; a search in saved looks inside the folders", intoServers && foundInside ? "PASS" : "FAIL");
             // The programs from that of the latest copy: PowerShell, then Edge.
             bool byTime = ((Place)nav.Items[8]).Origin.Name.Contains("PowerShell");
             nav.SelectedIndex = 9;

@@ -457,7 +457,7 @@ How to test:
 1. Launch SmartClip and copy some text in any program: it appears at the top of the list (History), with the program it was copied in.
 2. Press Ctrl+D in any program: the window comes up with the list on History; type to search, Enter puts the entry back on the clipboard and returns to the previous window.
 3. Typing: copy a text, open Notepad, click "Type clipboard" in SmartClip, then click into Notepad within 15 seconds; after a 1-second wait the text is typed. Alternatively press Ctrl+Alt+V inside Notepad. Typing stops if the foreground window changes.
-4. Saved texts: "New..." creates one; "New folder..." at the bottom of the sidebar creates a folder. Saved texts also appear in the menu of the tray icon (right-click), each folder a submenu.
+4. Saved texts: "New..." creates one; "New folder..." at the right end of the tabs above the saved texts creates a folder. Saved texts also appear in the menu of the tray icon (right-click), each folder a submenu.
 
 Global hotkeys: Ctrl+Alt+V (type the clipboard) and Ctrl+D (open the list), both configurable in Options > Hotkeys. By default clicking another program hides the window to the notification area; to exit, right-click the tray icon > "Exit". F1 opens the built-in guide. Changing the language restarts the app.
 ```

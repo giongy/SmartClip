@@ -147,8 +147,8 @@ static partial class Strings
             + "La flecha a la derecha de una entrada copiada ({2}) la mantiene un tiempo arriba de la lista:\n"
             + "se va igualmente cuando vencen sus días. Lo que deba quedarse, guárdalo.\n"
             + "Los textos guardados no vencen nunca y están cifrados para tu usuario; con un nombre,\n"
-            + "solo se ve el nombre. Sus carpetas están en la barra lateral, con «" + NewFolder + "» ({3})\n"
-            + "abajo: un texto entra arrastrándolo sobre una, o con «" + MoveTo + "».\n"
+            + "solo se ve el nombre. Sus carpetas están en la barra lateral; «" + NewFolder + "» ({3})\n"
+            + "está encima de sus tarjetas: un texto entra arrastrándolo sobre una, o con «" + MoveTo + "».\n"
             + "«{5}», en el menú del clic derecho, da un número a la entrada: luego {4}\n"
             + "la pegan dondequiera que estés, sin abrir esta ventana.";
         PressKeys = "Pulsa las teclas…";
@@ -462,22 +462,28 @@ static partial class Strings
 
             "# Carpetas",
             "Cuando los textos guardados son muchos puedes reunirlos en carpetas, y las carpetas en otras carpetas. Están "
-                + "en la barra lateral, bajo «" + SavedTitle + "»: un clic en una carpeta muestra los textos que contiene "
-                + "directamente, no los de las carpetas que tiene dentro.",
+                + "en la barra lateral, bajo «" + SavedTitle + "», y entre las tarjetas, como en el Explorador de archivos: «"
+                + SavedTitle + "» muestra sus carpetas y luego los textos fuera de las carpetas, una carpeta las carpetas y los "
+                + "textos que contiene directamente, no los de las carpetas que tiene dentro. La búsqueda mira también dentro "
+                + "de las carpetas.",
             "## Crearlas y abrirlas",
-            "- «" + NewFolder + "» está abajo en la barra lateral y en el menú del clic derecho de una carpeta "
+            "- «" + NewFolder + "» está en el extremo derecho de las pestañas de tipos, encima de los textos guardados, "
+                + "y en el menú del clic derecho de una carpeta "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nace dentro de la carpeta "
                 + "mostrada, pero en su ventana puedes elegir dónde ponerla.",
+            "- La tarjeta de una carpeta la abre con un doble clic o Intro, como un clic en su fila de la barra lateral.",
             "- La flecha del extremo derecho de una carpeta que contiene otras la abre y la cierra; la de «" + SavedTitle
                 + "» las muestra o las oculta todas. El número dice cuántos textos hay en la carpeta misma, no en las "
-                + "que tiene dentro. Abiertas o cerradas, las encuentras como las dejaste.",
+                + "que tiene dentro; el de «" + SavedTitle + "», los que están fuera de las carpetas. Abiertas o cerradas, "
+                + "las encuentras como las dejaste.",
             "## Mover textos y carpetas",
-            "- La tarjeta de un texto guardado, o una carpeta de la barra con todo lo que contiene, se arrastra sobre una "
-                + "carpeta de la barra; soltada sobre «" + SavedTitle + "», sale de las carpetas.",
+            "- La tarjeta de un texto guardado, o una carpeta con todo lo que contiene, de la barra o de las tarjetas, se "
+                + "arrastra sobre una carpeta de la barra o sobre la tarjeta de una carpeta; soltada sobre «" + SavedTitle
+                + "», sale de las carpetas.",
             "- «" + MoveTo + "», en el menú de un texto guardado o de una carpeta, hace lo mismo. La "
                 + "misma elección está en la ventana donde lo escribes, a la izquierda de los botones.",
             "## Renombrarlas y eliminarlas",
-            "- En el menú del clic derecho de una carpeta, «" + RenameDots + "» cambia su nombre o su lugar y «" + Delete
+            "- En el menú del clic derecho de una carpeta, en la barra o entre las tarjetas, «" + RenameDots + "» cambia su nombre o su lugar y «" + Delete
                 + "» quita solo la carpeta: lo que contenía, textos y carpetas, sube a la carpeta que la contenía, o queda "
                 + "entre los guardados fuera de las carpetas.",
             "- El nombre de una carpeta no puede contener «" + Texts.Separator + "».",

@@ -200,8 +200,8 @@ static partial class Strings
         + "The arrow at the right of a copied entry ({2}) keeps it at the top of the list\n"
         + "for a while: it still goes when its days are over. What is to stay, save it.\n"
         + "Saved texts never expire and are kept encrypted for your user; with a name, only\n"
-        + "the name is shown. Their folders are in the sidebar, with “" + NewFolder + "” ({3}) at\n"
-        + "its bottom: a text goes in by dragging it onto one, or with “" + MoveTo + "”.\n"
+        + "the name is shown. Their folders are in the sidebar; “" + NewFolder + "” ({3}) is above\n"
+        + "their cards: a text goes in by dragging it onto one, or with “" + MoveTo + "”.\n"
         + "“{5}”, in the right-click menu, gives an entry a number: then {4}\n"
         + "paste it wherever you are, without opening this window.";
     public static string PressKeys = "Press the keys…";
@@ -517,21 +517,24 @@ static partial class Strings
 
             "# Folders",
             "When the saved texts become many you can gather them in folders, and folders in other folders. They are in "
-                + "the sidebar, under " + SavedTitle + ": a click on a folder shows the texts in it, not those of the folders inside it.",
+                + "the sidebar, under " + SavedTitle + ", and among the cards, as in File Explorer: " + SavedTitle + " shows its "
+                + "folders and then the texts outside them, a folder the folders and the texts in it itself, not those of the "
+                + "folders inside it. A search looks inside the folders too.",
             "## Making and opening them",
-            "- “" + NewFolder + "” is at the bottom of the sidebar and in the right-click menu of a folder "
+            "- “" + NewFolder + "” is at the right end of the tabs above the saved texts and in the right-click menu of a folder "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): it is created inside the folder shown, "
                 + "but its window lets you choose where it goes.",
+            "- The card of a folder opens it with a double click or Enter, as a click on its row in the sidebar does.",
             "- The arrow at the right end of a folder that holds others opens and closes it; that of " + SavedTitle
                 + " shows or hides all of them. The number says how many texts are in a folder itself, not in the folders "
-                + "inside it. Open or closed, you find them as you left them.",
+                + "inside it; that of " + SavedTitle + ", those outside the folders. Open or closed, you find them as you left them.",
             "## Moving texts and folders",
-            "- The card of a saved text, or a folder of the sidebar with all it holds, can be dragged onto a folder of the "
-                + "sidebar; dropped onto " + SavedTitle + ", it leaves the folders.",
+            "- The card of a saved text, or a folder with all it holds, from the sidebar or among the cards, can be dragged "
+                + "onto a folder of the sidebar or onto the card of a folder; dropped onto " + SavedTitle + ", it leaves the folders.",
             "- “" + MoveTo + "”, in the menu of a saved text or of a folder, does the same. The same choice "
                 + "is in the window where you write it, to the left of the buttons.",
             "## Renaming and deleting",
-            "- In the right-click menu of a folder, “" + RenameDots + "” changes its name or place and “" + Delete
+            "- In the right-click menu of a folder, in the sidebar or among the cards, “" + RenameDots + "” changes its name or place and “" + Delete
                 + "” removes the folder only: what it held, texts and folders, moves up into the folder that held it, or "
                 + "stays among the saved texts outside the folders.",
             "- The name of a folder cannot contain “" + Texts.Separator + "”.",

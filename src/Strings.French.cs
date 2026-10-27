@@ -151,8 +151,9 @@ static partial class Strings
             + "La flèche à droite d'un élément copié ({2}) le garde un moment en haut de la liste :\n"
             + "il part quand même quand ses jours expirent. Ce qui doit rester, enregistrez-le.\n"
             + "Les textes enregistrés n'expirent jamais et sont chiffrés pour votre utilisateur ; avec un\n"
-            + "nom, seul le nom est visible. Leurs dossiers sont dans la barre latérale, avec « " + NewFolder + " »\n"
-            + "({3}) en bas : un texte y entre en le faisant glisser sur l'un d'eux, ou avec « " + MoveTo + " ».\n"
+            + "nom, seul le nom est visible. Leurs dossiers sont dans la barre latérale ; « " + NewFolder + " »\n"
+            + "({3}) est au-dessus de leurs cartes : un texte y entre en le faisant glisser\n"
+            + "sur l'un d'eux, ou avec « " + MoveTo + " ».\n"
             + "« {5} », dans le menu du clic droit, donne un numéro à l'élément : ensuite {4}\n"
             + "le collent où que vous soyez, sans ouvrir cette fenêtre.";
         PressKeys = "Appuyez sur les touches…";
@@ -476,22 +477,28 @@ static partial class Strings
 
             "# Les dossiers",
             "Quand les textes enregistrés deviennent nombreux, vous pouvez les regrouper en dossiers, et les dossiers "
-                + "dans d'autres dossiers. Ils sont dans la barre latérale, sous « " + SavedTitle + " » : un clic sur un "
-                + "dossier montre les textes qu'il contient directement, pas ceux des dossiers qu'il contient.",
+                + "dans d'autres dossiers. Ils sont dans la barre latérale, sous « " + SavedTitle + " », et parmi les "
+                + "cartes, comme dans l'Explorateur de fichiers : « " + SavedTitle + " » montre ses dossiers puis les textes "
+                + "hors des dossiers, un dossier les dossiers et les textes qu'il contient directement, pas ceux des dossiers "
+                + "qu'il contient. La recherche regarde aussi dans les dossiers.",
             "## Les créer et les ouvrir",
-            "- « " + NewFolder + " » est en bas de la barre latérale et dans le menu du clic droit d'un dossier "
+            "- « " + NewFolder + " » est à l'extrémité droite des onglets des types, au-dessus des textes enregistrés, "
+                + "et dans le menu du clic droit d'un dossier "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + ") : il est créé dans le dossier "
                 + "affiché, mais sa fenêtre permet de choisir où le mettre.",
+            "- La carte d'un dossier l'ouvre par un double clic ou Entrée, comme un clic sur sa ligne dans la barre latérale.",
             "- La flèche à l'extrémité droite d'un dossier qui en contient d'autres l'ouvre et le ferme ; celle de « "
                 + SavedTitle + " » les montre ou les cache tous. Le nombre dit combien de textes sont dans le dossier même, "
-                + "pas dans ceux qu'il contient. Ouverts ou fermés, vous les retrouvez comme vous les avez laissés.",
+                + "pas dans ceux qu'il contient ; celui de « " + SavedTitle + " », ceux hors des dossiers. Ouverts ou fermés, "
+                + "vous les retrouvez comme vous les avez laissés.",
             "## Déplacer textes et dossiers",
-            "- La carte d'un texte enregistré, ou un dossier de la barre avec tout son contenu, se fait glisser sur un "
-                + "dossier de la barre ; lâché sur « " + SavedTitle + " », il sort des dossiers.",
+            "- La carte d'un texte enregistré, ou un dossier avec tout son contenu, de la barre ou parmi les cartes, se fait "
+                + "glisser sur un dossier de la barre ou sur la carte d'un dossier ; lâché sur « " + SavedTitle
+                + " », il sort des dossiers.",
             "- « " + MoveTo + " », dans le menu d'un texte enregistré ou d'un dossier, fait de même. Le "
                 + "même choix est dans la fenêtre où vous l'écrivez, à gauche des boutons.",
             "## Les renommer et les supprimer",
-            "- Dans le menu du clic droit d'un dossier, « " + RenameDots + " » change son nom ou sa place et « " + Delete
+            "- Dans le menu du clic droit d'un dossier, dans la barre ou parmi les cartes, « " + RenameDots + " » change son nom ou sa place et « " + Delete
                 + " » retire seulement le dossier : son contenu, textes et dossiers, remonte dans le dossier qui le "
                 + "contenait, ou reste parmi les textes enregistrés hors des dossiers.",
             "- Le nom d'un dossier ne peut pas contenir « " + Texts.Separator + " ».",

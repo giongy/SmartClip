@@ -274,7 +274,7 @@ condiviso su GitHub).
   cartelle e programmi, che con le sole icone si confondevano, e ogni cartella è piena (`Sign.FullFolder`) con
   l'iniziale del nome ritagliata nel colore della riga (`InitialShare`, `InitialDrop`; voluto dall'utente il 19/10/2026:
   tutte uguali, non si distinguevano; nella cartella vuota la lettera toccava i bordi); con i nomi, un nome tagliato compare intero nel
-  suggerimento (`NameCut`, `RowTip`; `PlaceParts` misura la riga per disegno e suggerimento). Sotto, `footList`: Nuova cartella, Sospendi/Riprendi la cattura, Opzioni, Guida. A destra, su un
+  suggerimento (`NameCut`, `RowTip`; `PlaceParts` misura la riga per disegno e suggerimento). Sotto, `footList`: Sospendi/Riprendi la cattura, Opzioni, Guida. A destra, su un
   pannello più chiaro che arriva ai bordi della finestra (`pane`, un `Card` `Flat`; il resto dell'area lo dipinge
   `OnPaintBackground` della finestra, che per il resto è la barra laterale): titolo del posto con accanto, piccolo e grigio, il conteggio (`PlaceTitle`,
   sulla stessa linea di base; prima stava all'altro capo del pannello), ricerca con «Nuovo…» e «Digita gli
@@ -297,7 +297,10 @@ condiviso su GitHub).
   scrive a pezzi su una forma tinta d'accento (`DrawMarked`, `MarkTint`); trovate oltre ciò che la scheda mostra, la
   scheda parte da poco prima della prima (`MarkContext`) dopo «…». Si ricorda per scheda fino alla ricerca dopo
   (`marks`); senza ricerca, e per le immagini, la scheda si scrive come sempre. «Salvati» e una
-  cartella (solo quelli contenuti direttamente in lei, non nelle sottocartelle; «Salvati» tutti) mostrano i salvati per nome, senza giorni. I copiati li filtra il database
+  cartella mostrano i salvati per nome, senza giorni, come Esplora file (voluto dall'utente il 27/10/2026): prima le
+  cartelle contenute direttamente (`FolderCard`, una riga che non è una `Entry`, quindi copia, digitazione, scelta di più
+  schede e i tasti delle voci la saltano), poi i testi contenuti direttamente; «Salvati» quelli fuori da ogni cartella.
+  Cercando, o con un tipo scelto, niente cartelle, e la ricerca guarda anche dentro le sottocartelle. I copiati li filtra il database
   (`Clips.Copied` con un `Sieve`: parole, tipo, programma, solo in alto; al massimo `MaxShown`), i salvati la memoria
   (`Texts.Matches`: parole in qualsiasi ordine, senza maiuscole né accenti). `Filter` rifà anche la barra (`FillNav`,
   i conteggi cambiano a ogni copia); un posto che sparisce (cartella eliminata, programma senza più voci) lascia
@@ -495,18 +498,22 @@ condiviso su GitHub).
   (`Parent`, `Leaf`, `Join`, `Within`, `Depth`, `Display` con « › », `CleanPath` per i file esportati). In `entries`
   una cartella è una `Entry` con `IsGroup` (e `Saved`) e `Name` uguale al percorso (`Label` ne mostra l'ultimo
   nome), messa subito prima dei suoi testi e poi delle sue sottocartelle, quelle affiancate
-  per nome: per questo dove si scorre `entries` cercando i testi va escluso `IsGroup`. Le cartelle stanno solo
-  nella barra laterale (dal 18/10/2026, scelta dell'utente), sotto «Salvati», rientrate per livello: un clic mostra i
+  per nome: per questo dove si scorre `entries` cercando i testi va escluso `IsGroup`. Le cartelle stanno
+  nella barra laterale (dal 18/10/2026, scelta dell'utente), sotto «Salvati», rientrate per livello, e dal 27/10/2026
+  anche tra le schede (`FolderCard`, vedi sopra: doppio clic o Invio la aprono, `OpenCard`, aprendo nella barra le
+  cartelle che la contengono; il tasto destro ha il suo menu, `cardMenu`: Apri, Rinomina, Sposta in, Elimina; Ctrl+E la
+  elimina; ci si trascina sopra come sulla barra, `DropOnCards`): un clic mostra le sottocartelle e i
   testi che la cartella contiene direttamente (non quelli delle sottocartelle, dal 22/10/2026: voluto dall'utente, che
-  lo ha segnalato come problema); il conteggio accanto a ogni cartella fa lo stesso; la freccia a destra apre e chiude le sottocartelle (una chiusa
+  lo ha segnalato come problema); il conteggio accanto a ogni cartella fa lo stesso, e quello di «Salvati» conta i
+  testi fuori dalle cartelle; la freccia a destra apre e chiude le sottocartelle (una chiusa
   nasconde anche quelle dentro, `InView`). Il menu del tasto destro di una cartella (`navMenu`) ha «Nuova cartella…»,
   «Rinomina…», «Sposta in» ed «Elimina»; quello di «Salvati» solo la prima. La cartella mostrata segue i propri
   spostamenti e cambi di nome (`Follow`); eliminata, si torna a «Salvati». Rinominare e spostare insieme è `PlaceFolder` (un
   solo aggiornamento, così un nome uguale solo a metà strada non conta); `DeleteFolder` elimina la cartella e il
   contenuto sale di un livello (scelta dell'utente: i testi potrebbero essere password), riempiendo una cartella
   con lo stesso nome se lassù c'è già. «Nuova cartella…»
-  (Ctrl+Maiusc+N, in fondo alla barra, nasce dentro la cartella mostrata: `FolderHere`) e «Sposta in» (anche per le
-  cartelle, mai dentro se stesse: `CanGo`, `ListPlaces`) «Sposta in» sta anche nel menu delle voci, che si apre anche senza selezione (voluto dall'utente: «Nuova cartella…» e la pausa no, stanno in fondo alla barra). In
+  (Ctrl+Maiusc+N; dal 27/10/2026, voluto dall'utente, non più in fondo alla barra laterale ma un pulsante sottile all'estremità destra delle schede dei tipi, solo su «Salvati» e nelle cartelle e non con più schede scelte, `folderButton`, `ShowFolderButton`; nasce dentro la cartella mostrata: `FolderHere`) e «Sposta in» (anche per le
+  cartelle, mai dentro se stesse: `CanGo`, `ListPlaces`) «Sposta in» sta anche nel menu delle voci, che si apre anche senza selezione (voluto dall'utente: «Nuova cartella…» e la pausa no). In
   `EditForm` la cartella si sceglie da un pulsante che apre un menu (un `ComboBox` resterebbe chiaro), con il
   percorso accorciato da sinistra se non ci sta; la stessa finestra, senza contenuto, chiede nome e posto di
   una cartella. In una ricerca le cartelle compaiono solo se contengono risultati, anche da chiuse, insieme a
@@ -749,7 +756,7 @@ condiviso su GitHub).
   (o il giorno, se non è oggi); accanto al titolo il numero di voci; un elenco vuoto dice perché (`emptyNote`).
   La descrizione sotto il pulsante deve stare in due righe: è il motivo della larghezza (`ContentWidth`).
 
-- Disposizione (dal 18/10/2026, vedi sopra): la barra laterale a sinistra, con in fondo Nuova cartella,
+- Disposizione (dal 18/10/2026, vedi sopra): la barra laterale a sinistra, con in fondo
   la pausa, Opzioni e Guida (`PlaceSidebar` la mette a posto quando la finestra ha la sua scala); a destra il pannello con
   titolo, ricerca, «Nuovo…» sottile e «Digita gli appunti» d'accento, schede dei tipi, voci e riga di stato in fondo.
   Prima la ricerca stava in cima e sotto le colonne c'era una fila di pulsanti piccoli.

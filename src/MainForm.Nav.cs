@@ -83,13 +83,14 @@ class Place
 
 // The sidebar, as in the apps of Windows 11: the places, a folder under the one it is in, the programs under Sources;
 // a click shows a place, the arrow at the right end of a row opens or closes what is under it. A saved text, or a
-// folder, is dragged onto a folder to go in it, onto Saved to leave the folders. Under it, a new folder, the
-// options, the guide. Its edge drags it wider or narrower, and the button on top reduces it to its signs.
+// folder, is dragged onto a folder to go in it, onto Saved to leave the folders. Under it, the pause of the
+// capture, the options, the guide. Its edge drags it wider or narrower, and the button on top reduces it to its signs.
 partial class MainForm
 {
-    // The commands at the bottom of the sidebar: a new folder, the pause of the capture, the options, the guide.
-    static readonly Sign[] FootSigns = { Sign.NewFolder, Sign.Pause, Sign.Options, Sign.Help };
-    const int PauseRow = 1;
+    // The commands at the bottom of the sidebar: the pause of the capture, the options, the guide. A new folder is made
+    // where the saved texts are shown (ShowFolderButton).
+    static readonly Sign[] FootSigns = { Sign.Pause, Sign.Options, Sign.Help };
+    const int PauseRow = 0;
     // Reduced, the first letter of a folder inside its sign: how tall, of the sign, and how far below its middle, where
     // the body of the folder is under its tab.
     const float InitialShare = 0.55f, InitialDrop = 0.1f;
@@ -143,7 +144,7 @@ partial class MainForm
         WireNavMenu();
 
         // The pause says what it would do, and changes with it (ShowPause).
-        footList.Items.AddRange(new object[] { Strings.NewFolder, Strings.Pause, Strings.Options, Strings.GuideItem });
+        footList.Items.AddRange(new object[] { Strings.Pause, Strings.Options, Strings.GuideItem });
         footList.Marked = false;
         footList.TabStop = false;
         footList.LightUnderPointer();
@@ -174,10 +175,9 @@ partial class MainForm
             int row = footList.RowAt(e.Location);
             footList.SelectedIndex = -1;
             if (e.Button != MouseButtons.Left) return;
-            if (row == 0) EditGroup(null);
-            else if (row == PauseRow) Pause(!paused);
-            else if (row == 2) OpenOptions();
-            else if (row == 3) ShowHelp();
+            if (row == PauseRow) Pause(!paused);
+            else if (row == 1) OpenOptions();
+            else if (row == 2) ShowHelp();
         };
     }
 
@@ -384,8 +384,12 @@ partial class MainForm
         foreach (Entry entry in entries)
         {
             if (entry.IsGroup) continue;
-            saved++;
-            if (entry.Group == null) continue;
+            // Each counts what a click shows: Saved those outside the folders, a folder those in it itself.
+            if (entry.Group == null)
+            {
+                saved++;
+                continue;
+            }
             int count;
             held.TryGetValue(entry.Group, out count);
             held[entry.Group] = count + 1;
@@ -622,8 +626,13 @@ partial class MainForm
             HidePeek();
             list.DoDragDrop(entry, DragDropEffects.Move);
             Aim(null);
+            AimCard(-1);
         };
-        if (list != navList) return;
+        if (list != navList)
+        {
+            DropOnCards();
+            return;
+        }
         navList.AllowDrop = true;
         navList.DragOver += delegate(object sender, DragEventArgs e)
         {
@@ -641,6 +650,44 @@ partial class MainForm
             Aim(null);
             if (entry != null && target != null && CanGo(entry, target.Path)) MoveTo(entry, target.Path);
         };
+    }
+
+    // Among the cards, the same onto the card of a folder.
+    void DropOnCards()
+    {
+        cardList.AllowDrop = true;
+        cardList.DragOver += delegate(object sender, DragEventArgs e)
+        {
+            Entry entry = e.Data.GetData(typeof(Entry)) as Entry;
+            FolderCard target = CardDropAt(e);
+            bool moves = entry != null && target != null && CanGo(entry, target.Folder.Name);
+            e.Effect = moves ? DragDropEffects.Move : DragDropEffects.None;
+            AimCard(moves ? cardList.Items.IndexOf(target) : -1);
+        };
+        cardList.DragLeave += delegate { AimCard(-1); };
+        cardList.DragDrop += delegate(object sender, DragEventArgs e)
+        {
+            Entry entry = e.Data.GetData(typeof(Entry)) as Entry;
+            FolderCard target = CardDropAt(e);
+            AimCard(-1);
+            if (entry != null && target != null && CanGo(entry, target.Folder.Name)) MoveTo(entry, target.Folder.Name);
+        };
+    }
+
+    // The folder among the cards something dragged is over, or null.
+    FolderCard CardDropAt(DragEventArgs e)
+    {
+        int row = cardList.RowAt(cardList.PointToClient(new Point(e.X, e.Y)));
+        return row < 0 ? null : cardList.Items[row] as FolderCard;
+    }
+
+    // Lights up the card of the folder a dragged text is over.
+    void AimCard(int row)
+    {
+        if (row == dropCard) return;
+        if (dropCard >= 0 && dropCard < cardList.Items.Count) cardList.Invalidate(cardList.GetItemRectangle(dropCard));
+        dropCard = row;
+        if (row >= 0) cardList.Invalidate(cardList.GetItemRectangle(row));
     }
 
     // The row of the sidebar something dragged would go to: a folder, or Saved for none.

@@ -26,6 +26,25 @@ class Heading
     }
 }
 
+// A folder among the cards of Saved or of a folder, one directly inside it, before its texts, as in File Explorer
+// (wanted by the user on 27/10/2026). Not an entry: what acts on entries (copy, type, delete, pick) passes it by.
+class FolderCard
+{
+    public readonly Entry Folder;   // its row among the saved entries (IsGroup)
+    public readonly int Count;      // the texts directly inside it, as the sidebar counts them
+
+    public FolderCard(Entry folder, int count)
+    {
+        Folder = folder;
+        Count = count;
+    }
+
+    public override string ToString()
+    {
+        return Folder.Label;
+    }
+}
+
 // The name of the day of the top card, standing over the cards while they scroll under it: drawn as the names of
 // the days among them (see MainForm.ShowDay). The wheel over it scrolls them.
 class DayBar : Control
@@ -165,6 +184,7 @@ partial class MainForm
         Look.Style((ToolStripDropDownMenu)numberItem.DropDown);
         Look.Style((ToolStripDropDownMenu)kindItem.DropDown);
         Look.Style(listMenu);
+        WireCardMenu();
 
         Look.Field(cardList);
         cardList.IntegralHeight = false;
@@ -181,6 +201,7 @@ partial class MainForm
         {
             if (cardList.SelectedItem is Heading) cardList.SelectedIndex = lastCard < cardList.Items.Count ? lastCard : -1;
             else lastCard = cardList.SelectedIndex;
+            cardList.ContextMenuStrip = SelectedFolder != null ? cardMenu : listMenu;   // also for the menu key
             if (keepPicks) return;
             pickFrom = cardList.SelectedIndex;
             ClearPicks();
@@ -198,13 +219,17 @@ partial class MainForm
             HidePeek();
             HideHoverTip();
             Entry entry = index < 0 ? null : cardList.Items[index] as Entry;
+            FolderCard card = index < 0 ? null : cardList.Items[index] as FolderCard;
             if (e.Button == MouseButtons.Left) ClearPicks();   // also on the card already selected, which Windows leaves as it is
-            else if (e.Button == MouseButtons.Right && entry != null && !picked.Contains(entry.Id))
+            else if (e.Button == MouseButtons.Right && (entry != null && !picked.Contains(entry.Id) || card != null))
             {
                 ClearPicks();
                 cardList.SelectedIndex = index;
             }
-            // A saved text may be dragged to a folder of the sidebar.
+            // The menu of a folder is that of the folders; anywhere else that of the entries.
+            cardList.ContextMenuStrip = card != null ? cardMenu : listMenu;
+            // A saved text, or a folder, may be dragged to a folder of the sidebar or among the cards.
+            if (card != null) entry = card.Folder;
             grabbed = e.Button == MouseButtons.Left && entry != null && entry.Saved && PartAt(index, e.Location) == Part.Body ? entry : null;
             grabbedAt = e.Location;
         };
@@ -216,8 +241,8 @@ partial class MainForm
         cardList.MouseClick += delegate(object sender, MouseEventArgs e)
         {
             int index = cardList.RowAt(e.Location);
-            if (e.Button != MouseButtons.Left || index < 0 || cardList.Items[index] is Heading) return;
-            Entry entry = (Entry)cardList.Items[index];
+            Entry entry = index < 0 ? null : cardList.Items[index] as Entry;
+            if (e.Button != MouseButtons.Left || entry == null) return;   // a folder is only selected, as a card is
             switch (PartAt(index, e.Location))
             {
                 case Part.Show: if (!eyeCloses) ShowPeek(cardList, index, true); break;
@@ -354,7 +379,7 @@ partial class MainForm
     // from those in memory, whose content only this program can read.
     void Filter()
     {
-        Entry selected = Selected;
+        object selected = cardList.SelectedItem;   // an entry, or a folder
         HidePeek();   // the card it belongs to may be about to move
         string[] words = Texts.Words(search.Text);   // taken from the box once, not for each entry
         searched = words;
@@ -382,15 +407,27 @@ partial class MainForm
             });
         }
         // In History only those a search finds (wanted by the user on 19/10/2026: what is saved is not history, but the list
-        // hotkey, a name and Enter must still find a saved password).
+        // hotkey, a name and Enter must still find a saved password). In Saved those outside the folders, in a folder
+        // those directly in it, after the folders directly inside it, as in File Explorer (wanted by the user on
+        // 27/10/2026); a search finds them inside the folders too, and shows no folders.
         List<Entry> saved = new List<Entry>();
+        List<FolderCard> folders = new List<FolderCard>();
+        string shown = place.Kind == PlaceKind.Folder ? place.Path : null;   // null in Saved: outside the folders
         if (place.HasSaved || numbered || place.Kind == PlaceKind.History && words.Length > 0)
             foreach (Entry entry in entries)
-                if (!entry.IsGroup && (place.Kind != PlaceKind.Folder || Texts.SameName(entry.Group, place.Path))
+                if (!entry.IsGroup && (!place.HasSaved || (words.Length > 0 ? shown == null || Texts.Within(entry.Group, shown)
+                    : Texts.SameName(entry.Group, shown)))
                     && (!numbered || entry.Number > 0) && (!kind.HasValue || entry.Category == kind.Value) && Texts.Matches(entry, words))
                     saved.Add(entry);
+        if (place.HasSaved && words.Length == 0 && !kind.HasValue)
+            foreach (Entry folder in entries)
+                if (folder.IsGroup && Texts.SameName(Texts.Parent(folder.Name), shown))
+                    folders.Add(new FolderCard(folder, entries.FindAll(delegate(Entry entry)
+                    {
+                        return !entry.IsGroup && Texts.SameName(entry.Group, folder.Name);
+                    }).Count));
         total += saved.Count;
-        rows = Arrange(copied, saved);
+        rows = Arrange(copied, saved, folders);
         // The name the cards begin under is said by the bar over them, which says the name of the day of the top card.
         topDay = rows.Count > 0 ? rows[0] as Heading : null;
         if (topDay != null) rows.RemoveAt(0);
@@ -404,7 +441,7 @@ partial class MainForm
         ShowPictureRoom();
         if (options.Visible) ShowSize();
         SayWhyEmpty(words.Length > 0, kind.HasValue);
-        emptyNote.Visible = shownCount == 0;
+        emptyNote.Visible = shownCount + folders.Count == 0;
         FillNav();   // the counts of the sidebar, and the programs, may have changed
     }
 
@@ -428,14 +465,15 @@ partial class MainForm
         emptyNote.Sign = sign;
     }
 
-    // The cards in their order. In Shortcuts by number; in Saved and its folders the texts by name; elsewhere those kept
-    // at the top first, then the others from the newest, each day under its name, and last, by name under their own,
-    // the saved texts a search in History found.
-    List<object> Arrange(List<Entry> copied, List<Entry> saved)
+    // The cards in their order. In Shortcuts by number; in Saved and its folders the folders by name, then the texts by
+    // name; elsewhere those kept at the top first, then the others from the newest, each day under its name, and last,
+    // by name under their own, the saved texts a search in History found.
+    List<object> Arrange(List<Entry> copied, List<Entry> saved, List<FolderCard> folders)
     {
         List<object> arranged = new List<object>();
         headed = place.HasCopied;
         saved.Sort(delegate(Entry a, Entry b) { return StringComparer.CurrentCultureIgnoreCase.Compare(a.Label, b.Label); });
+        folders.Sort(delegate(FolderCard a, FolderCard b) { return StringComparer.CurrentCultureIgnoreCase.Compare(a.Folder.Label, b.Folder.Label); });
         if (place.Kind == PlaceKind.Shortcuts)
         {
             // Copied and saved together, by their numbers.
@@ -447,6 +485,7 @@ partial class MainForm
         }
         if (!headed)
         {
+            arranged.AddRange(folders);
             arranged.AddRange(saved);
             return arranged;
         }
@@ -494,9 +533,12 @@ partial class MainForm
     // where it was scrolled to as far as that entry stays in view. Without one, the first entry is. After a copy and
     // the list hotkey (newest), the latest copied entry is, also when kept at the top under others, and the list
     // shows its top (wanted by the user on 19/10/2026: the card selected before kept the new copy out of view).
-    // The cards picked stay picked, those still there.
-    void ShowRows(Entry selected)
+    // The cards picked stay picked, those still there. A folder selected stays selected as well; without an entry, the
+    // first folder is.
+    void ShowRows(object selected)
     {
+        Entry selectedEntry = selected as Entry;
+        FolderCard selectedFolder = selected as FolderCard;
         bool toNewest = newest;
         newest = false;
         int top = cardList.TopIndex;
@@ -504,19 +546,26 @@ partial class MainForm
         metaWide = MetaWide();
         cardList.BeginUpdate();
         cardList.Items.Clear();
-        int found = -1, first = -1, latest = -1;
+        int found = -1, first = -1, latest = -1, firstFolder = -1;
         HashSet<long> still = new HashSet<long>();
         foreach (object row in rows)
         {
             int index = cardList.Items.Add(row);
+            FolderCard card = row as FolderCard;
+            if (card != null)
+            {
+                if (firstFolder < 0) firstFolder = index;
+                if (selectedFolder != null && card.Folder.FolderId == selectedFolder.Folder.FolderId) found = index;
+            }
             Entry entry = row as Entry;
             if (entry == null) continue;
             if (first < 0) first = index;
-            if (selected != null && entry.Id == selected.Id) found = index;
+            if (selectedEntry != null && entry.Id == selectedEntry.Id) found = index;
             if (!entry.Saved && (latest < 0 || entry.Time > ((Entry)rows[latest]).Time)) latest = index;
             if (picked.Contains(entry.Id)) still.Add(entry.Id);
         }
         lastCard = -1;
+        if (first < 0) first = firstFolder;
         if (toNewest && latest >= 0)
         {
             cardList.SelectedIndex = latest;
@@ -626,8 +675,8 @@ partial class MainForm
         if (cardList.Glow.Row == index) return;
         cardList.Glow.Set(index);   // the card lights up gradually, the one left fades
         if (!peekAsked || index < 0) HidePeek();
-        if (index < 0 || !restBox.Checked) return;
-        Entry entry = (Entry)cardList.Items[index];
+        Entry entry = index < 0 ? null : cardList.Items[index] as Entry;
+        if (entry == null || !restBox.Checked) return;   // a folder has nothing more to show
         if (entry.Saved && entry.Name != null && !entry.Picture) return;
         resting = cardList;
         rest.Interval = RestMs;
@@ -1106,7 +1155,7 @@ partial class MainForm
         int inset = (int)(CardInset * Zoom), pad = (int)(CardPad * Zoom), gap = (int)(CardLineGap * Zoom), side = (int)(PartHeight * Zoom);
         int between = (int)(PartGap * Zoom) / 2;
         CardParts parts = new CardParts();
-        parts.Card = Rectangle.FromLTRB(row.Left + 1, row.Top, row.Right - 2, row.Bottom - (int)(CardGap * Zoom));
+        parts.Card = CardBox(row);
         int left = parts.Card.Left + inset, right = parts.Card.Right - inset, top = parts.Card.Top + pad;
         // The buttons in the middle of the first line of the entry.
         int middle = top + Look.EntryFont.Height / 2, end = right;
@@ -1128,6 +1177,12 @@ partial class MainForm
         }
         parts.Body = Rectangle.FromLTRB(left, top, end - (int)(BodyGap * Zoom), Math.Max(top, parts.Card.Bottom - pad));
         return parts;
+    }
+
+    // The card in its row, with air under it.
+    Rectangle CardBox(Rectangle row)
+    {
+        return Rectangle.FromLTRB(row.Left + 1, row.Top, row.Right - 2, row.Bottom - (int)(CardGap * Zoom));
     }
 
     // What a small button does, in its tooltip.
@@ -1168,7 +1223,9 @@ partial class MainForm
     // The part of a card at a point, Body anywhere else on the card, None outside the cards.
     Part PartAt(int index, Point where)
     {
-        Entry entry = index < 0 ? null : cardList.Items[index] as Entry;
+        object row = index < 0 ? null : cardList.Items[index];
+        if (row is FolderCard) return CardBox(cardList.GetItemRectangle(index)).Contains(where) ? Part.Body : Part.None;
+        Entry entry = row as Entry;
         if (entry == null) return Part.None;
         CardParts parts = Lay(entry, cardList.GetItemRectangle(index));
         foreach (KeyValuePair<Part, Rectangle> button in parts.Buttons)
@@ -1187,6 +1244,12 @@ partial class MainForm
         if (heading != null)
         {
             DrawHeading(g, heading.Text, e.Bounds);
+            return;
+        }
+        FolderCard card = cardList.Items[e.Index] as FolderCard;
+        if (card != null)
+        {
+            DrawFolderCard(g, card, e);
             return;
         }
         Entry entry = (Entry)cardList.Items[e.Index];
@@ -1280,6 +1343,39 @@ partial class MainForm
                 : Look.Own(sign);
             DrawPart(g, hovered, button.Value, sign, Look.Blend(fill, colour, buttons), fill);
         }
+    }
+
+    // The card of a folder: as that of an entry, lit as fully as a row of the sidebar when a card dragged would go into it;
+    // its sign and its name, and at the right end, small and faint where the time of the cards is, how many texts it
+    // holds itself, as the sidebar says.
+    void DrawFolderCard(Graphics g, FolderCard card, DrawItemEventArgs e)
+    {
+        bool selected = !Many && (e.State & DrawItemState.Selected) != 0;
+        float glow = e.Index == dropCard ? 1 : cardList.Glow.Of(e.Index);
+        Rectangle box = CardBox(e.Bounds);
+        g.SmoothingMode = SmoothingMode.AntiAlias;
+        Color fill = Look.Blend(Look.Raised, Look.Soft, 0.4f * glow);
+        using (GraphicsPath shape = Look.Rounded(box))
+        using (Brush back = new SolidBrush(fill))
+        using (Pen edge = new Pen(selected ? Look.Accent : Look.Border, selected ? 2 * Zoom : 1))
+        {
+            g.FillPath(back, shape);
+            g.DrawPath(edge, shape);
+        }
+        int inset = (int)(CardInset * Zoom), pad = (int)(CardPad * Zoom), side = Look.EntryFont.Height;
+        int middle = box.Top + pad + side / 2, right = box.Right - inset;
+        Look.Draw(g, Sign.Folder, new Rectangle(box.Left + inset, middle - side / 2, side, side), null);
+        if (card.Count > 0)
+        {
+            string count = card.Count.ToString();
+            int wide = TextRenderer.MeasureText(g, count, Look.NoteFont, Size.Empty, MetaFlags & ~TextFormatFlags.EndEllipsis).Width;
+            TextRenderer.DrawText(g, count, Look.NoteFont, Rectangle.FromLTRB(right - wide, middle - side / 2, right, middle + side / 2),
+                Look.Blend(fill, Look.Muted, MetaShare), MetaFlags);
+            right -= wide + (int)(BodyGap * Zoom);
+        }
+        int left = box.Left + inset + side + (int)(PartGap * Zoom);
+        TextRenderer.DrawText(g, card.Folder.Label, Look.StrongEntryFont, Rectangle.FromLTRB(left, middle - side / 2, right,
+            middle + side / 2), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
     }
 
     // The name of a day, in its row among the cards or in the bar over them: low in it, with a thin line under it, across.
@@ -1637,6 +1733,7 @@ partial class MainForm
         bool many = Many;
         pickBar.Visible = many;
         tabs.Visible = !many;
+        ShowFolderButton();
         if (!many) return;
         List<Entry> targets = Targets();
         pickCount.Text = string.Format(Strings.PickedCount, targets.Count);
@@ -1666,11 +1763,21 @@ partial class MainForm
         pickCount.SetBounds(inset, 0, Math.Max(0, right - inset), pickBar.Height);
     }
 
-    // The card before or after the selected one, over the names of the days.
+    // Where saved texts are shown, a new folder at the right end of the tabs, as wide as what it says.
+    void ShowFolderButton()
+    {
+        folderButton.Visible = place.HasSaved;
+        if (!shown) return;
+        int high = (int)(ButtonHeight * Zoom);
+        int wide = TextRenderer.MeasureText(folderButton.Text, folderButton.Font).Width + (int)(PickPadding * Zoom);
+        folderButton.SetBounds(tabs.ClientSize.Width - wide, (tabs.Height - high) / 2, wide, high);
+    }
+
+    // The card before or after the selected one, a folder too, over the names of the days.
     void Step(int by)
     {
         for (int index = cardList.SelectedIndex + by; index >= 0 && index < cardList.Items.Count; index += by)
-            if (cardList.Items[index] is Entry)
+            if (!(cardList.Items[index] is Heading))
             {
                 cardList.SelectedIndex = index;
                 return;
@@ -1680,8 +1787,62 @@ partial class MainForm
     // Enter, or a double click: the entry on the clipboard, and back to the window the list hotkey was pressed in.
     void Accept()
     {
+        if (SelectedFolder != null)
+        {
+            OpenCard(SelectedFolder);
+            return;
+        }
         Entry entry = Selected;
         if (entry != null && !busy && !Many && Use(entry)) GoBack();   // of several cards picked, none is the one chosen
+    }
+
+    // A folder among the cards opens as its row in the sidebar would; the folders it is in open too, so that its row is
+    // seen there.
+    void OpenCard(FolderCard card)
+    {
+        Entry folder = card.Folder;
+        if (!Change(delegate
+        {
+            for (string parent = Texts.Parent(folder.Name); parent != null; parent = Texts.Parent(parent))
+            {
+                Entry above = FolderEntry(parent);
+                if (above == null || above.Open) continue;
+                clips.OpenFolder(above.FolderId, true);
+                above.Open = true;
+            }
+        })) return;
+        savedOpen = true;
+        Place at = new Place(PlaceKind.Folder);
+        at.Path = folder.Name;
+        at.Id = folder.FolderId;
+        Go(at);
+    }
+
+    // The menu of a folder among the cards: open it, or what the menu of its row in the sidebar does.
+    void WireCardMenu()
+    {
+        ToolStripItem openItem = cardMenu.Items.Add(Strings.Open, null, delegate { OpenCard(SelectedFolder); });
+        ToolStripItem renameItem = cardMenu.Items.Add(Strings.RenameDots, null, delegate { EditGroup(SelectedFolder.Folder.Name); });
+        ToolStripMenuItem moveItem = new ToolStripMenuItem(Strings.MoveTo);
+        cardMenu.Items.Add(moveItem);
+        ToolStripItem deleteItem = cardMenu.Items.Add(Strings.Delete, null, delegate { DeleteFolder(SelectedFolder.Folder); });
+        Look.Mark(openItem, Sign.Open);
+        Look.Mark(renameItem, Sign.Edit);
+        Look.Mark(moveItem, Sign.Move);
+        Look.Mark(deleteItem, Sign.Delete);
+        Look.Style((ToolStripDropDownMenu)moveItem.DropDown);
+        Look.Style(cardMenu);
+        cardMenu.Opening += delegate(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            HidePeek();
+            if (SelectedFolder == null) e.Cancel = true;
+            else ListPlaces(moveItem, SelectedFolder.Folder);
+        };
+    }
+
+    FolderCard SelectedFolder
+    {
+        get { return cardList.SelectedItem as FolderCard; }
     }
 
     // Makes an entry the clipboard content again: from there Ctrl+V pastes it and the hotkey types it.
@@ -1976,6 +2137,11 @@ partial class MainForm
     // asking, those picked all of them or none.
     void DeleteSelected()
     {
+        if (SelectedFolder != null && !Many)
+        {
+            DeleteFolder(SelectedFolder.Folder);
+            return;
+        }
         List<Entry> targets = Targets();
         if (targets.Count == 0) return;
         Entry entry = targets[0];
@@ -2003,7 +2169,7 @@ partial class MainForm
     }
 
     // Deletes a folder, only the folder: what it holds is too easily a password to be deleted along. It moves up a
-    // level, and Saved is shown.
+    // level; if the folder was shown, or one inside it, Saved is shown.
     void DeleteFolder(Entry folder)
     {
         if (folder == null) return;
@@ -2015,7 +2181,7 @@ partial class MainForm
         if (!Ask(string.Format(Strings.AskDeleteFolder, Texts.Display(folder.Name))
             + (!holds ? "" : parent == null ? Strings.DeleteFolderTop : string.Format(Strings.DeleteFolderUp, Texts.Display(parent))))
             || !Change(delegate { clips.DeleteFolder(folder.FolderId); })) return;
-        place = new Place(PlaceKind.Saved);
+        if (place.Kind == PlaceKind.Folder && Texts.Within(place.Path, folder.Name)) place = new Place(PlaceKind.Saved);
         Reload();
     }
 

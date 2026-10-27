@@ -149,8 +149,9 @@ partial class MainForm : Window
     readonly Label pickCount = new Label();       // how many
     readonly RoundButton pickCopy = new RoundButton(), pickPin = new RoundButton(), pickMove = new RoundButton(), pickDelete = new RoundButton(), pickNone = new RoundButton();
     readonly ContextMenuStrip pickPlaces = new ContextMenuStrip();   // where the move button sends them
+    readonly ContextMenuStrip cardMenu = new ContextMenuStrip();     // of a folder among the cards (see FolderCard)
     readonly RowList navList = new RowList();     // the sidebar: the places (see Place)
-    readonly RowList footList = new RowList();    // under it: a new folder, the options, the guide
+    readonly RowList footList = new RowList();    // under it: the pause, the options, the guide
     Place place = new Place(PlaceKind.History);       // the place shown
     bool savedOpen = true, sourcesOpen = true;    // the sidebar shows the folders, and the programs
     bool fillingNav;                              // the sidebar is being filled: its selection is not the user's
@@ -181,6 +182,7 @@ partial class MainForm : Window
     Entry grabbed;                                // the saved text or folder the button went down on: it may be dragged to a folder
     Point grabbedAt;
     Place dropPlace;                              // the folder a dragged text would go to, while it is over one; Saved for none
+    int dropCard = -1;                            // the same among the cards: the row of the folder, or -1
     int hoverRow = -1;                            // the card the pointer is on, and the part of it
     Part hoverPart;
     bool paused;                                  // what is copied is not remembered, until the user says otherwise
@@ -189,6 +191,7 @@ partial class MainForm : Window
     Size savedSize;                               // the size the user left the window at, empty until there is one
     bool shown;                                   // the window has its final scale
     readonly RoundButton newButton = new RoundButton();
+    readonly RoundButton folderButton = new RoundButton();   // where saved texts are shown, at the right end of the tabs
     // The options, which belong to this window although they are shown in their own (see OptionsWindow).
     readonly RowList pageList = new RowList();   // the categories of the options: each item is the page of one
     readonly Panel pagePane = new Panel();       // where the pages take turns
@@ -279,6 +282,15 @@ partial class MainForm : Window
         newButton.Sign = Sign.Plus;
         Look.Style(newButton, false);
         newButton.Subtle = true;
+        // A new folder, quiet like it, where saved texts are shown (ShowFolderButton).
+        folderButton.Text = Strings.NewFolder;
+        folderButton.Sign = Sign.NewFolder;
+        Look.Style(folderButton, false);
+        folderButton.Subtle = true;
+        folderButton.TabStop = false;
+        folderButton.Visible = false;
+        folderButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
+        folderButton.Click += delegate { EditGroup(null); };
 
         // The status line takes the room of what it says. A message written with Say leaves after a while;
         // anything else stays until the next one. The window of the options says it too: what an option did must
@@ -335,6 +347,7 @@ partial class MainForm : Window
         tabs.SetBounds(PaneInset, searchFrame.Bottom + Gap, ContentWidth, TabsHeight);
         foreach (string name in new string[] { Strings.AllKinds, Strings.TextKinds, Strings.CodeKinds, Strings.LinkKinds, Strings.PictureKinds })
             tabs.Add(name);
+        tabs.Controls.Add(folderButton);   // at their right end, and away with them while cards are picked
         // In their place while cards are picked: how many, and what can be done with all of them (see ShowPickBar).
         pickBar.Bounds = tabs.Bounds;
         pickBar.Visible = false;
@@ -360,8 +373,8 @@ partial class MainForm : Window
         emptyNote.BringToFront();
         ClientSize = new Size(SideWidth + paneWidth + Edge, Edge + pane.Height + Edge);
 
-        // On the left the sidebar: the button that reduces it, the places, and under them a new folder, the options
-        // and the guide. Placed for good, at their width, once their rows have their height (PlaceSidebar).
+        // On the left the sidebar: the button that reduces it, the places, and under them the pause, the options and
+        // the guide. Placed for good, at their width, once their rows have their height (PlaceSidebar).
         sideButton.SetBounds(Edge, Edge, ButtonHeight, ButtonHeight);
         sideButton.Sign = Sign.Menu;
         Look.Style(sideButton, false);
@@ -392,6 +405,7 @@ partial class MainForm : Window
         tips.AutoPopDelay = 30000;
         Look.Style(tips);
         Tip(string.Format(Strings.NewTip, NameOf(NewKeys)), newButton);
+        Tip(string.Format(Strings.WithKeys, Strings.NewFolderTitle, NameOf(GroupKeys)), folderButton);
         // No AcceptButton: Enter chooses an entry, and in the search box it must not start typing the clipboard.
 
         OpenClips();
@@ -669,6 +683,7 @@ partial class MainForm : Window
         PlaceSidebar();   // at the width it was left at, once the window has its size
         PlaceTitle();     // measured with the fonts of the screen, once the window has its scale
         shown = true;
+        ShowFolderButton();   // as wide as what it says, in the fonts of the screen
         PlaceDay();       // the same: its height is that of the name of a day among the cards
         FitStatus();
     }

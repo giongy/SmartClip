@@ -145,8 +145,8 @@ static partial class Strings
             + "La freccia a destra di una voce copiata ({2}) la tiene per un po' in cima all'elenco:\n"
             + "se ne va comunque quando scadono i suoi giorni. Ciò che deve restare, salvalo.\n"
             + "I testi salvati non scadono mai e sono cifrati per il tuo utente; con un nome, se ne\n"
-            + "vede solo il nome. Le loro cartelle stanno nella barra laterale, con «" + NewFolder + "» ({3})\n"
-            + "in fondo: un testo ci entra trascinandolo sopra una, o con «" + MoveTo + "».\n"
+            + "vede solo il nome. Le loro cartelle stanno nella barra laterale; «" + NewFolder + "» ({3})\n"
+            + "sta sopra le loro schede: un testo ci entra trascinandolo sopra una, o con «" + MoveTo + "».\n"
             + "«{5}», nel menu del tasto destro, dà un numero alla voce: poi {4}\n"
             + "la incollano ovunque tu sia, senza aprire questa finestra.";
         PressKeys = "Premi i tasti…";
@@ -456,22 +456,27 @@ static partial class Strings
 
             "# Le cartelle",
             "Quando i testi salvati diventano tanti puoi raccoglierli in cartelle, e le cartelle in altre cartelle. Stanno "
-                + "nella barra laterale, sotto «" + SavedTitle + "»: un clic su una cartella mostra i testi che contiene "
-                + "direttamente, non quelli delle cartelle al suo interno.",
+                + "nella barra laterale, sotto «" + SavedTitle + "», e tra le schede, come in Esplora file: «" + SavedTitle
+                + "» mostra le sue cartelle e poi i testi fuori dalle cartelle, una cartella le cartelle e i testi che contiene "
+                + "direttamente, non quelli delle cartelle al suo interno. La ricerca guarda anche dentro le cartelle.",
             "## Crearle e aprirle",
-            "- «" + NewFolder + "» sta in fondo alla barra laterale e nel menu del tasto destro di una cartella "
+            "- «" + NewFolder + "» sta all'estremità destra delle schede dei tipi, sopra i testi salvati, e nel menu del "
+                + "tasto destro di una cartella "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nasce dentro la cartella mostrata, "
                 + "ma nella sua finestra puoi scegliere dove metterla.",
+            "- La scheda di una cartella la apre con un doppio clic o Invio, come un clic sulla sua riga nella barra laterale.",
             "- La freccia all'estremità destra di una cartella che ne contiene altre la apre e la chiude; quella di «"
                 + SavedTitle + "» le mostra o le nasconde tutte. Il numero dice quanti testi sono in una cartella stessa, "
-                + "non in quelle al suo interno. Aperte e chiuse, le ritrovi come le hai lasciate.",
+                + "non in quelle al suo interno; quello di «" + SavedTitle + "», quelli fuori dalle cartelle. Aperte e chiuse, "
+                + "le ritrovi come le hai lasciate.",
             "## Spostare testi e cartelle",
-            "- La scheda di un testo salvato, o una cartella della barra con tutto quello che contiene, si trascina su una "
-                + "cartella della barra; lasciata su «" + SavedTitle + "», esce dalle cartelle.",
+            "- La scheda di un testo salvato, o una cartella con tutto quello che contiene, dalla barra o dalle schede, si "
+                + "trascina su una cartella della barra o sulla scheda di una cartella; lasciata su «" + SavedTitle
+                + "», esce dalle cartelle.",
             "- «" + MoveTo + "», nel menu di un testo salvato o di una cartella, fa lo stesso. La stessa "
                 + "scelta c'è nella finestra in cui lo scrivi, a sinistra dei pulsanti.",
             "## Rinominarle ed eliminarle",
-            "- Nel menu del tasto destro di una cartella, «" + RenameDots + "» le cambia il nome o il posto ed «" + Delete
+            "- Nel menu del tasto destro di una cartella, nella barra o tra le schede, «" + RenameDots + "» le cambia il nome o il posto ed «" + Delete
                 + "» toglie la cartella soltanto: quello che conteneva, testi e cartelle, sale nella cartella che la "
                 + "conteneva, o resta tra i salvati fuori dalle cartelle.",
             "- Nel nome di una cartella non può esserci «" + Texts.Separator + "».",
