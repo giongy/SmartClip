@@ -5,12 +5,14 @@ static partial class Strings
 {
     static void Spanish()
     {
-        ShiftName = "Mayús"; DeleteKeyName = "Supr"; EnterKeyName = "Intro"; ArrowsName = "Arriba / Abajo";
+        ShiftName = "Mayús"; DeleteKeyName = "Supr"; EnterKeyName = "Intro"; ArrowsName = "Arriba / Abajo"; BackKeyName = "Retroceso";
         DayFormat = "dd/MM"; YearDayFormat = "dd/MM/yy";
         Quote = "«{0}»";
 
         TypeButton = "Teclear portapapeles";
         SavedTitle = "Guardados"; PausedSuffix = " (en pausa)";
+        FoldersHeading = "Carpetas"; TextsHeading = "Textos"; TextOne = "texto"; TextMany = "textos";
+        UpNote = "Carpeta superior";
         New = "Nuevo…"; SaveDots = "Guardar…"; EditDots = "Editar…"; RenameDots = "Renombrar…"; Delete = "Eliminar";
         Options = "Opciones"; SearchCue = "Buscar…";
         CountOf = "{0} de {1}";
@@ -214,7 +216,66 @@ static partial class Strings
         ChooseDataFolder = "La carpeta en la que {0} guarda lo que copias y guardas.";
         AskUseExisting = "En {0} ya hay una lista de {1}.\n\n¿Quieres usar esa? La tuya se queda donde está, tal como está.";
         AskSyncedFolder = "{0} parece una carpeta sincronizada en línea o en red.\n\nLa sincronización puede bloquear o "
-            + "estropear la base de datos, y los textos guardados no se leen en otro PC. ¿Quieres usarla igualmente?";
+            + "estropear la base de datos, y en otro PC los textos guardados solo se leen con la frase de recuperación. "
+            + "¿Quieres usarla igualmente?";
+        ProtectOption = "Cifrar"; ProtectNote = "Lo que el archivo de la lista guarda cifrado";
+        ProtectNothing = "Nada"; ProtectSaved = "Textos guardados"; ProtectAll = "Todo";
+        ProtectTip = "Nada: el archivo se lee en cualquier PC sin frase, y por cualquiera que tenga una copia.\n"
+            + "Textos guardados: están cifrados, y solo se leen en este PC, o con la frase de recuperación.\n"
+            + "Todo: también lo que copias. Al cambiarlo, lo que hay se cifra o se descifra enseguida.";
+        ProtectAllExplain = "Se cifran los textos guardados y también todo lo que copias.\n"
+            + "En este PC los abre Windows solo: no tienes que hacer nada.\n"
+            + "En otro PC, o tras reinstalar Windows, solo se abren con la frase de recuperación.\n"
+            + "Con miles de entradas, buscar en el historial es algo más lento.";
+        ProtectNothingExplain = "No se cifra nada.\n"
+            + "El archivo se abre en cualquier PC, sin frase, pero cualquiera que tenga una copia puede leerlo.\n"
+            + "Lo que otros programas marcan como privado nunca se conserva de todos modos.";
+        ProtectSavedExplain = "Solo se cifran los textos guardados; lo que copias sigue sin cifrar.\n"
+            + "En este PC los abre Windows solo: no tienes que hacer nada.\n"
+            + "En otro PC, o tras reinstalar Windows, solo se abren con la frase de recuperación.";
+        AskPlain = "Los textos guardados se guardarán sin cifrar: cualquiera que tenga el archivo de la lista puede leerlos, "
+            + "también los privados.\n\n¿Continuar?";
+        NowPlain = "Ahora los textos guardados se guardan sin cifrar."; NowEncrypted = "Ahora los textos guardados están cifrados.";
+        NowAll = "Ahora todo está cifrado, también lo que copias.";
+        SetupTitle = "Bienvenido a {0}"; UpgradeTitle = "Tus textos guardados";
+        SetupStep = "{0} de {1}";
+        BackButton = "Atrás"; NextButton = "Siguiente"; DoneButton = "Listo";
+        SetupFolderTitle = "Dónde guardar la lista";
+        SetupFolderExplain = "{0} guarda lo que copias y guardas en un solo archivo. En una carpeta sincronizada en línea, como "
+            + "OneDrive, sobrevive a un PC averiado o formateado. Si la carpeta elegida ya tiene una lista de {0}, se usa esa.";
+        SetupFolderOption = "Carpeta de la lista"; SetupFolderNote = "En este PC, o en una carpeta como OneDrive";
+        SetupHistoryTitle = "Qué recordar";
+        SetupHistoryExplain = "Además de los textos que guardas, {0} puede recordar todo lo que copias, durante los días que "
+            + "elijas, para que lo recuperes cuando haga falta. Desactivado, solo se conserva lo que guardas.";
+        SetupProtectTitle = "Qué cifrar";
+        UpgradeExplain = "Desde esta versión eliges tú qué se cifra. Hasta ahora los textos guardados se cifraban solo para "
+            + "este PC, y tras reinstalar Windows ya no se podían leer.";
+        PhraseOptional = "Frase de recuperación"; PhraseOptionalNote = "Opcional: tres palabras unidas por «-»";
+        PhraseOption = "Frase de recuperación"; PhraseNote = "Para leer lo cifrado en otro PC";
+        PhraseTip = "En este PC Windows desbloquea por ti lo cifrado; en otro,\n"
+            + "o tras reinstalar Windows, solo la frase de recuperación, desde una copia de la base de datos\n"
+            + "(con Cambiar… junto a la carpeta de la lista). Sin ella, solo se lee aquí.";
+        SetPhraseButton = "Definir…"; ChangePhraseButton = "Cambiar…"; UnlockButton = "Desbloquear…";
+        PhraseTitle = "Frase de recuperación"; UnlockTitle = "Desbloquear la lista";
+        PhraseExplain = "Tres palabras unidas por «-», tan largas como quieras, como {0}. Con ellas lo cifrado se lee en otro "
+            + "PC, también tras reinstalar Windows; mayúsculas y minúsculas no cuentan. Anótalas en un lugar seguro: sin ellas, "
+            + "nadie puede leerlo salvo aquí.";
+        UnlockExplain = "Lo que esta lista guarda cifrado se cifró en otro PC. Escribe su frase de recuperación para leerlo "
+            + "aquí: desde entonces este PC la recuerda.";
+        PhraseExample = "río-lámpara-siete";
+        PhraseLabel = "Tres palabras unidas por «-»";
+        PhraseWillBe = "Será: {0}"; PhraseNotThree = "Tres palabras, unidas por «-».";
+        PhraseWrong = "No es la frase de esta lista.";
+        Unlock = "Desbloquear"; NoPhraseButton = "No la tengo…";
+        AskStartOver = "Sin la frase nadie puede leer lo que otro PC cifró.\n\n"
+            + "¿Eliminarlo, y cifrar lo que venga después con una clave nueva?";
+        StartedOver = "Entradas eliminadas: {0}. Lo que venga después se cifra con una clave nueva.";
+        PhraseSet = "Frase de recuperación definida: guárdala en un lugar seguro.";
+        Unlocked = "Desbloqueado: este PC recuerda la frase.";
+        SavedLocked = "Lo cifrado está bloqueado en este PC: desbloquéalo con la frase de recuperación, en las opciones.";
+        LockedWarning = "Esta lista se cifró en otro PC.\tDesbloquéala con la frase de recuperación: Opciones › {0}.";
+        UnreadableWarning = "Textos guardados que no se pueden leer en este PC: {0}. Una versión anterior a la frase de "
+            + "recuperación los cifró para otro usuario de Windows, u otro PC.";
         ListMovedTo = "Ahora la lista está en {0}.";
         ListMoveFailed = "No se ha podido mover la lista, que se queda donde estaba: {0}";
         FolderUnavailable = "No se puede acceder a la carpeta de la lista, {0}: lo que copies y guardes ahora se pierde al "
@@ -260,7 +321,7 @@ static partial class Strings
         DataFolderTip = "Dónde está la base de datos con lo que copias y guardas, junto al registro de errores:\n{0}\n"
             + "La carpeta predeterminada es {1}. «Cambiar…» mueve la base de datos a la carpeta que elijas,\n"
             + "o usa la que ya está allí. No sirve para compartir la lista entre PC: los textos guardados\n"
-            + "solo los lee este usuario de Windows en este PC, y dos programas que usan el mismo\n"
+            + "cifrados solo se leen en otro PC con la frase de recuperación, y dos programas que usan el mismo\n"
             + "archivo a la vez pueden estropearlo.";
         CleanTip = "Borra enseguida del historial lo que copiaste antes de los últimos días\n"
             + "escritos arriba: con 1 solo queda hoy, con 0 no queda nada.\n"
@@ -439,14 +500,21 @@ static partial class Strings
                 + "lista la entrada copiada.",
             "## Verlos y usarlos",
             "- El ojo de un texto guardado con nombre («" + ShowContent + "», también en su menú) muestra su contenido en un "
-                + "recuadro unos segundos: la lista solo muestra su nombre, y pasar el puntero por encima nunca basta.",
+                + "recuadro unos segundos: su tarjeta solo muestra su nombre, con puntos en lugar del contenido, y pasar el "
+                + "puntero por encima nunca basta.",
             "- Los textos guardados también están en el menú del icono junto al reloj: elegir uno lo devuelve al "
                 + "portapapeles sin abrir la ventana.",
             "## A salvo",
-            "Los textos guardados no vencen nunca. Están en la base de datos del programa, cifrados para tu usuario: "
-                + "otro usuario del mismo PC no puede leerlos. Cuando devuelves uno al portapapeles se marca como privado, para que el "
-                + "historial de Windows (Win+V) y los demás gestores del portapapeles lo ignoren. También se puede "
-                + "guardar una imagen copiada: siempre muestra su miniatura, con su nombre al lado si lo tiene.",
+            "- Los textos guardados no vencen nunca. Qué cifra la base de datos se elige al primer inicio, y en «"
+                + ProtectOption + "» (Opciones › " + ProgramTitle + "): nada, para que se lea en cualquier PC, pero también "
+                + "por cualquiera que tenga una copia; los textos guardados, que en este PC Windows desbloquea por ti, y que "
+                + "otro usuario del mismo PC no puede leer; o todo, también lo que copias.",
+            "- Cifrados, con una «" + PhraseOption + "» (Opciones › " + ProgramTitle + ") de tres palabras unidas por «-», se leen "
+                + "también en otro PC, incluso tras reinstalar Windows: allí elige la carpeta de la base de datos, y escribe la "
+                + "frase cuando te la pida. Sin ella, solo se leen en este PC; guárdala en un lugar seguro.",
+            "- Cuando devuelves uno al portapapeles se marca como privado, para que el historial de Windows (Win+V) y "
+                + "los demás gestores del portapapeles lo ignoren.",
+            "- También se puede guardar una imagen copiada: siempre muestra su miniatura, con su nombre al lado si lo tiene.",
             "## Textos con formato",
             "Un texto guardado puede tener formato, como una firma de correo: negrita, cursiva, subrayado, fuentes y tamaños.",
             "- Copia la firma de un correo o de un documento y guárdala: conserva su formato. El historial guarda "
@@ -472,6 +540,8 @@ static partial class Strings
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nace dentro de la carpeta "
                 + "mostrada, pero en su ventana puedes elegir dónde ponerla.",
             "- La tarjeta de una carpeta la abre con un doble clic o Intro, como un clic en su fila de la barra lateral.",
+            "- En una carpeta la primera fila, «" + UpNote + "», vuelve a la que la contiene, o a «" + SavedTitle + "» (también "
+                + BackKeyName + " o " + Key(MainForm.UpKeys) + "); lo que arrastras encima va allí.",
             "- La flecha del extremo derecho de una carpeta que contiene otras la abre y la cierra; la de «" + SavedTitle
                 + "» las muestra o las oculta todas. El número dice cuántos textos hay en la carpeta misma, no en las "
                 + "que tiene dentro; el de «" + SavedTitle + "», los que están fuera de las carpetas. Abiertas o cerradas, "
@@ -542,11 +612,12 @@ static partial class Strings
             "Lo que copias se queda en la lista el número de días que decidas (" + Texts.DefaultKeepDays
                 + " si no lo cambias), también después de cerrar el programa o apagar el PC.",
             "## Dónde está",
-            "- Se guarda sin cifrar en una base de datos, por defecto " + Clips.DefaultFile + ", junto a los textos "
-                + "guardados, que en cambio están cifrados. Los días vencidos se borran solos.",
+            "- Se guarda en una base de datos, por defecto " + Clips.DefaultFile + ", junto a los textos guardados: "
+                + "sin cifrar, salvo que elijas cifrarlo todo («" + ProtectOption + "»). Los días vencidos se borran solos.",
             "- En las opciones, «" + ChangeFolderButton + "» lleva la base de datos a otra carpeta, o usa la que ya "
-                + "está allí; «" + DefaultFolderButton + "» la devuelve. No sirve para compartir la lista entre PC: los "
-                + "textos guardados solo se leen en este PC. Si al iniciar no se puede acceder a la carpeta elegida, la "
+                + "está allí; «" + DefaultFolderButton + "» la devuelve. No sirve para compartir la lista entre PC "
+                + "abiertos a la vez, pero una copia en OneDrive sobrevive a un PC averiado: los textos guardados cifrados "
+                + "piden entonces la frase de recuperación. Si al iniciar no se puede acceder a la carpeta elegida, la "
                 + "lista trabaja en memoria y lo dice.",
             "## Qué se queda y qué se va",
             "- Con 0 días solo queda lo que copiaste hoy.",
@@ -564,7 +635,9 @@ static partial class Strings
             "# Las opciones",
             "El botón «" + Options + "» las abre en una ventana aparte, que puede quedarse abierta junto a la lista. Cada "
                 + "opción dice en pocas palabras, bajo su nombre, qué hace; si dejas el puntero encima aparece su explicación "
-                + "completa. Están en cinco páginas, que se eligen en la columna de la izquierda como los temas de esta guía.",
+                + "completa. Están en cinco páginas, que se eligen en la columna de la izquierda como los temas de esta guía. "
+                + "Al primer inicio unos pasos preguntan dónde guardar la lista, qué recordar y qué cifrar: todo se puede "
+                + "cambiar aquí.",
             "## " + TypingTitle,
             "Cuántos segundos esperar antes de teclear (de " + MainForm.MinDelay + " a "
                 + MainForm.MaxDelay + "), si el servidor usa el teclado estadounidense, si pulsar Intro al final, si "
@@ -574,17 +647,18 @@ static partial class Strings
                 + ", y les da otras teclas; y si " + pick + " abre la lista donde la dejaste.",
             "## " + HistoryTitle,
             "Si recordar lo que copias, durante cuántos días, la carpeta de la base de datos "
-                + "(que se puede cambiar) con el enlace que la abre, y el botón que limpia enseguida el historial.",
+                + "(que se puede cambiar) con el enlace que la abre, el botón que limpia enseguida el historial, y los "
+                + "botones para exportar e importar.",
             "## " + AppearanceTitle,
             "El idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño "
                 + "de la interfaz (botones, opciones, esta guía: en píxeles, reinician el programa), los de las entradas "
                 + "(cambian enseguida), y si dejar el puntero sobre una tarjeta la muestra entera.",
             "## " + ProgramTitle,
             "Si seguir en el área de notificación y ocultarse al cambiar a otro programa, si "
-                + "iniciarse con Windows, los botones para exportar e importar, y la versión del programa.",
+                + "iniciarse con Windows, qué cifrar y la frase de recuperación de los textos guardados, y la versión del programa.",
 
             "# Exportar e importar",
-            "En las opciones, bajo «" + ProgramTitle + "», dos botones sacan tus textos del programa y los recuperan, "
+            "En las opciones, bajo «" + HistoryTitle + "», dos botones sacan tus textos del programa y los recuperan, "
                 + "como copia de seguridad o para pasarlos a otro PC. Cada uno pregunta si quieres solo los textos "
                 + "guardados o todo, es decir también lo copiado.",
             "## Exportar",

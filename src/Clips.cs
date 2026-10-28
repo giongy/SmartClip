@@ -18,8 +18,8 @@ class Folder
 //
 // One table holds both. A copied entry is temporary: it goes when its days are over, also if it is kept at the
 // top of the list (pinned), and it is stored as it is, unencrypted. A saved entry never goes by itself, can be
-// in a folder and can have a name (the list then shows the name and hides the content); it is encrypted for the
-// Windows user (DPAPI), content and preview. A number from 1 to MainForm.MaxNumber chooses one entry of either
+// in a folder and can have a name (the list then shows the name and hides the content); it is encrypted, content and
+// preview, under the key of the database (Vault), which DPAPI keeps for each PC and a recovery phrase for any. A number from 1 to MainForm.MaxNumber chooses one entry of either
 // kind from anywhere. The database itself refuses what breaks these rules (the CHECKs of EntriesSchema).
 //
 // Times are kept in UTC, in milliseconds since 1970; days are counted in local time. Used from one thread.
@@ -28,9 +28,24 @@ sealed class Clips : IDisposable
     // In PRAGMA user_version: a newer file is refused, an older one brought up to date (Upgrade). 2: the large
     // columns of the entries at the end of their rows. 3: the formatting of saved texts. 4: the program each copied
     // entry was copied in. 5: what it is (Category). 6: what the user says it is, of a saved entry too. 7: the indexes
-    // of the sidebar, the tabs and the room of the pictures (LookupIndexes).
-    public const int SchemaVersion = 7;
+    // of the sidebar, the tabs and the room of the pictures (LookupIndexes). 8: the key of the saved entries (KeysSchema).
+    public const int SchemaVersion = 8;
     const int TextKind = 1, PictureKind = 2;
+    const int PcKey = 1, PhraseKey = 2;   // how the key is kept: by DPAPI, for a PC and a Windows user; by the phrase
+    // The key of the saved entries (Vault), kept locked: by each PC that opened the database, and by the recovery phrase,
+    // once at most, with the salt and the rounds it was derived with. Made only if missing: the checks make the layouts
+    // of older versions out of a new database, which has it already.
+    static readonly string KeysSchema =
+        "CREATE TABLE IF NOT EXISTS keys ("
+        + " id INTEGER PRIMARY KEY,"
+        + " kind INTEGER NOT NULL CHECK (kind IN (" + PcKey + ", " + PhraseKey + ")),"
+        + " salt BLOB, rounds INTEGER,"
+        + " locked BLOB NOT NULL,"
+        + " CHECK ((kind = " + PhraseKey + ") = (salt IS NOT NULL AND rounds IS NOT NULL)));"
+        + "CREATE UNIQUE INDEX IF NOT EXISTS keys_phrase ON keys (kind) WHERE kind = " + PhraseKey + ";"
+        // What belongs to the data rather than to a PC, and so travels with the file: what is kept encrypted (Protection).
+        + "CREATE TABLE IF NOT EXISTS settings (name TEXT PRIMARY KEY, value);";
+    const string ProtectionSetting = "protection";
     // The most the copied pictures take, previews included: beyond it the oldest go (TrimPictures). The checks
     // make it smaller.
     public static long PictureSpace = 200L * 1024 * 1024;
@@ -113,10 +128,16 @@ sealed class Clips : IDisposable
 
     readonly Database data;
     readonly string path;
+    Vault vault = Vault.None;   // the key of the saved entries, once this PC or the phrase unlocked it
+    // What is kept encrypted. Until the user chooses, what the versions before did: the saved entries.
+    Protection protection = Protection.Saved;
     DateTime pruned;   // the day the expired entries were last removed
     // The previews of the copied pictures listed last, by row. The list is read again at every copy, and a picture
     // never changes: decoded anew each time, they would cost time and fill the memory with copies of themselves.
     Dictionary<long, Image> previews = new Dictionary<long, Image>();
+    // With everything encrypted the database cannot search what is copied: the search texts, decrypted once, by row, kept
+    // up by each copy. Null until the first search.
+    Dictionary<long, string> searchTexts;
     // The programs things were copied in: by the path of their executable, those described in this session; by their
     // row, as the list shows them, read once.
     readonly Dictionary<string, long> programs = new Dictionary<string, long>(StringComparer.OrdinalIgnoreCase);
@@ -146,6 +167,7 @@ sealed class Clips : IDisposable
                 throw new InvalidDataException(string.Format(Strings.NewerDatabase, path, Program.AppName));
             if (version == 0) Create(fill);
             else if (version < SchemaVersion) Upgrade(version);
+            OpenVault();
         }
         catch (Exception)
         {
@@ -160,7 +182,7 @@ sealed class Clips : IDisposable
         data.Execute("PRAGMA auto_vacuum = INCREMENTAL");   // only before the first table: see Compact
         using (Transaction transaction = data.Begin())
         {
-            data.Execute(FoldersSchema + AppsSchema + EntriesSchema);
+            data.Execute(FoldersSchema + AppsSchema + EntriesSchema + KeysSchema);
             data.Execute("PRAGMA user_version = " + SchemaVersion);
             if (fill != null) fill(this);
             transaction.Commit();
@@ -177,7 +199,8 @@ sealed class Clips : IDisposable
             // program of a copied entry, 4 → 5 its category and 5 → 6 whether the user chose it (and the checks that let
             // a saved entry have one), before the large ones, which ADD COLUMN would put
             // after them. Either way the table is made anew under its name and filled from the old one, with the
-            // indexes of today. 6 → 7 only adds indexes.
+            // indexes of today. 6 → 7 only adds indexes, 7 → 8 the table of the key (made by OpenVault, which also
+            // encrypts again under it what DPAPI encrypted).
             if (version < 6)
             {
                 string fields = version < 3 ? OldFields : version < 4 ? OldFields + FormattingFields
@@ -189,6 +212,7 @@ sealed class Clips : IDisposable
                 if (version < 5) Categorize();
             }
             else if (version < 7) data.Execute(LookupIndexes);
+            if (version < 8) data.Execute(KeysSchema);
             data.Execute("PRAGMA user_version = " + SchemaVersion);
             transaction.Commit();
         }
@@ -229,6 +253,242 @@ sealed class Clips : IDisposable
     public bool Healthy()
     {
         return Equals(data.Value("PRAGMA quick_check"), "ok");
+    }
+
+    // --- The key of the saved entries ---
+
+    // Reads what is kept encrypted, and unlocks the key as this PC kept it. Where the saved entries are encrypted, a
+    // database without a key (new, or of a version before) gets one now; one whose key only other PCs kept stays locked
+    // until the phrase is given (Unlock), unless it has nothing saved to read. Then each saved value is brought to what
+    // is chosen.
+    void OpenVault()
+    {
+        object chosen = data.Value("SELECT value FROM settings WHERE name = ?1", ProtectionSetting);
+        ProtectionChosen = chosen != null;
+        if (chosen != null) protection = (Protection)(long)chosen;
+        using (Statement rows = data.Prepare("SELECT locked FROM keys WHERE kind = ?1", PcKey))
+            while (vault.Locked && rows.Step())
+            {
+                try
+                {
+                    vault = Vault.FromThisPc(rows.Blob(0));
+                }
+                catch (CryptographicException)
+                {
+                    // Kept by another PC, or another Windows user.
+                }
+            }
+        // Without a key yet, nothing is lost: what DPAPI encrypted, also what this user cannot read, stays as it was.
+        // Locked with nothing to read (no saved entry; with everything encrypted, no entry at all), nothing is lost either.
+        if (protection != Protection.Nothing && vault.Locked && data.Value("SELECT 1 FROM keys") == null) NewKey();
+        else if (Locked && data.Value(protection == Protection.All ? "SELECT 1 FROM entries" : "SELECT 1 FROM entries WHERE saved = 1") == null)
+            StartOver();
+        Modernize();
+    }
+
+    // A key never used before, kept for this PC alone: those other PCs or the phrase kept are forgotten.
+    void NewKey()
+    {
+        Vault fresh = Vault.New();
+        using (Transaction transaction = data.Begin())
+        {
+            data.Execute("DELETE FROM keys");
+            data.Execute("INSERT INTO keys (kind, locked) VALUES (?1, ?2)", PcKey, fresh.ForThisPc());
+            transaction.Commit();
+        }
+        vault = fresh;
+    }
+
+    // Each saved value as what is chosen keeps it: encrypted under the key, or unencrypted; DPAPI of the versions before
+    // becomes either. Those that cannot be read here stay as they are. The copied entries change only with the choice
+    // (SetProtection): they are always as it says.
+    void Modernize()
+    {
+        if (Locked) return;   // nothing can be encrypted yet
+        Dictionary<long, byte[][]> found = new Dictionary<long, byte[][]>();
+        using (Statement rows = data.Prepare("SELECT id, content, preview, html, rtf FROM entries WHERE saved = 1"))
+            while (rows.Step())
+            {
+                byte[][] values = { rows.Blob(1), rows.Blob(2), rows.Blob(3), rows.Blob(4) };
+                bool old = false;
+                try
+                {
+                    for (int i = 0; i < values.Length; i++)
+                    {
+                        if (values[i] == null || (protection != Protection.Nothing ? Vault.Sealed(values[i])
+                            : !Vault.Sealed(values[i]) && !Vault.Dpapi(values[i]))) continue;
+                        values[i] = Protect(vault.Open(values[i]));
+                        old = true;
+                    }
+                }
+                catch (CryptographicException)
+                {
+                    continue;
+                }
+                if (old) found[rows.Long(0)] = values;
+            }
+        if (found.Count == 0) return;
+        using (Transaction transaction = data.Begin())
+        using (Statement update = data.Prepare("UPDATE entries SET content = ?2, preview = ?3, html = ?4, rtf = ?5 WHERE id = ?1"))
+        {
+            foreach (KeyValuePair<long, byte[][]> each in found)
+                update.Run(each.Key, each.Value[0], each.Value[1], each.Value[2], each.Value[3]);
+            transaction.Commit();
+        }
+    }
+
+    // The key of what is encrypted is not there: this PC never opened the database, and the phrase was not given yet.
+    // With everything encrypted, nothing copied is read nor remembered meanwhile.
+    public bool Locked
+    {
+        get { return protection != Protection.Nothing && vault.Locked; }
+    }
+
+    // What is copied is encrypted too, and cannot be read nor written now.
+    bool Blind
+    {
+        get { return protection == Protection.All && vault.Locked; }
+    }
+
+    // What is kept encrypted, and whether the user chose it (the first start asks, and a database of a version before).
+    public Protection Protection
+    {
+        get { return protection; }
+    }
+
+    public bool ProtectionChosen { get; private set; }
+
+    // Keeps encrypted what 'mode' says from now on, the entries there are too: encrypted under a key (a new one where
+    // there was none, or only another PC's), or unencrypted, the phrase forgotten; with everything or no longer, the copied
+    // entries too, all at once (with many pictures, seconds). Locked, nothing can change but saying the same again.
+    public void SetProtection(Protection mode)
+    {
+        if (Locked && mode != protection) throw new InvalidOperationException(Strings.SavedLocked);
+        Protection before = protection;
+        Vault kept = vault;
+        try
+        {
+            using (Transaction transaction = data.Begin())
+            {
+                data.Execute("INSERT OR REPLACE INTO settings (name, value) VALUES (?1, ?2)", ProtectionSetting, (int)mode);
+                if (mode != Protection.Nothing && vault.Locked) NewKey();
+                if (mode == Protection.Nothing) data.Execute("DELETE FROM keys WHERE kind = ?1", PhraseKey);
+                if ((before == Protection.All) != (mode == Protection.All)) Recopy(mode == Protection.All);
+                protection = mode;
+                Modernize();
+                transaction.Commit();
+            }
+        }
+        catch (Exception)
+        {
+            protection = before;
+            vault = kept;
+            searchTexts = null;
+            throw;
+        }
+        ProtectionChosen = true;
+    }
+
+    // The copied entries encrypted under the key ('sealing'), their fingerprint an HMAC under it; or unencrypted, a plain
+    // SHA-256. One at a time: the pictures can take 200 MB.
+    void Recopy(bool sealing)
+    {
+        List<long> ids = new List<long>();
+        using (Statement rows = data.Prepare("SELECT id FROM entries WHERE saved = 0"))
+            while (rows.Step()) ids.Add(rows.Long(0));
+        using (Statement update = data.Prepare("UPDATE entries SET content = ?2, preview = ?3, folded = ?4, hash = ?5 WHERE id = ?1"))
+            foreach (long id in ids)
+            {
+                byte[] content, preview;
+                string folded;
+                using (Statement row = data.Prepare("SELECT content, preview, folded FROM entries WHERE id = ?1", id))
+                {
+                    row.Step();
+                    content = vault.Open(row.Blob(0));
+                    preview = row.IsNull(1) ? null : vault.Open(row.Blob(1));
+                    folded = SearchText(row, 2);
+                }
+                update.Run(id, sealing ? vault.Seal(content) : content, preview == null || !sealing ? preview : vault.Seal(preview),
+                    folded == null || !sealing ? (object)folded : vault.Seal(Encoding.UTF8.GetBytes(folded)),
+                    sealing ? vault.Fingerprint(content) : Sha(content));
+            }
+        searchTexts = null;
+    }
+
+    // Whether a recovery phrase keeps the key.
+    public bool HasPhrase
+    {
+        get { return data.Value("SELECT 1 FROM keys WHERE kind = ?1", PhraseKey) != null; }
+    }
+
+    // Has the phrase keep the key, in place of the one before. 'phrase' as the user wrote it: it must be three words.
+    public void SetPhrase(string phrase)
+    {
+        string words = Vault.Phrase(phrase);
+        if (words == null) throw new ArgumentException("Not a phrase of " + Vault.PhraseWords + " words");
+        if (protection == Protection.Nothing || vault.Locked) throw new InvalidOperationException("No key for a phrase to keep");
+        byte[] salt;
+        byte[] locked = vault.ForPhrase(words, out salt);
+        using (Transaction transaction = data.Begin())
+        {
+            data.Execute("DELETE FROM keys WHERE kind = ?1", PhraseKey);
+            data.Execute("INSERT INTO keys (kind, salt, rounds, locked) VALUES (?1, ?2, ?3, ?4)", PhraseKey, salt, Vault.Rounds, locked);
+            transaction.Commit();
+        }
+    }
+
+    // Unlocks the key with the phrase, as the user wrote it, and keeps it for this PC. False if it is not the phrase.
+    public bool Unlock(string phrase)
+    {
+        if (!vault.Locked) return true;
+        string words = Vault.Phrase(phrase);
+        if (words == null) return false;
+        Vault found;
+        using (Statement row = data.Prepare("SELECT salt, rounds, locked FROM keys WHERE kind = ?1", PhraseKey))
+        {
+            if (!row.Step()) return false;
+            found = Vault.FromPhrase(words, row.Blob(0), row.Int(1), row.Blob(2));
+        }
+        if (found == null) return false;
+        data.Execute("INSERT INTO keys (kind, locked) VALUES (?1, ?2)", PcKey, found.ForThisPc());   // asked no more here
+        vault = found;
+        searchTexts = null;
+        Modernize();
+        return true;
+    }
+
+    // Without the phrase, a new key: the saved entries the old one encrypted, which nobody can read any more, are deleted;
+    // with everything encrypted, the copied ones too. Those DPAPI encrypted that this user can read stay, and are
+    // encrypted again under the new key. Returns how many went.
+    public int StartOver()
+    {
+        List<long> lost = new List<long>();
+        if (Blind)
+            using (Statement rows = data.Prepare("SELECT id FROM entries WHERE saved = 0"))
+                while (rows.Step()) lost.Add(rows.Long(0));
+        using (Statement rows = data.Prepare("SELECT id, content FROM entries WHERE saved = 1"))
+            while (rows.Step())
+                try
+                {
+                    vault.Open(rows.Blob(1));
+                }
+                catch (CryptographicException)
+                {
+                    lost.Add(rows.Long(0));
+                }
+        Vault fresh = Vault.New();
+        using (Transaction transaction = data.Begin())
+        {
+            using (Statement delete = data.Prepare("DELETE FROM entries WHERE id = ?1"))
+                foreach (long id in lost) delete.Run(id);
+            data.Execute("DELETE FROM keys");
+            data.Execute("INSERT INTO keys (kind, locked) VALUES (?1, ?2)", PcKey, fresh.ForThisPc());
+            transaction.Commit();
+        }
+        vault = fresh;
+        searchTexts = null;
+        Modernize();
+        return lost.Count;
     }
 
     // Moves the database to 'target', where there is none yet: 'from' is closed, its file copied there, the copy
@@ -425,7 +685,7 @@ sealed class Clips : IDisposable
     // the entry comes from there.
     public bool AddText(string text, string program)
     {
-        if (!Worth(text)) return false;
+        if (!Worth(text) || Blind) return false;
         if (pruned != DateTime.Today) Prune();
         byte[] content = Encoding.UTF8.GetBytes(text);
         Insert(TextKind, content, null, 0, 0, Texts.Fold(text), Hash(content), DateTime.Now, false, App(program));
@@ -447,6 +707,7 @@ sealed class Clips : IDisposable
     // The same, copied in the program whose executable is 'program' (null: nobody knows).
     public void AddPicture(Image picture, string program)
     {
+        if (Blind) return;
         if (pruned != DateTime.Today) Prune();
         Entry entry = new Entry(picture);
         using (entry.Preview)
@@ -525,7 +786,7 @@ sealed class Clips : IDisposable
     // nothing worth keeping, or there already, whatever its line ends (the file has its own).
     public bool Import(string text, DateTime time, bool pinned)
     {
-        if (!Worth(text)) return false;
+        if (!Worth(text) || Blind) return false;
         string bare = text.Replace("\r\n", "\n");
         foreach (string each in new string[] { text, bare, bare.Replace("\n", "\r\n") })
             if (data.Value("SELECT 1 FROM entries WHERE hash = ?1", Hash(Encoding.UTF8.GetBytes(each))) != null) return false;
@@ -548,12 +809,16 @@ sealed class Clips : IDisposable
             return (long)same;
         }
         Category category = kind == PictureKind ? Category.Picture : Texts.CategoryOf(Encoding.UTF8.GetString(content));
+        bool sealing = protection == Protection.All;
         data.Execute("INSERT INTO entries (kind, content, preview, width, height, folded, hash, copied_at, pinned, app_id, category)"
             + " VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
-            kind, content, preview, kind == PictureKind ? (object)width : null, kind == PictureKind ? (object)height : null,
-            folded, hash, Stamp(time), pinned, app, (int)category);
-        // SQLite may give the new row the id of the last one removed: a preview kept for that one is not this one's.
+            kind, Copy(content), preview == null ? null : Copy(preview), kind == PictureKind ? (object)width : null,
+            kind == PictureKind ? (object)height : null, sealing ? (object)vault.Seal(Encoding.UTF8.GetBytes(folded)) : folded,
+            hash, Stamp(time), pinned, app, (int)category);
+        // SQLite may give the new row the id of the last one removed: a preview kept for that one is not this one's, and
+        // its search text neither.
         previews.Remove(data.LastId);
+        if (searchTexts != null) searchTexts[data.LastId] = folded;
         return data.LastId;
     }
 
@@ -569,21 +834,82 @@ sealed class Clips : IDisposable
     // The same, only those the sieve lets through.
     public List<Entry> Copied(int most, Sieve sieve)
     {
-        List<object> values = new List<object>();
-        StringBuilder sql = new StringBuilder("SELECT " + EntryColumns + " FROM entries WHERE " + Where(sieve, values));
-        values.Add(most);
-        sql.Append(" ORDER BY pinned DESC, copied_at DESC, id DESC LIMIT ?" + values.Count);
         List<Entry> entries = new List<Entry>();
         Dictionary<long, Image> listed = new Dictionary<long, Image>();
-        using (Statement rows = data.Prepare(sql.ToString(), values.ToArray()))
-            while (rows.Step())
+        Action<Statement> take = delegate(Statement rows)
+        {
+            try
             {
                 Entry entry = Read(rows);
                 entries.Add(entry);
                 if (entry.Picture) listed[entry.Id] = entry.Preview;
             }
+            catch (CryptographicException)
+            {
+                // Encrypted, the key locked: nothing to show of it.
+            }
+        };
+        if (Searching(sieve))
+            foreach (long id in Found(sieve, most))
+                using (Statement row = data.Prepare("SELECT " + EntryColumns + " FROM entries WHERE id = ?1", id))
+                    if (row.Step()) take(row);
+        if (!Searching(sieve))
+        {
+            List<object> values = new List<object>();
+            StringBuilder sql = new StringBuilder("SELECT " + EntryColumns + " FROM entries WHERE " + Where(sieve, values));
+            values.Add(most);
+            sql.Append(" ORDER BY pinned DESC, copied_at DESC, id DESC LIMIT ?" + values.Count);
+            using (Statement rows = data.Prepare(sql.ToString(), values.ToArray()))
+                while (rows.Step()) take(rows);
+        }
         previews = listed;   // those no longer listed are left to whoever still shows them
         return entries;
+    }
+
+    // The search text of a copied entry in a column: a text, or encrypted as UTF-8 (a text read as bytes would come in
+    // the encoding of the database, UTF-16).
+    string SearchText(Statement row, int column)
+    {
+        object value = row.Get(column);
+        return value == null ? null : value as string ?? Encoding.UTF8.GetString(vault.Open((byte[])value));
+    }
+
+    // The search is done here and not by the database: what is copied is encrypted, its search texts too.
+    bool Searching(Sieve sieve)
+    {
+        return protection == Protection.All && sieve.Words.Length > 0;
+    }
+
+    // The rows of the copied entries the sieve lets through, in the order of the list, at most 'most': the other
+    // conditions asked of the database, the words looked for among the search texts, decrypted once.
+    List<long> Found(Sieve sieve, int most)
+    {
+        if (Blind) return new List<long>();
+        if (searchTexts == null)
+        {
+            Dictionary<long, string> texts = new Dictionary<long, string>();
+            using (Statement rows = data.Prepare("SELECT id, folded FROM entries WHERE saved = 0 AND folded IS NOT NULL"))
+                while (rows.Step()) texts[rows.Long(0)] = SearchText(rows, 1);
+            searchTexts = texts;
+        }
+        List<object> values = new List<object>();
+        List<long> found = new List<long>();
+        using (Statement rows = data.Prepare("SELECT id FROM entries WHERE " + Where(sieve, values, false)
+            + " ORDER BY pinned DESC, copied_at DESC, id DESC", values.ToArray()))
+            while (found.Count < most && rows.Step())
+            {
+                string text;
+                if (!searchTexts.TryGetValue(rows.Long(0), out text)) continue;
+                bool all = true;
+                foreach (string word in sieve.Words)
+                    if (text.IndexOf(word, StringComparison.Ordinal) < 0)
+                    {
+                        all = false;
+                        break;
+                    }
+                if (all) found.Add(rows.Long(0));
+            }
+        return found;
     }
 
     // How many copied entries there are, also beyond those the list shows.
@@ -595,6 +921,7 @@ sealed class Clips : IDisposable
     // The same, those the sieve lets through.
     public int CopiedCount(Sieve sieve)
     {
+        if (Searching(sieve)) return Found(sieve, int.MaxValue).Count;
         List<object> values = new List<object>();
         string where = Where(sieve, values);
         return (int)(long)data.Value("SELECT count(*) FROM entries WHERE " + where, values.ToArray());
@@ -603,14 +930,21 @@ sealed class Clips : IDisposable
     // The condition of the copied entries a sieve lets through, its values added to 'values'.
     static string Where(Sieve sieve, List<object> values)
     {
+        return Where(sieve, values, true);
+    }
+
+    // The same, without the words of a search if not 'words'.
+    static string Where(Sieve sieve, List<object> values, bool words)
+    {
         // With a number, through the index of the numbers, which only a few have: through that of the copied entries
         // SQLite would read them all.
         StringBuilder sql = new StringBuilder(sieve.Numbered ? "+saved = 0 AND number > 0" : "saved = 0");
-        foreach (string word in sieve.Words)
-        {
-            values.Add(word);
-            sql.Append(" AND instr(folded, ?" + values.Count + ") > 0");
-        }
+        if (words)
+            foreach (string word in sieve.Words)
+            {
+                values.Add(word);
+                sql.Append(" AND instr(folded, ?" + values.Count + ") > 0");
+            }
         if (sieve.Category.HasValue)
         {
             values.Add((int)sieve.Category.Value);
@@ -647,6 +981,7 @@ sealed class Clips : IDisposable
     // top or gave it a number.
     public void Forget(string text)
     {
+        if (Blind) return;
         data.Execute("DELETE FROM entries WHERE hash = ?1 AND pinned = 0 AND number IS NULL", Hash(Encoding.UTF8.GetBytes(text)));
     }
 
@@ -705,17 +1040,19 @@ sealed class Clips : IDisposable
         using (Statement row = data.Prepare("SELECT content, saved FROM entries WHERE id = ?1 AND kind = ?2", id, PictureKind))
         {
             if (!row.Step()) throw new InvalidOperationException("No picture " + id);
-            return row.Bool(1) ? Unprotect(row.Blob(0)) : row.Blob(0);
+            return Unprotect(row.Blob(0));
         }
     }
 
     // --- Saved entries ---
 
-    // Every saved entry, its content readable again, in the order of what the list shows of each. One saved
-    // by another Windows user, or on another PC, cannot be read and is left out.
+    // Every saved entry, its content readable again, in the order of what the list shows of each. One that cannot be
+    // read (the key locked, or DPAPI of another Windows user, or of this PC before it was formatted) is left out, and
+    // counted in Unreadable.
     public List<Entry> Saved()
     {
         List<Entry> entries = new List<Entry>();
+        Unreadable = 0;
         using (Statement rows = data.Prepare("SELECT " + EntryColumns + " FROM entries WHERE saved = 1"))
             while (rows.Step())
             {
@@ -725,11 +1062,15 @@ sealed class Clips : IDisposable
                 }
                 catch (CryptographicException)
                 {
+                    Unreadable++;
                 }
             }
         entries.Sort(delegate(Entry a, Entry b) { return StringComparer.CurrentCultureIgnoreCase.Compare(a.Label, b.Label); });
         return entries;
     }
+
+    // How many saved entries the last Saved left out, as it could not read them.
+    public int Unreadable { get; private set; }
 
     // The id of the saved entry with that name, whatever its letter case, or 0.
     public long Named(string name)
@@ -739,7 +1080,7 @@ sealed class Clips : IDisposable
     }
 
     // Saves a copied entry, under a name or without one, in a folder (0: none). From now on it never goes by
-    // itself, and only this Windows user can read it.
+    // itself, and it is encrypted under the key of the database.
     public void Save(long id, string name, long folder)
     {
         using (Transaction transaction = data.Begin())
@@ -753,7 +1094,8 @@ sealed class Clips : IDisposable
             }
             data.Execute("UPDATE entries SET saved = 1, saved_at = ?2, name = ?3, name_key = ?4, folder_id = ?5, pinned = 0,"
                 + " app_id = NULL, category = CASE WHEN chosen = 1 THEN category END, folded = NULL, hash = NULL, content = ?6, preview = ?7 WHERE id = ?1",
-                id, Stamp(DateTime.Now), Name(name), Key(name), Place(folder), Protect(content), preview == null ? null : Protect(preview));
+                id, Stamp(DateTime.Now), Name(name), Key(name), Place(folder), Protect(Unprotect(content)),
+                preview == null ? null : Protect(Unprotect(preview)));
             transaction.Commit();
         }
     }
@@ -1007,7 +1349,7 @@ sealed class Clips : IDisposable
             if (saved || !previews.TryGetValue(id, out preview))
             {
                 // Copied into a bitmap of its own, which does not need the stream to stay open.
-                using (MemoryStream packed = new MemoryStream(saved ? Unprotect(row.Blob(3)) : row.Blob(3)))
+                using (MemoryStream packed = new MemoryStream(Unprotect(row.Blob(3))))
                 using (Image image = Image.FromStream(packed))
                     preview = new Bitmap(image);
             }
@@ -1017,7 +1359,7 @@ sealed class Clips : IDisposable
         else
         {
             byte[] content = row.Blob(2);
-            entry = new Entry(name, Encoding.UTF8.GetString(saved ? Unprotect(content) : content), time);
+            entry = new Entry(name, Encoding.UTF8.GetString(Unprotect(content)), time);
             entry.Html = Revealed(row.Blob(13));
             entry.Rtf = Revealed(row.Blob(14));
         }
@@ -1062,28 +1404,42 @@ sealed class Clips : IDisposable
         return folder == 0 ? null : (object)folder;
     }
 
-    static byte[] Hash(byte[] content)
+    // What tells a copied entry copied again: with everything encrypted, an HMAC under the key (Vault.Fingerprint).
+    byte[] Hash(byte[] content)
+    {
+        return protection == Protection.All ? vault.Fingerprint(content) : Sha(content);
+    }
+
+    static byte[] Sha(byte[] content)
     {
         using (SHA256 sha = SHA256.Create()) return sha.ComputeHash(content);
     }
 
-    static byte[] Protect(byte[] plain)
+    // A value of a copied entry as it is kept: encrypted only with everything encrypted.
+    byte[] Copy(byte[] plain)
     {
-        return ProtectedData.Protect(plain, null, DataProtectionScope.CurrentUser);
+        return protection == Protection.All ? vault.Seal(plain) : plain;
     }
 
-    static byte[] Unprotect(byte[] secret)
+    // A value of a saved entry as it is kept: encrypted, unless the user chose to keep nothing encrypted. Unprotect reads
+    // any value, of any entry, however it is kept.
+    byte[] Protect(byte[] plain)
     {
-        return ProtectedData.Unprotect(secret, null, DataProtectionScope.CurrentUser);
+        return protection == Protection.Nothing ? plain : vault.Seal(plain);
+    }
+
+    byte[] Unprotect(byte[] secret)
+    {
+        return vault.Open(secret);
     }
 
     // A text that may be missing, as a saved entry keeps it: encrypted, or NULL.
-    static object Secret(string text)
+    object Secret(string text)
     {
         return text == null ? null : Protect(Encoding.UTF8.GetBytes(text));
     }
 
-    static string Revealed(byte[] secret)
+    string Revealed(byte[] secret)
     {
         return secret == null ? null : Encoding.UTF8.GetString(Unprotect(secret));
     }

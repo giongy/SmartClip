@@ -5,13 +5,15 @@ static partial class Strings
 {
     static void French()
     {
-        ShiftName = "Maj"; DeleteKeyName = "Suppr"; EnterKeyName = "Entrée"; ArrowsName = "Haut / Bas"; EscapeKeyName = "Échap";
+        ShiftName = "Maj"; DeleteKeyName = "Suppr"; EnterKeyName = "Entrée"; ArrowsName = "Haut / Bas"; EscapeKeyName = "Échap"; BackKeyName = "Retour arrière";
         DayFormat = "dd/MM"; YearDayFormat = "dd/MM/yy";
         Quote = "« {0} »";
         Megabytes = "{0} Mo"; Kilobytes = "{0} Ko";
 
         TypeButton = "Saisir le presse-papiers";
         SavedTitle = "Enregistrés"; PausedSuffix = " (en pause)";
+        FoldersHeading = "Dossiers"; TextsHeading = "Textes"; TextOne = "texte"; TextMany = "textes";
+        UpNote = "Dossier parent";
         New = "Nouveau…"; SaveDots = "Garder…"; EditDots = "Modifier…"; RenameDots = "Renommer…"; Delete = "Supprimer";
         Options = "Options"; SearchCue = "Rechercher…";
         CountOf = "{0} sur {1}";
@@ -222,7 +224,68 @@ static partial class Strings
         ChooseDataFolder = "Le dossier où {0} garde ce que vous copiez et enregistrez.";
         AskUseExisting = "{0} contient déjà une liste de {1}.\n\nUtiliser celle-ci ? La vôtre reste où elle est, telle quelle.";
         AskSyncedFolder = "{0} semble être un dossier synchronisé en ligne ou sur le réseau.\n\nLa synchronisation peut "
-            + "bloquer ou abîmer la base de données, et les textes enregistrés ne se lisent pas sur un autre PC. L'utiliser quand même ?";
+            + "bloquer ou abîmer la base de données, et sur un autre PC les textes enregistrés ne se lisent qu'avec la phrase "
+            + "de récupération. L'utiliser quand même ?";
+        ProtectOption = "Chiffrer"; ProtectNote = "Ce que le fichier de la liste garde chiffré";
+        ProtectNothing = "Rien"; ProtectSaved = "Textes enregistrés"; ProtectAll = "Tout";
+        ProtectTip = "Rien : le fichier se lit sur n'importe quel PC sans phrase, et par quiconque en a une copie.\n"
+            + "Textes enregistrés : ils sont chiffrés, et ne se lisent que sur ce PC, ou avec la phrase de récupération.\n"
+            + "Tout : ce que vous copiez aussi. En le changeant, ce qui existe est chiffré ou déchiffré aussitôt.";
+        ProtectAllExplain = "Les textes enregistrés sont chiffrés, et tout ce que vous copiez aussi.\n"
+            + "Sur ce PC, Windows les ouvre tout seul : rien à faire.\n"
+            + "Sur un autre PC, ou après avoir réinstallé Windows, ils ne s'ouvrent qu'avec la phrase de récupération.\n"
+            + "Avec des milliers d'éléments, chercher dans l'historique est un peu plus lent.";
+        ProtectNothingExplain = "Rien n'est chiffré.\n"
+            + "Le fichier s'ouvre sur n'importe quel PC, sans phrase, mais quiconque en a une copie peut le lire.\n"
+            + "Ce que d'autres programmes marquent comme privé n'est de toute façon jamais conservé.";
+        ProtectSavedExplain = "Seuls les textes enregistrés sont chiffrés ; ce que vous copiez reste en clair.\n"
+            + "Sur ce PC, Windows les ouvre tout seul : rien à faire.\n"
+            + "Sur un autre PC, ou après avoir réinstallé Windows, ils ne s'ouvrent qu'avec la phrase de récupération.";
+        AskPlain = "Les textes enregistrés seront gardés en clair : quiconque a le fichier de la liste peut les lire, même les "
+            + "privés.\n\nContinuer ?";
+        NowPlain = "Les textes enregistrés sont maintenant gardés en clair."; NowEncrypted = "Les textes enregistrés sont maintenant chiffrés.";
+        NowAll = "Tout est maintenant chiffré, ce que vous copiez aussi.";
+        SetupTitle = "Bienvenue dans {0}"; UpgradeTitle = "Vos textes enregistrés";
+        SetupStep = "{0} sur {1}";
+        BackButton = "Précédent"; NextButton = "Suivant"; DoneButton = "Terminer";
+        SetupFolderTitle = "Où garder la liste";
+        SetupFolderExplain = "{0} garde ce que vous copiez et enregistrez dans un seul fichier. Dans un dossier synchronisé en "
+            + "ligne, comme OneDrive, il survit à un PC en panne ou formaté. Si le dossier choisi contient déjà une liste de {0}, "
+            + "c'est elle qui sert.";
+        SetupFolderOption = "Dossier de la liste"; SetupFolderNote = "Sur ce PC, ou dans un dossier comme OneDrive";
+        SetupHistoryTitle = "Que retenir";
+        SetupHistoryExplain = "En plus des textes que vous enregistrez, {0} peut retenir tout ce que vous copiez, pendant les "
+            + "jours choisis, pour que vous le repreniez au besoin. Désactivé, seul ce que vous enregistrez est gardé.";
+        SetupProtectTitle = "Que chiffrer";
+        UpgradeExplain = "Depuis cette version, vous choisissez ce qui est chiffré. Jusqu'ici les textes enregistrés étaient "
+            + "chiffrés pour ce PC seul, et ne se lisaient plus après avoir réinstallé Windows.";
+        PhraseOptional = "Phrase de récupération"; PhraseOptionalNote = "Facultative : trois mots reliés par « - »";
+        PhraseOption = "Phrase de récupération"; PhraseNote = "Pour lire ce qui est chiffré sur un autre PC";
+        PhraseTip = "Sur ce PC Windows déverrouille pour vous ce qui est chiffré ; sur un autre,\n"
+            + "ou après avoir réinstallé Windows, seule la phrase de récupération, depuis une copie de la base\n"
+            + "(avec Changer… à côté du dossier de la liste). Sans elle, cela ne se lit qu'ici.";
+        SetPhraseButton = "Définir…"; ChangePhraseButton = "Changer…"; UnlockButton = "Déverrouiller…";
+        PhraseTitle = "Phrase de récupération"; UnlockTitle = "Déverrouiller la liste";
+        PhraseExplain = "Trois mots reliés par « - », aussi longs que vous voulez, comme {0}. Avec eux ce qui est chiffré se "
+            + "lit sur un autre PC, même après avoir réinstallé Windows ; majuscules et minuscules ne comptent pas. "
+            + "Notez-les en lieu sûr : sans eux, personne ne peut le lire ailleurs qu'ici.";
+        UnlockExplain = "Ce que cette liste garde chiffré a été chiffré sur un autre PC. Écrivez sa phrase de récupération "
+            + "pour le lire ici : ce PC s'en souvient ensuite.";
+        PhraseExample = "rivière-lampe-sept";
+        PhraseLabel = "Trois mots reliés par « - »";
+        PhraseWillBe = "Ce sera : {0}"; PhraseNotThree = "Trois mots, reliés par « - ».";
+        PhraseWrong = "Ce n'est pas la phrase de cette liste.";
+        Unlock = "Déverrouiller"; NoPhraseButton = "Je ne l'ai pas…";
+        AskStartOver = "Sans la phrase personne ne peut lire ce qu'un autre PC a chiffré.\n\n"
+            + "Le supprimer, et chiffrer ce qui vient ensuite avec une nouvelle clé ?";
+        StartedOver = "Éléments supprimés : {0}. Ce qui vient ensuite se chiffre avec une nouvelle clé.";
+        PhraseSet = "Phrase de récupération définie : gardez-la en lieu sûr.";
+        Unlocked = "Déverrouillé : ce PC se souvient de la phrase.";
+        SavedLocked = "Ce qui est chiffré est verrouillé sur ce PC : déverrouillez-le avec la phrase de récupération, dans les options.";
+        LockedWarning = "Cette liste a été chiffrée sur un autre PC.\tDéverrouillez-la avec la phrase de récupération : "
+            + "Options › {0}.";
+        UnreadableWarning = "Textes enregistrés illisibles sur ce PC : {0}. Une version antérieure à la phrase de "
+            + "récupération les a chiffrés pour un autre utilisateur de Windows, ou un autre PC.";
         ListMovedTo = "La liste est maintenant dans {0}.";
         ListMoveFailed = "La liste n'a pas pu être déplacée et reste où elle était : {0}";
         FolderUnavailable = "Le dossier de la liste, {0}, est inaccessible : ce que vous copiez et enregistrez maintenant "
@@ -268,7 +331,7 @@ static partial class Strings
         DataFolderTip = "Où se trouve la base de données avec ce que vous copiez et enregistrez, avec le journal des erreurs :\n{0}\n"
             + "Le dossier par défaut est {1}. « Changer… » déplace la base de données dans le dossier choisi,\n"
             + "ou utilise celle qui s'y trouve déjà. Ce n'est pas un moyen de partager la liste entre PC : les\n"
-            + "textes enregistrés ne sont lisibles que par cet utilisateur Windows sur ce PC, et deux programmes\n"
+            + "textes enregistrés chiffrés ne se lisent sur un autre PC qu'avec la phrase de récupération, et deux programmes\n"
             + "utilisant le même fichier en même temps peuvent l'abîmer.";
         CleanTip = "Efface aussitôt de l'historique ce que vous avez copié avant les derniers jours\n"
             + "indiqués ci-dessus : avec 1, seul aujourd'hui reste ; avec 0, rien.\n"
@@ -451,15 +514,21 @@ static partial class Strings
                 + "retire l'élément copié de la liste.",
             "## Les voir et les utiliser",
             "- L'œil d'un texte enregistré avec un nom (« " + ShowContent + " », aussi dans son menu) montre son contenu dans "
-                + "un petit cadre pendant quelques secondes : la liste ne montre que son nom, et le survoler ne suffit jamais.",
+                + "un petit cadre pendant quelques secondes : sa carte ne montre que son nom, des points à la place du "
+                + "contenu, et le survoler ne suffit jamais.",
             "- Les textes enregistrés sont aussi dans le menu de l'icône près de l'horloge : en choisir un le remet "
                 + "dans le presse-papiers sans ouvrir la fenêtre.",
             "## En sécurité",
-            "Les textes enregistrés n'expirent jamais. Ils sont dans la base de données du programme, chiffrés pour "
-                + "votre utilisateur : un autre utilisateur du même PC ne peut pas les lire. Quand vous en remettez un dans le presse-papiers, il "
-                + "est marqué comme privé, pour que l'historique de Windows (Win+V) et les autres gestionnaires de "
-                + "presse-papiers l'ignorent. Une image copiée peut aussi être enregistrée : elle montre "
-                + "toujours sa miniature, avec son nom à côté si elle en a un.",
+            "- Les textes enregistrés n'expirent jamais. Ce que la base garde chiffré se choisit au premier démarrage, et "
+                + "sous « " + ProtectOption + " » (Options › " + ProgramTitle + ") : rien, pour qu'elle se lise sur n'importe "
+                + "quel PC, mais aussi par quiconque en a une copie ; les textes enregistrés, que sur ce PC Windows "
+                + "déverrouille pour vous, et qu'un autre utilisateur du même PC ne peut pas lire ; ou tout, ce que vous copiez aussi.",
+            "- Chiffrés, avec une « " + PhraseOption + " » (Options › " + ProgramTitle + ") de trois mots reliés par « - », ils se "
+                + "lisent aussi sur un autre PC, même après avoir réinstallé Windows : là, choisissez le dossier de la base, "
+                + "et écrivez la phrase quand elle est demandée. Sans elle, ils ne se lisent que sur ce PC ; gardez-la en lieu sûr.",
+            "- Quand vous en remettez un dans le presse-papiers, il est marqué comme privé, pour que l'historique de "
+                + "Windows (Win+V) et les autres gestionnaires de presse-papiers l'ignorent.",
+            "- Une image copiée peut aussi être enregistrée : elle montre toujours sa miniature, avec son nom à côté si elle en a un.",
             "## Textes mis en forme",
             "Un texte enregistré peut être mis en forme, comme une signature de courriel : gras, italique, souligné, polices et tailles.",
             "- Copiez la signature depuis un courriel ou un document et enregistrez-la : elle garde sa mise en forme. "
@@ -487,6 +556,8 @@ static partial class Strings
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + ") : il est créé dans le dossier "
                 + "affiché, mais sa fenêtre permet de choisir où le mettre.",
             "- La carte d'un dossier l'ouvre par un double clic ou Entrée, comme un clic sur sa ligne dans la barre latérale.",
+            "- Dans un dossier la première ligne, « " + UpNote + " », revient à celui qui le contient, ou à « " + SavedTitle
+                + " » (aussi " + BackKeyName + " ou " + Key(MainForm.UpKeys) + ") ; ce que vous y glissez va là.",
             "- La flèche à l'extrémité droite d'un dossier qui en contient d'autres l'ouvre et le ferme ; celle de « "
                 + SavedTitle + " » les montre ou les cache tous. Le nombre dit combien de textes sont dans le dossier même, "
                 + "pas dans ceux qu'il contient ; celui de « " + SavedTitle + " », ceux hors des dossiers. Ouverts ou fermés, "
@@ -558,11 +629,12 @@ static partial class Strings
             "Ce que vous copiez reste dans la liste pendant un nombre de jours que vous choisissez ("
                 + Texts.DefaultKeepDays + " si vous ne le changez pas), même après avoir fermé le programme ou éteint le PC.",
             "## Où il est gardé",
-            "- Il est gardé en clair dans une base de données, par défaut " + Clips.DefaultFile + ", avec les textes "
-                + "enregistrés, qui eux sont chiffrés. Les jours expirés s'effacent tout seuls.",
+            "- Il est gardé dans une base de données, par défaut " + Clips.DefaultFile + ", avec les textes enregistrés : "
+                + "en clair, sauf si vous avez choisi de tout chiffrer (« " + ProtectOption + " »). Les jours expirés s'effacent tout seuls.",
             "- Dans les options, « " + ChangeFolderButton + " » emmène la base de données dans un autre dossier, ou "
                 + "utilise celle qui s'y trouve déjà ; « " + DefaultFolderButton + " » la ramène. Ce n'est pas un moyen "
-                + "de partager la liste entre PC : les textes enregistrés ne se lisent que sur ce PC. Si le dossier "
+                + "de partager la liste entre PC ouverts en même temps, mais une copie sur OneDrive survit à un PC en panne : "
+                + "les textes enregistrés chiffrés demandent alors la phrase de récupération. Si le dossier "
                 + "choisi est inaccessible au démarrage, la liste travaille en mémoire et le dit.",
             "## Ce qui reste et ce qui part",
             "- Avec 0 jour, seul ce que vous avez copié aujourd'hui reste.",
@@ -581,7 +653,8 @@ static partial class Strings
             "Le bouton « " + Options + " » les ouvre dans une fenêtre à part, qui peut rester ouverte à côté de la liste. "
                 + "Chaque option dit en quelques mots, sous son nom, ce qu'elle fait ; en laissant le pointeur dessus, son "
                 + "explication complète apparaît. Elles sont réparties en cinq pages, choisies dans la colonne de gauche comme "
-                + "les sujets de ce guide.",
+                + "les sujets de ce guide. Au premier démarrage, quelques étapes demandent où garder la liste, que retenir "
+                + "et que chiffrer : tout peut se changer ici.",
             "## " + TypingTitle,
             "Combien de secondes attendre avant la saisie (de " + MainForm.MinDelay + " à "
                 + MainForm.MaxDelay + "), si le serveur a un clavier américain, s'il faut appuyer sur Entrée à la fin, "
@@ -591,17 +664,18 @@ static partial class Strings
                 + ", et leur donne d'autres touches ; et si " + pick + " rouvre la liste là où vous l'avez laissée.",
             "## " + HistoryTitle,
             "S'il faut mémoriser ce que vous copiez, pendant combien de jours, le dossier de la base de données "
-                + "(qu'on peut changer) avec le lien qui l'ouvre, et le bouton qui nettoie aussitôt l'historique.",
+                + "(qu'on peut changer) avec le lien qui l'ouvre, le bouton qui nettoie aussitôt l'historique, et les "
+                + "boutons pour exporter et importer.",
             "## " + AppearanceTitle,
             "La langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la "
                 + "taille de l'interface (boutons, options, ce guide : en pixels, elles redémarrent le programme), celles des "
                 + "éléments (elles changent aussitôt), et si laisser le pointeur sur une carte la montre en entier.",
             "## " + ProgramTitle,
             "S'il faut rester dans la zone de notification et se masquer en passant à un autre "
-                + "programme, s'il faut démarrer avec Windows, les boutons pour exporter et importer, et la version du programme.",
+                + "programme, s'il faut démarrer avec Windows, que chiffrer et la phrase de récupération des textes enregistrés, et la version du programme.",
 
             "# Exporter et importer",
-            "Dans les options, sous « " + ProgramTitle + " », deux boutons sortent vos textes du programme et les "
+            "Dans les options, sous « " + HistoryTitle + " », deux boutons sortent vos textes du programme et les "
                 + "reprennent, comme sauvegarde ou pour les passer à un autre PC. Chacun demande si vous voulez "
                 + "seulement les textes enregistrés ou tout, c'est-à-dire aussi les éléments copiés.",
             "## Exporter",

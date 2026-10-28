@@ -71,6 +71,11 @@ partial class MainForm
         PlaceNumber(Sign.Clean, cleanBox, Strings.SpareOption, Strings.SpareNote, Texts.MaxKeepDays, delegate { Spared = Spared; }, ref top,
             cleanButton);
         Spared = 0;
+        // Side by side, each with its two choices: the saved texts alone, or what was copied too.
+        ContextMenuStrip exportMenu = Choice(Export), importMenu = Choice(Import);
+        Act(exportButton, Strings.ExportButton, delegate { exportMenu.Show(exportButton, 0, exportButton.Height); });
+        Act(importButton, Strings.ImportButton, delegate { importMenu.Show(importButton, 0, importButton.Height); });
+        PlaceTile(Sign.Archive, Strings.BackupOption, Strings.BackupNote, ref top, exportButton, importButton);
 
         // Each of these has a button that shows the choice in use and opens the others. The language by the name each
         // gives itself; a font written in itself. The language and the font of the interface apply from a new start,
@@ -108,11 +113,13 @@ partial class MainForm
         PlaceOption(Sign.Hide, leaveBox, Strings.LeaveOption, Strings.LeaveNote, ref top);
         leaveBox.Checked = true;
         PlaceOption(Sign.Power, startBox, Strings.StartOption, Strings.StartNote, ref top);
-        // Side by side, each with its two choices: the saved texts alone, or what was copied too.
-        ContextMenuStrip exportMenu = Choice(Export), importMenu = Choice(Import);
-        Act(exportButton, Strings.ExportButton, delegate { exportMenu.Show(exportButton, 0, exportButton.Height); });
-        Act(importButton, Strings.ImportButton, delegate { importMenu.Show(importButton, 0, importButton.Height); });
-        PlaceTile(Sign.Archive, Strings.BackupOption, Strings.BackupNote, ref top, exportButton, importButton);
+        // What is kept encrypted travels with the list: read from it once it is open (ShowPhrase).
+        PlaceTile(Sign.Lock, Strings.ProtectOption, Strings.ProtectNote, ref top, Picker(protectButton,
+            new Protection[] { Protection.Nothing, Protection.Saved, Protection.All }, ProtectionName,
+            delegate { return clips == null ? Protection.Saved : clips.Protection; }, ChangeProtection, null));
+        // What the button says follows the key of the saved texts (ShowPhrase).
+        Act(phraseButton, Strings.SetPhraseButton, ChoosePhrase);
+        PlaceTile(Sign.Key, Strings.PhraseOption, Strings.PhraseNote, ref top, phraseButton);
         PlaceTile(Sign.Info, Program.AppName + " " + Program.Version, Strings.AboutNote, ref top);   // which version this is
         pageList.SelectedIndex = 0;
 
@@ -139,6 +146,8 @@ partial class MainForm
         TipOption(string.Format(Strings.StartTip, Program.AppName), startBox);
         Tip(Strings.ExportTip, exportButton);
         Tip(Strings.ImportTip, importButton);
+        TipOption(Strings.PhraseTip, phraseButton);
+        TipOption(Strings.ProtectTip, protectButton);
     }
 
     // Opens a new page of options, with its name on top and its row in the column on the left; what is placed
@@ -435,6 +444,71 @@ partial class MainForm
         return number + " " + (number == 1 ? one : many);
     }
 
+    // What the list keeps encrypted; and the button of the recovery phrase says what it would do: unlock the saved texts
+    // another PC encrypted, change the phrase, or set one. With nothing encrypted there is no phrase.
+    void ShowPhrase()
+    {
+        bool has = false;
+        Change(delegate { has = clips.HasPhrase; });
+        protectButton.Text = ProtectionName(clips.Protection);
+        phraseButton.Text = clips.Locked ? Strings.UnlockButton : has ? Strings.ChangePhraseButton : Strings.SetPhraseButton;
+        phraseButton.Enabled = clips.Protection != Protection.Nothing;
+    }
+
+    // Keeps encrypted what the user chose from now on, the saved texts there are too. Unencrypted only after asking.
+    void ChangeProtection(Protection protection)
+    {
+        if (protection == Protection.Nothing && !AskForm.Ask(Front, Strings.AskPlain, true)) return;
+        Cursor before = Cursor.Current;
+        Cursor.Current = Cursors.WaitCursor;   // the history too, with everything: with many pictures, seconds
+        bool done = Change(delegate { clips.SetProtection(protection); });
+        Cursor.Current = before;
+        if (!done) return;
+        Reload();
+        Say(protection == Protection.Nothing ? Strings.NowPlain : protection == Protection.Saved ? Strings.NowEncrypted : Strings.NowAll);
+    }
+
+    // Sets the recovery phrase, or changes it; with the saved texts locked, unlocks them with it instead.
+    void ChoosePhrase()
+    {
+        if (clips.Locked)
+        {
+            UnlockSaved();
+            return;
+        }
+        using (PhraseForm form = new PhraseForm())
+        {
+            if (form.ShowDialog(Front) != DialogResult.OK || !Change(delegate { clips.SetPhrase(form.Phrase); })) return;
+        }
+        ShowPhrase();
+        Say(Strings.PhraseSet);
+    }
+
+    // Unlocks with the recovery phrase the saved texts another PC encrypted. Without the phrase they can only be deleted,
+    // after asking, so that new ones can be saved under a new key.
+    void UnlockSaved()
+    {
+        DialogResult answer;
+        using (PhraseForm form = new PhraseForm(delegate(string phrase)
+        {
+            bool unlocked = false;
+            Change(delegate { unlocked = clips.Unlock(phrase); });
+            return unlocked;
+        }))
+            answer = form.ShowDialog(Front);
+        if (answer == DialogResult.OK)
+        {
+            Reload();
+            Say(Strings.Unlocked);
+            return;
+        }
+        if (answer != DialogResult.Abort || !AskForm.Ask(Front, Strings.AskStartOver, true)) return;
+        int deleted = 0;
+        if (!Change(delegate { deleted = clips.StartOver(); })) return;
+        Reload();
+        Say(string.Format(Strings.StartedOver, deleted));
+    }
+
     // Removes at once what was copied before the days to spare; with zero, everything, the entries kept at the top
     // too. The saved ones stay.
     void CleanHistory()
@@ -536,6 +610,8 @@ partial class MainForm
         Reload();
         ShowFolder();
         Say(string.Format(Strings.ListMovedTo, DataFolder));
+        // A list brought from another PC: its saved texts want the phrase that unlocks them, asked at once.
+        if (clips.Locked) UnlockSaved();
     }
 
     static bool SameFolder(string one, string other)

@@ -162,6 +162,8 @@ class RowList : ListBox, Scrolling
         marked = index;
         if (index < 0 || !known || !Visible || !IsHandleCreated)
         {
+            // Left halfway, as when the selection goes to another list (History has one of its own), it must not stay.
+            if (step >= 0 && IsHandleCreated) Invalidate(Strip());
             step = -1;
             slide.Stop();
             return;
@@ -227,7 +229,8 @@ class RowList : ListBox, Scrolling
             g.ResetTransform();
             Rectangle row = new Rectangle(Point.Empty, e.Bounds.Size);
             base.OnDrawItem(new DrawItemEventArgs(g, e.Font, row, e.Index, e.State, e.ForeColor, e.BackColor));
-            if (step >= 0)
+            // Filled again with nothing selected while the mark slid, the list has no mark to show.
+            if (step >= 0 && SelectedIndex >= 0)
             {
                 RectangleF mark = Mark();
                 mark.Offset(0, -e.Bounds.Top);

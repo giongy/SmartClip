@@ -30,7 +30,8 @@ condiviso su GitHub).
     - `MainForm.List.cs` — le schede delle voci (`cardList`): `WireLists` (menu, mouse), riempimento (`Filter`,
       `Arrange`, `ShowRows`), misura e disegno delle schede (`CardHeight`, `Lay`, `DrawEntry`, `PartAt`), anteprima,
       scelta, modifica, cartelle, tasti dell'elenco.
-    - `MainForm.Nav.cs` — la barra laterale (`navList`, i posti `Place`/`PlaceKind`; `footList` sotto), il suo
+    - `MainForm.Nav.cs` — la barra laterale (`homeList` con la sola Cronologia, `navList` con gli altri posti
+      `Place`/`PlaceKind`; `footList` sotto), il suo
       menu (`navMenu`) e il trascinamento nelle cartelle (`Draggable`).
     - `MainForm.Options.cs` — `PlaceOptions` (le opzioni e i loro suggerimenti), i `Place…`, esportazione,
       importazione, pulizia, `TransferSettings`, e `OptionsWindow`, la finestra delle
@@ -106,7 +107,7 @@ condiviso su GitHub).
     nemmeno il ripiego in memoria funzionerebbe. Portarsene una propria non serve (ogni Windows 10 e 11 ce l'ha, e
     Windows Update la tiene aggiornata).
   - `Clips.cs` — i dati dell'elenco in un file SQLite (dalla 4.0; `docs\piano-sqlite.md`). Una tabella `entries` per copiati e salvati (`saved` 0/1; un salvato può non
-    avere nome, è cifrato con DPAPI, contenuto e miniatura, e non scade mai; un copiato scade anche se in alto) e
+    avere nome, è cifrato con la chiave del database, `Vault`, contenuto e miniatura, e non scade mai; un copiato scade anche se in alto) e
     una `folders` ad albero (`parent_id`, 0 = fuori da tutte). Le regole le fa rispettare lo schema stesso
     (`Clips.Schema`: CHECK, UNIQUE, chiave esterna): nome e cartella solo sui salvati, niente freccia, testo per
     la ricerca né impronta sui salvati, numeri 1–`MaxNumber` unici, nomi unici senza maiuscole (`Key`, perché
@@ -130,7 +131,12 @@ condiviso su GitHub).
     indici (`LookupIndexes`: per tipo, per programma, per genere), così barra laterale, schede dei tipi e spazio delle
     immagini non leggono più tutta la tabella a ogni copia (misurato con `tests.exe many`: a 20.000 voci 50 ms
     ciascuno, ora 1–2); `Upgrade` li aggiunge senza rifare la tabella. La cache di SQLite è di 8 MB (`cache_size`;
-    con i 2 MB di default ogni lettura di tutta la tabella tornava al disco: 12 ms invece di 2 a 5000 voci). Ore in UTC, millisecondi dal 1970. Copiare di nuovo
+    con i 2 MB di default ogni lettura di tutta la tabella tornava al disco: 12 ms invece di 2 a 5000 voci). Versione 8
+    (28/10/2026): le tabelle `keys` e `settings` (`KeysSchema`; in `settings` cosa cifrare), con la chiave dei salvati chiusa da DPAPI per ogni PC (`PcKey`) e
+    al più una volta dalla frase di recupero (`PhraseKey`, con sale e giri); vedi `Vault.cs`. `Upgrade` la crea (`IF NOT
+    EXISTS`: i test fanno i database vecchi da uno nuovo), `OpenVault` a ogni apertura sblocca la chiave con DPAPI, ne
+    crea una se non c'è e ricifra con lei i salvati che DPAPI aveva cifrato (`Modernize`; quelli che questo utente non
+    legge restano com'erano). Ore in UTC, millisecondi dal 1970. Copiare di nuovo
     aggiorna la stessa riga (`hash`). `Entry` ha in più `Id`, `Saved`, `FolderId`. Un database nuovo si riempie
     dentro la transazione che lo crea (`new Clips(path, fill)`): se il riempimento fallisce non resta niente, e al
     prossimo avvio è di nuovo nuovo (`Created`).
@@ -156,6 +162,48 @@ condiviso su GitHub).
   - `Origin.cs` — il programma in cui è stata copiata una voce (`Origin`: nome e icona), vedi «App di provenienza» sotto.
   - `Ocr.cs` — il testo di un'immagine letto dal riconoscimento di Windows (`Windows.Media.Ocr`, sul PC, senza
     rete; funziona anche fuori dal pacchetto): vedi «Copia il testo» sotto.
+  - `Vault.cs` — la chiave dei testi salvati (voluta dall'utente il 28/10/2026: con DPAPI per l'utente, dopo una
+    formattazione i salvati di una copia del database su OneDrive non si leggevano più). Una chiave casuale (AES-256 in
+    CBC, poi HMAC-SHA256 su tutto: .NET Framework non ha AES-GCM; un valore cifrato comincia con `Mark`, «SCK» e la
+    versione), chiusa nel database da DPAPI per ogni PC che lo apre e, se l'utente la sceglie, dalla **frase di
+    recupero**: tre parole unite da «-», lunghe quanto si vuole, senza maiuscole né spazi attorno (`Vault.Phrase`,
+    scelte dell'utente), da cui PBKDF2-HMAC-SHA512 a 210.000 giri (0,7 s; con SHA-256 a 600.000 erano quasi 3 s,
+    perché 64 byte sono due blocchi) ricava la chiave che la chiude. La frase non si conserva mai. Su un altro PC la
+    chiave è chiusa (`Clips.Locked`): i salvati non si leggono e non se ne salvano di nuovi (`Seal` lo rifiuta con
+    `Strings.SavedLocked`), la riga di stato lo dice a riposo (`ShowIdle`, `LockedWarning`) e scegliendo quella
+    cartella nelle opzioni la frase si chiede subito (`UnlockSaved`); data la frase giusta (`Clips.Unlock`), quel PC
+    aggiunge la sua copia DPAPI e non la chiede più. Senza frase, «Non ce l'ho…» elimina dopo una domanda i salvati
+    che nessuno può leggere e ricomincia con una chiave nuova (`StartOver`); chiusa ma senza salvati, ricomincia da
+    sé. I salvati che una versione precedente aveva cifrato con DPAPI per un altro utente restano com'erano, contati
+    (`Clips.Unreadable`, `UnreadableWarning`). La finestra è `PhraseForm` (sceglierla, con sotto come sarà
+    confrontata; o sbloccare), l'opzione «Frase di recupero» sta in «Programma» (`phraseButton`, `ShowPhrase`,
+    `ChoosePhrase`). Controlli in `VaultTest` (`data`), foto in `shot` (`-phrase`, `-unlock`).
+    **Cosa cifrare** (`Protection`, voluto dall'utente il 28/10/2026: «io lo lascerei sempre tutto in chiaro»):
+    `Nothing` o `Saved`, nella tabella `settings` del database (viaggia con il file: un PC nuovo sa come leggerlo).
+    Senza riga vale `Saved`, come le versioni precedenti (`ProtectionChosen` falso); una lista nuova la sceglie alla
+    procedura del primo avvio, con `Nothing` già scelto (scelta dell'utente). In chiaro i valori sono i byte stessi,
+    leggibili da qualsiasi strumento SQLite: `Vault.Open` riconosce il formato dall'inizio (`Mark`; DPAPI dai primi 20
+    byte di un blob fatto al momento, `Dpapi`; altrimenti in chiaro), e `Modernize` porta ogni valore leggibile a ciò che
+    è scelto. `SetProtection` cifra o decifra subito tutti i salvati (in chiaro la frase si dimentica; chiusa, la chiave
+    non si può togliere). **`All`** (voluto dall'utente il 28/10/2026, «tutto, niente, salvati»): anche i copiati,
+    contenuto, miniatura e testo per la ricerca (`folded`, allora un BLOB cifrato del suo UTF-8: il database apre i file con
+    `sqlite3_open16`, quindi i testi vi stanno in UTF-16 e letti come byte non sono UTF-8, `SearchText`), e l'impronta
+    diventa una HMAC con una chiave derivata (`Vault.Fingerprint`). I copiati cambiano solo con la scelta (`Recopy`, una
+    riga alla volta), mai a ogni apertura. Il database non può più cercare: `Copied`/`CopiedCount` con parole passano da
+    `Found`, che chiede al database le altre condizioni e cerca le parole in `searchTexts` (testi decifrati una volta, alla
+    prima ricerca, tenuti aggiornati da `Insert`). Chiusa la chiave (`Blind`), niente si legge e niente si cattura;
+    «Non ce l'ho…» elimina anche i copiati. Misurato con `tests.exe many` (5000 testi, 200 MB di immagini): cifrare
+    tutto 3,5 s, la prima ricerca 0,45 s, le altre 12–42 ms come in chiaro, una copia 8 ms. Lo schema non cambia (8).
+  - `MainForm.Setup.cs` — la procedura del primo avvio (voluta dall'utente il 28/10/2026), `SetupWindow`, a passi
+    (Indietro / Avanti / Fine) fatti con le righe delle opzioni (`PlaceTile`, `Picker`, `PlaceNumber`, con `page`
+    puntato sulle sue pagine): dove tenere l'elenco (cambiato subito con `MoveDataFolder`, che chiede prima di usare
+    un elenco trovato e ne sblocca i salvati con la frase; il database vuoto appena creato nella cartella predefinita
+    si cancella se un altro ne prende il posto), cosa ricordare (cronologia e giorni), cosa cifrare con la frase
+    facoltativa (non chiesto se l'elenco scelto lo dice già). Primo avvio = nessuna impostazione nel registro
+    (`FirstStart`, letto da `Main` prima di creare la finestra, che le scrive chiudendosi); `AskSetup`/`RunSetup` da
+    `OnShown`, mai dai test. Un elenco di una versione precedente (`!ProtectionChosen`) vede una volta sola il passo
+    «cosa cifrare», con `Saved` già scelto; chiuso con la X, resta com'è e non si chiede più. Foto in `shot`
+    (`-setup-1`…`-3`, `-upgrade`).
   - `Qr.cs` — il codice QR di un testo (`Qr.Of`), scritto qui perché non si può aggiungere niente alla compilazione;
     `QrForm.cs` — la finestra che lo mostra. Vedi «Codice QR» sotto.
   - `Icons.cs` — i segni (`Sign`), dal 24/10/2026 (voluto dall'utente: le icone a linee gli piacevano) le icone di
@@ -274,7 +322,10 @@ condiviso su GitHub).
   cartelle e programmi, che con le sole icone si confondevano, e ogni cartella è piena (`Sign.FullFolder`) con
   l'iniziale del nome ritagliata nel colore della riga (`InitialShare`, `InitialDrop`; voluto dall'utente il 19/10/2026:
   tutte uguali, non si distinguevano; nella cartella vuota la lettera toccava i bordi); con i nomi, un nome tagliato compare intero nel
-  suggerimento (`NameCut`, `RowTip`; `PlaceParts` misura la riga per disegno e suggerimento). Sotto, `footList`: Sospendi/Riprendi la cattura, Opzioni, Guida. A destra, su un
+  suggerimento (`NameCut`, `RowTip`; `PlaceParts` misura la riga per disegno e suggerimento). «Cronologia» sta da sola in un elenco suo (`homeList`), sopra
+  `navList`, così resta sempre in vista e a scorrere sono gli altri posti, da «In alto» (voluto dall'utente il
+  28/10/2026); `FillNav` riempie tutti e due e seleziona in uno solo, le frecce passano dall'uno all'altro. Sotto, dopo
+  una linea sottile (disegnata da `OnPaintBackground`), `footList`: Sospendi/Riprendi la cattura, Opzioni, Guida. A destra, su un
   pannello più chiaro che arriva ai bordi della finestra (`pane`, un `Card` `Flat`; il resto dell'area lo dipinge
   `OnPaintBackground` della finestra, che per il resto è la barra laterale): titolo del posto con accanto, piccolo e grigio, il conteggio (`PlaceTitle`,
   sulla stessa linea di base; prima stava all'altro capo del pannello), ricerca con «Nuovo…» e «Digita gli
@@ -300,6 +351,17 @@ condiviso su GitHub).
   cartella mostrano i salvati per nome, senza giorni, come Esplora file (voluto dall'utente il 27/10/2026): prima le
   cartelle contenute direttamente (`FolderCard`, una riga che non è una `Entry`, quindi copia, digitazione, scelta di più
   schede e i tasti delle voci la saltano), poi i testi contenuti direttamente; «Salvati» quelli fuori da ogni cartella.
+  Con delle cartelle, ognuno dei due gruppi sotto il suo `Heading`, «Cartelle» e «Testi», come i giorni della Cronologia
+  (il primo nella barra del giorno). Le cartelle non sono schede ma righe come quelle della barra laterale
+  (`DrawFolderCard`: `Look.DrawRow`, tacca se selezionata, cartella piena d'accento, nome in peso normale, «N testi» e ›);
+  un salvato con nome scrive il nome in peso normale e dopo, tenui, i pallini `Hidden` (prima nome in grassetto: voluto
+  dall'utente il 28/10/2026, cartelle e salvati con nome si confondevano). Nel posto in cui stanno, i salvati non dicono
+  «☆ Salvati» o la cartella nella riga piccola (`Source` nullo), solo il giorno; trovati più in fondo da una ricerca, sì.
+  In una cartella (senza ricerca né tipo) la prima riga sotto «Cartelle» è `UpCard`, «Cartella superiore» con il nome
+  di quella che la contiene o «Salvati» (voluta dall'utente il 28/10/2026): Invio, doppio clic, Backspace nelle schede o
+  Alt+↑ (`UpKeys`, `BackKey`) chiamano `GoUp`, che seleziona lassù la cartella lasciata; ciò che vi si trascina va lì
+  (`CardDropAt`). Niente menu, non si sposta né si elimina. In una cartella vuota è selezionata, e la nota di
+  `emptyNote` sta sotto di lei (`PlaceDay`). `shot` ne fa la foto (`-folder`).
   Cercando, o con un tipo scelto, niente cartelle, e la ricerca guarda anche dentro le sottocartelle. I copiati li filtra il database
   (`Clips.Copied` con un `Sieve`: parole, tipo, programma, solo in alto; al massimo `MaxShown`), i salvati la memoria
   (`Texts.Matches`: parole in qualsiasi ordine, senza maiuscole né accenti). `Filter` rifà anche la barra (`FillNav`,
@@ -483,12 +545,13 @@ condiviso su GitHub).
   scartato (Esplora file e gli emulatori di terminale danno il nome della cartella o «[62 x 160]»). Non si esporta, e la ricerca non trova le voci per programma (si potrebbe: ma
   «code» troverebbe tutto ciò che è copiato in VS Code). Le voci finte delle immagini (`FillSample`) vengono da Edge,
   PowerShell e Blocco note (`Clips.Attribute`).
-- I testi salvati (`Entry.Saved`) stanno nello stesso database, contenuto e miniatura cifrati con DPAPI per
-  l'utente (`ProtectedData`, in `System.Security.dll` che `csc` riferisce già da solo); non hanno testo per la
+- I testi salvati (`Entry.Saved`) stanno nello stesso database, contenuto e miniatura cifrati con la chiave del
+  database (`Vault`, sopra; DPAPI con `ProtectedData`, in `System.Security.dll` che `csc` riferisce già da solo, ne
+  custodisce una copia per ogni PC; fino alla 4.3.18 cifrava ogni valore da sé); non hanno testo per la
   ricerca né impronta, che li tradirebbero. Non scadono mai. L'elenco li tiene in memoria decifrati (`entries`,
   `LoadSaved`, rifatto da `Reload` solo quando cambiano) e la ricerca li scorre lì (`Texts.Matches`). La scheda
-  ne mostra in cima la cartella (o «Salvati») e il nome, in basso il giorno in cui sono stati salvati (sotto il nome
-  di un giorno solo l'ora; quelli salvati prima che si tenesse il giorno restano senza).
+  ne mostra il nome (con i pallini) o il contenuto, e nella riga piccola la cartella (o «Salvati», tranne nel posto in cui
+  stanno) e il giorno in cui sono stati salvati (quelli salvati prima che si tenesse il giorno restano senza).
   Una voce si riconosce dal suo `Id`, non più dal nome.
 - Cartelle dei testi salvati (volute dall'utente), anche una dentro l'altra (sottocartelle volute dopo, dalla
   3.8). Nel codice si chiamano «group». Nel database sono un albero (`folders`, `parent_id`, `Folder`), ma la
@@ -545,7 +608,8 @@ condiviso su GitHub).
   l'app»), dopo «Apri», ogni cartella un sottomenu, aperta o chiusa che sia: `ShowSaved`, rifatto a ogni
   apertura del menu da `entries`. La scelta passa da `Use` come nell'elenco: solo appunti, niente digitazione.
   Si vedono solo i nomi.
-- «Esporta…» e «Importa…» nelle opzioni, sotto «Programma» (voluti dall'utente, con la scelta «solo i testi
+- «Esporta…» e «Importa…» nelle opzioni, in fondo a «Cronologia» (fino alla 4.3.18 sotto «Programma»; spostati
+  dall'utente il 28/10/2026) (voluti dall'utente, con la scelta «solo i testi
   salvati» o «tutto» in un menu sotto ciascun pulsante, `Choice`). Il file è testo UTF-8 con BOM, leggibile dal
   Blocco note e **in chiaro** (prima di esportare si chiede conferma): un segno per voce (`[Folder]`,
   `[Saved]`, `[Copied]` in inglese, `[Cartella]`… in italiano: il file si scrive nella lingua in uso e si legge

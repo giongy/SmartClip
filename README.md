@@ -106,8 +106,8 @@ only the name and the content stays hidden, which suits a password; without, the
 | Ctrl+Shift+1 … Ctrl+Shift+9, in any program | Pastes the entry with that number into the active window, without opening SmartClip (see below) |
 | F1, or **Help** at the bottom of the sidebar | Opens the guide: everything the program does, by topic |
 
-Of a saved text the card shows the name only: **Show the content** in its menu shows the text in the same small
-box for a few seconds.
+Of a saved text with a name the card shows the name only, followed by dots in place of the content: **Show the
+content** in its menu shows the text in the same small box for a few seconds.
 
 **Pause capture**, at the bottom of the sidebar and in the menu of the tray icon, stops remembering what
 you copy until you choose **Resume capture**. It is not a setting: the next start
@@ -127,8 +127,8 @@ types the text. As long as it is not changed it stays exactly as it was copied, 
 once edited, it is written again from what the buttons know, and links, pictures, alignment and lists are lost.
 
 Saved texts can be gathered in folders, and folders in other folders. They are in the sidebar under **Saved**, and
-among the cards as in File Explorer: **Saved** shows its folders and then the texts outside them, a folder the folders
-and the texts in it itself, not those of the folders inside it; a double click or Enter on the card of a folder opens it,
+among the cards as in File Explorer: **Saved** shows its folders and then the texts outside them, each under a heading
+(the folders as rows with an arrow, the texts as cards), a folder the folders and the texts in it itself, after a first row, **Folder above**, that goes back up (Backspace or Alt+↑ too), not those of the folders inside it; a double click or Enter on the card of a folder opens it,
 and a search looks inside the folders too. **New folder…** is at the right end of the tabs above the saved texts
 and in the right-click menu of a folder (Ctrl+Shift+N), and creates the folder inside the one shown; **Move to** moves a saved
 text or a whole folder, and the window of a text or a folder has the same choice beside its buttons. The arrow at
@@ -181,6 +181,10 @@ together with any digit; the button says right away which of them another progra
 
 ## Options
 
+The very first start asks, in three steps, where to keep the list (a folder on OneDrive outlives a broken PC; if
+it already holds a list of SmartClip, that one is used), whether to remember what you copy and for how many days,
+and what to encrypt, with an optional recovery phrase. All of it can be changed later in the options.
+
 The **Options** button opens the options in a window of their own, like the guide, which can stay open beside the
 list; **Close** or Esc puts it away.
 The options are in five pages, **Typing**, **Hotkeys**, **History**, **Appearance** and **Program**, chosen from a column on the left as in the Windows 11 Settings; each page slides into place. As there, each option is a card with its name, a few words on what it does and its control on the right; switches say **On** or **Off**. Resting the pointer
@@ -213,13 +217,15 @@ on an option shows its full explanation.
 | Stay in the notification area (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Exit** to quit; the same menu lists the saved texts. |
 | Hide when switching to another program | With the option above on, the window also goes back to the notification area when you click another program; off, it simply stays open behind the others. Never while it waits and types, nor while a window of its own (a text being written, a question) is open. |
 | Start with Windows | Start SmartClip when you sign in, already hidden in the notification area (minimised, if the option above is off). It is the entry Windows shows in Task Manager > Startup apps: the switch reflects it, and follows the program if you move the `.exe`. |
+| Encrypt | **Nothing** (the default of a new list): the file can be read on any PC without a phrase, and by anyone who gets a copy of it. **Saved texts**: they are encrypted, and can be read only on this PC, or with the recovery phrase. **Everything**: what you copy too, its search text and pictures included; a search in the history is then done in memory, so the first one after a start takes a moment. Changing it encrypts or decrypts at once what there is (with 200 MB of pictures, a few seconds). |
+| Recovery phrase, with the button **Set…** | Three words joined by “-”, such as `river-lamp-seven`, letter case aside: with them a copy of the database (on OneDrive, say) shows its saved texts on another PC too, also after Windows is installed again. Choose its folder there with **Change…** and write the phrase when asked: that PC remembers it. Without the phrase, those saved texts can only be deleted, to start again. |
 
 A hotkey takes Ctrl or Alt, with Shift if you like, and a letter, a digit or a function key. While the button
 waits for the new keys, Esc keeps the current ones and Del goes back to the default. On keyboards where AltGr
 types symbols, avoid Ctrl+Alt with a letter that has one (E for the euro sign, for example): the hotkey would
 fire while you type it. The key names in this page are the defaults, as the English interface writes them.
 
-Under **Program**, the buttons **Export…** and **Import…** write the saved texts, with their folders (the
+Under **History**, the buttons **Export…** and **Import…** write the saved texts, with their folders (the
 formatted ones with their HTML too), to a plain text file that Notepad opens, and read such a file back, on this
 PC or another. Each asks whether to take
 only the saved texts or everything, that is also what was copied (pictures are left out). The file holds the
@@ -241,7 +247,7 @@ Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key t
   password.
 - Nothing is typed while Caps Lock is on.
 - The program waits for you to release the hotkey keys before typing, so they cannot alter the output.
-- Copied texts and pictures are never sent anywhere. They are kept **unencrypted** in the database
+- Copied texts and pictures are never sent anywhere. Unless **Encrypt** is set to **Everything**, they are kept **unencrypted** in the database
   `%LOCALAPPDATA%\SmartClip\SmartClip.db` (in the Store version, under the package's own folder in
   `%LOCALAPPDATA%\Packages`), and removed when their days expire. An entry you remove from the list is
   overwritten in the file, not only forgotten. With **Remember copied texts and pictures** off, the clipboard is
@@ -249,8 +255,13 @@ Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key t
 - What password managers and private browser windows mark as private (KeePass, Bitwarden and others do) is never
   remembered. A password typed with **Clear the clipboard after typing** on is dropped from the list and
   from the database too.
-- Saved texts are in the same database, encrypted with Windows DPAPI for your user account: they cannot be read
-  by another user or copied to another PC. Nothing readable is left of them in the file, not even what the
+- Saved texts are in the same database. At the first start, and later under **Encrypt** (Options › Program), you
+  choose whether they are kept unencrypted, readable on any PC by anyone who has the file, or encrypted (AES-256,
+  authenticated with HMAC-SHA256) with a random key that Windows DPAPI keeps for your user account on each PC: another
+  user cannot read them. A list made by an earlier version asks once, and until then stays encrypted. With a **Recovery phrase** of
+  three words (Options › Program) the key is kept by the phrase too (PBKDF2-SHA512), so that a copy of the database
+  can be unlocked on another PC, also after Windows is installed again; the phrase itself is never stored. Without
+  it, the saved texts can be read only on the PC that saved them. Nothing readable is left of them in the file, not even what the
   search uses. Of those with a name only the name is shown, until you ask for the content from the right-click
   menu.
 - Versions before 4.0 kept saved texts in the registry and the history in one file per day. The first start of

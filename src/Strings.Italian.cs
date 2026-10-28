@@ -5,12 +5,14 @@ static partial class Strings
 {
     static void Italian()
     {
-        ShiftName = "Maiusc"; DeleteKeyName = "Canc"; EnterKeyName = "Invio"; ArrowsName = "Su / Giù";
+        ShiftName = "Maiusc"; DeleteKeyName = "Canc"; EnterKeyName = "Invio"; ArrowsName = "Su / Giù"; BackKeyName = "Backspace";
         DayFormat = "dd/MM"; YearDayFormat = "dd/MM/yy";
         Quote = "«{0}»";
 
         TypeButton = "Digita gli appunti";
         SavedTitle = "Salvati"; PausedSuffix = " (in pausa)";
+        FoldersHeading = "Cartelle"; TextsHeading = "Testi"; TextOne = "testo"; TextMany = "testi";
+        UpNote = "Cartella superiore";
         New = "Nuovo…"; SaveDots = "Salva…"; EditDots = "Modifica…"; RenameDots = "Rinomina…"; Delete = "Elimina";
         Options = "Opzioni"; SearchCue = "Cerca…";
         CountOf = "{0} di {1}";
@@ -213,7 +215,65 @@ static partial class Strings
         ChooseDataFolder = "La cartella in cui {0} tiene ciò che copi e salvi.";
         AskUseExisting = "In {0} c'è già un elenco di {1}.\n\nVuoi usare quello? Il tuo resta dov'è, così com'è.";
         AskSyncedFolder = "{0} sembra una cartella sincronizzata online o in rete.\n\nLa sincronizzazione può bloccare o "
-            + "rovinare il database, e i testi salvati non si leggono su un altro PC. Vuoi usarla lo stesso?";
+            + "rovinare il database, e su un altro PC i testi salvati si leggono solo con la frase di recupero. Vuoi usarla lo stesso?";
+        ProtectOption = "Cifra"; ProtectNote = "Ciò che il file dell'elenco tiene cifrato";
+        ProtectNothing = "Niente"; ProtectSaved = "Testi salvati"; ProtectAll = "Tutto";
+        ProtectTip = "Niente: il file si legge su qualsiasi PC senza frase, e da chiunque ne abbia una copia.\n"
+            + "Testi salvati: sono cifrati, e si leggono solo su questo PC, o con la frase di recupero.\n"
+            + "Tutto: anche ciò che copi. Cambiandola, ciò che c'è si cifra o si decifra subito.";
+        ProtectAllExplain = "Si cifrano i testi salvati e anche tutto ciò che copi.\n"
+            + "Su questo PC li apre Windows da solo: non devi fare niente.\n"
+            + "Su un altro PC, o dopo aver reinstallato Windows, si aprono solo con la frase di recupero.\n"
+            + "Con migliaia di voci, cercare nella cronologia è un po' più lento.";
+        ProtectNothingExplain = "Non si cifra niente.\n"
+            + "Il file si apre su qualsiasi PC, senza frase, ma chiunque ne abbia una copia può leggerlo.\n"
+            + "Ciò che altri programmi segnano come riservato non viene comunque mai conservato.";
+        ProtectSavedExplain = "Si cifrano solo i testi salvati; ciò che copi resta in chiaro.\n"
+            + "Su questo PC li apre Windows da solo: non devi fare niente.\n"
+            + "Su un altro PC, o dopo aver reinstallato Windows, si aprono solo con la frase di recupero.";
+        AskPlain = "I testi salvati saranno tenuti in chiaro: chiunque abbia il file dell'elenco li può leggere, anche quelli "
+            + "riservati.\n\nVuoi continuare?";
+        NowPlain = "Ora i testi salvati sono tenuti in chiaro."; NowEncrypted = "Ora i testi salvati sono cifrati.";
+        NowAll = "Ora è tutto cifrato, anche ciò che copi.";
+        SetupTitle = "Benvenuto in {0}"; UpgradeTitle = "I tuoi testi salvati";
+        SetupStep = "{0} di {1}";
+        BackButton = "Indietro"; NextButton = "Avanti"; DoneButton = "Fine";
+        SetupFolderTitle = "Dove tenere l'elenco";
+        SetupFolderExplain = "{0} tiene ciò che copi e salvi in un file solo. In una cartella sincronizzata online, come "
+            + "OneDrive, sopravvive a un PC guasto o formattato. Se la cartella scelta contiene già un elenco di {0}, si usa quello.";
+        SetupFolderOption = "Cartella dell'elenco"; SetupFolderNote = "Su questo PC, o in una cartella come OneDrive";
+        SetupHistoryTitle = "Cosa ricordare";
+        SetupHistoryExplain = "Oltre ai testi che salvi, {0} può ricordare tutto ciò che copi, per i giorni che scegli, così "
+            + "lo riprendi quando serve. Spenta, si tiene solo ciò che salvi.";
+        SetupProtectTitle = "Cosa cifrare";
+        UpgradeExplain = "Da questa versione scegli tu cosa cifrare. Finora i testi salvati erano cifrati per questo PC soltanto, "
+            + "e dopo aver reinstallato Windows non si potevano più leggere.";
+        PhraseOptional = "Frase di recupero"; PhraseOptionalNote = "Facoltativa: tre parole unite da «-»";
+        PhraseOption = "Frase di recupero"; PhraseNote = "Per leggere ciò che è cifrato su un altro PC";
+        PhraseTip = "Su questo PC ciò che è cifrato lo sblocca Windows per te; su un altro,\n"
+            + "o dopo aver reinstallato Windows, solo la frase di recupero, da una copia del database\n"
+            + "(con Cambia… accanto alla cartella dell'elenco). Senza, si legge solo qui.";
+        SetPhraseButton = "Imposta…"; ChangePhraseButton = "Cambia…"; UnlockButton = "Sblocca…";
+        PhraseTitle = "Frase di recupero"; UnlockTitle = "Sblocca l'elenco";
+        PhraseExplain = "Tre parole unite da «-», lunghe quanto vuoi, come {0}. Con loro ciò che è cifrato si legge su un "
+            + "altro PC, anche dopo aver reinstallato Windows; maiuscole e minuscole non contano. Scrivile in un posto sicuro: "
+            + "senza, nessuno lo può leggere se non qui.";
+        UnlockExplain = "Ciò che questo elenco tiene cifrato è stato cifrato su un altro PC. Scrivi la sua frase di recupero "
+            + "per leggerlo qui: da allora questo PC la ricorda.";
+        PhraseExample = "fiume-lampada-sette";
+        PhraseLabel = "Tre parole unite da «-»";
+        PhraseWillBe = "Sarà: {0}"; PhraseNotThree = "Tre parole, unite da «-».";
+        PhraseWrong = "Non è la frase di questo elenco.";
+        Unlock = "Sblocca"; NoPhraseButton = "Non ce l'ho…";
+        AskStartOver = "Senza la frase nessuno può leggere ciò che un altro PC ha cifrato.\n\n"
+            + "Vuoi eliminarlo, e cifrare ciò che viene dopo con una chiave nuova?";
+        StartedOver = "Voci eliminate: {0}. Ciò che viene dopo si cifra con una chiave nuova.";
+        PhraseSet = "Frase di recupero impostata: tienila in un posto sicuro.";
+        Unlocked = "Sbloccato: questo PC ricorda la frase.";
+        SavedLocked = "Ciò che è cifrato è bloccato su questo PC: sbloccalo con la frase di recupero, nelle opzioni.";
+        LockedWarning = "Questo elenco è stato cifrato su un altro PC.\tSbloccalo con la frase di recupero: Opzioni › {0}.";
+        UnreadableWarning = "Testi salvati che non si possono leggere su questo PC: {0}. Una versione precedente alla frase "
+            + "di recupero li ha cifrati per un altro utente di Windows, o un altro PC.";
         ListMovedTo = "Ora l'elenco sta in {0}.";
         ListMoveFailed = "Non è stato possibile spostare l'elenco, che resta dov'era: {0}";
         FolderUnavailable = "La cartella dell'elenco, {0}, non è raggiungibile: ciò che copi e salvi ora si perde alla "
@@ -259,7 +319,7 @@ static partial class Strings
         DataFolderTip = "Dove sta il database con ciò che copi e salvi, insieme al registro degli errori:\n{0}\n"
             + "La cartella predefinita è {1}. «Cambia…» sposta il database nella cartella che scegli,\n"
             + "o usa quello che c'è già lì. Non serve a condividere l'elenco tra PC: i testi salvati\n"
-            + "li legge solo questo utente di Windows su questo PC, e due programmi che usano\n"
+            + "cifrati si leggono su un altro PC solo con la frase di recupero, e due programmi che usano\n"
             + "lo stesso file insieme possono rovinarlo.";
         CleanTip = "Elimina subito dalla cronologia quello che hai copiato prima degli ultimi giorni\n"
             + "scritti qui sopra: con 1 resta solo oggi, con 0 non resta niente.\n"
@@ -432,15 +492,22 @@ static partial class Strings
                 + "dall'elenco la voce copiata.",
             "## Vederli e usarli",
             "- L'occhio di un testo salvato con un nome («" + ShowContent + "», anche nel suo menu) ne fa vedere il contenuto "
-                + "in un riquadro per qualche secondo: l'elenco ne mostra solo il nome, e passarci sopra con il puntatore non "
+                + "in un riquadro per qualche secondo: la sua scheda ne mostra solo il nome, con dei pallini al posto del "
+                + "contenuto, e passarci sopra con il puntatore non "
                 + "basta mai.",
             "- I testi salvati sono anche nel menu dell'icona vicino all'orologio: sceglierne uno lo rimette negli "
                 + "appunti senza aprire la finestra.",
             "## Al sicuro",
-            "I testi salvati non scadono mai. Stanno nel database del programma, cifrati per il tuo utente: un altro "
-                + "utente dello stesso PC non li può leggere. Quando ne rimetti uno negli appunti viene segnato come riservato, perché la "
-                + "cronologia di Windows (Win+V) e gli altri gestori di appunti lo ignorino. Si può salvare anche un'immagine copiata: mostra sempre la "
-                + "sua miniatura, con accanto il nome se ne ha uno.",
+            "- I testi salvati non scadono mai. Che cosa il database tiene cifrato si sceglie al primo avvio, e sotto «"
+                + ProtectOption + "» (Opzioni › " + ProgramTitle + "): niente, così si legge su qualsiasi PC, ma anche da "
+                + "chiunque ne abbia una copia; i testi salvati, che su questo PC sblocca Windows per te, e che un altro "
+                + "utente dello stesso PC non può leggere; oppure tutto, anche ciò che copi.",
+            "- Cifrati, con una «" + PhraseOption + "» (Opzioni › " + ProgramTitle + ") di tre parole unite da «-», si leggono anche "
+                + "su un altro PC, anche dopo aver reinstallato Windows: lì scegli la cartella del database, e scrivi la frase "
+                + "quando te la chiede. Senza, si leggono solo su questo PC; tienila in un posto sicuro.",
+            "- Quando ne rimetti uno negli appunti viene segnato come riservato, perché la cronologia di Windows (Win+V) "
+                + "e gli altri gestori di appunti lo ignorino.",
+            "- Si può salvare anche un'immagine copiata: mostra sempre la sua miniatura, con accanto il nome se ne ha uno.",
             "## Testi formattati",
             "Un testo salvato può essere formattato, come una firma di posta: grassetto, corsivo, sottolineato, caratteri e dimensioni.",
             "- Copia la firma da una mail o da un documento e salvala: tiene la sua formattazione. La cronologia tiene "
@@ -465,6 +532,8 @@ static partial class Strings
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nasce dentro la cartella mostrata, "
                 + "ma nella sua finestra puoi scegliere dove metterla.",
             "- La scheda di una cartella la apre con un doppio clic o Invio, come un clic sulla sua riga nella barra laterale.",
+            "- In una cartella la prima riga, «" + UpNote + "», torna a quella che la contiene, o a «" + SavedTitle + "» (anche "
+                + BackKeyName + " o " + Key(MainForm.UpKeys) + "); ciò che ci trascini sopra va lì.",
             "- La freccia all'estremità destra di una cartella che ne contiene altre la apre e la chiude; quella di «"
                 + SavedTitle + "» le mostra o le nasconde tutte. Il numero dice quanti testi sono in una cartella stessa, "
                 + "non in quelle al suo interno; quello di «" + SavedTitle + "», quelli fuori dalle cartelle. Aperte e chiuse, "
@@ -534,11 +603,12 @@ static partial class Strings
             "Quello che copi resta nell'elenco per un numero di giorni che decidi tu (" + Texts.DefaultKeepDays
                 + " se non lo cambi), anche dopo aver chiuso il programma o spento il PC.",
             "## Dove sta",
-            "- Sta in chiaro in un database, di solito " + Clips.DefaultFile + ", insieme ai testi salvati, che invece "
-                + "sono cifrati. I giorni scaduti si eliminano da soli.",
+            "- Sta in un database, di solito " + Clips.DefaultFile + ", insieme ai testi salvati: in chiaro, a meno che "
+                + "tu abbia scelto di cifrare tutto («" + ProtectOption + "»). I giorni scaduti si eliminano da soli.",
             "- Nelle opzioni, «" + ChangeFolderButton + "» porta il database in un'altra cartella, o usa quello che c'è "
-                + "già lì; «" + DefaultFolderButton + "» lo riporta indietro. Non serve a condividere l'elenco tra PC: i "
-                + "testi salvati si leggono solo su questo PC. Se all'avvio la cartella scelta non è raggiungibile, "
+                + "già lì; «" + DefaultFolderButton + "» lo riporta indietro. Non serve a condividere l'elenco tra PC aperti "
+                + "insieme, ma una copia su OneDrive sopravvive a un PC guasto: i testi salvati cifrati vogliono allora la "
+                + "frase di recupero. Se all'avvio la cartella scelta non è raggiungibile, "
                 + "l'elenco lavora in memoria e lo dice.",
             "## Che cosa resta e che cosa se ne va",
             "- Con 0 giorni resta solo quello che hai copiato oggi.",
@@ -557,7 +627,8 @@ static partial class Strings
             "Il pulsante «" + Options + "» le apre in una finestra a parte, che può restare aperta accanto all'elenco. Ogni "
                 + "opzione dice in poche parole, sotto il nome, che cosa fa; fermandoci sopra il puntatore ne compare la "
                 + "spiegazione completa. Stanno in cinque pagine, che si scelgono dalla colonna a sinistra come gli argomenti "
-                + "di questa guida.",
+                + "di questa guida. Al primo avvio alcuni passi chiedono dove tenere l'elenco, cosa ricordare e cosa cifrare: "
+                + "tutto si può cambiare qui.",
             "## " + TypingTitle,
             "Quanti secondi aspettare prima di digitare (da " + MainForm.MinDelay + " a "
                 + MainForm.MaxDelay + "), se il server usa la tastiera americana, se premere Invio alla fine, se "
@@ -567,17 +638,18 @@ static partial class Strings
                 + ", e dà loro altri tasti; e se " + pick + " riapre l'elenco dove l'hai lasciato.",
             "## " + HistoryTitle,
             "Se ricordare ciò che copi, per quanti giorni, la cartella del database "
-                + "(che si può cambiare) con il collegamento che la apre, e il pulsante che pulisce subito la cronologia.",
+                + "(che si può cambiare) con il collegamento che la apre, il pulsante che pulisce subito la cronologia, e i "
+                + "pulsanti per esportare e importare.",
             "## " + AppearanceTitle,
             "La lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), il carattere e la "
                 + "dimensione dell'interfaccia (pulsanti, opzioni, questa guida: in pixel, riavviano il programma), quelli "
                 + "delle voci (cambiano subito), e se fermare il puntatore su una scheda la mostra per intero.",
             "## " + ProgramTitle,
             "Se restare attivo nell'area di notifica e nascondersi passando a un altro programma, "
-                + "se partire insieme a Windows, i pulsanti per esportare e importare, e la versione del programma.",
+                + "se partire insieme a Windows, cosa cifrare e la frase di recupero dei testi salvati, e la versione del programma.",
 
             "# Esportare e importare",
-            "Nelle opzioni, sotto «" + ProgramTitle + "», due pulsanti portano i tuoi testi fuori dal programma e li "
+            "Nelle opzioni, sotto «" + HistoryTitle + "», due pulsanti portano i tuoi testi fuori dal programma e li "
                 + "riprendono, per una copia di sicurezza o per passarli a un altro PC. Ognuno chiede se vuoi solo i "
                 + "testi salvati o tutto, cioè anche le cose copiate.",
             "## Esportare",

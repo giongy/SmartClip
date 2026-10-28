@@ -45,6 +45,28 @@ class FolderCard
     }
 }
 
+// In a folder, before the folders inside it, the row that goes back to the one it is in, or to Saved (wanted by the user
+// on 28/10/2026). Not a folder: it has no menu, and is not moved nor deleted; what is dragged onto it goes up there.
+class UpCard
+{
+    public readonly string Path;   // the folder above, null for Saved
+
+    public UpCard(string path)
+    {
+        Path = path;
+    }
+
+    public string Label
+    {
+        get { return Path == null ? Strings.SavedTitle : Texts.Leaf(Path); }
+    }
+
+    public override string ToString()
+    {
+        return Label;
+    }
+}
+
 // The name of the day of the top card, standing over the cards while they scroll under it: drawn as the names of
 // the days among them (see MainForm.ShowDay). The wheel over it scrolls them.
 class DayBar : Control
@@ -331,6 +353,7 @@ partial class MainForm
     void Reload()
     {
         Change(delegate { entries = LoadSaved(); });
+        ShowPhrase();   // the key may have been unlocked, or the database changed
         ReloadCopied();
     }
 
@@ -427,7 +450,8 @@ partial class MainForm
                         return !entry.IsGroup && Texts.SameName(entry.Group, folder.Name);
                     }).Count));
         total += saved.Count;
-        rows = Arrange(copied, saved, folders);
+        UpCard up = place.Kind == PlaceKind.Folder && words.Length == 0 && !kind.HasValue ? new UpCard(Texts.Parent(place.Path)) : null;
+        rows = Arrange(copied, saved, folders, up);
         // The name the cards begin under is said by the bar over them, which says the name of the day of the top card.
         topDay = rows.Count > 0 ? rows[0] as Heading : null;
         if (topDay != null) rows.RemoveAt(0);
@@ -466,9 +490,9 @@ partial class MainForm
     }
 
     // The cards in their order. In Shortcuts by number; in Saved and its folders the folders by name, then the texts by
-    // name; elsewhere those kept at the top first, then the others from the newest, each day under its name, and last,
+    // name, each under its name; elsewhere those kept at the top first, then the others from the newest, each day under its name, and last,
     // by name under their own, the saved texts a search in History found.
-    List<object> Arrange(List<Entry> copied, List<Entry> saved, List<FolderCard> folders)
+    List<object> Arrange(List<Entry> copied, List<Entry> saved, List<FolderCard> folders, UpCard up)
     {
         List<object> arranged = new List<object>();
         headed = place.HasCopied;
@@ -483,9 +507,18 @@ partial class MainForm
             arranged.AddRange(both);
             return arranged;
         }
+        // The folders under a name of their own and the texts under theirs, as the days of History: folders and texts with
+        // names looked alike (wanted by the user on 28/10/2026). Without folders the texts need none. In a folder, the way
+        // back up first.
         if (!headed)
         {
-            arranged.AddRange(folders);
+            if (folders.Count > 0 || up != null)
+            {
+                arranged.Add(new Heading(Strings.FoldersHeading));
+                if (up != null) arranged.Add(up);
+                arranged.AddRange(folders);
+                if (saved.Count > 0) arranged.Add(new Heading(Strings.TextsHeading));
+            }
             arranged.AddRange(saved);
             return arranged;
         }
@@ -546,11 +579,17 @@ partial class MainForm
         metaWide = MetaWide();
         cardList.BeginUpdate();
         cardList.Items.Clear();
-        int found = -1, first = -1, latest = -1, firstFolder = -1;
+        int found = -1, first = -1, latest = -1, firstFolder = -1, upward = -1;
         HashSet<long> still = new HashSet<long>();
         foreach (object row in rows)
         {
             int index = cardList.Items.Add(row);
+            if (row is UpCard)
+            {
+                if (selected is UpCard) found = index;
+                upward = index;
+                continue;
+            }
             FolderCard card = row as FolderCard;
             if (card != null)
             {
@@ -566,6 +605,7 @@ partial class MainForm
         }
         lastCard = -1;
         if (first < 0) first = firstFolder;
+        if (first < 0) first = upward;   // in an empty folder, the way back is what Enter takes
         if (toNewest && latest >= 0)
         {
             cardList.SelectedIndex = latest;
@@ -596,7 +636,9 @@ partial class MainForm
         int top = tabs.Bottom + (int)(Gap * Zoom), tall = topDay != null ? CardHeight(topDay) : 0, bottom = cardList.Bottom;
         dayBar.SetBounds(cardList.Left, top, cardList.ClientSize.Width, tall);
         if (cardList.Top != top + tall) cardList.SetBounds(cardList.Left, top + tall, cardList.Width, bottom - top - tall);
-        emptyNote.SetBounds(cardList.Left, top, cardList.Width, bottom - top);
+        // An empty folder says so under the way back up, which stays in sight.
+        int skip = cardList.Items.Count > 0 && cardList.Items[0] is UpCard ? tall + CardHeight(cardList.Items[0]) : 0;
+        emptyNote.SetBounds(cardList.Left, top + skip, cardList.Width, bottom - top - skip);
         ShowDay();
     }
 
@@ -865,6 +907,7 @@ partial class MainForm
     const int MaxBody = 600;   // of a long text, what a card takes to show its first lines
     const char JointSign = '↵';
     static readonly string Joint = " " + JointSign + " ";   // between the lines of a text on a card of one line
+    const string Hidden = "••••••••";   // after the name of a saved text: the content it hides
     const float MetaShare = 0.6f;   // how far that line goes from the card towards Muted, and how opaque its icon is
     // The small buttons at the right of a card, from the left: they are signs alone, named by their tooltips. A copied
     // entry has its arrow first.
@@ -1102,9 +1145,11 @@ partial class MainForm
     }
 
     // Where an entry comes from, in the small line beside it: the program it was copied in, or the folder of a saved
-    // one; cut short after SourceLetters.
-    static string Source(Entry entry)
+    // one; cut short after SourceLetters. Null for a saved text in the place shown itself, which the title already says
+    // (wanted by the user on 28/10/2026: "Saved" on every card of Saved); one a search found deeper says its folder.
+    string Source(Entry entry)
     {
+        if (entry.Saved && place.HasSaved && Texts.SameName(entry.Group, place.Kind == PlaceKind.Folder ? place.Path : null)) return null;
         string source = entry.Saved ? (entry.Group != null ? Texts.Display(entry.Group) : Strings.SavedTitle)
             : entry.Origin != null ? entry.Origin.Name : null;
         return source != null && source.Length > SourceLetters ? source.Substring(0, SourceLetters).TrimEnd() + Ellipsis : source;
@@ -1128,10 +1173,11 @@ partial class MainForm
 
     // What a card writes its entry in, which says what it is (chosen by the user on 24/10/2026 among a sign and both;
     // before, a word at the end of the small line, which pushed the program and the time of those cards to the left):
-    // a piece of code in a font of fixed width, a link underlined in blue; the name of a saved text in the heavier face.
+    // a piece of code in a font of fixed width, a link underlined in blue. The name of a saved text is written as any
+    // text, the content it hides as faint dots after it (Hidden).
     Font BodyFont(Entry entry)
     {
-        if (entry.Saved && entry.Name != null) return Look.StrongEntryFont;
+        if (entry.Saved && entry.Name != null) return Look.EntryFont;
         if (entry.Category == Category.Code) return Look.CodeFont;
         if (entry.Category == Category.Link) return Look.LinkFont;
         return Look.EntryFont;
@@ -1224,7 +1270,7 @@ partial class MainForm
     Part PartAt(int index, Point where)
     {
         object row = index < 0 ? null : cardList.Items[index];
-        if (row is FolderCard) return CardBox(cardList.GetItemRectangle(index)).Contains(where) ? Part.Body : Part.None;
+        if (row is FolderCard || row is UpCard) return CardBox(cardList.GetItemRectangle(index)).Contains(where) ? Part.Body : Part.None;
         Entry entry = row as Entry;
         if (entry == null) return Part.None;
         CardParts parts = Lay(entry, cardList.GetItemRectangle(index));
@@ -1249,7 +1295,13 @@ partial class MainForm
         FolderCard card = cardList.Items[e.Index] as FolderCard;
         if (card != null)
         {
-            DrawFolderCard(g, card, e);
+            DrawFolderRow(g, e, Sign.FullFolder, card.Folder.Label, card.Count > 0 ? Count(card.Count, Strings.TextOne, Strings.TextMany) : null, true);
+            return;
+        }
+        UpCard up = cardList.Items[e.Index] as UpCard;
+        if (up != null)
+        {
+            DrawFolderRow(g, e, Sign.FolderUp, up.Label, Strings.UpNote, false);
             return;
         }
         Entry entry = (Entry)cardList.Items[e.Index];
@@ -1288,8 +1340,18 @@ partial class MainForm
             Color ink = BodyInk(entry);
             if (marked != null) DrawMarked(g, marked, font, parts.Body, fill, ink);
             else if (named)
-                TextRenderer.DrawText(g, entry.Name, font, new Rectangle(parts.Body.Left, parts.Body.Top, parts.Body.Width,
-                    font.Height), ink, TextFormatFlags.VerticalCenter | LineFlags);
+            {
+                // The name, and after it, faint, the dots of what it hides, as long as the name leaves room for them.
+                int dots = Wide(Hidden, font), gap = (int)(PartGap * Zoom);
+                int name = TextRenderer.MeasureText(g, entry.Name, font, Size.Empty, LineFlags & ~TextFormatFlags.EndEllipsis).Width;
+                int wide = Math.Min(name, Math.Max(0, parts.Body.Width - dots - gap));
+                if (wide == 0) wide = parts.Body.Width;
+                TextRenderer.DrawText(g, entry.Name, font, new Rectangle(parts.Body.Left, parts.Body.Top, wide, font.Height),
+                    ink, TextFormatFlags.VerticalCenter | LineFlags);
+                if (parts.Body.Left + wide + gap + dots <= parts.Body.Right)
+                    TextRenderer.DrawText(g, Hidden, font, new Point(parts.Body.Left + wide + gap, parts.Body.Top),
+                        Look.Blend(fill, Look.Muted, MetaShare), MarkFlags);
+            }
             else if (cardLines > 1 || text.IndexOf(JointSign) >= 0) DrawMarked(g, Laid(entry, text, font, parts.Body.Width), font, parts.Body, fill, ink);
             else TextRenderer.DrawText(g, text, font, parts.Body, ink, LineFlags);
         }
@@ -1310,7 +1372,7 @@ partial class MainForm
             Rectangle icon = new Rectangle(parts.Meta.Left, parts.Meta.Top, side, side);
             Rectangle name = Rectangle.FromLTRB(icon.Right + gap, parts.Meta.Top, time.Left - 2 * gap, parts.Meta.Bottom);
             Color faint = Look.Blend(fill, Look.Muted, MetaShare * written);
-            if (entry.Saved) Look.Draw(g, Sign.Star, icon, faint);
+            if (entry.Saved && source != null) Look.Draw(g, Sign.Star, icon, faint);
             else if (entry.Origin != null && entry.Origin.Icon != null) Look.DrawFaint(g, entry.Origin.Icon, icon, MetaShare * written);
             else if (entry.Origin != null) Look.Draw(g, Sign.Apps, icon, faint);
             if (source != null && name.Width > 0) TextRenderer.DrawText(g, source, Look.NoteFont, name, faint, MetaFlags);
@@ -1345,37 +1407,37 @@ partial class MainForm
         }
     }
 
-    // The card of a folder: as that of an entry, lit as fully as a row of the sidebar when a card dragged would go into it;
-    // its sign and its name, and at the right end, small and faint where the time of the cards is, how many texts it
-    // holds itself, as the sidebar says.
-    void DrawFolderCard(Graphics g, FolderCard card, DrawItemEventArgs e)
+    // The row of a folder: not a card, but a place to go into, drawn as the rows of the sidebar (wanted by the user on
+    // 28/10/2026: as cards, the folders looked like the texts with names). Lit under the pointer, or fully when a card
+    // dragged would go into it; the selected one tinted, with its mark. Its sign in the accent colour, its name, and at the
+    // right end, faint, a note (how many texts it holds itself, as the sidebar counts them) and, if it 'opens', the arrow
+    // that says so. The way back up is drawn so too.
+    void DrawFolderRow(Graphics g, DrawItemEventArgs e, Sign sign, string name, string note, bool opens)
     {
         bool selected = !Many && (e.State & DrawItemState.Selected) != 0;
         float glow = e.Index == dropCard ? 1 : cardList.Glow.Of(e.Index);
         Rectangle box = CardBox(e.Bounds);
-        g.SmoothingMode = SmoothingMode.AntiAlias;
-        Color fill = Look.Blend(Look.Raised, Look.Soft, 0.4f * glow);
-        using (GraphicsPath shape = Look.Rounded(box))
-        using (Brush back = new SolidBrush(fill))
-        using (Pen edge = new Pen(selected ? Look.Accent : Look.Border, selected ? 2 * Zoom : 1))
+        Look.DrawRow(g, box, cardList.BackColor, selected, glow);
+        if (selected) Look.DrawMark(g, Look.MarkIn(box));
+        Color back = selected ? Look.Selected : Look.Blend(cardList.BackColor, Look.Soft, glow);
+        int inset = (int)(CardInset * Zoom), side = Look.EntryFont.Height, middle = box.Top + box.Height / 2;
+        int right = box.Right - inset, small = side * 3 / 4;
+        if (opens)
         {
-            g.FillPath(back, shape);
-            g.DrawPath(edge, shape);
+            Look.Draw(g, Sign.Closed, new Rectangle(right - small, middle - small / 2, small, small), Look.Muted);
+            right -= small + (int)(PartGap * Zoom);
         }
-        int inset = (int)(CardInset * Zoom), pad = (int)(CardPad * Zoom), side = Look.EntryFont.Height;
-        int middle = box.Top + pad + side / 2, right = box.Right - inset;
-        Look.Draw(g, Sign.Folder, new Rectangle(box.Left + inset, middle - side / 2, side, side), null);
-        if (card.Count > 0)
+        if (note != null)
         {
-            string count = card.Count.ToString();
-            int wide = TextRenderer.MeasureText(g, count, Look.NoteFont, Size.Empty, MetaFlags & ~TextFormatFlags.EndEllipsis).Width;
-            TextRenderer.DrawText(g, count, Look.NoteFont, Rectangle.FromLTRB(right - wide, middle - side / 2, right, middle + side / 2),
-                Look.Blend(fill, Look.Muted, MetaShare), MetaFlags);
+            int wide = TextRenderer.MeasureText(g, note, Look.NoteFont, Size.Empty, MetaFlags & ~TextFormatFlags.EndEllipsis).Width;
+            TextRenderer.DrawText(g, note, Look.NoteFont, Rectangle.FromLTRB(right - wide, middle - side / 2, right, middle + side / 2),
+                Look.Blend(back, Look.Muted, MetaShare), MetaFlags);
             right -= wide + (int)(BodyGap * Zoom);
         }
+        Look.Draw(g, sign, new Rectangle(box.Left + inset, middle - side / 2, side, side), Look.Accent);
         int left = box.Left + inset + side + (int)(PartGap * Zoom);
-        TextRenderer.DrawText(g, card.Folder.Label, Look.StrongEntryFont, Rectangle.FromLTRB(left, middle - side / 2, right,
-            middle + side / 2), Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
+        TextRenderer.DrawText(g, name, Look.EntryFont, Rectangle.FromLTRB(left, middle - side / 2, right, middle + side / 2),
+            Look.Ink, TextFormatFlags.VerticalCenter | LineFlags);
     }
 
     // The name of a day, in its row among the cards or in the bar over them: low in it, with a thin line under it, across.
@@ -1792,6 +1854,11 @@ partial class MainForm
             OpenCard(SelectedFolder);
             return;
         }
+        if (cardList.SelectedItem is UpCard)
+        {
+            GoUp();
+            return;
+        }
         Entry entry = Selected;
         if (entry != null && !busy && !Many && Use(entry)) GoBack();   // of several cards picked, none is the one chosen
     }
@@ -1816,6 +1883,25 @@ partial class MainForm
         at.Path = folder.Name;
         at.Id = folder.FolderId;
         Go(at);
+    }
+
+    // From a folder to the one it is in, or to Saved; the folder left is the one selected there. Elsewhere nothing.
+    void GoUp()
+    {
+        if (place.Kind != PlaceKind.Folder) return;
+        string from = place.Path, path = Texts.Parent(from);
+        Entry above = path == null ? null : FolderEntry(path);
+        Place at = new Place(path == null ? PlaceKind.Saved : PlaceKind.Folder);
+        at.Path = path;
+        if (above != null) at.Id = above.FolderId;
+        Go(at);
+        for (int i = 0; i < cardList.Items.Count; i++)
+        {
+            FolderCard card = cardList.Items[i] as FolderCard;
+            if (card == null || !Texts.SameName(card.Folder.Name, from)) continue;
+            cardList.SelectedIndex = i;
+            return;
+        }
     }
 
     // The menu of a folder among the cards: open it, or what the menu of its row in the sidebar does.
@@ -2202,7 +2288,7 @@ partial class MainForm
             return true;
         }
         bool inCards = search.Focused || cardList.Focused;
-        if (!inCards && !navList.Focused) return base.ProcessCmdKey(ref msg, keyData);
+        if (!inCards && !navList.Focused && !homeList.Focused) return base.ProcessCmdKey(ref msg, keyData);
         switch (keyData)
         {
             case NewKeys:
@@ -2251,6 +2337,13 @@ partial class MainForm
             case CopyKeys:
                 if (!cardList.Focused) break;   // in the search box, the text selected there
                 CopyPicked();
+                return true;
+            case BackKey:
+                if (!cardList.Focused) break;   // in the search box, it rubs out
+                GoUp();
+                return true;
+            case UpKeys:
+                GoUp();
                 return true;
         }
         return base.ProcessCmdKey(ref msg, keyData);

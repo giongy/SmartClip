@@ -35,7 +35,7 @@ static partial class Strings
 
     // --- Keys, as the keyboards of each language label them ---
     public static string ShiftName = "Shift", DeleteKeyName = "Del", EnterKeyName = "Enter", ArrowsName = "Up / Down";
-    public static string EscapeKeyName = "Esc";
+    public static string EscapeKeyName = "Esc", BackKeyName = "Backspace";
     public static string WithKeys = "{0} ({1})";   // what a button does, and its keys
 
     // --- Dates, quotes and sizes ---
@@ -54,6 +54,9 @@ static partial class Strings
     // --- Main window ---
     public static string TypeButton = "Type clipboard";
     public static string SavedTitle = "Saved", PausedSuffix = " (paused)";
+    // Over the folders and over the texts of Saved and of a folder, and how many texts a folder holds.
+    public static string FoldersHeading = "Folders", TextsHeading = "Texts", TextOne = "text", TextMany = "texts";
+    public static string UpNote = "Folder above";   // beside the name of the folder a folder is in, on the row that goes there
     public static string New = "New…", SaveDots = "Save…", EditDots = "Edit…", RenameDots = "Rename…", Delete = "Delete";
     public static string Options = "Options", SearchCue = "Search…";
     public static string CountOf = "{0} of {1}";
@@ -271,7 +274,71 @@ static partial class Strings
     public static string ChooseDataFolder = "The folder where {0} keeps what you copy and save.";
     public static string AskUseExisting = "{0} already holds a list of {1}.\n\nUse that one? Yours stays where it is, as it is.";
     public static string AskSyncedFolder = "{0} looks like a folder synchronised online or on the network.\n\nThe "
-        + "synchronisation can lock or damage the database, and the saved texts cannot be read on another PC. Use it all the same?";
+        + "synchronisation can lock or damage the database, and on another PC the saved texts can be read only with the "
+        + "recovery phrase. Use it all the same?";
+    // What is kept encrypted (Protection), in the options and at the first start.
+    public static string ProtectOption = "Encrypt", ProtectNote = "What the file of the list keeps encrypted";
+    public static string ProtectNothing = "Nothing", ProtectSaved = "Saved texts", ProtectAll = "Everything";
+    public static string ProtectTip = "Nothing: the file can be read on any PC without a phrase, and by anyone who gets a copy of it.\n"
+        + "Saved texts: they are encrypted, and can be read only on this PC, or with the recovery phrase.\n"
+        + "Everything: what you copy too. Changing it encrypts or decrypts at once what there is.";
+    public static string ProtectAllExplain = "The saved texts are encrypted, and everything you copy too.\n"
+        + "On this PC Windows opens them by itself: nothing to do.\n"
+        + "On another PC, or after Windows is installed again, they open only with the recovery phrase.\n"
+        + "With thousands of entries, searching the history is a little slower.";
+    public static string ProtectNothingExplain = "Nothing is encrypted.\n"
+        + "The file opens on any PC without a phrase, but anyone who has a copy of it can read it.\n"
+        + "What other programs mark as private is never kept anyway.";
+    public static string ProtectSavedExplain = "Only the saved texts are encrypted; what you copy stays unencrypted.\n"
+        + "On this PC Windows opens them by itself: nothing to do.\n"
+        + "On another PC, or after Windows is installed again, they open only with the recovery phrase.";
+    public static string AskPlain = "The saved texts will be kept unencrypted: anyone who gets the file of the list can read "
+        + "them, private ones included.\n\nContinue?";
+    public static string NowPlain = "The saved texts are now kept unencrypted.", NowEncrypted = "The saved texts are now encrypted.";
+    public static string NowAll = "Everything is now encrypted, what you copy too.";
+    // The first start: where the list is kept, what it remembers, what it encrypts. With a list of a version before,
+    // only the last.
+    public static string SetupTitle = "Welcome to {0}", UpgradeTitle = "Your saved texts";
+    public static string SetupStep = "{0} of {1}";
+    public static string BackButton = "Back", NextButton = "Next", DoneButton = "Done";
+    public static string SetupFolderTitle = "Where to keep the list";
+    public static string SetupFolderExplain = "{0} keeps what you copy and save in one file. In a folder synchronised online, "
+        + "such as OneDrive, it outlives a broken or formatted PC. If the folder chosen already holds a list of {0}, that one is used.";
+    public static string SetupFolderOption = "Folder of the list", SetupFolderNote = "On this PC, or in a folder such as OneDrive";
+    public static string SetupHistoryTitle = "What to remember";
+    public static string SetupHistoryExplain = "Besides the texts you save, {0} can remember everything you copy, for the days "
+        + "you choose, so that you can take it again. Off, only what you save is kept.";
+    public static string SetupProtectTitle = "What to encrypt";
+    public static string UpgradeExplain = "From this version you choose what is encrypted. Until now the saved texts were "
+        + "encrypted for this PC alone, and could not be read after Windows was installed again.";
+    public static string PhraseOptional = "Recovery phrase", PhraseOptionalNote = "Optional: three words joined by “-”";
+    // The phrase of three words that unlocks the saved texts on another PC (Vault).
+    public static string PhraseOption = "Recovery phrase", PhraseNote = "To read what is encrypted on another PC";
+    public static string PhraseTip = "On this PC Windows unlocks what is encrypted for you; on another one,\n"
+        + "or after Windows is installed again, only the recovery phrase does, from a copy of the database\n"
+        + "(with Change… beside the folder of the list). Without it, it can be read only here.";
+    public static string SetPhraseButton = "Set…", ChangePhraseButton = "Change…", UnlockButton = "Unlock…";
+    public static string PhraseTitle = "Recovery phrase", UnlockTitle = "Unlock the list";
+    public static string PhraseExplain = "Three words joined by “-”, as long as you like, such as {0}. With them what is encrypted "
+        + "can be read on another PC, also after Windows is installed again; letter case does not count. Write them down "
+        + "somewhere safe: without them nobody can read it anywhere but here.";
+    public static string UnlockExplain = "What this list keeps encrypted was encrypted on another PC. Write its recovery phrase "
+        + "to read it here: this PC remembers it from then on.";
+    public static string PhraseExample = "river-lamp-seven";
+    public static string PhraseLabel = "Three words joined by “-”";
+    public static string PhraseWillBe = "It will be: {0}", PhraseNotThree = "Three words, joined by “-”.";
+    public static string PhraseWrong = "That is not the phrase of this list.";
+    public static string Unlock = "Unlock", NoPhraseButton = "I don't have it…";
+    public static string AskStartOver = "Without the phrase nobody can read what another PC encrypted.\n\n"
+        + "Delete it, and encrypt what comes next with a new key?";
+    public static string StartedOver = "Entries deleted: {0}. What comes next is encrypted with a new key.";
+    public static string PhraseSet = "Recovery phrase set: keep it somewhere safe.";
+    public static string Unlocked = "Unlocked: this PC remembers the phrase.";
+    public static string SavedLocked = "What is encrypted is locked on this PC: unlock it with the recovery phrase, in the options.";
+    public static string LockedWarning = "This list was encrypted on another PC.\tUnlock it with the recovery phrase: "
+        + "Options › {0}.";
+    public static string UnreadableWarning = "Saved texts that cannot be read on this PC: {0}. A version before the recovery "
+        + "phrase encrypted them for another Windows user, or another PC.";
     public static string ListMovedTo = "The list is now kept in {0}.";
     public static string ListMoveFailed = "The list could not be moved, and stays where it was: {0}";
     public static string FolderUnavailable = "The folder of the list, {0}, cannot be reached: what you copy and save now is "
@@ -317,7 +384,7 @@ static partial class Strings
     public static string DataFolderTip = "Where the database with what you copy and save is kept, with the error log:\n{0}\n"
         + "The default is {1}. “Change…” moves the database to the folder you choose,\n"
         + "or uses the one already there. It is not a way to share the list between PCs:\n"
-        + "saved texts can be read only by this Windows user on this PC, and two programs\n"
+        + "encrypted saved texts can be read on another PC only with the recovery phrase, and two programs\n"
         + "using one file at once can damage it.";
     public static string CleanTip = "Deletes at once from the history what you copied before the last days\n"
         + "written above: with 1 only today stays, with 0 nothing does.\n"
@@ -494,14 +561,21 @@ static partial class Strings
                 + "copied entry from the list.",
             "## Seeing and using them",
             "- The eye of a saved text with a name (“" + ShowContent + "”, also in its menu) shows its content in a small box "
-                + "for a few seconds: the list shows only its name, and resting the pointer on it is never enough.",
+                + "for a few seconds: its card shows only its name, with dots in place of the content, and resting the "
+                + "pointer on it is never enough.",
             "- Saved texts are also in the menu of the icon by the clock: choosing one puts it back on the "
                 + "clipboard without opening the window.",
             "## Kept safe",
-            "Saved texts never expire. They are kept in the program's database, encrypted for your user: another "
-                + "user of the same PC cannot read them. When you put one back on the clipboard it is marked as private, so that Windows "
-                + "clipboard history (Win+V) and other clipboard managers ignore it. A copied picture can be saved too: it always shows its thumbnail, with "
-                + "its name beside it if it has one.",
+            "- Saved texts never expire. What the database keeps encrypted is chosen at the first start, and under “"
+                + ProtectOption + "” (Options › " + ProgramTitle + "): nothing, so that it can be read on any PC, but also by "
+                + "anyone who gets a copy of it; the saved texts, which on this PC Windows unlocks for you, and another "
+                + "user of the same PC cannot read; or everything, what you copy too.",
+            "- Encrypted, with a “" + PhraseOption + "” (Options › " + ProgramTitle + ") of three words joined by “-”, they can be read "
+                + "on another PC too, also after Windows is installed again: there choose the folder of the database, and write "
+                + "the phrase when asked. Without it they can be read only on this PC; keep it somewhere safe.",
+            "- When you put one back on the clipboard it is marked as private, so that Windows clipboard history (Win+V) "
+                + "and other clipboard managers ignore it.",
+            "- A copied picture can be saved too: it always shows its thumbnail, with its name beside it if it has one.",
             "## Formatted texts",
             "A saved text can be formatted, as a mail signature is: bold, italic, underlined, fonts and sizes.",
             "- Copy the signature from a mail or a document and save it: it keeps its formatting. The history keeps "
@@ -525,6 +599,8 @@ static partial class Strings
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): it is created inside the folder shown, "
                 + "but its window lets you choose where it goes.",
             "- The card of a folder opens it with a double click or Enter, as a click on its row in the sidebar does.",
+            "- In a folder the first row, “" + UpNote + "”, goes back to the one it is in, or to " + SavedTitle + " ("
+                + BackKeyName + " or " + Key(MainForm.UpKeys) + " too); what is dragged onto it goes there.",
             "- The arrow at the right end of a folder that holds others opens and closes it; that of " + SavedTitle
                 + " shows or hides all of them. The number says how many texts are in a folder itself, not in the folders "
                 + "inside it; that of " + SavedTitle + ", those outside the folders. Open or closed, you find them as you left them.",
@@ -591,12 +667,13 @@ static partial class Strings
             "What you copy stays in the list for a number of days you decide (" + Texts.DefaultKeepDays
                 + " unless you change it), also after closing the program or turning off the PC.",
             "## Where it is kept",
-            "- It is kept unencrypted in a database, by default " + Clips.DefaultFile + ", together with the saved "
-                + "texts, which are encrypted. Expired days are deleted by themselves.",
+            "- It is kept in a database, by default " + Clips.DefaultFile + ", together with the saved texts: "
+                + "unencrypted, unless you chose to encrypt everything (“" + ProtectOption + "”). Expired days are deleted by themselves.",
             "- In the options, “" + ChangeFolderButton + "” takes the database to another folder, or uses the one "
                 + "already there; “" + DefaultFolderButton + "” brings it back. It is not a way to share the list "
-                + "between PCs: saved texts can be read only on this PC. If the folder chosen cannot be reached at the "
-                + "start, the list works in memory and says so.",
+                + "between PCs open at the same time, but a copy on OneDrive outlives a broken PC: encrypted saved texts "
+                + "then want the recovery phrase. If the folder chosen cannot be reached at the start, the list works in "
+                + "memory and says so.",
             "## What stays and what goes",
             "- With 0 days only what you copied today stays.",
             "- Copied pictures take at most " + Size(Clips.PictureSpace) + ": beyond that the oldest go, even before their "
@@ -612,7 +689,8 @@ static partial class Strings
             "# Options",
             "The “" + Options + "” button opens them in a window of their own, which can stay open beside the list. Each option "
                 + "says in a few words what it does, under its name; resting the pointer on it shows its full explanation. They "
-                + "are in five pages, chosen from the column on the left as the subjects of this guide are.",
+                + "are in five pages, chosen from the column on the left as the subjects of this guide are. At the first start "
+                + "a few steps ask where to keep the list, what to remember and what to encrypt: all of it can be changed here.",
             "## " + TypingTitle,
             "How many seconds to wait before typing (" + MainForm.MinDelay + " to "
                 + MainForm.MaxDelay + "), whether the server uses a US keyboard, whether to press Enter at the end, "
@@ -622,17 +700,19 @@ static partial class Strings
                 + "gives them other keys; and whether " + pick + " opens the list where you left it.",
             "## " + HistoryTitle,
             "Whether to remember what you copy, for how many days, the folder of the database "
-                + "(which can be changed) with the link that opens it, and the button that cleans the history at once.",
+                + "(which can be changed) with the link that opens it, the button that cleans the history at once, and "
+                + "the buttons to export and import.",
             "## " + AppearanceTitle,
             "The language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of "
                 + "the interface (buttons, options, this guide: in pixels, they restart the program), those of the entries "
                 + "(they change at once), and whether resting the pointer on a card shows it whole.",
             "## " + ProgramTitle,
             "Whether to stay in the notification area and hide when you switch to another program, "
-                + "whether to start with Windows, the buttons to export and import, and the version of the program.",
+                + "whether to start with Windows, what to encrypt and the recovery phrase of the saved texts, and the version "
+                + "of the program.",
 
             "# Export and import",
-            "In the options, under “" + ProgramTitle + "”, two buttons take your texts out of the program and bring "
+            "In the options, under “" + HistoryTitle + "”, two buttons take your texts out of the program and bring "
                 + "them back, as a backup or to move them to another PC. Each asks whether you want the saved texts "
                 + "only or everything, that is the copied items too.",
             "## Exporting",

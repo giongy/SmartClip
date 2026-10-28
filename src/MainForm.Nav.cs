@@ -97,7 +97,7 @@ partial class MainForm
 
     void WireSidebar()
     {
-        foreach (RowList list in new RowList[] { navList, footList })
+        foreach (RowList list in new RowList[] { homeList, navList, footList })
         {
             Look.Field(list);
             list.BackColor = Look.Back;   // on the window, beside the pane
@@ -106,20 +106,41 @@ partial class MainForm
             list.DrawMode = DrawMode.OwnerDrawFixed;
             list.ItemHeight = Font.Height + NavPadding;
         }
-        navList.DrawItem += DrawPlace;
-        navList.SelectedIndexChanged += delegate { if (!fillingNav) Go(navList.SelectedItem as Place); };
-        navList.MouseMove += delegate(object sender, MouseEventArgs e)
+        // History has a list of its own over the others, so that it stays in sight however far they scroll.
+        foreach (RowList each in new RowList[] { homeList, navList })
         {
-            int row = navList.RowAt(e.Location);
-            navList.Cursor = row >= 0 ? Cursors.Hand : Cursors.Default;
-            navList.Glow.Set(row);
-            // A folder by its whole path; with the names, only one cut short.
-            RowTip(navList, row, row < 0 ? null : ((Place)navList.Items[row]).Title, row >= 0 && NameCut(row));
+            RowList list = each;   // a variable of its own for the delegates
+            list.DrawItem += DrawPlace;
+            list.SelectedIndexChanged += delegate { if (!fillingNav) Go(list.SelectedItem as Place); };
+            list.MouseMove += delegate(object sender, MouseEventArgs e)
+            {
+                int row = list.RowAt(e.Location);
+                list.Cursor = row >= 0 ? Cursors.Hand : Cursors.Default;
+                list.Glow.Set(row);
+                // A folder by its whole path; with the names, only one cut short.
+                RowTip(list, row, row < 0 ? null : ((Place)list.Items[row]).Title, row >= 0 && NameCut(list, row));
+            };
+            list.MouseLeave += delegate
+            {
+                list.Glow.Set(-1);
+                HideHoverTip();
+            };
+        }
+        homeList.MouseDown += delegate { HideHoverTip(); };
+        // Up from the first of the other places goes to History, down from History to them.
+        navList.KeyDown += delegate(object sender, KeyEventArgs e)
+        {
+            if (e.KeyCode != Keys.Up || navList.SelectedIndex > 0) return;
+            e.SuppressKeyPress = true;
+            homeList.Focus();
+            homeList.SelectedIndex = 0;
         };
-        navList.MouseLeave += delegate
+        homeList.KeyDown += delegate(object sender, KeyEventArgs e)
         {
-            navList.Glow.Set(-1);
-            HideHoverTip();
+            if (e.KeyCode != Keys.Down || navList.Items.Count == 0) return;
+            e.SuppressKeyPress = true;
+            navList.Focus();
+            navList.SelectedIndex = 0;
         };
         // The arrow at the right end opens and closes; anywhere else the row is shown (SelectedIndexChanged), and
         // Sources, which has nothing to show, opens and closes there. Reduced, the arrows are not there.
@@ -184,7 +205,8 @@ partial class MainForm
     // The sidebar at the width the user gave it, or reduced to its signs, and the pane beside it with the rest of the
     // window: the pane never gets narrower than designed by more than PaneSlack, so a wider sidebar may wait for a
     // wider window. On top the button that reduces it, at the bottom the commands, as tall as their rows, the places
-    // between them. Once the window has its scale, and again whenever the sidebar changes.
+    // between them: History first, then the others, which scroll under it. Once the window has its scale, and again
+    // whenever the sidebar changes.
     void PlaceSidebar()
     {
         int edge = (int)(Edge * Zoom), gap = (int)(Gap * Zoom);
@@ -215,15 +237,19 @@ partial class MainForm
         int middle = sideNarrow ? navList.ClientSize.Width / 2 : (int)(NavInset * Zoom) + Font.Height / 2;
         sideButton.SetBounds(navList.Left + middle - row / 2, pane.Top, row, row);
         footList.SetBounds(navList.Left, pane.Bottom - height, navList.Width, height);
-        navList.SetBounds(navList.Left, sideButton.Bottom + gap, navList.Width, footList.Top - gap - sideButton.Bottom - gap);
+        int top = sideButton.Bottom + gap;
+        navList.SetBounds(navList.Left, top + row, navList.Width, footList.Top - gap - top - row);
+        // As wide as the rows under it, which leave room to the scroll bar.
+        homeList.SetBounds(navList.Left, top, navList.ClientSize.Width, row);
         ResumeLayout();
         // Reduced, the rows say their names one at a time (RowTip); with the names, the list has a tooltip of its own.
         HideHoverTip();
         tips.SetToolTip(navList, sideNarrow ? null : Strings.PinnedTip + "\n" + Strings.ShortcutsTip + "\n" + Strings.SourcesTip);
         Tip(sideNarrow ? Strings.WideSideTip : Strings.NarrowSideTip, sideButton);
+        homeList.Invalidate();
         navList.Invalidate();
         footList.Invalidate();
-        Invalidate();   // where the area of the work begins
+        Invalidate();   // where the area of the work begins, and the line over the commands
     }
 
     // Reduces the sidebar to its signs, or gives it back its names, at the width it had.
@@ -299,12 +325,16 @@ partial class MainForm
     }
 
     // The sidebar is the window itself; the area of the work, on the right, reaches the top, the right and the bottom
-    // of it, and the pane, a little within, is of the same colour without an edge: the two are one.
+    // of it, and the pane, a little within, is of the same colour without an edge: the two are one. In the sidebar a thin
+    // line between the places and the commands under them.
     protected override void OnPaintBackground(PaintEventArgs e)
     {
         base.OnPaintBackground(e);
         using (Brush work = new SolidBrush(pane.BackColor))
             e.Graphics.FillRectangle(work, pane.Left, 0, ClientSize.Width - pane.Left, ClientSize.Height);
+        int y = (navList.Bottom + footList.Top) / 2, inset = navList.Font.Height / 2;
+        using (Pen line = new Pen(Look.Border))
+            e.Graphics.DrawLine(line, footList.Left + inset, y, footList.Right - inset, y);
     }
 
     protected override void OnMouseDown(MouseEventArgs e)
@@ -414,7 +444,7 @@ partial class MainForm
         savedRow.Count = saved;
         Place shortcuts = new Place(PlaceKind.Shortcuts);
         shortcuts.Count = numbered;
-        rows.AddRange(new Place[] { all, kept, shortcuts, savedRow });
+        rows.AddRange(new Place[] { kept, shortcuts, savedRow });   // History is on a list of its own
         // The folders, each under the one it is in; those inside a closed one are not there.
         List<Entry> folders = entries.FindAll(delegate(Entry e) { return e.IsGroup; });
         savedRow.Opens = folders.Count > 0;
@@ -453,11 +483,17 @@ partial class MainForm
 
         // The place shown, if it is still there: a folder inside a closed one, or a program in a closed list, is
         // shown all the same, though its row is not.
-        Place found = rows.Find(delegate(Place row) { return row.Is(place); });
+        Place found = all.Is(place) ? all : rows.Find(delegate(Place row) { return row.Is(place); });
         bool gone = found == null && (place.Kind == PlaceKind.Folder ? FolderEntry(place.Path) == null
             : place.Kind == PlaceKind.Source && !sources.Exists(delegate(Source s) { return s.App == place.Id; }));
         int top = navList.TopIndex;
         fillingNav = true;
+        homeList.BeginUpdate();
+        homeList.Items.Clear();
+        homeList.Items.Add(all);
+        homeList.SelectedIndex = found == all ? 0 : -1;
+        homeList.EndUpdate();
+        homeList.Glow.Reset();
         navList.BeginUpdate();
         navList.Items.Clear();
         foreach (Place row in rows) navList.Items.Add(row);
@@ -469,7 +505,7 @@ partial class MainForm
         if (found != null) place = found;
         if (!gone) return;
         place = all;
-        navList.SelectedIndex = 0;   // which fills the cards again
+        homeList.SelectedIndex = 0;   // which fills the cards again
     }
 
     // The folder Entry of a path, or null.
@@ -485,11 +521,12 @@ partial class MainForm
     void DrawPlace(object sender, DrawItemEventArgs e)
     {
         if (e.Index < 0) return;
-        Place at = (Place)navList.Items[e.Index];
+        RowList list = (RowList)sender;
+        Place at = (Place)list.Items[e.Index];
         bool selected = (e.State & DrawItemState.Selected) != 0 && at.Kind != PlaceKind.Sources;
         // Fully lit, the folder a dragged text would be dropped into.
-        float glow = dropPlace != null && dropPlace.Is(at) ? 1 : navList.Glow.Of(e.Index);
-        Look.DrawRow(e.Graphics, e.Bounds, navList.BackColor, selected, glow);
+        float glow = dropPlace != null && dropPlace.Is(at) ? 1 : list.Glow.Of(e.Index);
+        Look.DrawRow(e.Graphics, e.Bounds, list.BackColor, selected, glow);
         Rectangle box, number, name;
         PlaceParts(at, e.Bounds, out box, out number, out name);
         // Reduced, a folder is filled, with the first letter of its name cut out of it in the colour of the row: alike as
@@ -508,10 +545,10 @@ partial class MainForm
                 using (Font letter = new Font(Look.StrongFont.FontFamily, box.Height * InitialShare, FontStyle.Bold, GraphicsUnit.Pixel))
                     TextRenderer.DrawText(e.Graphics, StringInfo.GetNextTextElement(at.Label).ToUpper(Strings.Culture), letter,
                         new Rectangle(box.Left, box.Top + (int)(box.Height * InitialDrop), box.Width, box.Height),
-                        selected ? Look.Selected : Look.Blend(navList.BackColor, Look.Soft, glow),   // as DrawRow fills it
+                        selected ? Look.Selected : Look.Blend(list.BackColor, Look.Soft, glow),   // as DrawRow fills it
                         TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine
                         | TextFormatFlags.NoPadding | TextFormatFlags.NoPrefix | TextFormatFlags.NoClipping);
-            if (e.Index > 0 && (at.Kind == PlaceKind.Saved || at.Kind == PlaceKind.Sources))
+            if (at.Kind == PlaceKind.Saved || at.Kind == PlaceKind.Sources)
                 using (Pen line = new Pen(Look.Border))
                     e.Graphics.DrawLine(line, e.Bounds.Left + box.Width / 2, e.Bounds.Top, e.Bounds.Right - box.Width / 2, e.Bounds.Top);
             return;
@@ -545,11 +582,11 @@ partial class MainForm
     }
 
     // Whether the name of a row is cut short: its tooltip says it whole.
-    bool NameCut(int row)
+    bool NameCut(RowList list, int row)
     {
-        Place at = (Place)navList.Items[row];
+        Place at = (Place)list.Items[row];
         Rectangle box, number, name;
-        PlaceParts(at, navList.GetItemRectangle(row), out box, out number, out name);
+        PlaceParts(at, list.GetItemRectangle(row), out box, out number, out name);
         return TextRenderer.MeasureText(at.Label, navList.Font, Size.Empty, LineFlags & ~TextFormatFlags.EndEllipsis).Width > name.Width;
     }
 
@@ -652,33 +689,40 @@ partial class MainForm
         };
     }
 
-    // Among the cards, the same onto the card of a folder.
+    // Among the cards, the same onto the card of a folder, or onto the way back up, to the folder above or out of them.
     void DropOnCards()
     {
         cardList.AllowDrop = true;
         cardList.DragOver += delegate(object sender, DragEventArgs e)
         {
             Entry entry = e.Data.GetData(typeof(Entry)) as Entry;
-            FolderCard target = CardDropAt(e);
-            bool moves = entry != null && target != null && CanGo(entry, target.Folder.Name);
+            string path;
+            int row = CardDropAt(e, out path);
+            bool moves = entry != null && row >= 0 && CanGo(entry, path);
             e.Effect = moves ? DragDropEffects.Move : DragDropEffects.None;
-            AimCard(moves ? cardList.Items.IndexOf(target) : -1);
+            AimCard(moves ? row : -1);
         };
         cardList.DragLeave += delegate { AimCard(-1); };
         cardList.DragDrop += delegate(object sender, DragEventArgs e)
         {
             Entry entry = e.Data.GetData(typeof(Entry)) as Entry;
-            FolderCard target = CardDropAt(e);
+            string path;
+            int row = CardDropAt(e, out path);
             AimCard(-1);
-            if (entry != null && target != null && CanGo(entry, target.Folder.Name)) MoveTo(entry, target.Folder.Name);
+            if (entry != null && row >= 0 && CanGo(entry, path)) MoveTo(entry, path);
         };
     }
 
-    // The folder among the cards something dragged is over, or null.
-    FolderCard CardDropAt(DragEventArgs e)
+    // The row among the cards something dragged would go into, with the path of its folder (null for none: out of the
+    // folders); -1 if it is over no folder.
+    int CardDropAt(DragEventArgs e, out string path)
     {
         int row = cardList.RowAt(cardList.PointToClient(new Point(e.X, e.Y)));
-        return row < 0 ? null : cardList.Items[row] as FolderCard;
+        object at = row < 0 ? null : cardList.Items[row];
+        FolderCard folder = at as FolderCard;
+        UpCard up = at as UpCard;
+        path = folder != null ? folder.Folder.Name : up != null ? up.Path : null;
+        return folder != null || up != null ? row : -1;
     }
 
     // Lights up the card of the folder a dragged text is over.

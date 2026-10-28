@@ -98,6 +98,7 @@ partial class MainForm : Window
     public const Keys AllKey = Keys.A;      // with Ctrl, in the cards: picks them all
     public const Keys CopyKey = Keys.C;     // with Ctrl, in the cards: their texts onto the clipboard
     public const Keys SearchKey = Keys.F;   // with Ctrl, anywhere in the window: to the search box
+    public const Keys UpKeys = Keys.Alt | Keys.Up, BackKey = Keys.Back;   // in a folder: to the one it is in, as in File Explorer
     const Keys NewKeys = Keys.Control | NewKey, GroupKeys = Keys.Control | Keys.Shift | NewKey, SaveKeys = Keys.Control | SaveKey,
         DeleteKeys = Keys.Control | DeleteKey, PinKeys = Keys.Control | PinKey, SearchKeys = Keys.Control | SearchKey,
         AllKeys = Keys.Control | AllKey, CopyKeys = Keys.Control | CopyKey;
@@ -150,7 +151,8 @@ partial class MainForm : Window
     readonly RoundButton pickCopy = new RoundButton(), pickPin = new RoundButton(), pickMove = new RoundButton(), pickDelete = new RoundButton(), pickNone = new RoundButton();
     readonly ContextMenuStrip pickPlaces = new ContextMenuStrip();   // where the move button sends them
     readonly ContextMenuStrip cardMenu = new ContextMenuStrip();     // of a folder among the cards (see FolderCard)
-    readonly RowList navList = new RowList();     // the sidebar: the places (see Place)
+    readonly RowList homeList = new RowList();    // the sidebar: History alone, always in sight
+    readonly RowList navList = new RowList();     // under it the other places (see Place), which scroll
     readonly RowList footList = new RowList();    // under it: the pause, the options, the guide
     Place place = new Place(PlaceKind.History);       // the place shown
     bool savedOpen = true, sourcesOpen = true;    // the sidebar shows the folders, and the programs
@@ -199,6 +201,8 @@ partial class MainForm : Window
     Panel restartPage;                           // where the language is: the options reopen there after changing it
     readonly TextBox delayBox = new TextBox(), keepBox = new TextBox(), cleanBox = new TextBox();
     readonly RoundButton cleanButton = new RoundButton(), exportButton = new RoundButton(), importButton = new RoundButton();
+    readonly RoundButton phraseButton = new RoundButton();   // sets the recovery phrase, changes it, or unlocks with it
+    readonly RoundButton protectButton = new RoundButton();  // what the list keeps encrypted, and the menu of the choices
     readonly RoundButton typeKeysButton = new RoundButton(), pickKeysButton = new RoundButton();   // show the keys of a hotkey, and take new ones
     readonly RoundButton quickKeysButton = new RoundButton();   // the same for the keys of the numbers
     readonly CheckBox usBox = new Toggle();
@@ -381,9 +385,10 @@ partial class MainForm : Window
         sideButton.Subtle = true;
         sideButton.TabStop = false;
         sideButton.Click += delegate { NarrowSide(!sideNarrow); };
+        homeList.SetBounds(Edge, sideButton.Bottom + Gap, SideWidth - 2 * Edge, 0);
         navList.SetBounds(Edge, sideButton.Bottom + Gap, SideWidth - 2 * Edge, pane.Bottom - sideButton.Bottom - Gap);
         footList.SetBounds(Edge, Edge, SideWidth - 2 * Edge, 0);
-        Controls.AddRange(new Control[] { pane, sideButton, navList, footList });
+        Controls.AddRange(new Control[] { pane, sideButton, homeList, navList, footList });
         // Thin scroll bars over those of the lists, which always have one so that their rows never change width.
         cardList.ScrollAlwaysVisible = navList.ScrollAlwaysVisible = true;
         Rail.Over(cardList);
@@ -395,6 +400,7 @@ partial class MainForm : Window
         searchFrame.Anchor = tabs.Anchor = pickBar.Anchor = dayBar.Anchor = toTop | toLeft | toRight;
         newButton.Anchor = typeButton.Anchor = toTop | toRight;
         status.Anchor = banner.Anchor = toBottom | toLeft | toRight;
+        homeList.Anchor = toTop | toLeft;
         navList.Anchor = toTop | toBottom | toLeft;
         footList.Anchor = toBottom | toLeft;
 
@@ -647,10 +653,13 @@ partial class MainForm : Window
 
     // With nothing to say the status line is silent, and leaves its room to the lists: how to type a
     // password is in the tooltip of its button and in the guide. Only a database that could not be opened is
-    // said always.
+    // said always, and saved texts it holds that cannot be read here: locked until the recovery phrase is given, or
+    // encrypted by a version before it for another user or PC.
     void ShowIdle()
     {
         if (unavailable != null) Warn(unavailable);
+        else if (clips.Locked) Warn(string.Format(Strings.LockedWarning, Strings.ProgramTitle));
+        else if (clips.Unreadable > 0) Warn(string.Format(Strings.UnreadableWarning, clips.Unreadable));
         else status.Text = "";
     }
 
@@ -691,6 +700,7 @@ partial class MainForm : Window
     protected override void OnShown(EventArgs e)
     {
         base.OnShown(e);
+        RunSetup();   // the first start, or what to encrypt of a list of a version before
         if (optionsAtStart) OpenOptions();   // started again from there
         optionsAtStart = false;
     }

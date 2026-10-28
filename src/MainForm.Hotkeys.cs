@@ -11,7 +11,8 @@ partial class MainForm
     public static string NameOf(Keys keys)
     {
         Keys code = keys & Keys.KeyCode;
-        string key = IsDigit(code) ? (code - Keys.D0).ToString() : code.ToString();
+        // An arrow by its sign, which every keyboard has on it.
+        string key = IsDigit(code) ? (code - Keys.D0).ToString() : code == Keys.Up ? "↑" : code == Keys.Down ? "↓" : code.ToString();
         return ((keys & Keys.Control) != 0 ? "Ctrl+" : "") + ((keys & Keys.Alt) != 0 ? "Alt+" : "")
             + ((keys & Keys.Shift) != 0 ? Strings.ShiftName + "+" : "") + key;
     }

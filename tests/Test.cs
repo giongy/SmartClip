@@ -53,7 +53,7 @@ class Sample
                         + "Il testo delle immagini\tCopia le parole di un'immagine, lette sul tuo PC\n"
                         + "Scorciatoie a tua scelta\tIncolla le voci preferite con Ctrl+Maiusc+1…9\n"
                         + "Da dove viene ogni copia\tIl programma di ogni voce, con la sua icona\n"
-                        + "Testi salvati, cifrati\tIn cartelle, con la loro formattazione\n"
+                        + "Testi salvati in cartelle\tCon la loro formattazione, cifrati se vuoi\n"
                         + "Riservato per natura\tNessun account, nessuna pubblicità, nessuna connessione";
                     s.Pages = "Digita dove incollare è bloccato\tSchermate di blocco dei desktop remoti, console di macchine virtuali, "
                             + "pagine di gestione dei server: SmartClip digita gli appunti tasto per tasto, dopo averti dato il tempo "
@@ -66,9 +66,9 @@ class Sample
                             + "fino a nove voci preferite con Ctrl+Maiusc+1…9. Ogni tasto si può cambiare.\n"
                         + "Da dove viene ogni copia\tOgni voce ricorda il programma in cui l'hai copiata, con la sua icona. Scegli "
                             + "un programma nella barra laterale per vedere solo ciò che viene da lì.\n"
-                        + "Testi salvati, cifrati\tTieni una firma, un indirizzo o un codice di accesso con un nome, in cartelle e "
-                            + "sottocartelle. Una firma di posta tiene grassetti e caratteri; tutto ciò che salvi è cifrato per il "
-                            + "tuo utente di Windows.\n"
+                        + "Testi salvati in cartelle\tTieni una firma, un indirizzo o un codice di accesso con un nome, in cartelle e "
+                            + "sottocartelle. Una firma di posta tiene grassetti e caratteri; se vuoi, si cifrano, e con una "
+                            + "frase di recupero si aprono anche su un altro PC.\n"
                         + "Sempre a portata di mano\tI testi salvati sono anche nel menu dell'icona vicino all'orologio, cartelle "
                             + "comprese: prendine uno senza nemmeno aprire la finestra.\n"
                         + "Chiaro o scuro\tGrigi caldi con un accento arancio, in chiaro o in scuro, come Windows o come scegli tu. "
@@ -88,7 +88,7 @@ class Sample
                         + "El texto de las imágenes\tCopia las palabras de una imagen, leídas en tu PC\n"
                         + "Atajos a tu medida\tPega tus favoritos con Ctrl+Mayús+1…9\n"
                         + "De dónde viene cada copia\tEl programa de cada entrada, con su icono\n"
-                        + "Textos guardados, cifrados\tEn carpetas, con su formato\n"
+                        + "Textos guardados en carpetas\tCon su formato, cifrados si quieres\n"
                         + "Privado por diseño\tSin cuenta, sin anuncios, sin conexión a Internet";
                     s.Pages = "Teclea donde pegar está bloqueado\tPantallas de bloqueo de escritorios remotos, consolas de máquinas "
                             + "virtuales, páginas de gestión de servidores: SmartClip teclea el portapapeles tecla por tecla, tras "
@@ -101,9 +101,9 @@ class Sample
                             + "hasta nueve entradas favoritas con Ctrl+Mayús+1…9. Cada tecla se puede cambiar.\n"
                         + "De dónde viene cada copia\tCada entrada recuerda el programa en el que la copiaste, con su icono. Elige "
                             + "un programa en la barra lateral para ver solo lo que vino de allí.\n"
-                        + "Textos guardados, cifrados\tGuarda una firma, una dirección o un código de acceso con un nombre, en "
-                            + "carpetas y subcarpetas. Una firma de correo conserva negritas y fuentes; todo lo guardado se cifra "
-                            + "para tu usuario de Windows.\n"
+                        + "Textos guardados en carpetas\tGuarda una firma, una dirección o un código de acceso con un nombre, en "
+                            + "carpetas y subcarpetas. Una firma de correo conserva negritas y fuentes; si quieres, se cifran, y con una "
+                            + "frase de recuperación se abren también en otro PC.\n"
                         + "Siempre a mano\tLos textos guardados están también en el menú del icono junto al reloj, con sus "
                             + "carpetas: toma uno sin abrir siquiera la ventana.\n"
                         + "Claro u oscuro\tGrises cálidos con un acento naranja, en claro o en oscuro, como Windows o como elijas. "
@@ -123,7 +123,7 @@ class Sample
                         + "Le texte des images\tCopie les mots d'une image, lus sur votre PC\n"
                         + "Raccourcis à votre choix\tCollez vos favoris avec Ctrl+Maj+1…9\n"
                         + "D'où vient chaque copie\tLe programme de chaque élément, avec son icône\n"
-                        + "Textes enregistrés, chiffrés\tDans des dossiers, avec leur mise en forme\n"
+                        + "Textes enregistrés en dossiers\tAvec leur mise en forme, chiffrés si vous voulez\n"
                         + "Privé par nature\tSans compte, sans publicité, sans connexion Internet";
                     s.Pages = "Saisit là où coller est bloqué\tÉcrans de verrouillage des bureaux à distance, consoles de machines "
                             + "virtuelles, pages d'administration des serveurs : SmartClip saisit le presse-papiers touche par touche, "
@@ -136,9 +136,9 @@ class Sample
                             + "où vous êtes et collez jusqu'à neuf favoris avec Ctrl+Maj+1…9. Chaque touche se change.\n"
                         + "D'où vient chaque copie\tChaque élément se souvient du programme où vous l'avez copié, avec son icône. "
                             + "Choisissez un programme dans la barre latérale pour ne voir que ce qui en vient.\n"
-                        + "Textes enregistrés, chiffrés\tGardez une signature, une adresse ou un code d'accès sous un nom, dans des "
-                            + "dossiers et sous-dossiers. Une signature d'e-mail garde ses gras et ses polices ; tout ce que vous "
-                            + "enregistrez est chiffré pour votre utilisateur Windows.\n"
+                        + "Textes enregistrés en dossiers\tGardez une signature, une adresse ou un code d'accès sous un nom, dans des "
+                            + "dossiers et sous-dossiers. Une signature d'e-mail garde ses gras et ses polices ; si vous voulez, "
+                            + "ils sont chiffrés, et avec une phrase de récupération ils s'ouvrent aussi sur un autre PC.\n"
                         + "Toujours à portée de main\tLes textes enregistrés sont aussi dans le menu de l'icône près de l'horloge, "
                             + "avec leurs dossiers : prenez-en un sans même ouvrir la fenêtre.\n"
                         + "Clair ou sombre\tDes gris chauds avec une touche d'orange, en clair ou en sombre, comme Windows ou comme "
@@ -158,7 +158,7 @@ class Sample
                         + "Text from pictures\tCopies the words in a picture, read on your PC\n"
                         + "Hotkeys of your choice\tPaste your favourites with Ctrl+Shift+1…9\n"
                         + "Where each copy comes from\tThe program of every entry, with its icon\n"
-                        + "Saved texts, encrypted\tIn folders, with their formatting\n"
+                        + "Saved texts in folders\tWith their formatting, encrypted if you like\n"
                         + "Private by design\tNo account, no ads, no Internet connection";
                     s.Pages = "Types where paste is blocked\tRemote desktop lock screens, virtual machine consoles, server management "
                             + "pages: SmartClip types the clipboard key by key, after giving you time to click the right field. If "
@@ -171,9 +171,9 @@ class Sample
                             + "up to nine favourite entries with Ctrl+Shift+1…9. Every key can be changed.\n"
                         + "Where each copy comes from\tEvery entry remembers the program it was copied in, with its icon. Choose a "
                             + "program in the sidebar to see only what came from there.\n"
-                        + "Saved texts, encrypted\tKeep a signature, an address or an access code under a name, in folders and "
-                            + "subfolders. A mail signature keeps its bold and its fonts; everything saved is encrypted for your "
-                            + "Windows user.\n"
+                        + "Saved texts in folders\tKeep a signature, an address or an access code under a name, in folders and "
+                            + "subfolders. A mail signature keeps its bold and its fonts; if you like, they are encrypted, and "
+                            + "with a recovery phrase they open on another PC too.\n"
                         + "Always at hand\tThe saved texts are also in the menu of the icon by the clock, folders included: take "
                             + "one without even opening the window.\n"
                         + "Light or dark\tWarm greys with an orange accent, in the light or in the dark, as Windows does or as you "
@@ -392,6 +392,7 @@ static class TestProgram
         ClipsTest();
         RoomTest();
         UpgradeTest();
+        VaultTest();
         FormattedTest();
         MigrationTest();
         BackupTest();
@@ -498,6 +499,30 @@ static class TestProgram
             clips.Prune();
             Mark("the expired entries removed (a new day)", clock.Elapsed.TotalMilliseconds, 2000);
             Console.WriteLine("       {0} entries removed; the file from {1} to {2}", count - clips.CopiedCount(), Strings.Size(before), Strings.Size(clips.Size));
+
+            // Everything encrypted, the history too: what encrypting it all takes, and the search done here instead of
+            // by the database, the search texts decrypted once.
+            clock.Restart();
+            clips.SetProtection(Protection.All);
+            Mark("everything encrypted, the history too", clock.Elapsed.TotalMilliseconds, 30000);
+            Sieve server = new Sieve();
+            server.Words = Texts.Words("server");
+            clock.Restart();
+            clips.CopiedCount(server);
+            Mark("encrypted: the first search, every search text decrypted", clock.Elapsed.TotalMilliseconds, 2000);
+            Timed("encrypted: the history, as the list asks it", 50, delegate { clips.Copied(MainForm.MaxShown, new Sieve()); clips.CopiedCount(new Sieve()); });
+            foreach (string query in new string[] { "server", "zanzibar", "s", "connessione remoto" })
+            {
+                Sieve sieve = new Sieve();
+                sieve.Words = Texts.Words(query);
+                Timed("encrypted: search \"" + query + "\": " + clips.CopiedCount(sieve) + " found", 100,
+                    delegate { clips.Copied(MainForm.MaxShown, sieve); clips.CopiedCount(sieve); });
+            }
+            Timed("encrypted: a text copied", 100, delegate { clips.AddText("an encrypted copy " + copy++, programs[0]); });
+            Timed("encrypted: a whole picture, chosen", 50, delegate { clips.Png(pictureId); });
+            clock.Restart();
+            clips.SetProtection(Protection.Saved);
+            Mark("the history unencrypted again", clock.Elapsed.TotalMilliseconds, 30000);
         }
         Console.WriteLine();
 
@@ -742,6 +767,143 @@ static class TestProgram
 
     // A database of version 1, with the large columns in the middle of the rows, is brought up to date when it is
     // opened: the same entries, the large columns at the end.
+    // The key of the saved entries: the phrase as it is compared, another PC that has only the phrase, one that has not
+    // even that, what DPAPI encrypted in the versions before.
+    static void VaultTest()
+    {
+        Check(Vault.Phrase("  Fiume - LAMPADA-sette ") == "fiume-lampada-sette" && Vault.Phrase("due  parole-qui-e") == "due parole-qui-e"
+            && Vault.Phrase("càsa-b-c") == Vault.Phrase("CÀSA-b-c") && Vault.Phrase("a-b") == null && Vault.Phrase("a--b") == null
+            && Vault.Phrase("a-b-c-d") == null && Vault.Phrase(" -b-c") == null, "a phrase is three words, whatever the spaces and the letter case");
+        string path = System.IO.Path.Combine(sandbox, "vault test.db");
+        // On another PC DPAPI cannot open what this one kept: so it is with a key kept by another.
+        string otherPc = "UPDATE keys SET locked = x'0102030405' WHERE kind = 1";
+        using (Clips clips = new Clips(path))
+        {
+            clips.AddSaved("Bank", "secret", 0, DateTime.Now);
+            byte[] content = (byte[])clips.Data.Value("SELECT content FROM entries WHERE saved = 1");
+            Check(!clips.Locked && !clips.HasPhrase && Vault.Sealed(content) && clips.Saved()[0].Text == "secret",
+                "a new database has a key, and what is saved is encrypted under it");
+            clips.SetPhrase("Fiume-Lampada-Sette");
+            clips.SetPhrase("fiume-lampada-sette");
+            Check(clips.HasPhrase && Equals(clips.Data.Value("SELECT count(*) FROM keys WHERE kind = 2"), 1L), "the phrase keeps it, once");
+            content[content.Length - 1] ^= 1;
+            clips.Data.Execute("UPDATE entries SET content = ?1 WHERE saved = 1", content);
+            Check(clips.Saved().Count == 0 && clips.Unreadable == 1, "a value changed by a byte is not read");
+            content[content.Length - 1] ^= 1;
+            clips.Data.Execute("UPDATE entries SET content = ?1 WHERE saved = 1", content);
+            clips.Data.Execute(otherPc);
+        }
+        using (Clips clips = new Clips(path))
+        {
+            bool refused = false;
+            try
+            {
+                clips.AddSaved("New", "text", 0, DateTime.Now);
+            }
+            catch (InvalidOperationException)
+            {
+                refused = true;
+            }
+            Check(clips.Locked && clips.Saved().Count == 0 && clips.Unreadable == 1 && refused,
+                "on another PC the saved texts are locked, and nothing new can be saved");
+            Check(!clips.Unlock("fiume-lampada-otto") && !clips.Unlock("fiume-lampada") && clips.Locked, "a wrong phrase unlocks nothing");
+            Check(clips.Unlock(" FIUME - lampada - Sette") && !clips.Locked && clips.Saved()[0].Text == "secret" && clips.Unreadable == 0
+                && clips.AddSaved("New", "text", 0, DateTime.Now) > 0, "the phrase unlocks them, whatever its spaces and letter case");
+        }
+        using (Clips clips = new Clips(path))
+            Check(!clips.Locked && clips.Saved().Count == 2 && Equals(clips.Data.Value("SELECT count(*) FROM keys WHERE kind = 1"), 2L),
+                "and that PC asks no more");
+        // Without the phrase only a new key: what the old one encrypted goes, after asking.
+        using (Clips clips = new Clips(path))
+        {
+            clips.Data.Execute("DELETE FROM keys WHERE kind = 2");
+            clips.Data.Execute(otherPc);
+        }
+        using (Clips clips = new Clips(path))
+        {
+            bool locked = clips.Locked && !clips.Unlock("fiume-lampada-sette");
+            int lost = clips.StartOver();
+            Check(locked && lost == 2 && !clips.Locked && clips.Saved().Count == 0 && clips.AddSaved("Bank", "again", 0, DateTime.Now) > 0
+                && Equals(clips.Data.Value("SELECT count(*) FROM keys"), 1L), "without the phrase, starting over deletes what nobody can read");
+        }
+        // Locked with nothing saved, there is nothing to lose: a new key at once.
+        using (Clips clips = new Clips(path))
+        {
+            clips.Data.Execute("DELETE FROM entries WHERE saved = 1");
+            clips.Data.Execute(otherPc);
+        }
+        using (Clips clips = new Clips(path)) Check(!clips.Locked, "locked with nothing saved, a new key");
+        // What DPAPI encrypted: under the key once read; what this user cannot read stays as it was, said.
+        using (Clips clips = new Clips(path))
+        {
+            clips.AdoptSaved("Old", Protected("from the registry"), 0, DateTime.Now, 0);
+            byte[] broken = Protected("another user's");
+            broken[broken.Length - 1] ^= 1;   // as DPAPI of another user: it begins as one, and cannot be read here
+            clips.AdoptSaved("Other", broken, 0, DateTime.Now, 0);
+        }
+        using (Clips clips = new Clips(path))
+        {
+            List<Entry> saved = clips.Saved();
+            Check(saved.Count == 1 && saved[0].Text == "from the registry" && clips.Unreadable == 1
+                && Vault.Sealed((byte[])clips.Data.Value("SELECT content FROM entries WHERE name = 'Old'"))
+                && !Vault.Sealed((byte[])clips.Data.Value("SELECT content FROM entries WHERE name = 'Other'")),
+                "what DPAPI encrypted goes under the key; what cannot be read stays, counted");
+            Check(!clips.ProtectionChosen && clips.Protection == Protection.Saved, "until the user chooses, the saved texts are encrypted");
+            clips.SetPhrase("a-b-c");
+            clips.SetProtection(Protection.Nothing);
+            clips.AddSaved("New", "plain too", 0, DateTime.Now);
+            Check(clips.ProtectionChosen && !clips.HasPhrase
+                && System.Linq.Enumerable.SequenceEqual((byte[])clips.Data.Value("SELECT content FROM entries WHERE name = 'Old'"),
+                    Encoding.UTF8.GetBytes("from the registry"))
+                && System.Linq.Enumerable.SequenceEqual((byte[])clips.Data.Value("SELECT content FROM entries WHERE name = 'New'"),
+                    Encoding.UTF8.GetBytes("plain too"))
+                && Vault.Dpapi((byte[])clips.Data.Value("SELECT content FROM entries WHERE name = 'Other'")),
+                "kept unencrypted, the saved texts are the bytes themselves, the phrase forgotten; what cannot be read stays");
+            clips.Data.Execute(otherPc);
+        }
+        using (Clips clips = new Clips(path))
+        {
+            Check(!clips.Locked && clips.Protection == Protection.Nothing && clips.Saved().Count == 2,
+                "unencrypted, they are read on any PC, without a phrase");
+            clips.SetProtection(Protection.Saved);
+            Check(!clips.Locked && Vault.Sealed((byte[])clips.Data.Value("SELECT content FROM entries WHERE name = 'New'"))
+                && clips.Saved().Count == 2, "encrypted again, under a new key");
+        }
+        // Everything encrypted, what is copied too: found by a search all the same, known again when copied again.
+        Sieve copiedWord = new Sieve();
+        copiedWord.Words = Texts.Words("COPIED");
+        using (Clips clips = new Clips(path))
+        {
+            clips.AddText("first copied text");
+            clips.SetProtection(Protection.All);
+            clips.AddText("second copied text");
+            clips.AddText("first copied text");
+            string first = "SELECT {0} FROM entries WHERE saved = 0 ORDER BY id LIMIT 1";
+            Check(Vault.Sealed((byte[])clips.Data.Value(string.Format(first, "content")))
+                && Vault.Sealed((byte[])clips.Data.Value(string.Format(first, "folded")))
+                && clips.CopiedCount() == 2 && clips.Copied(10, Texts.Words("second")).Count == 1 && clips.CopiedCount(copiedWord) == 2
+                && clips.Copied(10, new string[0])[0].Text == "first copied text" && clips.Saved().Count == 2,
+                "with everything encrypted, what is copied is too, and found and known again all the same");
+            clips.SetProtection(Protection.Nothing);
+            Check(System.Linq.Enumerable.SequenceEqual((byte[])clips.Data.Value(string.Format(first, "content")),
+                    Encoding.UTF8.GetBytes("first copied text"))
+                && Equals(clips.Data.Value(string.Format(first, "folded")), Texts.Fold("first copied text"))
+                && clips.Copied(10, Texts.Words("second")).Count == 1 && clips.AddText("first copied text")
+                && clips.CopiedCount() == 2, "and back unencrypted, the database searches it again, and knows it again");
+            clips.SetProtection(Protection.All);
+            clips.Data.Execute(otherPc);
+        }
+        using (Clips clips = new Clips(path))
+        {
+            Check(clips.Locked && clips.Copied(10, new string[0]).Count == 0 && clips.Copied(10, Texts.Words("second")).Count == 0
+                && !clips.AddText("while locked"), "on another PC without the phrase, nothing copied is read nor remembered");
+            int lost = clips.StartOver();
+            Check(lost == 5 && clips.CopiedCount() == 0 && clips.AddText("again") && clips.Copied(1, new string[0])[0].Text == "again",
+                "starting over, what is copied goes too, and copying starts again");
+        }
+        System.IO.File.Delete(path);
+    }
+
     static void UpgradeTest()
     {
         string path = System.IO.Path.Combine(sandbox, "upgrade test.db");
@@ -1100,7 +1262,10 @@ static class TestProgram
             OldSaved(savedKey, "Wi-Fi", Protected("casa123"), DateTime.Now, 2, "Casa");
             OldSaved(savedKey, "Orfano", Protected("nessuna cartella"), DateTime.Now, 0, "Sparita");
             OldSaved(savedKey, "Senza data", Protected("vecchio"), null, 0, null);
-            OldSaved(savedKey, "Illeggibile", new byte[] { 1, 2, 3 }, DateTime.Now, 0, null);
+            // Another Windows user's: DPAPI, which cannot be read here.
+            byte[] othersSecret = Protected("altrui");
+            othersSecret[othersSecret.Length - 1] ^= 1;
+            OldSaved(savedKey, "Illeggibile", othersSecret, DateTime.Now, 0, null);
 
             // The history: today, last week and long ago (beyond the days kept by default), a star with a number,
             // a picture, an entry deleted, a record cut short, a file that cannot be read.
@@ -2243,10 +2408,12 @@ static class TestProgram
             // The places of the sidebar, and the tabs.
             Sample s = Sample.Current;
             ListBox nav = (ListBox)typeof(MainForm).GetField("navList", hidden).GetValue(form);
-            Console.WriteLine("[{0}] the sidebar: history, pinned, shortcuts, saved with its folders, the programs: {1} rows",
-                nav.Items.Count == 11 && ((Place)nav.Items[2]).Kind == PlaceKind.Shortcuts && ((Place)nav.Items[2]).Count == 3
-                && ((Place)nav.Items[4]).Label == s.Home && ((Place)nav.Items[6]).Level == 2 && ((Place)nav.Items[7]).Kind == PlaceKind.Sources
-                && ((Place)nav.Items[8]).Origin != null ? "PASS" : "FAIL", nav.Items.Count);
+            ListBox home = (ListBox)typeof(MainForm).GetField("homeList", hidden).GetValue(form);
+            Console.WriteLine("[{0}] the sidebar: history on its own, then pinned, shortcuts, saved with its folders, the programs: {1} rows",
+                home.Items.Count == 1 && ((Place)home.Items[0]).Kind == PlaceKind.History && home.Bottom == nav.Top
+                && nav.Items.Count == 10 && ((Place)nav.Items[1]).Kind == PlaceKind.Shortcuts && ((Place)nav.Items[1]).Count == 3
+                && ((Place)nav.Items[3]).Label == s.Home && ((Place)nav.Items[5]).Level == 2 && ((Place)nav.Items[6]).Kind == PlaceKind.Sources
+                && ((Place)nav.Items[7]).Origin != null ? "PASS" : "FAIL", nav.Items.Count);
             // The shortcuts: the entries with a number, copied and saved, by number, without days.
             GoTo(form, PlaceKind.Shortcuts, null);
             List<Entry> numberedCards = Cards(cards);
@@ -2261,21 +2428,36 @@ static class TestProgram
             // As in File Explorer: Saved has its folders first, then the texts outside them; a folder the folders and the
             // texts in it itself.
             GoTo(form, PlaceKind.Saved, null);
-            bool savedOnly = Cards(cards).Count == 1 && Cards(cards)[0].Saved && Cards(cards)[0].Group == null && cards.Items.Count == 3
-                && ((FolderCard)cards.Items[0]).Folder.Label == s.Home && ((FolderCard)cards.Items[1]).Folder.Label == s.Work;
+            // Each under a name of its own; that of the folders in the bar over the cards.
+            Heading folderHead = (Heading)typeof(MainForm).GetField("topDay", hidden).GetValue(form);
+            bool savedOnly = Cards(cards).Count == 1 && Cards(cards)[0].Saved && Cards(cards)[0].Group == null && cards.Items.Count == 4
+                && ((FolderCard)cards.Items[0]).Folder.Label == s.Home && ((FolderCard)cards.Items[1]).Folder.Label == s.Work
+                && folderHead != null && folderHead.Text == Strings.FoldersHeading && ((Heading)cards.Items[2]).Text == Strings.TextsHeading;
             GoTo(form, PlaceKind.Folder, s.Work);
-            bool inWork = Cards(cards).Count == 1 && cards.Items.Count == 2 && ((FolderCard)cards.Items[0]).Folder.Label == s.Servers
-                && ((FolderCard)cards.Items[0]).Count == 1;
+            // A folder has first the way back up, to Saved here.
+            bool inWork = Cards(cards).Count == 1 && cards.Items.Count == 4 && cards.Items[0] is UpCard && ((UpCard)cards.Items[0]).Path == null
+                && ((FolderCard)cards.Items[1]).Folder.Label == s.Servers && ((FolderCard)cards.Items[1]).Count == 1;
+            Save(form, path + "-folder.png");
             GoTo(form, PlaceKind.Pinned, null);
             bool pinnedOnly = Cards(cards).Count == 1 && Cards(cards)[0].Pinned;
             Console.WriteLine("[{0}] saved and a folder with their folders and their own texts, pinned", savedOnly && inWork && pinnedOnly ? "PASS" : "FAIL");
             // The card of a folder opens it, as Enter does; a search in Saved finds the texts inside the folders too, and no folder.
             GoTo(form, PlaceKind.Folder, s.Work);
-            cards.SelectedIndex = 0;
+            cards.SelectedIndex = 1;
             typeof(MainForm).GetMethod("Accept", hidden).Invoke(form, null);
             Place inside = (Place)typeof(MainForm).GetField("place", hidden).GetValue(form);
             bool intoServers = inside.Kind == PlaceKind.Folder && inside.Path == s.Work + Texts.Separator + s.Servers
                 && Cards(cards).Count == 1 && Cards(cards)[0].Label == s.TestServer && ((ListBox)nav).SelectedItem == inside;
+            // The way back up, as Enter takes it, goes to the folder above, with the one left selected; and from there to Saved.
+            cards.SelectedIndex = 0;
+            typeof(MainForm).GetMethod("Accept", hidden).Invoke(form, null);
+            Place above = (Place)typeof(MainForm).GetField("place", hidden).GetValue(form);
+            bool backUp = above.Kind == PlaceKind.Folder && above.Path == s.Work && cards.SelectedItem is FolderCard
+                && ((FolderCard)cards.SelectedItem).Folder.Label == s.Servers;
+            typeof(MainForm).GetMethod("GoUp", hidden).Invoke(form, null);
+            backUp &= ((Place)typeof(MainForm).GetField("place", hidden).GetValue(form)).Kind == PlaceKind.Saved
+                && ((FolderCard)cards.SelectedItem).Folder.Label == s.Work;
+            Console.WriteLine("[{0}] the way back up goes to the folder above, then to saved, the folder left selected", backUp ? "PASS" : "FAIL");
             GoTo(form, PlaceKind.Saved, null);
             TextBox savedSearch = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
             savedSearch.Text = s.TestServer;
@@ -2283,8 +2465,8 @@ static class TestProgram
             savedSearch.Text = "";
             Console.WriteLine("[{0}] the card of a folder opens it; a search in saved looks inside the folders", intoServers && foundInside ? "PASS" : "FAIL");
             // The programs from that of the latest copy: PowerShell, then Edge.
-            bool byTime = ((Place)nav.Items[8]).Origin.Name.Contains("PowerShell");
-            nav.SelectedIndex = 9;
+            bool byTime = ((Place)nav.Items[7]).Origin.Name.Contains("PowerShell");
+            nav.SelectedIndex = 8;
             bool fromEdge = Cards(cards).Count == 2 && byTime;
             GoTo(form, PlaceKind.History, null);
             TabStrip tabs = (TabStrip)typeof(MainForm).GetField("tabs", hidden).GetValue(form);
@@ -2298,7 +2480,7 @@ static class TestProgram
             typeof(MainForm).GetMethod("ShowHistory", hidden).Invoke(form, null);
             Place opened = (Place)typeof(MainForm).GetField("place", hidden).GetValue(form);
             Console.WriteLine("[{0}] the list hotkey opens on the history", opened.Kind == PlaceKind.History && tabs.Selected == 0
-                && Cards(cards).Count == 5 && ((Place)nav.SelectedItem).Kind == PlaceKind.History ? "PASS" : "FAIL");
+                && Cards(cards).Count == 5 && home.SelectedIndex == 0 && nav.SelectedIndex < 0 ? "PASS" : "FAIL");
             // It, and a copy, select the latest copy, with the top of the list in view: never the card selected before.
             Entry latest = null;
             foreach (Entry e in Cards(cards))
@@ -2347,7 +2529,7 @@ static class TestProgram
             int closedRows = nav.Items.Count;
             work.Open = true;
             typeof(MainForm).GetMethod("Filter", hidden).Invoke(form, null);
-            Console.WriteLine("[{0}] a closed folder hides those inside it: {1} rows", closedRows == 10 ? "PASS" : "FAIL", closedRows);
+            Console.WriteLine("[{0}] a closed folder hides those inside it: {1} rows", closedRows == 9 ? "PASS" : "FAIL", closedRows);
 
             // The sidebar reduced to its signs leaves its room to the pane, with the same rows, and gets it back; its
             // width, as dragged, stays between its least and the room the pane leaves it.
@@ -2364,13 +2546,13 @@ static class TestProgram
             // Reduced, the name of a row waits for the pointer to rest, and goes when it leaves; with the names, never.
             MethodInfo rowTip = typeof(MainForm).GetMethod("RowTip", hidden);
             System.Windows.Forms.Timer tipWait = (System.Windows.Forms.Timer)typeof(MainForm).GetField("hoverTipWait", hidden).GetValue(form);
-            rowTip.Invoke(form, new object[] { nav, 4, s.Home, false });
+            rowTip.Invoke(form, new object[] { nav, 3, s.Home, false });
             bool waits = tipWait.Enabled && (string)typeof(MainForm).GetField("tipText", hidden).GetValue(form) == s.Home;
             typeof(MainForm).GetMethod("HideHoverTip", hidden).Invoke(form, null);
             waits &= !tipWait.Enabled;
             typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { false });
             bool back = pane.Width == wide && pane.Right == right;
-            rowTip.Invoke(form, new object[] { nav, 4, s.Home, false });
+            rowTip.Invoke(form, new object[] { nav, 3, s.Home, false });
             waits &= !tipWait.Enabled;
             // With the names, a name cut short says itself whole all the same.
             rowTip.Invoke(form, new object[] { nav, 4, s.Home, true });
@@ -2480,6 +2662,35 @@ static class TestProgram
                 Save(options, path + "-options-" + (i + 1) + ".png");
             }
             pages.SelectedIndex = 0;
+            // The window of the recovery phrase, to choose it with one written, and to unlock with it.
+            foreach (PhraseForm phrase in new PhraseForm[] { new PhraseForm(), new PhraseForm(delegate(string tried) { return false; }) })
+                using (phrase)
+                {
+                    bool choosing = phrase.Text == Strings.PhraseTitle;
+                    if (choosing) ((TextBox)typeof(PhraseForm).GetField("box", hidden).GetValue(phrase)).Text = "Fiume - lampada-SETTE";
+                    phrase.StartPosition = FormStartPosition.Manual;
+                    phrase.Location = new Point(-30000, -30000);
+                    phrase.Show();
+                    Application.DoEvents();
+                    Save(phrase, path + (choosing ? "-phrase.png" : "-unlock.png"));
+                }
+            // The first start, each step (-setup-1 and on), and what a list of a version before is asked (-upgrade).
+            Type setup = typeof(MainForm).GetNestedType("SetupWindow", hidden);
+            foreach (bool first in new bool[] { true, false })
+                using (Form window = (Form)Activator.CreateInstance(setup, new object[] { form, first }))
+                {
+                    window.StartPosition = FormStartPosition.Manual;
+                    window.Location = new Point(-30000, -30000);
+                    window.Show();
+                    int asked = ((List<int>)setup.GetField("shown", hidden).GetValue(window)).Count;
+                    for (int i = 0; i < asked; i++)
+                    {
+                        setup.GetMethod("ShowStep", hidden).Invoke(window, new object[] { i });
+                        Application.DoEvents();
+                        Save(window, path + (first ? "-setup-" + (i + 1) : "-upgrade") + ".png");
+                    }
+                    window.Hide();
+                }
             // What the status line says, the window of the options says too; closed, it is only hidden.
             Label status = (Label)typeof(MainForm).GetField("status", hidden).GetValue(form);
             status.Text = Strings.ResumedSay;
@@ -2802,7 +3013,7 @@ static class TestProgram
             // Reduced to its signs, the sidebar says the name of the row the pointer rests on, on its right.
             ListBox side = (ListBox)typeof(MainForm).GetField("navList", hidden).GetValue(form);
             typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { true });
-            typeof(MainForm).GetMethod("RowTip", hidden).Invoke(form, new object[] { side, 4, Sample.Current.Home, false });
+            typeof(MainForm).GetMethod("RowTip", hidden).Invoke(form, new object[] { side, 3, Sample.Current.Home, false });
             for (DateTime until = DateTime.Now.AddSeconds(1); DateTime.Now < until; System.Threading.Thread.Sleep(20)) Application.DoEvents();
             Snap(form, path + "-real-narrow.png");
             typeof(MainForm).GetMethod("NarrowSide", hidden).Invoke(form, new object[] { false });
@@ -2857,8 +3068,8 @@ static class TestProgram
             // The menu of a saved text with the numbers it can take, each beside the entry that has it.
             ListBox saved = (ListBox)typeof(MainForm).GetField("cardList", hidden).GetValue(form);
             ContextMenuStrip listMenu = (ContextMenuStrip)typeof(MainForm).GetField("listMenu", hidden).GetValue(form);
-            // A text without a number, not a folder, which has no numbers to take: among the saved ones, not in the history.
-            GoTo(form, PlaceKind.Saved, null);
+            // A text without a number, not a folder, which has no numbers to take: in its folder, not in the history.
+            GoTo(form, PlaceKind.Folder, Sample.Current.Work);
             saved.SelectedIndex = RowOf(saved, delegate(Entry e) { return e.Label == Sample.Current.Address; });
             listMenu.Show(saved, new Point(40, 60));
             foreach (ToolStripItem item in listMenu.Items)
@@ -3012,7 +3223,7 @@ static class TestProgram
                 nav.SelectedIndex = source;
                 Application.DoEvents();
                 snap(4, "6-sources.png");
-                nav.SelectedIndex = 0;
+                ((ListBox)typeof(MainForm).GetField("homeList", hidden).GetValue(form)).SelectedIndex = 0;
                 Application.DoEvents();
                 recent.SelectedIndex = RowOf(recent, pinned);
 

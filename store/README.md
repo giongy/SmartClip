@@ -101,7 +101,7 @@ Everything you copy, texts and pictures, stays in a list you can bring up from a
 The texts and pictures you use often, such as a signature with its bold and its fonts, an address or an access code, can be saved, under a name if you like, and arranged in folders and subfolders. They are also in the menu of the icon by the clock, ready to take without even opening the window.
 
 Built with privacy in mind:
-• saved texts are encrypted for your Windows user;
+• you choose what is encrypted: nothing, the saved texts or everything, with a recovery phrase to open it on another PC;
 • copies that other programs mark as private are not remembered;
 • you can pause capturing and choose how many days to keep the history, or keep only today's;
 • no account, no ads, no Internet connection: your data stays on your PC.
@@ -120,18 +120,18 @@ A sidebar like the apps of Windows 11, to widen or reduce to icons: history, pin
 Compact cards all of one height, one line or two, the content first and the buttons under the pointer, with tabs for texts, code, links and pictures
 List available from any program with a hotkey, and hotkeys of your choice
 Entries kept at the top for a while with an arrow, and saved texts or copied entries pasted anywhere with Ctrl+Shift+1…9
-Several cards selected at once, with Ctrl or Shift, to keep at the top, move into a folder or delete together
-Encrypted saved texts and pictures, with or without a name, in folders and subfolders
+Several cards selected at once, with Ctrl or Shift, to copy, keep at the top, move into a folder or delete together
+Saved texts and pictures, with or without a name, in folders and subfolders arranged as in File Explorer
+Encryption of your choice, nothing, saved texts or everything, and a recovery phrase of three words to open the list on another PC
 Formatted saved texts, such as mail signatures: bold, italic, fonts and sizes, pasted as they are
 Any text as a QR code to scan with your phone, to take it from the PC without the internet
 Full preview of long texts and pictures, and the text in a picture copied with the text recognition of Windows
 Copies that other programs mark as private are not remembered, and capturing pauses with one click
-Export and import to a text file, and the database in the folder you choose
+Export and import to a text file, and the list in the folder you choose, OneDrive too
 Starts with Windows, hidden in the notification area, with the saved texts in the menu of its icon
 Built-in guide by topic, in short sections that open and close
 Clean look in warm greys with an orange accent, line icons, options grouped like Windows Settings, light or dark theme, fonts and sizes of your choice
-In English, Spanish, French and Italian
-No account, no ads, no Internet connection
+In English, Spanish, French and Italian, with no account, no ads and no Internet connection
 ```
 
 ### Search terms
@@ -149,7 +149,11 @@ paste blocked
 ### What's new in this version
 
 ```
-New: any text as a QR code. Choose “QR code” in the menu of a text, copied or saved, and scan it with your phone: the text is there, to copy, or to open if it is a link. The code is made on your PC and nothing goes through the internet; it holds up to about 2,900 characters.
+New: you choose what is encrypted. Nothing, only the saved texts, or everything you copy too. With a recovery phrase of three words the list opens on another PC as well, even after Windows is installed again: keep it in a folder such as OneDrive and nothing is lost with the PC. On the first start a short guide asks where to keep the list, how long to remember what you copy and what to encrypt. If you used an earlier version, SmartClip asks once what to encrypt.
+
+Saved texts are arranged as in File Explorer: folders first, then texts, with a row to go back to the folder above (or Backspace). A saved text with a name shows the name and hidden dots, so it no longer looks like a folder.
+
+Also: History always stays at the top of the sidebar, several selected cards can be copied together, and Export and Import moved to the History page of the options.
 ```
 
 ### Screenshot captions
@@ -194,7 +198,7 @@ Tutto quello che copi, testi e immagini, resta in un elenco che si apre da quals
 I testi e le immagini che usi spesso, come una firma con i suoi grassetti e i suoi caratteri, un indirizzo o un codice di accesso, li salvi, con un nome se vuoi, e li organizzi in cartelle e sottocartelle. Li trovi anche nel menu dell'icona vicino all'orologio, da prendere senza nemmeno aprire la finestra.
 
 Pensato per la riservatezza:
-• i testi salvati sono cifrati per il tuo utente di Windows;
+• scegli tu cosa cifrare: niente, i testi salvati o tutto, con una frase di recupero per aprirlo su un altro PC;
 • le copie che altri programmi segnano come riservate non vengono ricordate;
 • puoi sospendere la cattura e scegliere per quanti giorni tenere la cronologia, o tenere solo quella di oggi;
 • nessun account, nessuna pubblicità, nessuna connessione a Internet: i tuoi dati restano sul tuo PC.
@@ -213,18 +217,18 @@ Una barra laterale come nelle app di Windows 11, da allargare o ridurre alle ico
 Voci in schede compatte tutte alte uguali, una riga o due, prima il contenuto e i pulsanti sotto il puntatore, con le schede per testi, codice, link e immagini
 Elenco richiamabile da qualsiasi programma con una scorciatoia, e scorciatoie a tua scelta
 Voci tenute in cima per un po' con una freccia, e testi salvati o voci copiate incollati ovunque con Ctrl+Maiusc+1…9
-Più schede selezionate insieme, con Ctrl o Maiusc, da tenere in cima, spostare in una cartella o eliminare in una volta
-Testi e immagini salvati cifrati, con o senza nome, in cartelle e sottocartelle
+Più schede selezionate insieme, con Ctrl o Maiusc, da copiare, tenere in cima, spostare in una cartella o eliminare in una volta
+Testi e immagini salvati, con o senza nome, in cartelle e sottocartelle ordinate come in Esplora file
+Cifratura a scelta, niente, testi salvati o tutto, e una frase di recupero di tre parole per aprire l'elenco su un altro PC
 Testi salvati formattati, come le firme di posta: grassetto, corsivo, caratteri e dimensioni, incollati così come sono
 Ogni testo come codice QR da inquadrare con il telefono, per portarlo via dal PC senza internet
 Anteprima completa di testi lunghi e immagini, e il testo di un'immagine copiato con il riconoscimento di Windows
 Le copie che altri programmi segnano come riservate non vengono ricordate, e la cattura si sospende con un clic
-Esportazione e importazione in un file di testo, e il database nella cartella che scegli
+Esportazione e importazione in un file di testo, e l'elenco nella cartella che scegli, anche OneDrive
 Avvio con Windows, nascosto nell'area di notifica, con i testi salvati nel menu della sua icona
 Guida integrata per argomenti, in sezioni brevi che si aprono e si chiudono
 Aspetto pulito in grigi caldi con un accento arancio, icone a linee, opzioni raggruppate come Impostazioni, tema chiaro o scuro, caratteri e dimensioni a scelta
-In italiano, inglese, spagnolo e francese
-Nessun account, nessuna pubblicità, nessuna connessione a Internet
+In italiano, inglese, spagnolo e francese, senza account, pubblicità né connessione a Internet
 ```
 
 ### Termini di ricerca
@@ -242,7 +246,11 @@ incolla bloccato
 ### Novità di questa versione
 
 ```
-Novità: ogni testo come codice QR. Scegli «Codice QR» nel menu di un testo, copiato o salvato, e inquadralo con il telefono: il testo è lì, da copiare, o da aprire se è un link. Il codice nasce sul tuo PC e niente passa da internet; contiene fino a circa 2900 caratteri.
+Novità: scegli tu cosa cifrare. Niente, solo i testi salvati, o anche tutto ciò che copi. Con una frase di recupero di tre parole l'elenco si apre anche su un altro PC, anche dopo aver reinstallato Windows: tienilo in una cartella come OneDrive e con il PC non perdi niente. Al primo avvio una breve procedura chiede dove tenere l'elenco, per quanto ricordare ciò che copi e cosa cifrare. Se usavi una versione precedente, SmartClip chiede una volta sola cosa cifrare.
+
+I testi salvati sono ordinati come in Esplora file: prima le cartelle, poi i testi, con una riga per tornare alla cartella superiore (o Backspace). Un testo salvato con un nome mostra il nome e dei pallini, così non sembra più una cartella.
+
+Inoltre: Cronologia resta sempre in cima alla barra laterale, più schede scelte si copiano insieme, ed Esporta e Importa sono passati nella pagina Cronologia delle opzioni.
 ```
 
 ### Didascalie delle schermate
@@ -287,7 +295,7 @@ Todo lo que copias, textos e imágenes, queda en una lista que se abre desde cua
 Los textos y las imágenes que usas a menudo, como una firma con sus negritas y sus fuentes, una dirección o un código de acceso, los guardas, con un nombre si quieres, y los organizas en carpetas y subcarpetas. También están en el menú del icono junto al reloj, listos para tomar sin abrir siquiera la ventana.
 
 Pensado para la privacidad:
-• los textos guardados están cifrados para tu usuario de Windows;
+• tú eliges qué se cifra: nada, los textos guardados o todo, con una frase de recuperación para abrirlo en otro PC;
 • las copias que otros programas marcan como privadas no se recuerdan;
 • puedes pausar la captura y elegir cuántos días conservar el historial, o solo el de hoy;
 • sin cuenta, sin publicidad, sin conexión a Internet: tus datos se quedan en tu PC.
@@ -306,18 +314,18 @@ Una barra lateral como en las apps de Windows 11, para ensanchar o reducir a ico
 Entradas en tarjetas compactas de la misma altura, una línea o dos, primero el contenido y los botones bajo el puntero, con pestañas para textos, código, enlaces e imágenes
 Lista disponible desde cualquier programa con un atajo, y atajos a tu elección
 Entradas mantenidas arriba un tiempo con una flecha, y textos guardados o entradas copiadas pegados en cualquier sitio con Ctrl+Mayús+1…9
-Varias tarjetas seleccionadas a la vez, con Ctrl o Mayús, para mantener arriba, mover a una carpeta o eliminar juntas
-Textos e imágenes guardados cifrados, con o sin nombre, en carpetas y subcarpetas
+Varias tarjetas seleccionadas a la vez, con Ctrl o Mayús, para copiar, mantener arriba, mover a una carpeta o eliminar juntas
+Textos e imágenes guardados, con o sin nombre, en carpetas y subcarpetas ordenadas como en el Explorador de archivos
+Cifrado a elegir, nada, textos guardados o todo, y una frase de recuperación de tres palabras para abrir la lista en otro PC
 Textos guardados con formato, como las firmas de correo: negrita, cursiva, fuentes y tamaños, pegados tal cual
 Cualquier texto como código QR para escanear con el teléfono y llevarlo del PC sin internet
 Vista previa completa de textos largos e imágenes, y el texto de una imagen copiado con el reconocimiento de Windows
 Las copias que otros programas marcan como privadas no se recuerdan, y la captura se pausa con un clic
-Exportación e importación a un archivo de texto, y la base de datos en la carpeta que elijas
+Exportación e importación a un archivo de texto, y la lista en la carpeta que elijas, también OneDrive
 Inicio con Windows, oculto en el área de notificación, con los textos guardados en el menú de su icono
 Guía integrada por temas, en secciones breves que se abren y se cierran
 Aspecto limpio en grises cálidos con un acento naranja, iconos de línea, opciones agrupadas como Configuración, tema claro u oscuro, fuentes y tamaños a elegir
-En español, inglés, francés e italiano
-Sin cuenta, sin publicidad, sin conexión a Internet
+En español, inglés, francés e italiano, sin cuenta, sin publicidad y sin conexión a Internet
 ```
 
 ### Términos de búsqueda
@@ -335,7 +343,11 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Novedad: cualquier texto como código QR. Elige «Código QR» en el menú de un texto, copiado o guardado, y escanéalo con el teléfono: el texto está allí, para copiarlo, o para abrirlo si es un enlace. El código se crea en tu PC y nada pasa por internet; admite hasta unos 2900 caracteres.
+Novedad: tú eliges qué se cifra. Nada, solo los textos guardados, o también todo lo que copias. Con una frase de recuperación de tres palabras la lista se abre también en otro PC, incluso tras reinstalar Windows: guárdala en una carpeta como OneDrive y no pierdes nada con el PC. En el primer inicio una breve guía pregunta dónde guardar la lista, cuánto tiempo recordar lo que copias y qué cifrar. Si usabas una versión anterior, SmartClip pregunta una sola vez qué cifrar.
+
+Los textos guardados se ordenan como en el Explorador de archivos: primero las carpetas, luego los textos, con una fila para volver a la carpeta superior (o Retroceso). Un texto guardado con nombre muestra el nombre y unos puntos, así ya no parece una carpeta.
+
+Además: Historial queda siempre arriba en la barra lateral, varias tarjetas elegidas se copian juntas, y Exportar e Importar pasaron a la página Historial de las opciones.
 ```
 
 ### Leyendas de las capturas
@@ -380,7 +392,7 @@ Tout ce que vous copiez, textes et images, reste dans une liste qui s'ouvre depu
 Les textes et les images que vous utilisez souvent, comme une signature avec son gras et ses polices, une adresse ou un code d'accès, s'enregistrent, sous un nom si vous voulez, et se rangent dans des dossiers et sous-dossiers. Ils sont aussi dans le menu de l'icône près de l'horloge, prêts à prendre sans même ouvrir la fenêtre.
 
 Pensé pour la confidentialité :
-• les textes enregistrés sont chiffrés pour votre utilisateur Windows ;
+• vous choisissez ce qui est chiffré : rien, les textes enregistrés ou tout, avec une phrase de récupération pour l'ouvrir sur un autre PC ;
 • les copies que d'autres programmes marquent comme privées ne sont pas mémorisées ;
 • vous pouvez suspendre la capture et choisir combien de jours garder l'historique, ou seulement celui d'aujourd'hui ;
 • pas de compte, pas de publicité, pas de connexion à Internet : vos données restent sur votre PC.
@@ -399,18 +411,18 @@ Une barre latérale comme les apps de Windows 11, à élargir ou réduire aux ic
 Éléments en cartes compactes de la même hauteur, une ligne ou deux, le contenu d'abord et les boutons sous le pointeur, avec des onglets pour textes, code, liens et images
 Liste accessible depuis n'importe quel programme avec un raccourci, et raccourcis à votre choix
 Éléments gardés un moment en haut avec une flèche, et textes enregistrés ou éléments copiés collés partout avec Ctrl+Maj+1…9
-Plusieurs cartes sélectionnées à la fois, avec Ctrl ou Maj, à garder en haut, déplacer dans un dossier ou supprimer ensemble
-Textes et images enregistrés chiffrés, avec ou sans nom, dans des dossiers et sous-dossiers
+Plusieurs cartes sélectionnées à la fois, avec Ctrl ou Maj, à copier, garder en haut, déplacer dans un dossier ou supprimer ensemble
+Textes et images enregistrés, avec ou sans nom, dans des dossiers et sous-dossiers rangés comme dans l'Explorateur de fichiers
+Chiffrement au choix, rien, textes enregistrés ou tout, et une phrase de récupération de trois mots pour ouvrir la liste sur un autre PC
 Textes enregistrés mis en forme, comme les signatures de courriel : gras, italique, polices et tailles, collés tels quels
 N'importe quel texte en code QR à scanner avec le téléphone, pour l'emporter du PC sans internet
 Aperçu complet des textes longs et des images, et le texte d'une image copié grâce à la reconnaissance de Windows
 Les copies que d'autres programmes marquent comme privées ne sont pas mémorisées, et la capture se suspend en un clic
-Export et import dans un fichier texte, et la base de données dans le dossier de votre choix
+Export et import dans un fichier texte, et la liste dans le dossier de votre choix, OneDrive aussi
 Démarrage avec Windows, caché dans la zone de notification, avec les textes enregistrés dans le menu de son icône
 Guide intégré par sujet, en courtes sections qui s'ouvrent et se ferment
 Aspect épuré en gris chauds avec un accent orange, icônes au trait, options regroupées comme les Paramètres, thème clair ou sombre, polices et tailles au choix
-En français, anglais, espagnol et italien
-Pas de compte, pas de publicité, pas de connexion à Internet
+En français, anglais, espagnol et italien, sans compte, sans publicité et sans connexion à Internet
 ```
 
 ### Termes de recherche
@@ -428,7 +440,11 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Nouveau : n'importe quel texte en code QR. Choisissez « Code QR » dans le menu d'un texte, copié ou enregistré, et scannez-le avec le téléphone : le texte s'y trouve, à copier, ou à ouvrir si c'est un lien. Le code est créé sur votre PC et rien ne passe par internet ; il contient jusqu'à environ 2 900 caractères.
+Nouveau : vous choisissez ce qui est chiffré. Rien, seulement les textes enregistrés, ou aussi tout ce que vous copiez. Avec une phrase de récupération de trois mots, la liste s'ouvre aussi sur un autre PC, même après avoir réinstallé Windows : gardez-la dans un dossier comme OneDrive et vous ne perdez rien avec le PC. Au premier démarrage, un court guide demande où garder la liste, combien de temps retenir ce que vous copiez et quoi chiffrer. Si vous utilisiez une version précédente, SmartClip demande une seule fois quoi chiffrer.
+
+Les textes enregistrés sont rangés comme dans l'Explorateur de fichiers : d'abord les dossiers, puis les textes, avec une ligne pour revenir au dossier parent (ou Retour arrière). Un texte enregistré avec un nom montre le nom et des points, il ne ressemble plus à un dossier.
+
+Aussi : Historique reste toujours en haut de la barre latérale, plusieurs cartes choisies se copient ensemble, et Exporter et Importer sont passés à la page Historique des options.
 ```
 
 ### Légendes des captures
@@ -454,6 +470,7 @@ con le etichette dell'interfaccia inglese, quella che vedono al primo avvio:
 SmartClip is a clipboard manager that can also type the clipboard text as simulated key presses (SendInput), for sign-in screens of remote desktops and virtual machine consoles where paste is blocked. It is a .NET Framework 4 Windows Forms desktop app packaged as MSIX (runFullTrust). The user interface is in English by default, and also in Spanish, French and Italian (Options > Appearance > Language). No account, no network access, no purchases.
 
 How to test:
+0. On the first launch a short setup asks where to keep the list, what to remember and what to encrypt ("Nothing" is preselected): click "Next" twice, then "Done".
 1. Launch SmartClip and copy some text in any program: it appears at the top of the list (History), with the program it was copied in.
 2. Press Ctrl+D in any program: the window comes up with the list on History; type to search, Enter puts the entry back on the clipboard and returns to the previous window.
 3. Typing: copy a text, open Notepad, click "Type clipboard" in SmartClip, then click into Notepad within 15 seconds; after a 1-second wait the text is typed. Alternatively press Ctrl+Alt+V inside Notepad. Typing stops if the foreground window changes.

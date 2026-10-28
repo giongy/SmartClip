@@ -308,7 +308,7 @@ class Tile : Panel
     {
         if (Parent != null)
             foreach (Control other in Parent.Controls)
-                if (other != this && other is Tile && other.Left == Left && (above ? other.Bottom == Top : other.Top == Bottom))
+                if (other != this && other is Tile && other.Visible && other.Left == Left && (above ? other.Bottom == Top : other.Top == Bottom))
                     return true;
         return false;
     }
@@ -630,7 +630,7 @@ enum Sign { Text, Link, Star, Plus, Edit, Delete, Options, Keys, Search, Help, O
     Bold, Italic, Underline, Erase, Formatted, Folder, NewFolder, Move, Pause, Resume, Open, Exit, Show, Check, Paint,
     Info, Done, Warning, Error, Paste, Code, Picture, Apps, More, Copy, Menu, FullFolder, Cancel,
     Timer, Globe, Enter, Unclip, Slow, Hash, Pin, Numbers, Calendar, Clean, Language, Contrast, Letters, Rows, Tray, Hide,
-    Archive, Power, Qr }
+    Archive, Power, Qr, FolderUp, Key, Lock }
 
 // The colours the user chose in the options: those Windows sets for apps, or always the same. Saved as a number.
 enum Theme { System, Light, Dark }
