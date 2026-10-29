@@ -84,8 +84,8 @@ partial class MainForm : Window
     const int RowInset = 12, TimeGap = 8;              // of the text in a row, and around the time on its right
     const int NumberPadding = 2;                       // added to the text height for the width of the frame of a number
     const int Gap = 5;                                 // between neighbouring controls
-    const int ActionHeight = ButtonHeight, ActionWidth = 92;   // a button beside the search
-    const int TypeWidth = 160;                         // the button that types the clipboard, in the same row
+    const int ActionHeight = ButtonHeight;             // a button in a tile of the options
+    const int TypeWidth = 160;                         // the button that types the clipboard, in the row of the title
     const int StatusHeight = 44;                       // two lines of text in their bar: the room the status line starts with
     const int FadeMs = 6000;                           // how long a passing message stays in the status line
     const int RestMs = 600;                            // how long the pointer rests on a row before it is shown whole
@@ -194,7 +194,7 @@ partial class MainForm : Window
     Size savedSize;                               // the size the user left the window at, empty until there is one
     bool shown;                                   // the window has its final scale
     readonly RoundButton newButton = new RoundButton();
-    readonly RoundButton folderButton = new RoundButton();   // where saved texts are shown, at the right end of the tabs
+    readonly RoundButton folderButton = new RoundButton();   // where saved texts are shown, before the new text
     // The options, which belong to this window although they are shown in their own (see OptionsWindow).
     readonly RowList pageList = new RowList();   // the categories of the options: each item is the page of one
     readonly Panel pagePane = new Panel();       // where the pages take turns
@@ -282,19 +282,19 @@ partial class MainForm : Window
         typeButton.Sign = Sign.Keys;
         typeButton.Click += delegate { if (busy) cancel = true; else Run(Delay); };
         Look.Style(typeButton, true);
-        // Beside it a new text, a command of a bar, quiet until the pointer reaches it.
+        // What adds to the list, at the right end of the tabs: a new text, commands of a bar, quiet until the pointer
+        // reaches them, and before it a new folder where saved texts are shown (PlaceNewButtons).
         newButton.Text = Strings.New;
         newButton.Sign = Sign.Plus;
         Look.Style(newButton, false);
         newButton.Subtle = true;
-        // A new folder, quiet like it, where saved texts are shown (ShowFolderButton).
+        newButton.TabStop = false;
         folderButton.Text = Strings.NewFolder;
         folderButton.Sign = Sign.NewFolder;
         Look.Style(folderButton, false);
         folderButton.Subtle = true;
         folderButton.TabStop = false;
         folderButton.Visible = false;
-        folderButton.Anchor = AnchorStyles.Top | AnchorStyles.Right;
         folderButton.Click += delegate { EditGroup(null); };
 
         // The status line takes the room of what it says. A message written with Say leaves after a while;
@@ -325,8 +325,9 @@ partial class MainForm : Window
         options = new OptionsWindow(this);
 
         // On the right the area of the work, lighter than the sidebar and reaching the edges of the window: on top the
-        // name of the place and how many entries it has, then the search with a new text and the typing of the clipboard
-        // beside it, the tabs of the categories, the cards, and at the bottom the status line.
+        // name of the place and how many entries it has, with the typing of the clipboard at the other end, the main
+        // command of the program; then the search, alone; the tabs of the categories, with what adds to the list at their
+        // right end; the cards, and at the bottom the status line.
         int paneWidth = PaneInset + ContentWidth + PaneInset;
         pane.Flat = true;
         pane.BackColor = Look.Well;
@@ -341,18 +342,20 @@ partial class MainForm : Window
         count.ForeColor = Look.Muted;
         pane.Resize += delegate { PlaceTitle(); };
         int searchTop = title.Bottom + Gap;
-        search.SetBounds(PaneInset, searchTop, ContentWidth - TypeWidth - ActionWidth - 2 * Gap, SearchHeight);
+        search.SetBounds(PaneInset, searchTop, ContentWidth, SearchHeight);
         Panel searchFrame = Look.Frame(search);
         // A magnifying glass on the left of the box, and its keys on the right: it makes room for them.
         search.Left += GlyphWidth;
         search.Width -= GlyphWidth + KeysWidth;
         searchFrame.Paint += DrawGlyph;
-        typeButton.SetBounds(PaneInset + ContentWidth - TypeWidth, searchTop, TypeWidth, searchFrame.Height);
-        newButton.SetBounds(typeButton.Left - Gap - ActionWidth, searchTop, ActionWidth, searchFrame.Height);
+        typeButton.SetBounds(PaneInset + ContentWidth - TypeWidth, PaneInset + (TitleRow - searchFrame.Height) / 2, TypeWidth,
+            searchFrame.Height);
         tabs.SetBounds(PaneInset, searchFrame.Bottom + Gap, ContentWidth, TabsHeight);
         foreach (string name in new string[] { Strings.AllKinds, Strings.TextKinds, Strings.CodeKinds, Strings.LinkKinds, Strings.PictureKinds })
             tabs.Add(name);
-        tabs.Controls.Add(folderButton);   // at their right end, and away with them while cards are picked
+        tabs.Controls.Add(newButton);      // at their right end, and away with them while cards are picked
+        tabs.Controls.Add(folderButton);
+        tabs.Resize += delegate { PlaceNewButtons(); };
         // In their place while cards are picked: how many, and what can be done with all of them (see ShowPickBar).
         pickBar.Bounds = tabs.Bounds;
         pickBar.Visible = false;
@@ -378,7 +381,7 @@ partial class MainForm : Window
         emptyNote.ForeColor = Look.Muted;
         status.SetBounds(PaneInset, statusTop, ContentWidth, StatusHeight);
         pane.SetBounds(SideWidth, Edge, paneWidth, statusTop + StatusHeight + PaneInset);
-        pane.Controls.AddRange(new Control[] { title, count, searchFrame, newButton, typeButton, tabs, pickBar, dayBar, trail, cardList, emptyNote,
+        pane.Controls.AddRange(new Control[] { title, count, typeButton, searchFrame, tabs, pickBar, dayBar, trail, cardList, emptyNote,
             banner, status });
         emptyNote.BringToFront();
         ClientSize = new Size(SideWidth + paneWidth + Edge, Edge + pane.Height + Edge);
@@ -404,7 +407,7 @@ partial class MainForm : Window
         const AnchorStyles toTop = AnchorStyles.Top, toBottom = AnchorStyles.Bottom, toLeft = AnchorStyles.Left, toRight = AnchorStyles.Right;
         pane.Anchor = cardList.Anchor = emptyNote.Anchor = toTop | toBottom | toLeft | toRight;
         searchFrame.Anchor = tabs.Anchor = pickBar.Anchor = dayBar.Anchor = trail.Anchor = toTop | toLeft | toRight;
-        newButton.Anchor = typeButton.Anchor = toTop | toRight;
+        typeButton.Anchor = toTop | toRight;
         status.Anchor = banner.Anchor = toBottom | toLeft | toRight;
         homeList.Anchor = toTop | toLeft;
         navList.Anchor = toTop | toBottom | toLeft;
@@ -698,7 +701,7 @@ partial class MainForm : Window
         PlaceSidebar();   // at the width it was left at, once the window has its size
         PlaceTitle();     // measured with the fonts of the screen, once the window has its scale
         shown = true;
-        ShowFolderButton();   // as wide as what it says, in the fonts of the screen
+        PlaceNewButtons();   // as wide as what they say, in the fonts of the screen
         PlaceDay();       // the same: its height is that of the name of a day among the cards
         FitStatus();
     }

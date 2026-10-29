@@ -328,8 +328,12 @@ condiviso su GitHub).
   una linea sottile (disegnata da `OnPaintBackground`), `footList`: Sospendi/Riprendi la cattura, Opzioni, Guida. A destra, su un
   pannello più chiaro che arriva ai bordi della finestra (`pane`, un `Card` `Flat`; il resto dell'area lo dipinge
   `OnPaintBackground` della finestra, che per il resto è la barra laterale): titolo del posto con accanto, piccolo e grigio, il conteggio (`PlaceTitle`,
-  sulla stessa linea di base; prima stava all'altro capo del pannello), ricerca con «Nuovo…» e «Digita gli
-  appunti», le schede dei tipi (`tabs`, `TabStrip`: Tutti, Testo, Codice, Link, Immagini, scelte dell'utente),
+  sulla stessa linea di base; prima stava all'altro capo del pannello) e all'altro capo della stessa riga «Digita gli
+  appunti», il comando principale; sotto la ricerca, da sola, a tutta larghezza; poi le schede dei tipi (`tabs`, `TabStrip`: Tutti, Testo, Codice, Link, Immagini, scelte dell'utente),
+  con alla loro estremità destra ciò che aggiunge all'elenco: «Nuovo…» in fondo e, su «Salvati» e nelle cartelle, «Nuova
+  cartella…» prima di lui (`PlaceNewButtons`; se le schede non lasciano posto ai nomi, solo i segni). Dal 29/10/2026, voluto
+  dall'utente: prima «Nuovo…» e «Digita gli appunti» stavano accanto alla ricerca e «Nuova cartella…» sulla riga sotto,
+  senza una logica;
   l'elenco delle schede delle voci (`cardList`), la riga di stato. «Cronologia» mostra solo i copiati (voluto
   dall'utente il 19/10/2026: prima mescolava copiati e salvati, e una password salvata mesi fa finiva in fondo tra le
   copie vecchie), quelli in alto prima e il nome del giorno sopra ogni giorno (`Heading`, mai selezionabile). Il primo
@@ -579,11 +583,14 @@ condiviso su GitHub).
   solo aggiornamento, così un nome uguale solo a metà strada non conta); `DeleteFolder` elimina la cartella e il
   contenuto sale di un livello (scelta dell'utente: i testi potrebbero essere password), riempiendo una cartella
   con lo stesso nome se lassù c'è già. «Nuova cartella…»
-  (Ctrl+Maiusc+N; dal 27/10/2026, voluto dall'utente, non più in fondo alla barra laterale ma un pulsante sottile all'estremità destra delle schede dei tipi, solo su «Salvati» e nelle cartelle e non con più schede scelte, `folderButton`, `ShowFolderButton`; nasce dentro la cartella mostrata: `FolderHere`) e «Sposta in» (anche per le
+  (Ctrl+Maiusc+N; dal 27/10/2026, voluto dall'utente, non più in fondo alla barra laterale ma un pulsante sottile all'estremità destra delle schede dei tipi, solo su «Salvati» e nelle cartelle e non con più schede scelte, `folderButton`, `PlaceNewButtons`, accanto a «Nuovo…»; nasce dentro la cartella mostrata: `FolderHere`) e «Sposta in» (anche per le
   cartelle, mai dentro se stesse: `CanGo`, `ListPlaces`) «Sposta in» sta anche nel menu delle voci, che si apre anche senza selezione (voluto dall'utente: «Nuova cartella…» e la pausa no). In
   `EditForm` la cartella si sceglie da un pulsante che apre un menu (un `ComboBox` resterebbe chiaro), con il
   percorso accorciato da sinistra se non ci sta; la stessa finestra, senza contenuto, chiede nome e posto di
-  una cartella. In una ricerca le cartelle compaiono solo se contengono risultati, anche da chiuse, insieme a
+  una cartella. In fondo a quel menu, per un testo (non per una cartella), «Nuova cartella…» (voluta dall'utente il
+  29/10/2026; il pulsante c'è anche senza cartelle): `EditForm.MakeFolder`, impostato da `Edit`, apre sopra di lei la
+  finestra della cartella (`EditGroup` con proprietario e cartella proposta, quella scelta nel menu), che la crea **subito**
+  (resta anche se poi il testo non si salva) e la sceglie (`Offer`, con le cartelle rilette). In una ricerca le cartelle compaiono solo se contengono risultati, anche da chiuse, insieme a
   quelle che le contengono.
 - Testi salvati formattati (voluti dall'utente il 17/10/2026, per le firme di posta: grassetto, corsivo, caratteri e
   dimensioni diversi; scelte sue: **solo i salvati**, modifica semplificata, HTML nell'esportazione). Nel database
@@ -826,7 +833,8 @@ condiviso su GitHub).
 
 - Disposizione (dal 18/10/2026, vedi sopra): la barra laterale a sinistra, con in fondo
   la pausa, Opzioni e Guida (`PlaceSidebar` la mette a posto quando la finestra ha la sua scala); a destra il pannello con
-  titolo, ricerca, «Nuovo…» sottile e «Digita gli appunti» d'accento, schede dei tipi, voci e riga di stato in fondo.
+  titolo con «Digita gli appunti» d'accento all'altro capo, ricerca, schede dei tipi con «Nuovo…» (e «Nuova cartella…»)
+  sottili a destra, voci e riga di stato in fondo.
   Prima la ricerca stava in cima e sotto le colonne c'era una fila di pulsanti piccoli.
   La riga di stato (una `InfoBar`) occupa solo lo spazio di ciò che dice (`FitStatus` con `InfoBar.Fit`: niente,
   o le righe del testo nella loro barra; il resto va alle voci) e a riposo tace (`ShowIdle`): come si digita

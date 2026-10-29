@@ -801,7 +801,7 @@ partial class MainForm
     {
         int gap = (int)(Gap * Zoom), counted = TextRenderer.MeasureText(count.Text, count.Font).Width;
         int named = TextRenderer.MeasureText(title.Text, title.Font).Width;
-        title.Width = Math.Max(0, Math.Min(named, typeButton.Right - title.Left - gap - counted));
+        title.Width = Math.Max(0, Math.Min(named, typeButton.Left - title.Left - 2 * gap - counted));
         count.SetBounds(title.Right + gap, title.Top + (count.Font.Height - title.Font.Height) / 2 + Ascent(title.Font) - Ascent(count.Font),
             counted, title.Height);
     }
@@ -1922,7 +1922,7 @@ partial class MainForm
         bool many = Many;
         pickBar.Visible = many;
         tabs.Visible = !many;
-        ShowFolderButton();
+        PlaceNewButtons();
         if (!many) return;
         List<Entry> targets = Targets();
         pickCount.Text = string.Format(Strings.PickedCount, targets.Count);
@@ -1952,14 +1952,32 @@ partial class MainForm
         pickCount.SetBounds(inset, 0, Math.Max(0, right - inset), pickBar.Height);
     }
 
-    // Where saved texts are shown, a new folder at the right end of the tabs, as wide as what it says.
-    void ShowFolderButton()
+    // What adds to the list, at the right end of the tabs: a new text at the very end, and before it, where saved texts
+    // are shown, a new folder. Each as wide as what it says; where the tabs leave no room for that, only their signs,
+    // their names staying in their tips.
+    void PlaceNewButtons()
     {
         folderButton.Visible = place.HasSaved;
         if (!shown) return;
-        int high = (int)(ButtonHeight * Zoom);
-        int wide = TextRenderer.MeasureText(folderButton.Text, folderButton.Font).Width + (int)(PickPadding * Zoom);
-        folderButton.SetBounds(tabs.ClientSize.Width - wide, (tabs.Height - high) / 2, wide, high);
+        int gap = (int)(Gap * Zoom), high = (int)(ButtonHeight * Zoom), top = (tabs.Height - high) / 2;
+        RoundButton[] buttons = place.HasSaved ? new[] { newButton, folderButton } : new[] { newButton };
+        string[] names = { Strings.New, Strings.NewFolder };
+        int[] wide = new int[buttons.Length];
+        int needed = 0;
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            wide[i] = TextRenderer.MeasureText(names[i], buttons[i].Font).Width + (int)(PickPadding * Zoom);
+            needed += gap + wide[i];
+        }
+        bool named = tabs.TabAt(tabs.Count - 1).Right + needed <= tabs.ClientSize.Width;
+        int right = tabs.ClientSize.Width;
+        for (int i = 0; i < buttons.Length; i++)
+        {
+            buttons[i].Text = named ? names[i] : "";
+            right -= named ? wide[i] : high;
+            buttons[i].SetBounds(right, top, named ? wide[i] : high, high);
+            right -= gap;
+        }
     }
 
     // The card before or after the selected one, a folder too, over the names of the days.
@@ -2222,6 +2240,12 @@ partial class MainForm
         string group = source != null ? source.Group : FolderHere();
         using (EditForm edit = new EditForm(source, group, GroupNames()))
         {
+            // A folder made from the menu of its folders is made at once, and stays even if the text is not saved.
+            edit.MakeFolder = delegate(string parent)
+            {
+                string made = EditGroup(null, parent, edit);
+                if (made != null) edit.Offer(GroupNames(), made);
+            };
             // Asked again, with what was written still there, if the name turns out to be taken.
             while (edit.ShowDialog(this) == DialogResult.OK)
             {
@@ -2286,13 +2310,14 @@ partial class MainForm
 
     // Says why a folder cannot be called 'name' inside 'parent', or returns false if it can. 'old' is the path
     // it has now, null for a new one.
-    bool Refused(string name, string parent, string old)
+    // 'owner' is the window that tells it.
+    bool Refused(string name, string parent, string old, IWin32Window owner)
     {
         string path = Texts.Join(parent, name);
         string why = name.IndexOf(Texts.Separator) >= 0 ? string.Format(Strings.FolderNoSeparator, Texts.Separator)
             : !Texts.SameName(path, old) && GroupNames().Exists(delegate(string other) { return Texts.SameName(other, path); })
             ? string.Format(Strings.FolderExists, Texts.Display(path)) : null;
-        if (why != null) AskForm.Tell(this, why);
+        if (why != null) AskForm.Tell(owner, why);
         return why != null;
     }
 
@@ -2300,14 +2325,21 @@ partial class MainForm
     // folder is proposed inside the one shown.
     void EditGroup(string old)
     {
-        string parent = old != null ? Texts.Parent(old) : FolderHere();
+        EditGroup(old, old != null ? Texts.Parent(old) : FolderHere(), this);
+    }
+
+    // The same with the folder proposed to hold it, asked over 'owner' (the window of a text, for a new folder chosen
+    // from its menu). Returns the path the folder has now, or null if nothing was made or changed.
+    string EditGroup(string old, string parent, Form owner)
+    {
+        string made = null;
         List<string> parents = GroupNames().FindAll(delegate(string group) { return !Texts.Within(group, old); });
         using (EditForm edit = new EditForm(old, parent, parents))
         {
-            while (edit.ShowDialog(this) == DialogResult.OK)
+            while (edit.ShowDialog(owner) == DialogResult.OK)
             {
                 string path = Texts.Join(edit.Group, edit.EntryName);
-                if (Refused(edit.EntryName, edit.Group, old)) continue;
+                if (Refused(edit.EntryName, edit.Group, old, owner)) continue;
                 if (!Change(delegate
                 {
                     long parentId = clips.FindFolder(edit.Group);
@@ -2318,11 +2350,13 @@ partial class MainForm
                 Say(string.Format(old == null ? Strings.FolderCreated : Texts.SameName(Texts.Parent(path), Texts.Parent(old))
                     ? Strings.FolderRenamed : Strings.FolderMoved, Shorten(Texts.Display(path))));
                 if (old != null) Follow(old, path);
+                made = path;
                 break;
             }
         }
         if (old == null) savedOpen = true;   // the new folder is seen
         Reload();
+        return made;
     }
 
     // A folder that was renamed or moved, or one inside it: if it is the one shown, it stays shown at its new path.
@@ -2334,7 +2368,7 @@ partial class MainForm
     // Puts a saved text or a folder into a folder, which opens to show it, or out of them all.
     void MoveTo(Entry entry, string group)
     {
-        if (entry.IsGroup && Refused(Texts.Leaf(entry.Name), group, entry.Name)) return;
+        if (entry.IsGroup && Refused(Texts.Leaf(entry.Name), group, entry.Name, this)) return;
         if (!Change(delegate
         {
             long folder = clips.FindFolder(group);

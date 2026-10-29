@@ -113,7 +113,7 @@ content** in its menu shows the text in the same small box for a few seconds.
 you copy until you choose **Resume capture**. It is not a setting: the next start
 always listens again.
 
-**New…**, beside the search, and **Save…** / **Edit…** on the cards open a small window with a name, optional, and
+**New…**, at the right end of the tabs above the cards, and **Save…** / **Edit…** on the cards open a small window with a name, optional, and
 a content box. Under the name a grey line says what the card will show.
 
 A saved text can be **formatted**, as a mail signature is: bold, italic, underlined, fonts, sizes and colours.

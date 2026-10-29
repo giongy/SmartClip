@@ -598,6 +598,8 @@ static partial class Strings
             "- “" + NewFolder + "” is at the right end of the tabs above the saved texts and in the right-click menu of a folder "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): it is created inside the folder shown, "
                 + "but its window lets you choose where it goes.",
+            "- In the window of a text, at the end of the menu of its folder, “" + NewFolder + "” makes one at once and puts the "
+                + "text in it.",
             "- The card of a folder opens it with a double click or Enter, as a click on its row in the sidebar does.",
             "- Over the cards of a folder is the way there from " + SavedTitle + ": a click on a folder before its name goes "
                 + "back there (" + BackKeyName + " or " + Key(MainForm.UpKeys) + " go up one); what is dragged onto one goes there.",

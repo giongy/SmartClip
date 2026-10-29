@@ -538,6 +538,8 @@ static partial class Strings
                 + "y en el menú del clic derecho de una carpeta "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nace dentro de la carpeta "
                 + "mostrada, pero en su ventana puedes elegir dónde ponerla.",
+            "- En la ventana de un texto, al final del menú de su carpeta, «" + NewFolder + "» crea una al momento y "
+                + "pone el texto en ella.",
             "- La tarjeta de una carpeta la abre con un doble clic o Intro, como un clic en su fila de la barra lateral.",
             "- Sobre las tarjetas de una carpeta está la ruta desde «" + SavedTitle + "»: un clic en una carpeta antes de su "
                 + "nombre vuelve allí (" + BackKeyName + " o " + Key(MainForm.UpKeys) + " suben una); lo que arrastras sobre "

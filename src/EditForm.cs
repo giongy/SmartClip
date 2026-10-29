@@ -33,6 +33,9 @@ class EditForm : Window
     string cameHtml, cameRtf;   // the formatting the text came with, saved as it is while the text does not change
     string shownRtf;            // what the box held when it was shown: the same at the end, nothing changed
     bool formatted;             // formatting came with the text, or was given or pasted since
+    List<string> groups;        // the folders it can go into, each by its path
+    // Set by the list for a text: makes a new folder, proposed inside the one given, and calls Offer if it does.
+    public Action<string> MakeFolder;
 
     // For a new text ('source' is null), a copied entry to keep or a saved one to change, a text or a picture.
     // 'group' is the folder proposed for it, 'groups' those it can go into.
@@ -149,20 +152,19 @@ class EditForm : Window
         Look.Style(cancelButton, false);
         Controls.AddRange(new Control[] { saveButton, cancelButton });
 
-        // On the left of the buttons, the folder of the text: a click lists those there are, each by its path.
-        // Without folders there is nothing to choose.
-        if (groups != null && groups.Count > 0)
+        // On the left of the buttons, the folder of the text: a click lists those there are, each by its path, and for
+        // a text a new one at the end (ListGroups). A folder without folders to go into has nothing to choose.
+        this.groups = groups;
+        if (groups != null && (groups.Count > 0 || !nameOnly))
         {
             ContextMenuStrip menu = new ContextMenuStrip();
             Look.Style(menu);
-            menu.Items.Add(outside, null, delegate { Choose(null); });
-            foreach (string each in groups)
-            {
-                string group = each;   // a variable of its own for the delegate
-                menu.Items.Add(Texts.Display(group), null, delegate { Choose(group); });
-            }
             groupButton.SetBounds(Edge, buttonTop, saveButton.Left - Edge - Edge, ButtonHeight);
-            groupButton.Click += delegate { menu.Show(groupButton, 0, groupButton.Height); };
+            groupButton.Click += delegate
+            {
+                ListGroups(menu);
+                menu.Show(groupButton, 0, groupButton.Height);
+            };
             Look.Style(groupButton, false);
             Controls.Add(groupButton);
         }
@@ -292,6 +294,30 @@ class EditForm : Window
         // What the box cannot show (links, tables, pictures) stays in what came.
         Html = same && cameHtml != null ? cameHtml : Rich.ToHtml(runs);
         Rtf = same ? cameRtf : null;
+    }
+
+    // The folders to choose from, out of them all first; for a text, at the end, a new one, made at once (MakeFolder).
+    void ListGroups(ContextMenuStrip menu)
+    {
+        ToolStripItem[] listed = new ToolStripItem[menu.Items.Count];
+        menu.Items.CopyTo(listed, 0);
+        foreach (ToolStripItem item in listed) item.Dispose();   // which takes it out of the menu
+        menu.Items.Add(outside, null, delegate { Choose(null); });
+        foreach (string each in groups)
+        {
+            string group = each;   // a variable of its own for the delegate
+            menu.Items.Add(Texts.Display(group), null, delegate { Choose(group); });
+        }
+        if (MakeFolder == null) return;
+        menu.Items.Add(new ToolStripSeparator());
+        Look.Mark(menu.Items.Add(Strings.NewFolder, null, delegate { MakeFolder(Group); }), Sign.NewFolder);
+    }
+
+    // A folder just made, from the menu: the folders as they are now, and that one chosen.
+    public void Offer(List<string> groups, string group)
+    {
+        this.groups = groups;
+        Choose(group);
     }
 
     // The button says the path of the folder chosen; if it is too long for it, the outer folders give way.

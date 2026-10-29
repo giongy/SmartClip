@@ -88,7 +88,7 @@ class Place
 partial class MainForm
 {
     // The commands at the bottom of the sidebar: the pause of the capture, the options, the guide. A new folder is made
-    // where the saved texts are shown (ShowFolderButton).
+    // where the saved texts are shown (PlaceNewButtons).
     static readonly Sign[] FootSigns = { Sign.Pause, Sign.Options, Sign.Help };
     const int PauseRow = 0;
     // Reduced, the first letter of a folder inside its sign: how tall, of the sign, and how far below its middle, where

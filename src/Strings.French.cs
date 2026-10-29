@@ -554,6 +554,8 @@ static partial class Strings
                 + "et dans le menu du clic droit d'un dossier "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + ") : il est créé dans le dossier "
                 + "affiché, mais sa fenêtre permet de choisir où le mettre.",
+            "- Dans la fenêtre d'un texte, à la fin du menu de son dossier, « " + NewFolder + " » en crée un aussitôt et y "
+                + "met le texte.",
             "- La carte d'un dossier l'ouvre par un double clic ou Entrée, comme un clic sur sa ligne dans la barre latérale.",
             "- Au-dessus des cartes d'un dossier se trouve le chemin depuis « " + SavedTitle + " » : un clic sur un dossier "
                 + "avant son nom y revient (" + BackKeyName + " ou " + Key(MainForm.UpKeys) + " remontent d'un niveau) ; ce que "

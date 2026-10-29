@@ -530,6 +530,8 @@ static partial class Strings
                 + "tasto destro di una cartella "
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nasce dentro la cartella mostrata, "
                 + "ma nella sua finestra puoi scegliere dove metterla.",
+            "- Nella finestra di un testo, in fondo al menu della sua cartella, «" + NewFolder + "» ne crea una subito e "
+                + "ci mette il testo.",
             "- La scheda di una cartella la apre con un doppio clic o Invio, come un clic sulla sua riga nella barra laterale.",
             "- Sopra le schede di una cartella c'è il percorso da «" + SavedTitle + "»: un clic su una cartella prima del suo "
                 + "nome torna lì (" + BackKeyName + " o " + Key(MainForm.UpKeys) + " salgono di una); ciò che trascini su una "
