@@ -176,7 +176,7 @@ condiviso su GitHub).
     che nessuno può leggere e ricomincia con una chiave nuova (`StartOver`); chiusa ma senza salvati, ricomincia da
     sé. I salvati che una versione precedente aveva cifrato con DPAPI per un altro utente restano com'erano, contati
     (`Clips.Unreadable`, `UnreadableWarning`). La finestra è `PhraseForm` (sceglierla, con sotto come sarà
-    confrontata; o sbloccare), l'opzione «Frase di recupero» sta in «Programma» (`phraseButton`, `ShowPhrase`,
+    confrontata; o sbloccare), l'opzione «Frase di recupero» sta in «Dati» (fino alla 4.3.19 in «Programma») (`phraseButton`, `ShowPhrase`,
     `ChoosePhrase`). Controlli in `VaultTest` (`data`), foto in `shot` (`-phrase`, `-unlock`).
     **Cosa cifrare** (`Protection`, voluto dall'utente il 28/10/2026: «io lo lascerei sempre tutto in chiaro»):
     `Nothing` o `Saved`, nella tabella `settings` del database (viaggia con il file: un PC nuovo sa come leggerlo).
@@ -351,17 +351,21 @@ condiviso su GitHub).
   cartella mostrano i salvati per nome, senza giorni, come Esplora file (voluto dall'utente il 27/10/2026): prima le
   cartelle contenute direttamente (`FolderCard`, una riga che non è una `Entry`, quindi copia, digitazione, scelta di più
   schede e i tasti delle voci la saltano), poi i testi contenuti direttamente; «Salvati» quelli fuori da ogni cartella.
-  Con delle cartelle, ognuno dei due gruppi sotto il suo `Heading`, «Cartelle» e «Testi», come i giorni della Cronologia
-  (il primo nella barra del giorno). Le cartelle non sono schede ma righe come quelle della barra laterale
-  (`DrawFolderCard`: `Look.DrawRow`, tacca se selezionata, cartella piena d'accento, nome in peso normale, «N testi» e ›);
+  Tra cartelle e testi una linea sottile (`Rule`, un `Heading` senza nome, quindi saltato come loro; dal 29/10/2026,
+  voluto dall'utente, al posto dei nomi «Cartelle» e «Testi» sopra i due gruppi), e dopo il nome nel percorso (sotto) il conteggio di
+  tutti e due, «1 cartella · 7 testi» (`CountBoth`). Le cartelle non sono schede ma righe come quelle della barra laterale
+  (`DrawFolderRow`: `Look.DrawRow`, tacca se selezionata, cartella piena d'accento, nome in peso normale, «N testi» e ›);
   un salvato con nome scrive il nome in peso normale e dopo, tenui, i pallini `Hidden` (prima nome in grassetto: voluto
   dall'utente il 28/10/2026, cartelle e salvati con nome si confondevano). Nel posto in cui stanno, i salvati non dicono
   «☆ Salvati» o la cartella nella riga piccola (`Source` nullo), solo il giorno; trovati più in fondo da una ricerca, sì.
-  In una cartella (senza ricerca né tipo) la prima riga sotto «Cartelle» è `UpCard`, «Cartella superiore» con il nome
-  di quella che la contiene o «Salvati» (voluta dall'utente il 28/10/2026): Invio, doppio clic, Backspace nelle schede o
-  Alt+↑ (`UpKeys`, `BackKey`) chiamano `GoUp`, che seleziona lassù la cartella lasciata; ciò che vi si trascina va lì
-  (`CardDropAt`). Niente menu, non si sposta né si elimina. In una cartella vuota è selezionata, e la nota di
-  `emptyNote` sta sotto di lei (`PlaceDay`). `shot` ne fa la foto (`-folder`).
+  In «Salvati» e in una cartella il titolo dice «Salvati», come gli altri posti dicono il loro, e subito sopra cartelle e testi, al posto
+  della barra del giorno e disegnato come lei (carattere, linea sottile sotto), c'è il percorso, come in Esplora file (`trail`, un `Trail`, messo da
+  `PlaceDay`; dal 29/10/2026, voluto dall'utente: prima la prima riga delle schede era «Cartella superiore», `UpCard`, che
+  sembrava una sottocartella, e il percorso è stato prima nel titolo): «Salvati › Lavoro › Server», in «Salvati» solo «Salvati» (voluto dall'utente: così le schede cominciano allo stesso punto ovunque), e, piccolo e grigio,
+  quanto contiene. Le cartelle prima del nome sono tenui e si illuminano sotto il puntatore, ognuna un clic per tornarci
+  (`GoUpTo`, che seleziona lassù la cartella da cui si è scesi) e un posto dove trascinare un salvato o una cartella. Se
+  non ci sta cedono loro, da sinistra, con «…». Backspace nelle schede e Alt+↑ (`UpKeys`, `BackKey`) salgono di una
+  (`GoUp`). Una cartella vuota lo dice sotto il percorso. `shot` ne fa le foto (`-saved`, `-folder`, `-subfolder`).
   Cercando, o con un tipo scelto, niente cartelle, e la ricerca guarda anche dentro le sottocartelle. I copiati li filtra il database
   (`Clips.Copied` con un `Sieve`: parole, tipo, programma, solo in alto; al massimo `MaxShown`), i salvati la memoria
   (`Texts.Matches`: parole in qualsiasi ordine, senza maiuscole né accenti). `Filter` rifà anche la barra (`FillNav`,
@@ -417,7 +421,7 @@ condiviso su GitHub).
   sempre (`unavailable`, che `ShowIdle` rimette); il log ha il perché, e al prossimo avvio si riprova.
 - La cartella del database si sceglie (voluto dall'utente, passo 6 del piano): impostazione `DataFolder` (vuota
   = predefinita), letta da `OpenClips` prima delle altre (`EarlySetting`) e scritta subito quando cambia
-  (`SaveSettings` in `MoveDataFolder`). Nella pagina Cronologia la riga «Cartella delle voci copiate e salvate»
+  (`SaveSettings` in `MoveDataFolder`). Nella pagina «Dati» (fino alla 4.3.19 in «Cronologia») la riga «Cartella delle voci copiate e salvate»
   (`folderPath`, `ShowFolder`), sotto quanto occupa il file e quanto le immagini copiate (`databaseSize`,
   `ShowSize`, `Clips.Size`, `Strings.Size`), con «Cambia…» (`ChangeDataFolder`, `FolderBrowserDialog`) e «Predefinita».
   Dove non c'è un database, quello in uso ci si sposta (`Clips.Move`: chiude, copia, apre la copia e la controlla
@@ -608,7 +612,7 @@ condiviso su GitHub).
   l'app»), dopo «Apri», ogni cartella un sottomenu, aperta o chiusa che sia: `ShowSaved`, rifatto a ogni
   apertura del menu da `entries`. La scelta passa da `Use` come nell'elenco: solo appunti, niente digitazione.
   Si vedono solo i nomi.
-- «Esporta…» e «Importa…» nelle opzioni, in fondo a «Cronologia» (fino alla 4.3.18 sotto «Programma»; spostati
+- «Esporta…» e «Importa…» nelle opzioni, in fondo a «Dati» (fino alla 4.3.18 sotto «Programma», poi in «Cronologia»; spostati
   dall'utente il 28/10/2026) (voluti dall'utente, con la scelta «solo i testi
   salvati» o «tutto» in un menu sotto ciascun pulsante, `Choice`). Il file è testo UTF-8 con BOM, leggibile dal
   Blocco note e **in chiaro** (prima di esportare si chiede conferma): un segno per voce (`[Folder]`,
@@ -762,7 +766,7 @@ condiviso su GitHub).
     sotto in grigio e più piccola che cosa fa in poche parole (`…Note` in `Strings`; la spiegazione completa resta
     nel suggerimento, su scheda e controllo: `TipOption`) e i controlli all'estremità destra; gli interruttori
     dicevano «Attivato/Disattivato» prima di sé, tolto con lo stile del 24/10/2026 (`Toggle.Alone`, `Switch`). Carattere e dimensione stanno su una
-    scheda sola. Cinque pagine: è nata «Aspetto» (lingua, tema, caratteri), perché «Programma» non ci stava più.
+    scheda sola. Cinque pagine: è nata «Aspetto» (lingua, tema, caratteri), perché «Programma» non ci stava più; sei dal 29/10/2026, con «Dati» (cartella dell'elenco, «Cifra», frase di recupero, esporta e importa; voluta dall'utente: la cifratura stava tra ciò che fa il programma, e «Cronologia» non l'avrebbe contenuta).
   - Riga di stato come l'InfoBar di Windows 11 (`InfoBar`): una barra arrotondata tinta del colore del tipo, con il
     suo segno (`Notice`: informazione, fatto, avviso, errore). `status.Tell(testo, tipo)`; `Say` è «fatto», `Warn`
     un avviso, `ShowError` un errore, un testo assegnato da solo è informazione (conto alla rovescia, digitazione in
@@ -890,7 +894,7 @@ condiviso su GitHub).
   sinistra la colonna delle pagine (`pageList`, disegnata come gli argomenti della guida con `Look.DrawTopic`, in un
   `Card` `Flat` del colore della barra laterale, a filo dei bordi come quella della guida; con l'icona di ciascuna), a destra la pagina scelta (`pagePane`, `ShowPage`), con il nome in grande in cima
   (`PageTop`) e le schede delle opzioni (`Tile`) larghe `PaneWidth`, una sotto l'altra. Ordine: Digitazione,
-  Scorciatoie, Cronologia, Aspetto, Programma. Una pagina è un `Panel` con `Text` (il nome) e `Tag` (il segno), ed è
+  Scorciatoie, Cronologia, Dati, Aspetto, Programma. Una pagina è un `Panel` con `Text` (il nome) e `Tag` (il segno), ed è
   lei l'elemento della colonna. Il colore d'accento resta a ciò che si clicca (il link alla cartella dei dati, sulla
   scheda della cartella, `PlaceFolder`). Le pagine sono alte `AreaHeight` (come l'elenco): in tutte e quattro le
   lingue ci stanno (la pagina più piena è Digitazione, sei schede).

@@ -54,9 +54,9 @@ static partial class Strings
     // --- Main window ---
     public static string TypeButton = "Type clipboard";
     public static string SavedTitle = "Saved", PausedSuffix = " (paused)";
-    // Over the folders and over the texts of Saved and of a folder, and how many texts a folder holds.
-    public static string FoldersHeading = "Folders", TextsHeading = "Texts", TextOne = "text", TextMany = "texts";
-    public static string UpNote = "Folder above";   // beside the name of the folder a folder is in, on the row that goes there
+    // How many texts a folder holds; over the cards of Saved and of a folder, how many folders and how many texts.
+    public static string TextOne = "text", TextMany = "texts", FolderOne = "folder", FolderMany = "folders";
+    public static string CountBoth = "{0} · {1}";
     public static string New = "New…", SaveDots = "Save…", EditDots = "Edit…", RenameDots = "Rename…", Delete = "Delete";
     public static string Options = "Options", SearchCue = "Search…";
     public static string CountOf = "{0} of {1}";
@@ -233,7 +233,7 @@ static partial class Strings
         + "keys in the options, or other numbers.";
 
     // --- Options ---
-    public static string TypingTitle = "Typing", ProgramTitle = "Program", HotkeysTitle = "Hotkeys", HistoryTitle = "History";
+    public static string TypingTitle = "Typing", ProgramTitle = "Program", HotkeysTitle = "Hotkeys", HistoryTitle = "History", DataTitle = "Data";
     public static string AppearanceTitle = "Appearance";
     // Each option has its name and, under it, what it does in a few words: the tooltip says the rest.
     public static string DelayOption = "Wait before typing", DelayNote = "Seconds to click into the right field";
@@ -567,10 +567,10 @@ static partial class Strings
                 + "clipboard without opening the window.",
             "## Kept safe",
             "- Saved texts never expire. What the database keeps encrypted is chosen at the first start, and under “"
-                + ProtectOption + "” (Options › " + ProgramTitle + "): nothing, so that it can be read on any PC, but also by "
+                + ProtectOption + "” (Options › " + DataTitle + "): nothing, so that it can be read on any PC, but also by "
                 + "anyone who gets a copy of it; the saved texts, which on this PC Windows unlocks for you, and another "
                 + "user of the same PC cannot read; or everything, what you copy too.",
-            "- Encrypted, with a “" + PhraseOption + "” (Options › " + ProgramTitle + ") of three words joined by “-”, they can be read "
+            "- Encrypted, with a “" + PhraseOption + "” (Options › " + DataTitle + ") of three words joined by “-”, they can be read "
                 + "on another PC too, also after Windows is installed again: there choose the folder of the database, and write "
                 + "the phrase when asked. Without it they can be read only on this PC; keep it somewhere safe.",
             "- When you put one back on the clipboard it is marked as private, so that Windows clipboard history (Win+V) "
@@ -599,8 +599,8 @@ static partial class Strings
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): it is created inside the folder shown, "
                 + "but its window lets you choose where it goes.",
             "- The card of a folder opens it with a double click or Enter, as a click on its row in the sidebar does.",
-            "- In a folder the first row, “" + UpNote + "”, goes back to the one it is in, or to " + SavedTitle + " ("
-                + BackKeyName + " or " + Key(MainForm.UpKeys) + " too); what is dragged onto it goes there.",
+            "- Over the cards of a folder is the way there from " + SavedTitle + ": a click on a folder before its name goes "
+                + "back there (" + BackKeyName + " or " + Key(MainForm.UpKeys) + " go up one); what is dragged onto one goes there.",
             "- The arrow at the right end of a folder that holds others opens and closes it; that of " + SavedTitle
                 + " shows or hides all of them. The number says how many texts are in a folder itself, not in the folders "
                 + "inside it; that of " + SavedTitle + ", those outside the folders. Open or closed, you find them as you left them.",
@@ -689,7 +689,7 @@ static partial class Strings
             "# Options",
             "The “" + Options + "” button opens them in a window of their own, which can stay open beside the list. Each option "
                 + "says in a few words what it does, under its name; resting the pointer on it shows its full explanation. They "
-                + "are in five pages, chosen from the column on the left as the subjects of this guide are. At the first start "
+                + "are in six pages, chosen from the column on the left as the subjects of this guide are. At the first start "
                 + "a few steps ask where to keep the list, what to remember and what to encrypt: all of it can be changed here.",
             "## " + TypingTitle,
             "How many seconds to wait before typing (" + MainForm.MinDelay + " to "
@@ -699,20 +699,20 @@ static partial class Strings
             "Turns " + type + ", " + pick + " and " + MainForm.NumbersName + " on and off, and "
                 + "gives them other keys; and whether " + pick + " opens the list where you left it.",
             "## " + HistoryTitle,
-            "Whether to remember what you copy, for how many days, the folder of the database "
-                + "(which can be changed) with the link that opens it, the button that cleans the history at once, and "
-                + "the buttons to export and import.",
+            "Whether to remember what you copy, for how many days, and the button that cleans the history at once.",
+            "## " + DataTitle,
+            "The folder of the database (which can be changed) with the link that opens it and how much it takes, what "
+                + "to encrypt, the recovery phrase of the saved texts, and the buttons to export and import.",
             "## " + AppearanceTitle,
             "The language, the theme (light, dark or “" + ThemeSystem + "”), the font and the size of "
                 + "the interface (buttons, options, this guide: in pixels, they restart the program), those of the entries "
                 + "(they change at once), and whether resting the pointer on a card shows it whole.",
             "## " + ProgramTitle,
             "Whether to stay in the notification area and hide when you switch to another program, "
-                + "whether to start with Windows, what to encrypt and the recovery phrase of the saved texts, and the version "
-                + "of the program.",
+                + "whether to start with Windows, and the version of the program.",
 
             "# Export and import",
-            "In the options, under “" + HistoryTitle + "”, two buttons take your texts out of the program and bring "
+            "In the options, under “" + DataTitle + "”, two buttons take your texts out of the program and bring "
                 + "them back, as a backup or to move them to another PC. Each asks whether you want the saved texts "
                 + "only or everything, that is the copied items too.",
             "## Exporting",

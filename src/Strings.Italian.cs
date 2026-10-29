@@ -11,8 +11,7 @@ static partial class Strings
 
         TypeButton = "Digita gli appunti";
         SavedTitle = "Salvati"; PausedSuffix = " (in pausa)";
-        FoldersHeading = "Cartelle"; TextsHeading = "Testi"; TextOne = "testo"; TextMany = "testi";
-        UpNote = "Cartella superiore";
+        TextOne = "testo"; TextMany = "testi"; FolderOne = "cartella"; FolderMany = "cartelle";
         New = "Nuovo…"; SaveDots = "Salva…"; EditDots = "Modifica…"; RenameDots = "Rinomina…"; Delete = "Elimina";
         Options = "Opzioni"; SearchCue = "Cerca…";
         CountOf = "{0} di {1}";
@@ -175,7 +174,7 @@ static partial class Strings
         QuickBusy = "Già usati da un altro programma: {0}. Quei numeri non incolleranno: scegli altri tasti nelle "
             + "opzioni, o altri numeri.";
 
-        TypingTitle = "Digitazione"; ProgramTitle = "Programma"; HotkeysTitle = "Scorciatoie"; HistoryTitle = "Cronologia";
+        TypingTitle = "Digitazione"; ProgramTitle = "Programma"; HotkeysTitle = "Scorciatoie"; HistoryTitle = "Cronologia"; DataTitle = "Dati";
         AppearanceTitle = "Aspetto";
         DelayOption = "Attesa prima di digitare"; DelayNote = "Secondi per cliccare nel campo giusto";
         UsOption = "Il server usa la tastiera inglese (USA)"; UsNote = "Solo se i simboli arrivano sbagliati";
@@ -499,10 +498,10 @@ static partial class Strings
                 + "appunti senza aprire la finestra.",
             "## Al sicuro",
             "- I testi salvati non scadono mai. Che cosa il database tiene cifrato si sceglie al primo avvio, e sotto «"
-                + ProtectOption + "» (Opzioni › " + ProgramTitle + "): niente, così si legge su qualsiasi PC, ma anche da "
+                + ProtectOption + "» (Opzioni › " + DataTitle + "): niente, così si legge su qualsiasi PC, ma anche da "
                 + "chiunque ne abbia una copia; i testi salvati, che su questo PC sblocca Windows per te, e che un altro "
                 + "utente dello stesso PC non può leggere; oppure tutto, anche ciò che copi.",
-            "- Cifrati, con una «" + PhraseOption + "» (Opzioni › " + ProgramTitle + ") di tre parole unite da «-», si leggono anche "
+            "- Cifrati, con una «" + PhraseOption + "» (Opzioni › " + DataTitle + ") di tre parole unite da «-», si leggono anche "
                 + "su un altro PC, anche dopo aver reinstallato Windows: lì scegli la cartella del database, e scrivi la frase "
                 + "quando te la chiede. Senza, si leggono solo su questo PC; tienila in un posto sicuro.",
             "- Quando ne rimetti uno negli appunti viene segnato come riservato, perché la cronologia di Windows (Win+V) "
@@ -532,8 +531,9 @@ static partial class Strings
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nasce dentro la cartella mostrata, "
                 + "ma nella sua finestra puoi scegliere dove metterla.",
             "- La scheda di una cartella la apre con un doppio clic o Invio, come un clic sulla sua riga nella barra laterale.",
-            "- In una cartella la prima riga, «" + UpNote + "», torna a quella che la contiene, o a «" + SavedTitle + "» (anche "
-                + BackKeyName + " o " + Key(MainForm.UpKeys) + "); ciò che ci trascini sopra va lì.",
+            "- Sopra le schede di una cartella c'è il percorso da «" + SavedTitle + "»: un clic su una cartella prima del suo "
+                + "nome torna lì (" + BackKeyName + " o " + Key(MainForm.UpKeys) + " salgono di una); ciò che trascini su una "
+                + "di loro va lì.",
             "- La freccia all'estremità destra di una cartella che ne contiene altre la apre e la chiude; quella di «"
                 + SavedTitle + "» le mostra o le nasconde tutte. Il numero dice quanti testi sono in una cartella stessa, "
                 + "non in quelle al suo interno; quello di «" + SavedTitle + "», quelli fuori dalle cartelle. Aperte e chiuse, "
@@ -626,7 +626,7 @@ static partial class Strings
             "# Le opzioni",
             "Il pulsante «" + Options + "» le apre in una finestra a parte, che può restare aperta accanto all'elenco. Ogni "
                 + "opzione dice in poche parole, sotto il nome, che cosa fa; fermandoci sopra il puntatore ne compare la "
-                + "spiegazione completa. Stanno in cinque pagine, che si scelgono dalla colonna a sinistra come gli argomenti "
+                + "spiegazione completa. Stanno in sei pagine, che si scelgono dalla colonna a sinistra come gli argomenti "
                 + "di questa guida. Al primo avvio alcuni passi chiedono dove tenere l'elenco, cosa ricordare e cosa cifrare: "
                 + "tutto si può cambiare qui.",
             "## " + TypingTitle,
@@ -637,19 +637,20 @@ static partial class Strings
             "Accende e spegne " + type + ", " + pick + " e " + MainForm.NumbersName
                 + ", e dà loro altri tasti; e se " + pick + " riapre l'elenco dove l'hai lasciato.",
             "## " + HistoryTitle,
-            "Se ricordare ciò che copi, per quanti giorni, la cartella del database "
-                + "(che si può cambiare) con il collegamento che la apre, il pulsante che pulisce subito la cronologia, e i "
-                + "pulsanti per esportare e importare.",
+            "Se ricordare ciò che copi, per quanti giorni, e il pulsante che pulisce subito la cronologia.",
+            "## " + DataTitle,
+            "La cartella del database (che si può cambiare) con il collegamento che la apre e quanto occupa, cosa "
+                + "cifrare, la frase di recupero dei testi salvati, e i pulsanti per esportare e importare.",
             "## " + AppearanceTitle,
             "La lingua, il tema (chiaro, scuro o «" + ThemeSystem + "»), il carattere e la "
                 + "dimensione dell'interfaccia (pulsanti, opzioni, questa guida: in pixel, riavviano il programma), quelli "
                 + "delle voci (cambiano subito), e se fermare il puntatore su una scheda la mostra per intero.",
             "## " + ProgramTitle,
             "Se restare attivo nell'area di notifica e nascondersi passando a un altro programma, "
-                + "se partire insieme a Windows, cosa cifrare e la frase di recupero dei testi salvati, e la versione del programma.",
+                + "se partire insieme a Windows, e la versione del programma.",
 
             "# Esportare e importare",
-            "Nelle opzioni, sotto «" + HistoryTitle + "», due pulsanti portano i tuoi testi fuori dal programma e li "
+            "Nelle opzioni, sotto «" + DataTitle + "», due pulsanti portano i tuoi testi fuori dal programma e li "
                 + "riprendono, per una copia di sicurezza o per passarli a un altro PC. Ognuno chiede se vuoi solo i "
                 + "testi salvati o tutto, cioè anche le cose copiate.",
             "## Esportare",

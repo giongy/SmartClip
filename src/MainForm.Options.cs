@@ -64,13 +64,25 @@ partial class MainForm
         PlaceNumber(Sign.Calendar, keepBox, Strings.KeepOption, Strings.KeepNote, Texts.MaxKeepDays,
             delegate { Retention = Retention; ApplyHistory(); Reload(); }, ref top);
         Retention = Texts.DefaultKeepDays;
-        PlaceFolder(ref top);
         // Not a setting: what to spare when the button beside it is pressed.
         Act(cleanButton, Strings.CleanButton, CleanHistory);
         cleanButton.Sign = Sign.Delete;
         PlaceNumber(Sign.Clean, cleanBox, Strings.SpareOption, Strings.SpareNote, Texts.MaxKeepDays, delegate { Spared = Spared; }, ref top,
             cleanButton);
         Spared = 0;
+
+        // The file of the list, copied and saved entries alike (wanted by the user on 29/10/2026: what it keeps encrypted
+        // was among what the program does, and History could not hold it): where it is, what it keeps encrypted, the
+        // phrase that opens it elsewhere, a copy of it as text.
+        top = Page(Strings.DataTitle, Sign.Database);
+        PlaceFolder(ref top);
+        // What is kept encrypted travels with the list: read from it once it is open (ShowPhrase).
+        PlaceTile(Sign.Lock, Strings.ProtectOption, Strings.ProtectNote, ref top, Picker(protectButton,
+            new Protection[] { Protection.Nothing, Protection.Saved, Protection.All }, ProtectionName,
+            delegate { return clips == null ? Protection.Saved : clips.Protection; }, ChangeProtection, null));
+        // What the button says follows the key of the saved texts (ShowPhrase).
+        Act(phraseButton, Strings.SetPhraseButton, ChoosePhrase);
+        PlaceTile(Sign.Key, Strings.PhraseOption, Strings.PhraseNote, ref top, phraseButton);
         // Side by side, each with its two choices: the saved texts alone, or what was copied too.
         ContextMenuStrip exportMenu = Choice(Export), importMenu = Choice(Import);
         Act(exportButton, Strings.ExportButton, delegate { exportMenu.Show(exportButton, 0, exportButton.Height); });
@@ -113,13 +125,6 @@ partial class MainForm
         PlaceOption(Sign.Hide, leaveBox, Strings.LeaveOption, Strings.LeaveNote, ref top);
         leaveBox.Checked = true;
         PlaceOption(Sign.Power, startBox, Strings.StartOption, Strings.StartNote, ref top);
-        // What is kept encrypted travels with the list: read from it once it is open (ShowPhrase).
-        PlaceTile(Sign.Lock, Strings.ProtectOption, Strings.ProtectNote, ref top, Picker(protectButton,
-            new Protection[] { Protection.Nothing, Protection.Saved, Protection.All }, ProtectionName,
-            delegate { return clips == null ? Protection.Saved : clips.Protection; }, ChangeProtection, null));
-        // What the button says follows the key of the saved texts (ShowPhrase).
-        Act(phraseButton, Strings.SetPhraseButton, ChoosePhrase);
-        PlaceTile(Sign.Key, Strings.PhraseOption, Strings.PhraseNote, ref top, phraseButton);
         PlaceTile(Sign.Info, Program.AppName + " " + Program.Version, Strings.AboutNote, ref top);   // which version this is
         pageList.SelectedIndex = 0;
 

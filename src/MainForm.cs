@@ -131,6 +131,7 @@ partial class MainForm : Window
     bool optionsAtStart;              // it opens as soon as this window shows
     readonly Card pane = new Card();              // the lighter area on the right of the sidebar, where the entries are
     readonly Label title = new Label();           // the name of the place shown
+    readonly Trail trail = new Trail();           // over the cards of Saved and of a folder, the way there
     readonly Label count = new Label();           // how many entries it lists
     readonly EmptyNote emptyNote = new EmptyNote();   // what the list says while it has none
     readonly InfoBar status = new InfoBar();   // what just happened, tinted by its kind
@@ -365,6 +366,11 @@ partial class MainForm : Window
         dayBar.SetBounds(PaneInset, listTop, ContentWidth, 0);
         dayBar.Visible = false;
         dayBar.Under = cardList;
+        // In its place in a folder, the way there from Saved, in the font of the names of the days (PlaceDay).
+        trail.SetBounds(PaneInset, listTop, ContentWidth, 0);
+        trail.Font = Look.StrongFont;
+        trail.Visible = false;
+        trail.Chosen += GoUpTo;
         // What an empty list says, in its place.
         emptyNote.Bounds = cardList.Bounds;
         emptyNote.TextAlign = ContentAlignment.MiddleCenter;
@@ -372,7 +378,7 @@ partial class MainForm : Window
         emptyNote.ForeColor = Look.Muted;
         status.SetBounds(PaneInset, statusTop, ContentWidth, StatusHeight);
         pane.SetBounds(SideWidth, Edge, paneWidth, statusTop + StatusHeight + PaneInset);
-        pane.Controls.AddRange(new Control[] { title, count, searchFrame, newButton, typeButton, tabs, pickBar, dayBar, cardList, emptyNote,
+        pane.Controls.AddRange(new Control[] { title, count, searchFrame, newButton, typeButton, tabs, pickBar, dayBar, trail, cardList, emptyNote,
             banner, status });
         emptyNote.BringToFront();
         ClientSize = new Size(SideWidth + paneWidth + Edge, Edge + pane.Height + Edge);
@@ -397,7 +403,7 @@ partial class MainForm : Window
         // When the window grows, the pane and its cards take the room; the sidebar stays as wide as it is.
         const AnchorStyles toTop = AnchorStyles.Top, toBottom = AnchorStyles.Bottom, toLeft = AnchorStyles.Left, toRight = AnchorStyles.Right;
         pane.Anchor = cardList.Anchor = emptyNote.Anchor = toTop | toBottom | toLeft | toRight;
-        searchFrame.Anchor = tabs.Anchor = pickBar.Anchor = dayBar.Anchor = toTop | toLeft | toRight;
+        searchFrame.Anchor = tabs.Anchor = pickBar.Anchor = dayBar.Anchor = trail.Anchor = toTop | toLeft | toRight;
         newButton.Anchor = typeButton.Anchor = toTop | toRight;
         status.Anchor = banner.Anchor = toBottom | toLeft | toRight;
         homeList.Anchor = toTop | toLeft;
@@ -483,7 +489,7 @@ partial class MainForm : Window
         {
             if (dataFolder.Length > 0 && !File.Exists(DatabaseFile))
             {
-                unavailable = string.Format(Strings.FolderUnavailable, dataFolder, Strings.HistoryTitle);
+                unavailable = string.Format(Strings.FolderUnavailable, dataFolder, Strings.DataTitle);
                 Log.Error(new FileNotFoundException(unavailable, DatabaseFile));
             }
             else
@@ -658,7 +664,7 @@ partial class MainForm : Window
     void ShowIdle()
     {
         if (unavailable != null) Warn(unavailable);
-        else if (clips.Locked) Warn(string.Format(Strings.LockedWarning, Strings.ProgramTitle));
+        else if (clips.Locked) Warn(string.Format(Strings.LockedWarning, Strings.DataTitle));
         else if (clips.Unreadable > 0) Warn(string.Format(Strings.UnreadableWarning, clips.Unreadable));
         else status.Text = "";
     }

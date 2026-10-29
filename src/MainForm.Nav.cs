@@ -46,7 +46,7 @@ class Place
         }
     }
 
-    // As the title over the cards says it: a folder by its whole path.
+    // As the tooltip of its row says it: a folder by its whole path.
     public string Title
     {
         get { return Kind == PlaceKind.Folder ? Texts.Display(Path) : Label; }
@@ -689,9 +689,27 @@ partial class MainForm
         };
     }
 
-    // Among the cards, the same onto the card of a folder, or onto the way back up, to the folder above or out of them.
+    // Among the cards, the same onto the card of a folder; over them, onto a folder of the way to the one shown, or onto
+    // Saved there, out of them.
     void DropOnCards()
     {
+        trail.AllowDrop = true;
+        trail.DragOver += delegate(object sender, DragEventArgs e)
+        {
+            Entry entry = e.Data.GetData(typeof(Entry)) as Entry;
+            int at = trail.At(trail.PointToClient(new Point(e.X, e.Y)));
+            bool moves = entry != null && at >= 0 && CanGo(entry, trail.Paths[at]);
+            e.Effect = moves ? DragDropEffects.Move : DragDropEffects.None;
+            trail.Light(moves ? at : -1);
+        };
+        trail.DragLeave += delegate { trail.Light(-1); };
+        trail.DragDrop += delegate(object sender, DragEventArgs e)
+        {
+            Entry entry = e.Data.GetData(typeof(Entry)) as Entry;
+            int at = trail.At(trail.PointToClient(new Point(e.X, e.Y)));
+            trail.Light(-1);
+            if (entry != null && at >= 0 && CanGo(entry, trail.Paths[at])) MoveTo(entry, trail.Paths[at]);
+        };
         cardList.AllowDrop = true;
         cardList.DragOver += delegate(object sender, DragEventArgs e)
         {
@@ -713,16 +731,14 @@ partial class MainForm
         };
     }
 
-    // The row among the cards something dragged would go into, with the path of its folder (null for none: out of the
-    // folders); -1 if it is over no folder.
+    // The row among the cards something dragged would go into, with the path of its folder; -1 if it is over no folder.
     int CardDropAt(DragEventArgs e, out string path)
     {
         int row = cardList.RowAt(cardList.PointToClient(new Point(e.X, e.Y)));
         object at = row < 0 ? null : cardList.Items[row];
         FolderCard folder = at as FolderCard;
-        UpCard up = at as UpCard;
-        path = folder != null ? folder.Folder.Name : up != null ? up.Path : null;
-        return folder != null || up != null ? row : -1;
+        path = folder != null ? folder.Folder.Name : null;
+        return folder != null ? row : -1;
     }
 
     // Lights up the card of the folder a dragged text is over.

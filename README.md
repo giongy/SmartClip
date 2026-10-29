@@ -187,7 +187,7 @@ and what to encrypt, with an optional recovery phrase. All of it can be changed 
 
 The **Options** button opens the options in a window of their own, like the guide, which can stay open beside the
 list; **Close** or Esc puts it away.
-The options are in five pages, **Typing**, **Hotkeys**, **History**, **Appearance** and **Program**, chosen from a column on the left as in the Windows 11 Settings; each page slides into place. As there, each option is a card with its name, a few words on what it does and its control on the right; switches say **On** or **Off**. Resting the pointer
+The options are in six pages, **Typing**, **Hotkeys**, **History**, **Data**, **Appearance** and **Program**, chosen from a column on the left as in the Windows 11 Settings; each page slides into place. As there, each option is a card with its name, a few words on what it does and its control on the right; switches say **On** or **Off**. Resting the pointer
 on an option shows its full explanation.
 
 ![The options](docs/screenshot-options.png)
@@ -206,8 +206,10 @@ on an option shows its full explanation.
 | Paste by number, with a button showing **Ctrl+Shift+1…9** | Enable the keys that paste the numbered entries. Only the keys of the numbers in use are taken from other programs. The button takes the keys to hold: press them with any digit; it says which of the nine another program already uses. Del goes back to Ctrl+Shift. |
 | Remember copied texts and pictures | Keep the copied texts and pictures in the list. Turn it off if you copy passwords from programs that do not mark them as private: they would be readable in the list. Turning it off also deletes the history on disk. |
 | Days kept | For how many days, 0 to 365, what you copy stays in the history, also after the program closes, today being the first: with 0 only what was copied today stays. Entries kept at the top go too when their days are over; saved texts never do. |
-| Folder of the copied and saved entries, with the buttons **Change…** and **Default** | Where the database is kept, with the error log (by default `%LOCALAPPDATA%\SmartClip`), and how much it takes, the copied pictures apart. **Change…** moves it to the folder you choose, checking the copy before deleting the old file, or uses the database already there; **Default** brings it back. A folder synchronised online or on the network asks first. It is not a way to share the list between PCs: saved texts can be read only by this Windows user on this PC. If the folder chosen cannot be reached at the start, no empty list is made in its place: the list works in memory and says so. |
 | Clean the history, with a box of days and the button **Clean now…** | Deletes at once what was copied before the last days written in the box: 1 keeps only today, 0 keeps nothing. It asks first. Entries kept at the top go too; saved texts are not touched. |
+| Folder of the copied and saved entries, with the buttons **Change…** and **Default** | Where the database is kept, with the error log (by default `%LOCALAPPDATA%\SmartClip`), and how much it takes, the copied pictures apart. **Change…** moves it to the folder you choose, checking the copy before deleting the old file, or uses the database already there; **Default** brings it back. A folder synchronised online or on the network asks first. It is not a way to share the list between PCs: saved texts can be read only by this Windows user on this PC. If the folder chosen cannot be reached at the start, no empty list is made in its place: the list works in memory and says so. |
+| Encrypt | **Nothing** (the default of a new list): the file can be read on any PC without a phrase, and by anyone who gets a copy of it. **Saved texts**: they are encrypted, and can be read only on this PC, or with the recovery phrase. **Everything**: what you copy too, its search text and pictures included; a search in the history is then done in memory, so the first one after a start takes a moment. Changing it encrypts or decrypts at once what there is (with 200 MB of pictures, a few seconds). |
+| Recovery phrase, with the button **Set…** | Three words joined by “-”, such as `river-lamp-seven`, letter case aside: with them a copy of the database (on OneDrive, say) shows its saved texts on another PC too, also after Windows is installed again. Choose its folder there with **Change…** and write the phrase when asked: that PC remembers it. Without the phrase, those saved texts can only be deleted, to start again. |
 | Language | English, Español, Français or Italiano. Changing it restarts SmartClip, which opens again at once on the options. |
 | Theme | Same as Windows (the mode it sets for apps, followed also when it changes), Light or Dark. Changes at once. |
 | Font of the interface, with its size | The font of the program itself, the same in every window: buttons, labels, options, the guide, menus and questions. Segoe UI Variable (the default where it is installed), Segoe UI, Aptos, Calibri, Arial, Verdana, Tahoma, Cascadia Mono or Consolas, among those Windows has; each is written in itself in the menu. The size goes from 12 to 16 px (13 px by default); the windows grow with the text. The program restarts to apply either. |
@@ -217,15 +219,13 @@ on an option shows its full explanation.
 | Stay in the notification area (tray) | Closing or minimising the window hides it to the notification area and the hotkey keeps working. Click the icon to reopen, right-click and choose **Exit** to quit; the same menu lists the saved texts. |
 | Hide when switching to another program | With the option above on, the window also goes back to the notification area when you click another program; off, it simply stays open behind the others. Never while it waits and types, nor while a window of its own (a text being written, a question) is open. |
 | Start with Windows | Start SmartClip when you sign in, already hidden in the notification area (minimised, if the option above is off). It is the entry Windows shows in Task Manager > Startup apps: the switch reflects it, and follows the program if you move the `.exe`. |
-| Encrypt | **Nothing** (the default of a new list): the file can be read on any PC without a phrase, and by anyone who gets a copy of it. **Saved texts**: they are encrypted, and can be read only on this PC, or with the recovery phrase. **Everything**: what you copy too, its search text and pictures included; a search in the history is then done in memory, so the first one after a start takes a moment. Changing it encrypts or decrypts at once what there is (with 200 MB of pictures, a few seconds). |
-| Recovery phrase, with the button **Set…** | Three words joined by “-”, such as `river-lamp-seven`, letter case aside: with them a copy of the database (on OneDrive, say) shows its saved texts on another PC too, also after Windows is installed again. Choose its folder there with **Change…** and write the phrase when asked: that PC remembers it. Without the phrase, those saved texts can only be deleted, to start again. |
 
 A hotkey takes Ctrl or Alt, with Shift if you like, and a letter, a digit or a function key. While the button
 waits for the new keys, Esc keeps the current ones and Del goes back to the default. On keyboards where AltGr
 types symbols, avoid Ctrl+Alt with a letter that has one (E for the euro sign, for example): the hotkey would
 fire while you type it. The key names in this page are the defaults, as the English interface writes them.
 
-Under **History**, the buttons **Export…** and **Import…** write the saved texts, with their folders (the
+Under **Data**, the buttons **Export…** and **Import…** write the saved texts, with their folders (the
 formatted ones with their HTML too), to a plain text file that Notepad opens, and read such a file back, on this
 PC or another. Each asks whether to take
 only the saved texts or everything, that is also what was copied (pictures are left out). The file holds the
@@ -255,11 +255,11 @@ Settings are stored in `HKEY_CURRENT_USER\Software\SmartClip`. Delete that key t
 - What password managers and private browser windows mark as private (KeePass, Bitwarden and others do) is never
   remembered. A password typed with **Clear the clipboard after typing** on is dropped from the list and
   from the database too.
-- Saved texts are in the same database. At the first start, and later under **Encrypt** (Options › Program), you
+- Saved texts are in the same database. At the first start, and later under **Encrypt** (Options › Data), you
   choose whether they are kept unencrypted, readable on any PC by anyone who has the file, or encrypted (AES-256,
   authenticated with HMAC-SHA256) with a random key that Windows DPAPI keeps for your user account on each PC: another
   user cannot read them. A list made by an earlier version asks once, and until then stays encrypted. With a **Recovery phrase** of
-  three words (Options › Program) the key is kept by the phrase too (PBKDF2-SHA512), so that a copy of the database
+  three words (Options › Data) the key is kept by the phrase too (PBKDF2-SHA512), so that a copy of the database
   can be unlocked on another PC, also after Windows is installed again; the phrase itself is never stored. Without
   it, the saved texts can be read only on the PC that saved them. Nothing readable is left of them in the file, not even what the
   search uses. Of those with a name only the name is shown, until you ask for the content from the right-click

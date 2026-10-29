@@ -12,8 +12,7 @@ static partial class Strings
 
         TypeButton = "Saisir le presse-papiers";
         SavedTitle = "Enregistrés"; PausedSuffix = " (en pause)";
-        FoldersHeading = "Dossiers"; TextsHeading = "Textes"; TextOne = "texte"; TextMany = "textes";
-        UpNote = "Dossier parent";
+        TextOne = "texte"; TextMany = "textes"; FolderOne = "dossier"; FolderMany = "dossiers";
         New = "Nouveau…"; SaveDots = "Garder…"; EditDots = "Modifier…"; RenameDots = "Renommer…"; Delete = "Supprimer";
         Options = "Options"; SearchCue = "Rechercher…";
         CountOf = "{0} sur {1}";
@@ -184,7 +183,7 @@ static partial class Strings
         QuickBusy = "Déjà utilisés par un autre programme : {0}. Ces numéros ne colleront pas : choisissez d'autres "
             + "touches dans les options, ou d'autres numéros.";
 
-        TypingTitle = "Saisie"; ProgramTitle = "Programme"; HotkeysTitle = "Raccourcis"; HistoryTitle = "Historique";
+        TypingTitle = "Saisie"; ProgramTitle = "Programme"; HotkeysTitle = "Raccourcis"; HistoryTitle = "Historique"; DataTitle = "Données";
         AppearanceTitle = "Apparence";
         DelayOption = "Attente avant la saisie"; DelayNote = "Secondes pour cliquer dans le bon champ";
         UsOption = "Le serveur a un clavier anglais (US)"; UsNote = "Seulement si les symboles arrivent faux";
@@ -520,10 +519,10 @@ static partial class Strings
                 + "dans le presse-papiers sans ouvrir la fenêtre.",
             "## En sécurité",
             "- Les textes enregistrés n'expirent jamais. Ce que la base garde chiffré se choisit au premier démarrage, et "
-                + "sous « " + ProtectOption + " » (Options › " + ProgramTitle + ") : rien, pour qu'elle se lise sur n'importe "
+                + "sous « " + ProtectOption + " » (Options › " + DataTitle + ") : rien, pour qu'elle se lise sur n'importe "
                 + "quel PC, mais aussi par quiconque en a une copie ; les textes enregistrés, que sur ce PC Windows "
                 + "déverrouille pour vous, et qu'un autre utilisateur du même PC ne peut pas lire ; ou tout, ce que vous copiez aussi.",
-            "- Chiffrés, avec une « " + PhraseOption + " » (Options › " + ProgramTitle + ") de trois mots reliés par « - », ils se "
+            "- Chiffrés, avec une « " + PhraseOption + " » (Options › " + DataTitle + ") de trois mots reliés par « - », ils se "
                 + "lisent aussi sur un autre PC, même après avoir réinstallé Windows : là, choisissez le dossier de la base, "
                 + "et écrivez la phrase quand elle est demandée. Sans elle, ils ne se lisent que sur ce PC ; gardez-la en lieu sûr.",
             "- Quand vous en remettez un dans le presse-papiers, il est marqué comme privé, pour que l'historique de "
@@ -556,8 +555,9 @@ static partial class Strings
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + ") : il est créé dans le dossier "
                 + "affiché, mais sa fenêtre permet de choisir où le mettre.",
             "- La carte d'un dossier l'ouvre par un double clic ou Entrée, comme un clic sur sa ligne dans la barre latérale.",
-            "- Dans un dossier la première ligne, « " + UpNote + " », revient à celui qui le contient, ou à « " + SavedTitle
-                + " » (aussi " + BackKeyName + " ou " + Key(MainForm.UpKeys) + ") ; ce que vous y glissez va là.",
+            "- Au-dessus des cartes d'un dossier se trouve le chemin depuis « " + SavedTitle + " » : un clic sur un dossier "
+                + "avant son nom y revient (" + BackKeyName + " ou " + Key(MainForm.UpKeys) + " remontent d'un niveau) ; ce que "
+                + "vous glissez sur l'un d'eux va là.",
             "- La flèche à l'extrémité droite d'un dossier qui en contient d'autres l'ouvre et le ferme ; celle de « "
                 + SavedTitle + " » les montre ou les cache tous. Le nombre dit combien de textes sont dans le dossier même, "
                 + "pas dans ceux qu'il contient ; celui de « " + SavedTitle + " », ceux hors des dossiers. Ouverts ou fermés, "
@@ -652,7 +652,7 @@ static partial class Strings
             "# Les options",
             "Le bouton « " + Options + " » les ouvre dans une fenêtre à part, qui peut rester ouverte à côté de la liste. "
                 + "Chaque option dit en quelques mots, sous son nom, ce qu'elle fait ; en laissant le pointeur dessus, son "
-                + "explication complète apparaît. Elles sont réparties en cinq pages, choisies dans la colonne de gauche comme "
+                + "explication complète apparaît. Elles sont réparties en six pages, choisies dans la colonne de gauche comme "
                 + "les sujets de ce guide. Au premier démarrage, quelques étapes demandent où garder la liste, que retenir "
                 + "et que chiffrer : tout peut se changer ici.",
             "## " + TypingTitle,
@@ -663,19 +663,20 @@ static partial class Strings
             "Active et désactive " + type + ", " + pick + " et " + MainForm.NumbersName
                 + ", et leur donne d'autres touches ; et si " + pick + " rouvre la liste là où vous l'avez laissée.",
             "## " + HistoryTitle,
-            "S'il faut mémoriser ce que vous copiez, pendant combien de jours, le dossier de la base de données "
-                + "(qu'on peut changer) avec le lien qui l'ouvre, le bouton qui nettoie aussitôt l'historique, et les "
-                + "boutons pour exporter et importer.",
+            "S'il faut mémoriser ce que vous copiez, pendant combien de jours, et le bouton qui nettoie aussitôt l'historique.",
+            "## " + DataTitle,
+            "Le dossier de la base de données (qu'on peut changer) avec le lien qui l'ouvre et la place qu'elle prend, que "
+                + "chiffrer, la phrase de récupération des textes enregistrés, et les boutons pour exporter et importer.",
             "## " + AppearanceTitle,
             "La langue, le thème (clair, sombre ou « " + ThemeSystem + " »), la police et la "
                 + "taille de l'interface (boutons, options, ce guide : en pixels, elles redémarrent le programme), celles des "
                 + "éléments (elles changent aussitôt), et si laisser le pointeur sur une carte la montre en entier.",
             "## " + ProgramTitle,
             "S'il faut rester dans la zone de notification et se masquer en passant à un autre "
-                + "programme, s'il faut démarrer avec Windows, que chiffrer et la phrase de récupération des textes enregistrés, et la version du programme.",
+                + "programme, s'il faut démarrer avec Windows, et la version du programme.",
 
             "# Exporter et importer",
-            "Dans les options, sous « " + HistoryTitle + " », deux boutons sortent vos textes du programme et les "
+            "Dans les options, sous « " + DataTitle + " », deux boutons sortent vos textes du programme et les "
                 + "reprennent, comme sauvegarde ou pour les passer à un autre PC. Chacun demande si vous voulez "
                 + "seulement les textes enregistrés ou tout, c'est-à-dire aussi les éléments copiés.",
             "## Exporter",

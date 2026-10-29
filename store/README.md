@@ -149,11 +149,9 @@ paste blocked
 ### What's new in this version
 
 ```
-New: you choose what is encrypted. Nothing, only the saved texts, or everything you copy too. With a recovery phrase of three words the list opens on another PC as well, even after Windows is installed again: keep it in a folder such as OneDrive and nothing is lost with the PC. On the first start a short guide asks where to keep the list, how long to remember what you copy and what to encrypt. If you used an earlier version, SmartClip asks once what to encrypt.
+New: over the saved texts, the path to where you are, as in File Explorer: Saved › Work › Servers. A click on a folder of the path goes back there, and a text or a folder dropped onto it moves there; Backspace still goes up one. After the name, how many folders and texts are inside. A thin line separates the folders from the texts, and the title always says Saved, as the other places say their name.
 
-Saved texts are arranged as in File Explorer: folders first, then texts, with a row to go back to the folder above (or Backspace). A saved text with a name shows the name and hidden dots, so it no longer looks like a folder.
-
-Also: History always stays at the top of the sidebar, several selected cards can be copied together, and Export and Import moved to the History page of the options.
+The options have a new page, Data: the folder of the list and how much it takes, what is encrypted, the recovery phrase, export and import, all in one place. History keeps what to remember and for how long.
 ```
 
 ### Screenshot captions
@@ -246,11 +244,9 @@ incolla bloccato
 ### Novità di questa versione
 
 ```
-Novità: scegli tu cosa cifrare. Niente, solo i testi salvati, o anche tutto ciò che copi. Con una frase di recupero di tre parole l'elenco si apre anche su un altro PC, anche dopo aver reinstallato Windows: tienilo in una cartella come OneDrive e con il PC non perdi niente. Al primo avvio una breve procedura chiede dove tenere l'elenco, per quanto ricordare ciò che copi e cosa cifrare. Se usavi una versione precedente, SmartClip chiede una volta sola cosa cifrare.
+Novità: sopra i testi salvati, il percorso fino a dove sei, come in Esplora file: Salvati › Lavoro › Server. Un clic su una cartella del percorso torna lì, e un testo o una cartella trascinati sopra ci vanno; Backspace sale ancora di una. Dopo il nome, quante cartelle e quanti testi ci sono dentro. Una linea sottile separa le cartelle dai testi, e il titolo dice sempre Salvati, come gli altri posti dicono il loro nome.
 
-I testi salvati sono ordinati come in Esplora file: prima le cartelle, poi i testi, con una riga per tornare alla cartella superiore (o Backspace). Un testo salvato con un nome mostra il nome e dei pallini, così non sembra più una cartella.
-
-Inoltre: Cronologia resta sempre in cima alla barra laterale, più schede scelte si copiano insieme, ed Esporta e Importa sono passati nella pagina Cronologia delle opzioni.
+Le opzioni hanno una pagina nuova, Dati: la cartella dell'elenco e quanto occupa, cosa cifrare, la frase di recupero, esportare e importare, tutto in un posto. Cronologia tiene cosa ricordare e per quanto.
 ```
 
 ### Didascalie delle schermate
@@ -343,11 +339,9 @@ clipboard
 ### Novedades de esta versión
 
 ```
-Novedad: tú eliges qué se cifra. Nada, solo los textos guardados, o también todo lo que copias. Con una frase de recuperación de tres palabras la lista se abre también en otro PC, incluso tras reinstalar Windows: guárdala en una carpeta como OneDrive y no pierdes nada con el PC. En el primer inicio una breve guía pregunta dónde guardar la lista, cuánto tiempo recordar lo que copias y qué cifrar. Si usabas una versión anterior, SmartClip pregunta una sola vez qué cifrar.
+Novedad: sobre los textos guardados, la ruta hasta donde estás, como en el Explorador de archivos: Guardados › Trabajo › Servidores. Un clic en una carpeta de la ruta vuelve allí, y un texto o una carpeta que sueltas encima va allí; Retroceso sigue subiendo una. Tras el nombre, cuántas carpetas y cuántos textos hay dentro. Una línea fina separa las carpetas de los textos, y el título dice siempre Guardados, como los demás lugares dicen su nombre.
 
-Los textos guardados se ordenan como en el Explorador de archivos: primero las carpetas, luego los textos, con una fila para volver a la carpeta superior (o Retroceso). Un texto guardado con nombre muestra el nombre y unos puntos, así ya no parece una carpeta.
-
-Además: Historial queda siempre arriba en la barra lateral, varias tarjetas elegidas se copian juntas, y Exportar e Importar pasaron a la página Historial de las opciones.
+Las opciones tienen una página nueva, Datos: la carpeta de la lista y lo que ocupa, qué se cifra, la frase de recuperación, exportar e importar, todo en un lugar. Historial conserva qué recordar y durante cuánto tiempo.
 ```
 
 ### Leyendas de las capturas
@@ -440,11 +434,9 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Nouveau : vous choisissez ce qui est chiffré. Rien, seulement les textes enregistrés, ou aussi tout ce que vous copiez. Avec une phrase de récupération de trois mots, la liste s'ouvre aussi sur un autre PC, même après avoir réinstallé Windows : gardez-la dans un dossier comme OneDrive et vous ne perdez rien avec le PC. Au premier démarrage, un court guide demande où garder la liste, combien de temps retenir ce que vous copiez et quoi chiffrer. Si vous utilisiez une version précédente, SmartClip demande une seule fois quoi chiffrer.
+Nouveau : au-dessus des textes enregistrés, le chemin jusqu'à l'endroit où vous êtes, comme dans l'Explorateur de fichiers : Enregistrés › Travail › Serveurs. Un clic sur un dossier du chemin y revient, et un texte ou un dossier déposé dessus y va ; Retour arrière remonte toujours d'un niveau. Après le nom, combien de dossiers et de textes il contient. Une ligne fine sépare les dossiers des textes, et le titre dit toujours Enregistrés, comme les autres endroits disent leur nom.
 
-Les textes enregistrés sont rangés comme dans l'Explorateur de fichiers : d'abord les dossiers, puis les textes, avec une ligne pour revenir au dossier parent (ou Retour arrière). Un texte enregistré avec un nom montre le nom et des points, il ne ressemble plus à un dossier.
-
-Aussi : Historique reste toujours en haut de la barre latérale, plusieurs cartes choisies se copient ensemble, et Exporter et Importer sont passés à la page Historique des options.
+Les options ont une nouvelle page, Données : le dossier de la liste et sa taille, ce qui est chiffré, la phrase de récupération, l'export et l'import, tout au même endroit. Historique garde quoi retenir et combien de temps.
 ```
 
 ### Légendes des captures

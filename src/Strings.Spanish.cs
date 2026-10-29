@@ -11,8 +11,7 @@ static partial class Strings
 
         TypeButton = "Teclear portapapeles";
         SavedTitle = "Guardados"; PausedSuffix = " (en pausa)";
-        FoldersHeading = "Carpetas"; TextsHeading = "Textos"; TextOne = "texto"; TextMany = "textos";
-        UpNote = "Carpeta superior";
+        TextOne = "texto"; TextMany = "textos"; FolderOne = "carpeta"; FolderMany = "carpetas";
         New = "Nuevo…"; SaveDots = "Guardar…"; EditDots = "Editar…"; RenameDots = "Renombrar…"; Delete = "Eliminar";
         Options = "Opciones"; SearchCue = "Buscar…";
         CountOf = "{0} de {1}";
@@ -176,7 +175,7 @@ static partial class Strings
         QuickBusy = "Ya los usa otro programa: {0}. Esos números no pegarán: elige otras teclas en las opciones, "
             + "u otros números.";
 
-        TypingTitle = "Escritura"; ProgramTitle = "Programa"; HotkeysTitle = "Atajos"; HistoryTitle = "Historial";
+        TypingTitle = "Escritura"; ProgramTitle = "Programa"; HotkeysTitle = "Atajos"; HistoryTitle = "Historial"; DataTitle = "Datos";
         AppearanceTitle = "Apariencia";
         DelayOption = "Espera antes de teclear"; DelayNote = "Segundos para hacer clic en el campo correcto";
         UsOption = "El servidor usa teclado inglés (EE. UU.)"; UsNote = "Solo si los símbolos llegan mal";
@@ -506,10 +505,10 @@ static partial class Strings
                 + "portapapeles sin abrir la ventana.",
             "## A salvo",
             "- Los textos guardados no vencen nunca. Qué cifra la base de datos se elige al primer inicio, y en «"
-                + ProtectOption + "» (Opciones › " + ProgramTitle + "): nada, para que se lea en cualquier PC, pero también "
+                + ProtectOption + "» (Opciones › " + DataTitle + "): nada, para que se lea en cualquier PC, pero también "
                 + "por cualquiera que tenga una copia; los textos guardados, que en este PC Windows desbloquea por ti, y que "
                 + "otro usuario del mismo PC no puede leer; o todo, también lo que copias.",
-            "- Cifrados, con una «" + PhraseOption + "» (Opciones › " + ProgramTitle + ") de tres palabras unidas por «-», se leen "
+            "- Cifrados, con una «" + PhraseOption + "» (Opciones › " + DataTitle + ") de tres palabras unidas por «-», se leen "
                 + "también en otro PC, incluso tras reinstalar Windows: allí elige la carpeta de la base de datos, y escribe la "
                 + "frase cuando te la pida. Sin ella, solo se leen en este PC; guárdala en un lugar seguro.",
             "- Cuando devuelves uno al portapapeles se marca como privado, para que el historial de Windows (Win+V) y "
@@ -540,8 +539,9 @@ static partial class Strings
                 + "(" + Key(Keys.Control | Keys.Shift | MainForm.NewKey) + "): nace dentro de la carpeta "
                 + "mostrada, pero en su ventana puedes elegir dónde ponerla.",
             "- La tarjeta de una carpeta la abre con un doble clic o Intro, como un clic en su fila de la barra lateral.",
-            "- En una carpeta la primera fila, «" + UpNote + "», vuelve a la que la contiene, o a «" + SavedTitle + "» (también "
-                + BackKeyName + " o " + Key(MainForm.UpKeys) + "); lo que arrastras encima va allí.",
+            "- Sobre las tarjetas de una carpeta está la ruta desde «" + SavedTitle + "»: un clic en una carpeta antes de su "
+                + "nombre vuelve allí (" + BackKeyName + " o " + Key(MainForm.UpKeys) + " suben una); lo que arrastras sobre "
+                + "una de ellas va allí.",
             "- La flecha del extremo derecho de una carpeta que contiene otras la abre y la cierra; la de «" + SavedTitle
                 + "» las muestra o las oculta todas. El número dice cuántos textos hay en la carpeta misma, no en las "
                 + "que tiene dentro; el de «" + SavedTitle + "», los que están fuera de las carpetas. Abiertas o cerradas, "
@@ -635,7 +635,7 @@ static partial class Strings
             "# Las opciones",
             "El botón «" + Options + "» las abre en una ventana aparte, que puede quedarse abierta junto a la lista. Cada "
                 + "opción dice en pocas palabras, bajo su nombre, qué hace; si dejas el puntero encima aparece su explicación "
-                + "completa. Están en cinco páginas, que se eligen en la columna de la izquierda como los temas de esta guía. "
+                + "completa. Están en seis páginas, que se eligen en la columna de la izquierda como los temas de esta guía. "
                 + "Al primer inicio unos pasos preguntan dónde guardar la lista, qué recordar y qué cifrar: todo se puede "
                 + "cambiar aquí.",
             "## " + TypingTitle,
@@ -646,19 +646,20 @@ static partial class Strings
             "Activa y desactiva " + type + ", " + pick + " y " + MainForm.NumbersName
                 + ", y les da otras teclas; y si " + pick + " abre la lista donde la dejaste.",
             "## " + HistoryTitle,
-            "Si recordar lo que copias, durante cuántos días, la carpeta de la base de datos "
-                + "(que se puede cambiar) con el enlace que la abre, el botón que limpia enseguida el historial, y los "
-                + "botones para exportar e importar.",
+            "Si recordar lo que copias, durante cuántos días, y el botón que limpia enseguida el historial.",
+            "## " + DataTitle,
+            "La carpeta de la base de datos (que se puede cambiar) con el enlace que la abre y lo que ocupa, qué cifrar, "
+                + "la frase de recuperación de los textos guardados, y los botones para exportar e importar.",
             "## " + AppearanceTitle,
             "El idioma, el tema (claro, oscuro o «" + ThemeSystem + "»), la fuente y el tamaño "
                 + "de la interfaz (botones, opciones, esta guía: en píxeles, reinician el programa), los de las entradas "
                 + "(cambian enseguida), y si dejar el puntero sobre una tarjeta la muestra entera.",
             "## " + ProgramTitle,
             "Si seguir en el área de notificación y ocultarse al cambiar a otro programa, si "
-                + "iniciarse con Windows, qué cifrar y la frase de recuperación de los textos guardados, y la versión del programa.",
+                + "iniciarse con Windows, y la versión del programa.",
 
             "# Exportar e importar",
-            "En las opciones, bajo «" + HistoryTitle + "», dos botones sacan tus textos del programa y los recuperan, "
+            "En las opciones, bajo «" + DataTitle + "», dos botones sacan tus textos del programa y los recuperan, "
                 + "como copia de seguridad o para pasarlos a otro PC. Cada uno pregunta si quieres solo los textos "
                 + "guardados o todo, es decir también lo copiado.",
             "## Exportar",

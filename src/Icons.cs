@@ -98,8 +98,6 @@ static class Icons
                 return Folder;
             case Sign.NewFolder:   // folder-plus
                 return "M12 10v6;M9 13h6;" + Folder;
-            case Sign.FolderUp:   // folder-up
-                return "M12 10v6;m9 13 3-3 3 3;" + Folder;
             case Sign.Move:   // folder-input
                 return "M2 9V5a2 2 0 0 1 2-2h3.9a2 2 0 0 1 1.69.9l.81 1.2a2 2 0 0 0 1.67.9H20a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2v-1;"
                     + "M2 13h10;m9 16 3-3-3-3";
@@ -187,6 +185,8 @@ static class Icons
             case Sign.Qr:   // qr-code
                 return "rect 3 3 5 5 1;rect 16 3 5 5 1;rect 3 16 5 5 1;M21 16h-3a2 2 0 0 0-2 2v3;M21 21v.01;M12 7v3a2 2 0 0 1-2 2H7;"
                     + "M3 12h.01;M12 3h.01;M12 16v.01;M16 12h1;M21 12v.01;M12 21v-1";
+            case Sign.Database:   // database (its ellipse as two arcs)
+                return "M3 5a9 3 0 1 0 18 0a9 3 0 1 0-18 0;M3 5V19A9 3 0 0 0 21 19V5;M3 12A9 3 0 0 0 21 12";
             case Sign.Lock:   // lock
                 return "rect 3 11 18 11 2;M7 11V7a5 5 0 0 1 10 0v4";
             case Sign.Key:   // key-round

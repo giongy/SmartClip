@@ -2428,36 +2428,51 @@ static class TestProgram
             // As in File Explorer: Saved has its folders first, then the texts outside them; a folder the folders and the
             // texts in it itself.
             GoTo(form, PlaceKind.Saved, null);
-            // Each under a name of its own; that of the folders in the bar over the cards.
-            Heading folderHead = (Heading)typeof(MainForm).GetField("topDay", hidden).GetValue(form);
+            // A thin line between the two, no names over them; over them Saved alone, counting both.
+            Label countLabel = (Label)typeof(MainForm).GetField("count", hidden).GetValue(form);
+            Trail trail = (Trail)typeof(MainForm).GetField("trail", hidden).GetValue(form);
             bool savedOnly = Cards(cards).Count == 1 && Cards(cards)[0].Saved && Cards(cards)[0].Group == null && cards.Items.Count == 4
                 && ((FolderCard)cards.Items[0]).Folder.Label == s.Home && ((FolderCard)cards.Items[1]).Folder.Label == s.Work
-                && folderHead != null && folderHead.Text == Strings.FoldersHeading && ((Heading)cards.Items[2]).Text == Strings.TextsHeading;
+                && typeof(MainForm).GetField("topDay", hidden).GetValue(form) == null && cards.Items[2] is Rule
+                && countLabel.Text == "" && trail.Paths.Count == 1 && trail.Paths[0] == null
+                && trail.Note == string.Format(Strings.CountBoth, "2 " + Strings.FolderMany, "1 " + Strings.TextOne);
+            Save(form, path + "-saved.png");
             GoTo(form, PlaceKind.Folder, s.Work);
-            // A folder has first the way back up, to Saved here.
-            bool inWork = Cards(cards).Count == 1 && cards.Items.Count == 4 && cards.Items[0] is UpCard && ((UpCard)cards.Items[0]).Path == null
-                && ((FolderCard)cards.Items[1]).Folder.Label == s.Servers && ((FolderCard)cards.Items[1]).Count == 1;
+            // The title says Saved; over the cards of a folder the way there, from Saved, with what it holds after its name.
+            Label titleLabel = (Label)typeof(MainForm).GetField("title", hidden).GetValue(form);
+            bool inWork = Cards(cards).Count == 1 && cards.Items.Count == 3 && cards.Items[1] is Rule
+                && ((FolderCard)cards.Items[0]).Folder.Label == s.Servers && ((FolderCard)cards.Items[0]).Count == 1
+                && trail.Paths.Count == 2 && trail.Paths[0] == null && trail.Paths[1] == s.Work && trail.Width > 0
+                && titleLabel.Text == Strings.SavedTitle && countLabel.Text == ""
+                && trail.Note == string.Format(Strings.CountBoth, "1 " + Strings.FolderOne, "1 " + Strings.TextOne);
             Save(form, path + "-folder.png");
             GoTo(form, PlaceKind.Pinned, null);
             bool pinnedOnly = Cards(cards).Count == 1 && Cards(cards)[0].Pinned;
             Console.WriteLine("[{0}] saved and a folder with their folders and their own texts, pinned", savedOnly && inWork && pinnedOnly ? "PASS" : "FAIL");
             // The card of a folder opens it, as Enter does; a search in Saved finds the texts inside the folders too, and no folder.
             GoTo(form, PlaceKind.Folder, s.Work);
-            cards.SelectedIndex = 1;
+            cards.SelectedIndex = 0;
             typeof(MainForm).GetMethod("Accept", hidden).Invoke(form, null);
             Place inside = (Place)typeof(MainForm).GetField("place", hidden).GetValue(form);
             bool intoServers = inside.Kind == PlaceKind.Folder && inside.Path == s.Work + Texts.Separator + s.Servers
                 && Cards(cards).Count == 1 && Cards(cards)[0].Label == s.TestServer && ((ListBox)nav).SelectedItem == inside;
-            // The way back up, as Enter takes it, goes to the folder above, with the one left selected; and from there to Saved.
-            cards.SelectedIndex = 0;
-            typeof(MainForm).GetMethod("Accept", hidden).Invoke(form, null);
+            Save(form, path + "-subfolder.png");
+            // The way there says both folders above; going up goes to the folder above, with the one left selected; and from
+            // there to Saved. Saved, from the way there, goes up two at once, with the folder the way went through selected.
+            bool backUp = trail.Paths.Count == 3 && trail.Paths[0] == null && trail.Paths[1] == s.Work && trail.Paths[2] == inside.Path;
+            typeof(MainForm).GetMethod("GoUp", hidden).Invoke(form, null);
             Place above = (Place)typeof(MainForm).GetField("place", hidden).GetValue(form);
-            bool backUp = above.Kind == PlaceKind.Folder && above.Path == s.Work && cards.SelectedItem is FolderCard
+            backUp &= above.Kind == PlaceKind.Folder && above.Path == s.Work && cards.SelectedItem is FolderCard
                 && ((FolderCard)cards.SelectedItem).Folder.Label == s.Servers;
             typeof(MainForm).GetMethod("GoUp", hidden).Invoke(form, null);
             backUp &= ((Place)typeof(MainForm).GetField("place", hidden).GetValue(form)).Kind == PlaceKind.Saved
+                && ((FolderCard)cards.SelectedItem).Folder.Label == s.Work && trail.Paths.Count == 1;
+            GoTo(form, PlaceKind.Folder, inside.Path);
+            typeof(MainForm).GetMethod("GoUpTo", hidden).Invoke(form, new object[] { null });
+            backUp &= ((Place)typeof(MainForm).GetField("place", hidden).GetValue(form)).Kind == PlaceKind.Saved
                 && ((FolderCard)cards.SelectedItem).Folder.Label == s.Work;
-            Console.WriteLine("[{0}] the way back up goes to the folder above, then to saved, the folder left selected", backUp ? "PASS" : "FAIL");
+            Console.WriteLine("[{0}] the way there, and up to the folder above, to saved, two at once, the folder left selected",
+                backUp ? "PASS" : "FAIL");
             GoTo(form, PlaceKind.Saved, null);
             TextBox savedSearch = (TextBox)typeof(MainForm).GetField("search", hidden).GetValue(form);
             savedSearch.Text = s.TestServer;
