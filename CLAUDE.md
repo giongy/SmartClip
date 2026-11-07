@@ -220,7 +220,9 @@ condiviso su GitHub).
   management → Product identity*: `lsgag.SmartClipClipboardTyper`, editore `ls_gag`; il nome sullo Store è «SmartClip – Clipboard & Typer», scelto
   dall'utente perché «SmartClip» era preso e «ClipSmart» è già un gestore di appunti per Chrome: sta in
   `DisplayName` identico a quello prenotato, mentre nel programma resta «SmartClip») e `pack.ps1` (immagini da `SmartClip.ico`, versione da
-  `AssemblyVersion`, poi `makepri` e `makeappx` del Windows SDK; senza SDK scrive solo `out\layout`). Lo Store
+  `AssemblyVersion`, poi `makepri` e `makeappx` del Windows SDK; senza SDK li scarica una volta dal pacchetto NuGet
+  `Microsoft.Windows.SDK.BuildTools` in `out`, fuori da git, e con `-NoDownload` scrive solo `out\layout`). In locale
+  (provato il 07/11/2026): `build.cmd`, poi `powershell -ExecutionPolicy Bypass -File packaging\pack.ps1`. Lo Store
   vuole la quarta cifra della versione a zero. Il flusso di release crea il pacchetto e lo lascia tra gli
   artifact (non nella release: senza la firma dello Store non si installa); lanciato a mano, lo crea anche se
   la release esiste già.
@@ -232,7 +234,8 @@ condiviso su GitHub).
   `store\upload\SmartClip-listing` (CSV compilato per tutte le lingue + immagini) da importare con *Store
   listings → Import listings → Import folder*; senza argomento riparte dal `listing.csv` scritto la volta prima
   (il CSV si legge con `TextFieldParser`: le descrizioni stanno su più righe). `get-package.ps1` (`-Build` per
-  avviare il flusso) scarica lì accanto il `.msix` della versione di `Program.cs` dagli artifact di GitHub. I
+  avviare il flusso) scarica lì accanto il `.msix` della versione di `Program.cs` dagli artifact di GitHub: dal
+  07/11/2026 solo un ripiego, perché il pacchetto si fa in locale con `pack.ps1` e si copia lì. I
   passi di un invio li segue la skill `partner-center` (`.claude\skills\partner-center\SKILL.md`). `make-listing.ps1` legge i testi da `README.md`, quindi i blocchi di codice di
   ogni lingua vanno tenuti in quell'ordine (nome, descrizione breve, descrizione, caratteristiche, termini, novità della versione da riscrivere a ogni invio) e i
   titoli delle sezioni con il codice tra parentesi, «## English (en-US)». `PRIVACY.md` è l'informativa indicata allo Store: va tenuta vera (oggi il programma non
@@ -318,7 +321,7 @@ condiviso su GitHub).
   voluto dall'utente il 19/10/2026 per vederle e gestirle in un posto solo; `Sieve.Numbered`), «Salvati» con sotto l'albero delle cartelle, «Provenienza» con sotto i programmi (icona e quante voci),
   ognuno un `Place`; la freccia a destra di una riga apre
   e chiude ciò che ha sotto (Salvati e Provenienza nelle impostazioni `SavedOpen`, `SourcesOpen`; le cartelle nel
-  database), un clic su «Provenienza» pure. Ridotta, una linea sottile sopra «Salvati» e sopra «Provenienza» separa
+  database), un clic su «Provenienza» pure; su «Salvati» o su una cartella con sottocartelle il clic la mostra e la apre se è chiusa, e su quella già mostrata la apre o chiude, come NavigationView (voluto dall'utente il 07/11/2026: solo «Provenienza» si apriva al clic; `wasShown`, letto da `RowList.Pressing` prima che Windows selezioni la riga). Ridotta, una linea sottile sopra «Salvati» e sopra «Provenienza» separa
   cartelle e programmi, che con le sole icone si confondevano, e ogni cartella è piena (`Sign.FullFolder`) con
   l'iniziale del nome ritagliata nel colore della riga (`InitialShare`, `InitialDrop`; voluto dall'utente il 19/10/2026:
   tutte uguali, non si distinguevano; nella cartella vuota la lettera toccava i bordi); con i nomi, un nome tagliato compare intero nel

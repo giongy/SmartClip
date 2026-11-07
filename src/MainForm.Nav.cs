@@ -143,13 +143,18 @@ partial class MainForm
             navList.SelectedIndex = 0;
         };
         // The arrow at the right end opens and closes; anywhere else the row is shown (SelectedIndexChanged), and
-        // Sources, which has nothing to show, opens and closes there. Reduced, the arrows are not there.
+        // Sources, which has nothing to show, opens and closes there. Saved and a folder with folders in it, as in
+        // NavigationView: a click shows them and opens them, and on the one already shown opens or closes it, like
+        // Sources. Reduced, the arrows are not there, and the click alone does it.
+        navList.Pressing = delegate(int row) { wasShown = row >= 0 && ((Place)navList.Items[row]).Is(place); };
         navList.MouseClick += delegate(object sender, MouseEventArgs e)
         {
             int row = navList.RowAt(e.Location);
-            if (e.Button != MouseButtons.Left || row < 0 || sideNarrow) return;
+            if (e.Button != MouseButtons.Left || row < 0) return;
             Place at = (Place)navList.Items[row];
-            if (at.Opens && at.Kind != PlaceKind.Sources && e.X >= ChevronArea(navList.GetItemRectangle(row)).Left) Toggle(at);
+            if (!at.Opens || at.Kind == PlaceKind.Sources) return;
+            bool chevron = !sideNarrow && e.X >= ChevronArea(navList.GetItemRectangle(row)).Left;
+            if (chevron || wasShown || !at.Open) Toggle(at);
         };
         navList.MouseDown += delegate(object sender, MouseEventArgs e)
         {

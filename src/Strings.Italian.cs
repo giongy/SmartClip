@@ -537,7 +537,7 @@ static partial class Strings
                 + "nome torna lì (" + BackKeyName + " o " + Key(MainForm.UpKeys) + " salgono di una); ciò che trascini su una "
                 + "di loro va lì.",
             "- La freccia all'estremità destra di una cartella che ne contiene altre la apre e la chiude; quella di «"
-                + SavedTitle + "» le mostra o le nasconde tutte. Il numero dice quanti testi sono in una cartella stessa, "
+                + SavedTitle + "» le mostra o le nasconde tutte. Un clic sulla riga fa lo stesso se è già quella mostrata, e la apre se è chiusa. Il numero dice quanti testi sono in una cartella stessa, "
                 + "non in quelle al suo interno; quello di «" + SavedTitle + "», quelli fuori dalle cartelle. Aperte e chiuse, "
                 + "le ritrovi come le hai lasciate.",
             "## Spostare testi e cartelle",

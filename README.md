@@ -127,12 +127,15 @@ types the text. As long as it is not changed it stays exactly as it was copied, 
 once edited, it is written again from what the buttons know, and links, pictures, alignment and lists are lost.
 
 Saved texts can be gathered in folders, and folders in other folders. They are in the sidebar under **Saved**, and
-among the cards as in File Explorer: **Saved** shows its folders and then the texts outside them, each under a heading
-(the folders as rows with an arrow, the texts as cards), a folder the folders and the texts in it itself, after a first row, **Folder above**, that goes back up (Backspace or Alt+↑ too), not those of the folders inside it; a double click or Enter on the card of a folder opens it,
+among the cards as in File Explorer: **Saved** shows its folders and then the texts outside them, a thin line between
+the two (the folders as rows with an arrow, the texts as cards), a folder the folders and the texts in it itself, not those of the folders inside it.
+Above them, the path, «Saved › Work › Servers», with how many folders and texts there are: a click on a folder of the path goes back to it (Backspace or Alt+↑ go up one); a double click or Enter on the card of a folder opens it,
 and a search looks inside the folders too. **New folder…** is at the right end of the tabs above the saved texts
 and in the right-click menu of a folder (Ctrl+Shift+N), and creates the folder inside the one shown; **Move to** moves a saved
 text or a whole folder, and the window of a text or a folder has the same choice beside its buttons. The arrow at
-the right end of a folder opens and closes the folders inside it, and they are found as they were left. The
+the right end of a folder opens and closes the folders inside it, and they are found as they were left; a click on
+**Saved** or on such a folder shows it and opens it, and a click on the one already shown opens or closes it, as on
+**Source** (with the sidebar reduced to its icons, where there are no arrows, too). The
 right-click menu of a folder renames or moves it, or deletes it: deleting a folder never deletes what it holds,
 which moves up one level. A folder name cannot contain `\`.
 

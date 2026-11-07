@@ -545,7 +545,7 @@ static partial class Strings
                 + "nombre vuelve allí (" + BackKeyName + " o " + Key(MainForm.UpKeys) + " suben una); lo que arrastras sobre "
                 + "una de ellas va allí.",
             "- La flecha del extremo derecho de una carpeta que contiene otras la abre y la cierra; la de «" + SavedTitle
-                + "» las muestra o las oculta todas. El número dice cuántos textos hay en la carpeta misma, no en las "
+                + "» las muestra o las oculta todas. Un clic en la fila hace lo mismo si ya es la que se muestra, y la abre si está cerrada. El número dice cuántos textos hay en la carpeta misma, no en las "
                 + "que tiene dentro; el de «" + SavedTitle + "», los que están fuera de las carpetas. Abiertas o cerradas, "
                 + "las encuentras como las dejaste.",
             "## Mover textos y carpetas",

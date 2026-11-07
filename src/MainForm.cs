@@ -184,6 +184,7 @@ partial class MainForm : Window
     readonly Timer fade = new Timer();            // runs while the status line holds a passing message
     Entry grabbed;                                // the saved text or folder the button went down on: it may be dragged to a folder
     Point grabbedAt;
+    bool wasShown;                                // the sidebar row the button went down on was already the place shown
     Place dropPlace;                              // the folder a dragged text would go to, while it is over one; Saved for none
     int dropCard = -1;                            // the same among the cards: the row of the folder, or -1
     int hoverRow = -1;                            // the card the pointer is on, and the part of it

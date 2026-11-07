@@ -561,7 +561,7 @@ static partial class Strings
                 + "avant son nom y revient (" + BackKeyName + " ou " + Key(MainForm.UpKeys) + " remontent d'un niveau) ; ce que "
                 + "vous glissez sur l'un d'eux va là.",
             "- La flèche à l'extrémité droite d'un dossier qui en contient d'autres l'ouvre et le ferme ; celle de « "
-                + SavedTitle + " » les montre ou les cache tous. Le nombre dit combien de textes sont dans le dossier même, "
+                + SavedTitle + " » les montre ou les cache tous. Un clic sur la ligne fait de même si elle est déjà affichée, et l'ouvre si elle est fermée. Le nombre dit combien de textes sont dans le dossier même, "
                 + "pas dans ceux qu'il contient ; celui de « " + SavedTitle + " », ceux hors des dossiers. Ouverts ou fermés, "
                 + "vous les retrouvez comme vous les avez laissés.",
             "## Déplacer textes et dossiers",

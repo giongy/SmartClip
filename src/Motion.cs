@@ -267,6 +267,9 @@ class RowList : ListBox, Scrolling
     // row and those keys: the list picks several rows (see MainForm.Pick). Left null, Windows selects one row.
     public Action<int, Keys> Picking;
 
+    // Given, told the row of a press of the left button before Windows selects it: MouseDown comes after the selection.
+    public Action<int> Pressing;
+
     // Given, the height of each row of a list of rows of different heights, told Windows when it asks for it. Asked
     // through MeasureItem, WinForms makes a Graphics for every row: filling a list of hundreds of cards took twice as
     // long.
@@ -289,6 +292,11 @@ class RowList : ListBox, Scrolling
             EraseBelowRows(m.WParam);
             m.Result = (IntPtr)1;
             return;
+        }
+        if (m.Msg == Native.WM_LBUTTONDOWN && Pressing != null)
+        {
+            long at = m.LParam.ToInt64();
+            Pressing(RowAt(new Point((short)(at & 0xFFFF), (short)((at >> 16) & 0xFFFF))));
         }
         if ((m.Msg == Native.WM_LBUTTONDOWN || m.Msg == Native.WM_LBUTTONDBLCLK) && Picking != null)
         {

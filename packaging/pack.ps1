@@ -2,15 +2,18 @@
 #
 #   powershell -ExecutionPolicy Bypass -File packaging\pack.ps1
 #
-# Writes packaging\out\layout (the content of the package) and, when the Windows SDK is installed (makeappx and
-# makepri), packaging\out\SmartClip-<version>.msix, ready for Partner Center: the Store signs it. Without the
-# SDK the layout alone can be tried with Developer Mode on:
+# Writes packaging\out\layout (the content of the package) and packaging\out\SmartClip-<version>.msix, ready for
+# Partner Center: the Store signs it. makeappx and makepri come from the Windows SDK, or without it from its NuGet
+# package (Microsoft.Windows.SDK.BuildTools), fetched once into packaging\out. With -NoDownload and no SDK only the
+# layout is written, which can be tried with Developer Mode on:
 #   Add-AppxPackage -Register packaging\out\layout\AppxManifest.xml
 # The images come from SmartClip.ico, the version from AssemblyVersion in src\Program.cs: nothing to keep in step.
 
 param(
     [string]$Exe = (Join-Path $PSScriptRoot '..\SmartClip.exe'),
-    [string]$Out = (Join-Path $PSScriptRoot 'out')
+    [string]$Out = (Join-Path $PSScriptRoot 'out'),
+    [string]$BuildToolsVersion = '10.0.28000.2957',   # used only without the Windows SDK
+    [switch]$NoDownload
 )
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName System.Drawing
@@ -92,6 +95,21 @@ foreach ($size in 16, 20, 24, 32, 40, 48, 64, 256) {
 $kits = Join-Path ${env:ProgramFiles(x86)} 'Windows Kits\10\bin'
 $tools = Get-ChildItem $kits -Directory -Filter '10.*' -ErrorAction SilentlyContinue | Sort-Object { [Version]$_.Name } -Descending |
     ForEach-Object { Join-Path $_.FullName 'x64' } | Where-Object { Test-Path (Join-Path $_ 'makeappx.exe') } | Select-Object -First 1
+# Without the Windows SDK, the same two tools from its NuGet package, fetched once into the output folder (out of git).
+if (-not $tools -and -not $NoDownload) {
+    $buildTools = Join-Path $Out "buildtools-$BuildToolsVersion"
+    $tools = Join-Path $buildTools ('bin\{0}.0\x64' -f ($BuildToolsVersion -replace '\.\d+$'))
+    if (-not (Test-Path (Join-Path $tools 'makeappx.exe'))) {
+        $zip = "$buildTools.zip"
+        Write-Host "Windows SDK not found: fetching makeappx and makepri (Microsoft.Windows.SDK.BuildTools $BuildToolsVersion)..."
+        Invoke-WebRequest "https://www.nuget.org/api/v2/package/Microsoft.Windows.SDK.BuildTools/$BuildToolsVersion" -OutFile $zip -UseBasicParsing
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        if (Test-Path $buildTools) { Remove-Item $buildTools -Recurse -Force }
+        [IO.Compression.ZipFile]::ExtractToDirectory($zip, $buildTools)
+        Remove-Item $zip
+    }
+    if (-not (Test-Path (Join-Path $tools 'makeappx.exe'))) { $tools = $null }
+}
 if (-not $tools) {
     Write-Warning 'Windows SDK not found (makeappx, makepri): only the layout was written.'
     Write-Host "Layout: $layout"

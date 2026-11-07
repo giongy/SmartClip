@@ -87,11 +87,18 @@ cambiato in `store\README.md`.
   `Co-Authored-By`.
 - Poi il push, **senza chiedere**: chiedere la skill vale già come consenso (detto dall'utente il 18/10/2026: «se
   ti chiedo la skill partner fai tutto»). Pubblica la release `vX.Y.Z` su GitHub.
-- Dopo il push, il flusso *Release* crea il pacchetto (qualche minuto): `gh run list --workflow release.yml
-  --limit 1`, poi `gh run watch <id> --exit-status`.
-- `powershell -ExecutionPolicy Bypass -File store\get-package.ps1` scarica in `store\upload` il `.msix` della
-  versione di `Program.cs` e toglie quelli vecchi. Se la release esisteva già e il pacchetto non c'è,
-  `get-package.ps1 -Build` avvia il flusso a mano (da ciò che è su `main`) e aspetta.
+- Il pacchetto si fa **in locale** (dal 07/11/2026), dallo stesso albero appena inviato, senza aspettare GitHub:
+  `build.cmd < NUL` (da `cmd /c`; l'eseguibile è sempre quello del `csc` di Windows, C# 5, mai del .NET SDK), poi
+  `powershell -ExecutionPolicy Bypass -File packaging\pack.ps1`. Senza Windows SDK lo script scarica la prima volta
+  `makeappx` e `makepri` dal pacchetto NuGet `Microsoft.Windows.SDK.BuildTools` in `packaging\out`. Deve finire con
+  «Package: …\SmartClip-<versione>.0.msix»: se scrive solo il layout, qualcosa è mancato.
+- Togliere da `store\upload` i `.msix` vecchi e copiarvi `packaging\out\SmartClip-<versione>.0.msix`.
+- Controllo: l'eseguibile dentro il `.msix` (è uno zip, voce `SmartClip.exe`) ha lo stesso hash di `SmartClip.exe`
+  e la versione di `Program.cs`.
+- Intanto il flusso *Release* su GitHub pubblica la release `vX.Y.Z` e crea anche lui un pacchetto tra gli
+  artifact: `gh run list --workflow release.yml --limit 1`, poi `gh run watch <id> --exit-status`, perché i
+  controlli devono passare anche lì. Il suo pacchetto non serve più; `store\get-package.ps1` (con `-Build` per
+  avviare il flusso a mano) resta solo come ripiego se quello locale non si può fare.
 
 ## 7. Consegna
 

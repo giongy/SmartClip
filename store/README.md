@@ -149,9 +149,7 @@ paste blocked
 ### What's new in this version
 
 ```
-A tidier top of the window: Type clipboard, the main command, is now on the row of the title; the search has the whole row to itself; New… and New folder… sit together at the right end of the tabs, with everything that adds to the list in one place.
-
-New: when you save a text or a picture, the menu of its folder ends with New folder…: the folder is made there and then, and the text goes in it. The folder button is there even before you have any folder.
+A quicker sidebar: a click on Saved, or on a folder with folders inside, shows it and opens it; a click on the one already shown opens or closes it, as on Source. It works the same with the sidebar reduced to its icons, where there are no arrows.
 ```
 
 ### Screenshot captions
@@ -244,9 +242,7 @@ incolla bloccato
 ### Novità di questa versione
 
 ```
-La parte alta della finestra è più ordinata: Digita gli appunti, il comando principale, ora sta sulla riga del titolo; la ricerca ha tutta la riga per sé; Nuovo… e Nuova cartella… stanno insieme all'estremità destra delle schede dei tipi, con tutto ciò che aggiunge all'elenco in un posto solo.
-
-Novità: quando salvi un testo o un'immagine, il menu della sua cartella finisce con Nuova cartella…: la cartella nasce subito e il testo ci va dentro. Il pulsante della cartella c'è anche prima di avere una cartella.
+Una barra laterale più comoda: un clic su Salvati, o su una cartella che ne contiene altre, la mostra e la apre; un clic su quella già mostrata la apre o la chiude, come su Provenienza. Funziona allo stesso modo con la barra ridotta alle icone, dove le frecce non ci sono.
 ```
 
 ### Didascalie delle schermate
@@ -339,9 +335,7 @@ clipboard
 ### Novedades de esta versión
 
 ```
-La parte superior de la ventana está más ordenada: Teclear portapapeles, el comando principal, está ahora en la fila del título; la búsqueda tiene toda la fila para ella; Nuevo… y Nueva carpeta… están juntos en el extremo derecho de las pestañas, con todo lo que añade a la lista en un solo lugar.
-
-Novedad: al guardar un texto o una imagen, el menú de su carpeta termina con Nueva carpeta…: la carpeta se crea al momento y el texto va dentro. El botón de la carpeta está incluso antes de tener ninguna carpeta.
+Una barra lateral más cómoda: un clic en Guardados, o en una carpeta que contiene otras, la muestra y la abre; un clic en la que ya se muestra la abre o la cierra, como en Origen. Funciona igual con la barra reducida a sus iconos, donde no hay flechas.
 ```
 
 ### Leyendas de las capturas
@@ -434,9 +428,7 @@ clipboard
 ### Nouveautés de cette version
 
 ```
-Le haut de la fenêtre est mieux rangé : Saisir le presse-papiers, la commande principale, est maintenant sur la ligne du titre ; la recherche a toute la ligne pour elle ; Nouveau… et Nouveau dossier… sont ensemble à l'extrémité droite des onglets, avec tout ce qui ajoute à la liste au même endroit.
-
-Nouveau : quand vous enregistrez un texte ou une image, le menu de son dossier se termine par Nouveau dossier… : le dossier est créé aussitôt et le texte y va. Le bouton du dossier est là même avant d'avoir un dossier.
+Une barre latérale plus pratique : un clic sur Enregistrés, ou sur un dossier qui en contient d'autres, l'affiche et l'ouvre ; un clic sur celui déjà affiché l'ouvre ou le ferme, comme sur Provenance. Cela fonctionne de même avec la barre réduite à ses icônes, où il n'y a pas de flèches.
 ```
 
 ### Légendes des captures

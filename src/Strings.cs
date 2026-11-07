@@ -604,7 +604,7 @@ static partial class Strings
             "- Over the cards of a folder is the way there from " + SavedTitle + ": a click on a folder before its name goes "
                 + "back there (" + BackKeyName + " or " + Key(MainForm.UpKeys) + " go up one); what is dragged onto one goes there.",
             "- The arrow at the right end of a folder that holds others opens and closes it; that of " + SavedTitle
-                + " shows or hides all of them. The number says how many texts are in a folder itself, not in the folders "
+                + " shows or hides all of them. A click on the row does the same when it is already shown, and opens it when it is closed. The number says how many texts are in a folder itself, not in the folders "
                 + "inside it; that of " + SavedTitle + ", those outside the folders. Open or closed, you find them as you left them.",
             "## Moving texts and folders",
             "- The card of a saved text, or a folder with all it holds, from the sidebar or among the cards, can be dragged "
